@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Core
+﻿using FluidScript.Compiler.SyntaxTree;
+
+namespace FluidScript.Core
 {
     public interface IInvocationContext
     {
@@ -8,11 +10,11 @@
 
     public interface IMethodInvocation : IInvocationContext
     {
-        Object Invoke(string name, Expression.Operation type, object obj, object[] args);
+        Object Invoke(string name, NodeType type, object obj, object[] args);
     }
 
     public interface IPropertyInvocation : IInvocationContext
     {
-        Object Invoke(string name, Expression.Operation type, object obj);
+        Object Invoke(string name, NodeType type, object obj);
     }
 }

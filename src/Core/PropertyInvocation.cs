@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using FluidScript.Compiler.SyntaxTree;
+using System.Linq;
 using System.Reflection;
 
 namespace FluidScript.Core
@@ -7,10 +8,10 @@ namespace FluidScript.Core
     {
         public readonly string Name;
         public readonly IInvocationContext Context;
-        public readonly Expression.Operation OpCode;
-        public readonly Expression.Operation ParentKind;
+        public readonly NodeType OpCode;
+        public readonly NodeType ParentKind;
 
-        public PropertyInvocation(string name, IInvocationContext context, Expression.Operation opCode, Expression.Operation parentKind)
+        public PropertyInvocation(string name, IInvocationContext context, NodeType opCode, NodeType parentKind)
         {
             Name = name;
             Context = context;
@@ -22,7 +23,7 @@ namespace FluidScript.Core
 
         public Object Invoke(Object args)
         {
-            if (ParentKind == Expression.Operation.Invocation)
+            if (ParentKind == NodeType.Invocation)
             {
                 var argValues = args.ToArray();
                 if (Context.CanInvoke && Context is IMethodInvocation invocation)

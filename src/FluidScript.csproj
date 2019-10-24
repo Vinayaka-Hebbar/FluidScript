@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Title>Scripting Runtime Library</Title>
-    <TargetFrameworks>net35;net45;netstandard1.3;netcoreapp1.0</TargetFrameworks>
+    <TargetFrameworks>net40;net45</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Runtime Scripting in code</Description>
     <RepositoryType>Library</RepositoryType>
@@ -13,6 +13,7 @@
     <SignAssembly>false</SignAssembly>
     <Authors>Vinayaka Hebbar</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/Vinayaka-Hebbar/FluidScript</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
@@ -32,9 +33,5 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Metadata\" />
   </ItemGroup>
 </Project>
