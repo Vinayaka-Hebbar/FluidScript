@@ -2,11 +2,12 @@
 {
     public enum IdentifierType
     {
+        Class,
         New,
         This,
         True,
         False,
-        Out,
+        Return,
         Var,
         Function,
         Lamda,

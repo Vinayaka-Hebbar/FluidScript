@@ -5,7 +5,7 @@
         public readonly Expression Target;
         public readonly Expression[] Arguments;
 
-        public InvocationExpression(Expression target, Expression[] arguments, NodeType opCode) : base(opCode)
+        public InvocationExpression(Expression target, Expression[] arguments, ExpressionType opCode) : base(opCode)
         {
             Target = target;
             Arguments = arguments;

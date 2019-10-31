@@ -8,10 +8,7 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         static readonly IEnumerable<Node> emptyNodes = Enumerable.Empty<Node>();
 
-        protected Node(NodeType nodeType)
-        {
-            NodeType = nodeType;
-        }
+        protected Node() { }
 
         public virtual IEnumerable<Node> ChildNodes
         {
@@ -40,10 +37,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public abstract void GenerateCode(ILGenerator generator, OptimizationInfo info);
 
-        public NodeType NodeType { get; }
 
-        public abstract Object GetValue();
-
-        public abstract TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor) where TReturn : IRuntimeObject;
+        public abstract object GetValue();
     }
 }

@@ -10,11 +10,11 @@ namespace FluidScript.Core
 
     public interface IMethodInvocation : IInvocationContext
     {
-        Object Invoke(string name, NodeType type, object obj, object[] args);
+        Object Invoke(string name, ExpressionType type, object obj, object[] args);
     }
 
     public interface IPropertyInvocation : IInvocationContext
     {
-        Object Invoke(string name, NodeType type, object obj);
+        Object Invoke(string name, ExpressionType type, object obj);
     }
 }

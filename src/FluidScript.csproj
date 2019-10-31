@@ -25,6 +25,23 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Compiler\InvocationParser.cs" />
+    <Compile Remove="Compiler\NodeVisitor.cs" />
+    <Compile Remove="Compiler\Reflection\AssemblyBuilder.cs" />
+    <Compile Remove="Compiler\Reflection\AssemblyInfo.cs" />
+    <Compile Remove="Compiler\Reflection\ConstructorInfo.cs" />
+    <Compile Remove="Compiler\Reflection\EmitILLocalVariable.cs" />
+    <Compile Remove="Compiler\Reflection\FieldInfo.cs" />
+    <Compile Remove="Compiler\Reflection\IReflection.cs" />
+    <Compile Remove="Compiler\Reflection\MemberInfo.cs" />
+    <Compile Remove="Compiler\Reflection\MethodBase.cs" />
+    <Compile Remove="Compiler\Reflection\MethodBody.cs" />
+    <Compile Remove="Compiler\Reflection\MethodInfo.cs" />
+    <Compile Remove="Compiler\Reflection\ModuleBuilder.cs" />
+    <Compile Remove="Compiler\Reflection\ModuleInfo.cs" />
+    <Compile Remove="Compiler\Reflection\PropertyInfo.cs" />
+    <Compile Remove="Compiler\Reflection\TypeInfo.cs" />
+    <Compile Remove="Compiler\SyntaxTree\Expressions\ArgumentExpression.cs" />
     <Compile Remove="NamedObject.cs" />
   </ItemGroup>
 

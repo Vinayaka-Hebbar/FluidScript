@@ -1,18 +1,26 @@
-﻿using FluidScript.Compiler.Reflection;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public class FunctionDeclarationStatement : Statement
     {
         public readonly string Name;
-        public readonly ParameterInfo[] Arguments;
 
-        public FunctionDeclarationStatement(string name, ParameterInfo[] arguments) : base(NodeType.Declaration)
+        public readonly ArgumentInfo[] Arguments;
+
+        public readonly string ReturnTypeName;
+
+        public FunctionDeclarationStatement(FunctionDeclaration declaration) : base(StatementType.Declaration)
         {
-            Name = name;
-            Arguments = arguments;
+            Name = declaration.Name;
+            ReturnTypeName = declaration.ReturnTypeName;
+            Arguments = declaration.Arguments;
         }
 
+        protected FunctionDeclarationStatement(FunctionDeclaration declaration, StatementType nodeType) : base(nodeType)
+        {
+            Name = declaration.Name;
+            ReturnTypeName = declaration.ReturnTypeName;
+            Arguments = declaration.Arguments;
+        }
         public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
         {
             return visitor.VisitVoid();

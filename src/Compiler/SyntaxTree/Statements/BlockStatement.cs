@@ -1,17 +1,33 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using System.Collections.Generic;
+using FluidScript.Compiler.Emit;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class BlockStatement : Statement
     {
         //Todo Linq
-        public readonly Statement[] Statements;
-        public BlockStatement(Statement[] statements) : base(NodeType.Block)
+        public readonly IList<Statement> Statements;
+        public BlockStatement(Statement[] statements, string[] labels) : base(labels, StatementType.Block)
         {
-            Statements = statements;
+            Statements = new List<Statement>(statements);
         }
+
+        public override IEnumerable<Node> ChildNodes => Statements;
 
         public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
         {
             return visitor.VisitBlock(this);
+        }
+
+        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
+        {
+            var statementLocals = new StatementLocals() { NonDefaultSourceSpanBehavior = true };
+            GenerateStartOfStatement(generator, info, statementLocals);
+            foreach (var statement in Statements)
+            {
+                statement.GenerateCode(generator, info);
+            }
+            GenerateEndOfStatement(generator, info, statementLocals);
         }
     }
 }

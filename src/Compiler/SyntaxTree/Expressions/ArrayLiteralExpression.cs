@@ -9,7 +9,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public readonly string TypeName;
 
-        public ArrayLiteralExpression(Expression[] expressions, string typeName) : base(NodeType.Array)
+        public ArrayLiteralExpression(Expression[] expressions, string typeName) : base(ExpressionType.Array)
         {
             Expressions = expressions;
             TypeName = typeName;

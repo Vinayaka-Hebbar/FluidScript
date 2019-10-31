@@ -1,52 +1,37 @@
-﻿using System;
+﻿
+using FluidScript.Compiler.Emit;
 using FluidScript.Compiler.Reflection;
+using FluidScript.Compiler.SyntaxTree;
 
 namespace FluidScript.Compiler.Scopes
 {
-    public abstract class Scope : System.IDisposable
+    public abstract class Scope
     {
         public readonly Scope ParentScope;
-        private readonly SyntaxVisitor visitor;
-
-        protected Scope(SyntaxVisitor visitor)
+        public readonly bool CanDeclareVariables;
+        protected Scope(Scope scope, bool canDeclareVariables)
         {
-            ParentScope = visitor.Scope;
-            visitor.Scope = this;
+            ParentScope = scope;
+            CanDeclareVariables = canDeclareVariables;
         }
 
-        /// <summary>
-        /// Build the scoped
-        /// </summary>
-        public void Dispose()
+        internal virtual DeclaredType DeclareType(Declaration declaration, BindingFlags binding, TypeDefinitionStatement statement)
         {
-            Build();
-            visitor.Scope = ParentScope;
+            throw new System.InvalidOperationException("Cannot delcare type here");
+        }
+        internal virtual DeclaredMember DeclareMember(Declaration declaration, BindingFlags binding, MemberTypes memberType, Statement statement = null)
+        {
+            throw new System.InvalidOperationException("Cannot delcare member here");
         }
 
-
-        public virtual void DeclareVariable(LocalVariableInfo variable)
+        internal virtual DeclaredVariable DeclareVariable(string name, string typeName, Expression expression = null, VariableType variableType = VariableType.Local)
         {
-            throw new NotImplementedException(nameof(DecalredVariable));
+            throw new System.InvalidOperationException("Cannot declare variable here");
         }
 
-        protected virtual void Build()
+        internal virtual void GenerateDeclarations(ILGenerator generator, OptimizationInfo info)
         {
 
-        }
-
-        public virtual TypeInfo GetTypeInfo()
-        {
-            throw new NotImplementedException(nameof(GetTypeInfo));
-        }
-
-        public virtual ModuleInfo GetModuleInfo()
-        {
-            throw new NotImplementedException(nameof(GetModuleInfo));
-        }
-
-        public virtual AssemblyInfo GetAssemblyInfo()
-        {
-            throw new NotImplementedException(nameof(GetAssemblyInfo));
         }
     }
 }

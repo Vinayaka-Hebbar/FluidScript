@@ -1,36 +1,31 @@
-﻿using FluidScript.Compiler;
-using FluidScript.Compiler.Reflection;
-
-namespace FluidScript.Core
+﻿namespace FluidScript.Core
 {
     public class TypeGenerator
     {
-        public readonly TypeInfo Type;
+        public readonly ScriptEngine engine;
 
-        public TypeGenerator(TypeInfo type)
+        public TypeGenerator(ScriptEngine engine, IScriptSource source, Compiler.Scopes.Scope scope)
         {
-            Type = type;
+            this.engine = engine;
+            SyntaxVisitor = new Compiler.SyntaxVisitor(source, scope, engine.Settings);
         }
 
-        public MethodInfo GenerateMethod(string name, ParameterInfo[] parameters, TypeInfo returnType, string code)
-        {
-            var methodInfo = Type.DeclareMethod(name, parameters, returnType, System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.HideBySig);
-            var visitor = new SyntaxVisitor(code, new ParserSettings());
-            var statement = visitor.VisitStatement(CodeScope.Local);
-            var body = methodInfo.GetMethodBody();
-            body.Add(statement);
-            return methodInfo;
-        }
+        public readonly Compiler.SyntaxVisitor SyntaxVisitor;
 
-        public System.Type Generate()
+        public Compiler.SyntaxTree.TypeDeclaration Generate()
         {
-            if (Type.IsGenerated)
-                return Type.RuntimeType();
-            var module = Type.Module;
-            var assemblyBuilder = new AssemblyBuilder(module.Assembly, System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave);
-            var moduleBuilder = assemblyBuilder.DefineModule(module, false);
-            Type.Generate(moduleBuilder);
-            return Type.RuntimeType();
+            SyntaxVisitor.Reset();
+            SyntaxVisitor.MoveNext();
+            if(SyntaxVisitor.TokenType == Compiler.TokenType.Identifier)
+            {
+                var name = SyntaxVisitor.GetName();
+                if(name == "class")
+                {
+                    return SyntaxVisitor.VisitTypeDeclaration();
+
+                }
+            }
+            return null;
         }
     }
 }

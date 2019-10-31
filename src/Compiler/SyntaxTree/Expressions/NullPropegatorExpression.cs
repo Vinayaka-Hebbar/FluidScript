@@ -5,7 +5,7 @@
         public readonly Expression Left;
         public readonly Expression Right;
 
-        public NullPropegatorExpression(Expression left, Expression right) : base(NodeType.Invocation)
+        public NullPropegatorExpression(Expression left, Expression right) : base(ExpressionType.Invocation)
         {
             Left = left;
             Right = right;

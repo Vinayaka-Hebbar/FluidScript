@@ -4,7 +4,7 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public class AnonymousFunctionExpression : Expression, IFunctionExpression
     {
-        public AnonymousFunctionExpression(Node[] arguments, Statement body) : base(NodeType.Function)
+        public AnonymousFunctionExpression(Node[] arguments, Statement body) : base(ExpressionType.Function)
         {
             Arguments = arguments;
             Body = body;
@@ -19,9 +19,9 @@ namespace FluidScript.Compiler.SyntaxTree
             return new FunctionPartBuilder(Arguments.Length, Invoke, CodeScope.Local);
         }
 
-        private Object Invoke(NodeVisitor visitor, Node[] args)
+        private Object Invoke(INodeVisitor<Object> visitor, Node[] args)
         {
-            visitor = new NodeVisitor(visitor);
+            //visitor = new NodeVisitor(visitor);
             return visitor.VisitFunction(this, args.Select(arg => arg.Accept(visitor)).ToArray());
         }
 

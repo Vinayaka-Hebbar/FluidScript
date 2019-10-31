@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace FluidScript.Compiler.Emit
 {
@@ -13,24 +10,24 @@ namespace FluidScript.Compiler.Emit
                 generator.Box(type);
         }
 
-        public static void ToAny(ILGenerator generator, ObjectType type)
+        public static void ToAny(ILGenerator generator, PrimitiveType type)
         {
             if (TypeUtils.IsValueType(type))
                 generator.Box(type);
         }
 
-        internal static void ToString(ILGenerator generator, ObjectType fromType, string typeName)
+        internal static void ToString(ILGenerator generator, PrimitiveType fromType, string typeName)
         {
-            if (TypeUtils.CheckType(fromType, ObjectType.String))
+            if (TypeUtils.CheckType(fromType, PrimitiveType.String))
                 return;
             switch (fromType)
             {
-                case ObjectType.Null:
+                case PrimitiveType.Null:
                     //Push empty string if null
                     generator.Pop();
                     generator.LoadString(string.Empty);
                     break;
-                case ObjectType.Bool:
+                case PrimitiveType.Bool:
                     var elseClause = generator.CreateLabel();
                     var endOfIf = generator.CreateLabel();
                     generator.BranchIfFalse(elseClause);
@@ -40,16 +37,16 @@ namespace FluidScript.Compiler.Emit
                     generator.LoadString(bool.FalseString);
                     generator.DefineLabelPosition(endOfIf);
                     break;
-                case ObjectType.Byte:
-                case ObjectType.UByte:
-                case ObjectType.Int16:
-                case ObjectType.UInt16:
-                case ObjectType.Int32:
-                case ObjectType.UInt32:
-                case ObjectType.Int64:
-                case ObjectType.UInt64:
-                case ObjectType.Float:
-                case ObjectType.Double:
+                case PrimitiveType.Byte:
+                case PrimitiveType.UByte:
+                case PrimitiveType.Int16:
+                case PrimitiveType.UInt16:
+                case PrimitiveType.Int32:
+                case PrimitiveType.UInt32:
+                case PrimitiveType.Int64:
+                case PrimitiveType.UInt64:
+                case PrimitiveType.Float:
+                case PrimitiveType.Double:
                     if (TypeUtils.IsValueType(fromType))
                         generator.Box(fromType);
                     else
@@ -62,28 +59,42 @@ namespace FluidScript.Compiler.Emit
             }
         }
 
-        internal static void ToNumber(ILGenerator generator, ObjectType fromType)
+        internal static void ToPrimitive(ILGenerator generator, PrimitiveType fromType)
         {
             switch (fromType)
             {
-                case ObjectType.Byte:
-                case ObjectType.UByte:
-                case ObjectType.UInt16:
-                case ObjectType.Int16:
-                case ObjectType.Int32:
-                    generator.ConvertToInt32();
-                    break;
-                case ObjectType.UInt32:
-                    generator.ConvertToUnsignedInt32();
-                    break;
-                case ObjectType.Double:
+                case PrimitiveType.Double:
                     generator.ConvertToDouble();
                     break;
-                case ObjectType.Float:
+                case PrimitiveType.Float:
                     generator.ConvertToSingle();
                     break;
-                case ObjectType.String:
-                case ObjectType.Object:
+                case PrimitiveType.UInt64:
+                    generator.ConvertToUnsignedInt64();
+                    break;
+                case PrimitiveType.Int32:
+                    generator.ConvertToInt32();
+                    break;
+                case PrimitiveType.UInt32:
+                    generator.ConvertToUnsignedInt32();
+                    break;
+                case PrimitiveType.Char:
+                    generator.ConvertToChar();
+                    break;
+                case PrimitiveType.Int16:
+                    generator.ConvertToInt16();
+                    break;
+                case PrimitiveType.UInt16:
+                    generator.ConvertToUnsignedInt16();
+                    break;
+                case PrimitiveType.Byte:
+                    generator.ConvertToByte();
+                    break;
+                case PrimitiveType.UByte:
+                    generator.ConvertToUnsignedByte();
+                    break;
+                case PrimitiveType.String:
+                case PrimitiveType.Object:
                     throw new InvalidCastException("cannot convert to number");
                 default:
                     throw new System.InvalidOperationException("type not found");

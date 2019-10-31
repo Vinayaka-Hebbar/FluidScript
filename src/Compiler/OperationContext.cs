@@ -66,13 +66,6 @@ namespace FluidScript.Compiler
         {
             return Variables.ContainsKey(name);
         }
-        
-        public IDictionary<string, TSource> UserDefinedValues<TSource>()
-        {
-            return this
-                .Where(id => !id.Value.IsInbuilt() && id.Value.IsTypeOf<TSource>())
-                .ToDictionary(id => id.Key, id => (TSource)id.Value.Raw);
-        }
 
         public IEnumerator<KeyValuePair<string, Object>> GetEnumerator() => Constants.GetEnumerator();
 

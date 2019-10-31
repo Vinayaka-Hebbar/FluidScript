@@ -1,33 +1,62 @@
 ﻿using FluidScript.Compiler.Reflection;
+using FluidScript.Compiler.SyntaxTree;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace FluidScript.Compiler.Scopes
 {
-    public class ObjectScope : Scope
+    public class ObjectScope : Scope, System.IDisposable
     {
-        public readonly string Name;
-        public TypeInfo BaseType { get; set; }
-        public readonly System.Reflection.TypeAttributes Attributes;
-        private TypeInfo type;
-
-        public ObjectScope(SyntaxVisitor visitor, string name, TypeAttributes attributes) : base(visitor)
+        private List<DeclaredMember> localMembers;
+        private readonly SyntaxVisitor visitor;
+        public ObjectScope(SyntaxVisitor visitor) : base(visitor.Scope, false)
         {
-            this.Name = name;
-            Attributes = attributes;
+            this.visitor = visitor;
+            visitor.Scope = this;
+        }
+        public ObjectScope(Scope parentScope) : base(parentScope, false)
+        {
         }
 
-        public override TypeInfo GetTypeInfo()
+        internal override DeclaredMember DeclareMember(Declaration declaration, Reflection.BindingFlags binding, Reflection.MemberTypes memberType, Statement statement = null)
         {
-            if(type == null)
+            if (localMembers == null)
+                localMembers = new List<DeclaredMember>();
+            DeclaredMember member = localMembers.Find((obj) => obj.Name.Equals(declaration.Name));
+            if (member == null)
             {
-                type = new TypeInfo(Name, Attributes, GetModuleInfo(), BaseType);
+                switch (memberType)
+                {
+                    case Reflection.MemberTypes.Field:
+                        member = new DeclaredField(declaration, localMembers.Count, binding);
+                        break;
+                    case Reflection.MemberTypes.Function:
+                        member = new DeclaredMethod(declaration, localMembers.Count, binding);
+                        break;
+                    case Reflection.MemberTypes.Property:
+                        member = new DeclaredProperty(declaration, localMembers.Count, binding);
+                        break;
+                }
+                localMembers.Add(member);
             }
-            return type;
+            member.ValueAtTop = statement;
+            return member;
         }
 
-        protected override void Build()
+        internal IEnumerable<DeclaredMember> Members
         {
-            throw new System.NotImplementedException();
+            get
+            {
+                if (localMembers == null)
+                    return System.Linq.Enumerable.Empty<DeclaredMember>();
+                return localMembers;
+            }
+        }
+        public void Dispose()
+        {
+            if (visitor != null)
+                visitor.Scope = ParentScope;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace FluidScript.Compiler
         {
             ScriptEngine expression = new ScriptEngine();
             var exp = expression.ParseExpression(text);
-            var context = EvaluateMethod(new NodeVisitor(expression.Context), exp.Expression, NodeType.Unknown);
+            var context = EvaluateMethod(new NodeVisitor(expression.Context), exp.Statement, ExpressionType.Unknown);
             if (context.CanInvoke)
             {
                 return null;
@@ -18,20 +18,20 @@ namespace FluidScript.Compiler
             return Object.Null;
         }
 
-        private IInvocationContext EvaluateMethod(NodeVisitor visitor, Expression target, NodeType parentKind)
+        private IInvocationContext EvaluateMethod(INodeVisitor<Object> visitor, Expression target, ExpressionType parentKind)
         {
-            NodeType opCode = target.NodeType;
+            ExpressionType opCode = target.NodeType;
             switch (opCode)
             {
-                case NodeType.PropertyAccess:
+                case ExpressionType.PropertyAccess:
                     var exp = (QualifiedExpression)target;
                     var left = EvaluateMethod(visitor, exp.Target, opCode);
                     return new PropertyInvocation(exp.Identifier.Id, left, exp.Identifier.NodeType, parentKind);
-                case NodeType.QualifiedNamespace:
-                case NodeType.Identifier:
+                case ExpressionType.QualifiedNamespace:
+                case ExpressionType.Identifier:
                     return new TypeNameContext(target.ToString());
-                case NodeType.Invocation:
-                case NodeType.New:
+                case ExpressionType.Invocation:
+                case ExpressionType.New:
                     var invocation = (InvocationExpression)target;
                     var args = invocation.Arguments.Select(arg => arg.Accept(visitor)).ToArray();
                     var value = EvaluateMethod(visitor, invocation.Target, opCode);

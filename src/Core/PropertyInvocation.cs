@@ -8,10 +8,10 @@ namespace FluidScript.Core
     {
         public readonly string Name;
         public readonly IInvocationContext Context;
-        public readonly NodeType OpCode;
-        public readonly NodeType ParentKind;
+        public readonly ExpressionType OpCode;
+        public readonly ExpressionType ParentKind;
 
-        public PropertyInvocation(string name, IInvocationContext context, NodeType opCode, NodeType parentKind)
+        public PropertyInvocation(string name, IInvocationContext context, ExpressionType opCode, ExpressionType parentKind)
         {
             Name = name;
             Context = context;
@@ -23,7 +23,7 @@ namespace FluidScript.Core
 
         public Object Invoke(Object args)
         {
-            if (ParentKind == NodeType.Invocation)
+            if (ParentKind == ExpressionType.Invocation)
             {
                 var argValues = args.ToArray();
                 if (Context.CanInvoke && Context is IMethodInvocation invocation)

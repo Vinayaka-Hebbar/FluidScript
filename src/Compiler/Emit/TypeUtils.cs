@@ -1,71 +1,99 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FluidScript.Compiler.Emit
 {
     public static class TypeUtils
     {
-        public static Type ToType(ObjectType type)
+
+        internal static readonly IDictionary<string, Primitive> PrimitiveNames;
+        internal static readonly IDictionary<System.Type, PrimitiveType> PrimitiveTypes;
+
+        /// <summary>
+        /// Must be primitive
+        /// </summary>
+        /// <param name="typeName"></param>
+        /// <returns></returns>
+        public static Primitive From(string typeName)
         {
-            if (type == ObjectType.Null)
-                return typeof(object);
-            if (type == ObjectType.Bool)
-                return typeof(bool);
-            if (type == ObjectType.String)
-                return typeof(string);
-            if (type == ObjectType.Char)
-                return typeof(char);
-            bool isNumber = (type & ObjectType.Number) == ObjectType.Number;
-            if (isNumber)
+            if (PrimitiveNames.ContainsKey(typeName))
+                return PrimitiveNames[typeName];
+            return Primitive.Any;
+        }
+
+        static TypeUtils()
+        {
+            PrimitiveNames = new Dictionary<string, Primitive>
             {
-                //Unset ObjectType.Number
-                switch (type & (~ObjectType.Number))
-                {
-                    case ObjectType.Byte:
-                        return typeof(sbyte);
-                    case ObjectType.UByte:
-                        return typeof(byte);
-                    case ObjectType.Int16:
-                        return typeof(short);
-                    case ObjectType.UInt16:
-                        return typeof(ushort);
-                    case ObjectType.Int32:
-                        return typeof(int);
-                    case ObjectType.UInt32:
-                        return typeof(uint);
-                    case ObjectType.Int64:
-                        return typeof(long);
-                    case ObjectType.UInt64:
-                        return typeof(ulong);
-                    case ObjectType.Float:
-                        return typeof(float);
-                    case ObjectType.Double:
-                        return typeof(double);
-                    case ObjectType.Bool:
-                        return typeof(bool);
-                }
-            }
-            if (type == ObjectType.Function)
-                return typeof(Delegate);
+                {"byte", new Primitive(typeof(byte), PrimitiveType.UByte) },
+                {"sbyte", new Primitive(typeof(sbyte), PrimitiveType.Byte) },
+                {"short", new Primitive(typeof(short), PrimitiveType.Int16) },
+                {"ushort", new Primitive(typeof(ushort), PrimitiveType.UInt16) },
+                {"int",new Primitive ( typeof(int) , PrimitiveType.Int32)},
+                {"uint",new Primitive(typeof(uint), PrimitiveType.UInt32)},
+                {"long", new Primitive(typeof(long) , PrimitiveType.Int64)},
+                {"ulong", new Primitive(typeof(ulong), PrimitiveType.UInt64) },
+                {"float", new Primitive(typeof(float), PrimitiveType.Float) },
+                {"double",new Primitive( typeof(double), PrimitiveType.Double) },
+                {"bool", new Primitive(typeof(bool) , PrimitiveType.Bool)},
+                {"string", new Primitive(typeof(string), PrimitiveType.String) },
+                {"char", new Primitive(typeof(char), PrimitiveType.Char) },
+                {"object", new Primitive(typeof(object), PrimitiveType.Object) }
+            };
+            PrimitiveTypes = PrimitiveNames
+                .Select(item => item.Value)
+                .ToDictionary(element => element.Type, element => element.Enum);
+        }
+
+        internal static Type GetType(string typeName)
+        {
+            if (typeName == null)
+                return typeof(object);
+            if (PrimitiveNames.ContainsKey(typeName))
+                return PrimitiveNames[typeName].Type;
+            return System.Type.GetType(typeName);
+        }
+
+        internal static Type GetPrimitive(string typeName)
+        {
+            return PrimitiveNames[typeName].Type;
+        }
+
+        internal static void ConvertToPrimitive(ILGenerator generator, Type targetType)
+        {
+            var primitive = PrimitiveTypes[targetType];
+            EmitConvertion.ToPrimitive(generator, primitive);
+        }
+
+        public static Type ToType(PrimitiveType type)
+        {
+            var primitive = PrimitiveNames.Values.FirstOrDefault(item => item.Enum == type);
+            if (primitive.Type != null)
+                return primitive.Type;
             return typeof(object);
         }
 
-        public static bool CheckType(ObjectType leftType, ObjectType expected)
+        internal static bool IsPrimitiveType(string typeName)
+        {
+            return PrimitiveNames.ContainsKey(typeName);
+        }
+
+        public static bool CheckType(PrimitiveType leftType, PrimitiveType expected)
         {
             return (leftType & expected) == expected;
         }
 
-        public static bool IsValueType(ObjectType type)
+        public static bool IsValueType(PrimitiveType type)
         {
             switch (type)
             {
-                case ObjectType.Object:
+                case PrimitiveType.Object:
                     return false;
-                case ObjectType.Null:
+                case PrimitiveType.Null:
                     return false;
-                case ObjectType.Array:
-                case ObjectType.Function:
-                case ObjectType.Inbuilt:
-                case ObjectType.Void:
+                case PrimitiveType.Array:
+                case PrimitiveType.Any:
                     return false;
                 default:
                     return true;

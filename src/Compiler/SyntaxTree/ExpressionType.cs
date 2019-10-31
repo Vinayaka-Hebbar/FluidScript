@@ -1,6 +1,6 @@
 ﻿namespace FluidScript.Compiler.SyntaxTree
 {
-    public enum NodeType
+    public enum ExpressionType
     {
         Unknown = 0,
         Literal = 1,
@@ -14,10 +14,17 @@
         Constant = 9,
         Identifier = 10,
         Parenthesized = 11,
+        /// <summary>
+        /// method call
+        /// </summary>
         Invocation = 12,
         AnonymousMethod = 13,
+        //either 0->x or x = 0
         Declaration = 14,
         //Known types
+        /// <summary>
+        /// array block initailization
+        /// </summary>
         Block = 15,
         Function = 16,
         Argument = 17,
@@ -32,12 +39,6 @@
         Out = 33,
         In = 34,
         This = 35,
-        Expression = 36,
-        Return = 37,
-        Throw = 38,
-        If = 39,
-        While = 40,
-        For = 41,
 
         #region Math
         Plus = 66,

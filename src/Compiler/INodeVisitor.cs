@@ -10,11 +10,10 @@ namespace FluidScript.Compiler
         TReturn VisitFunction(IFunctionExpression function, Object[] args);
         TReturn VisitInitializer(InitializerExpression initializerExpression);
         TReturn VisitReturnOrThrow(ReturnOrThrowStatement returnOrThrowStatement);
-        TReturn VisitArgument(ArgumentExpression argumentExpression);
         TReturn VisitVoid();
         TReturn VisitIfElse(IfStatement statement);
         TReturn VisitInvocation(InvocationExpression expression);
-        TReturn VisitIdentifier(IdentifierExpression identifierExpression);
+        TReturn VisitIdentifier(NameExpression identifierExpression);
         TReturn VisitVarDeclaration(VariableDeclarationExpression variableDeclarationExpression);
         TReturn VisitExpressions(ArrayExpression arrayExpression);
         TReturn VisitNullPropagator(NullPropegatorExpression expression);

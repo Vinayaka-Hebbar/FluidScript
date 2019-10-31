@@ -4,7 +4,7 @@
     {
         public readonly Expression Expression;
 
-        public ExpressionStatement(Expression expression, NodeType opCode) : base(opCode)
+        public ExpressionStatement(Expression expression, StatementType nodeType) : base(nodeType)
         {
             Expression = expression;
         }

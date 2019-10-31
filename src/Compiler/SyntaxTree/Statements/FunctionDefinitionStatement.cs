@@ -1,30 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class FunctionDefinitionStatement : Statement, IFunctionExpression
+    public class FunctionDefinitionStatement : FunctionDeclarationStatement
     {
-        public readonly string Name;
+        public readonly Scopes.Scope Scope;
 
-        public Node[] Arguments { get; }
-        public readonly CodeScope Scope;
+        internal readonly Reflection.DeclaredMember Member;
 
-        public Statement Body { get; }
+        public BlockStatement Body { get; }
 
-        public FunctionDefinitionStatement(FunctionDeclarationStatement declaration, BlockStatement body) : base(NodeType.Function)
+        internal FunctionDefinitionStatement(FunctionDeclaration declaration, BlockStatement body, Scopes.Scope scope, Reflection.DeclaredMember member) : base(declaration, StatementType.Function)
         {
-            Name = declaration.Name;
-            Arguments = declaration.Arguments;
             Body = body;
             Scope = scope;
-        }
-
-        public FunctionDefinitionStatement(string name, Node[] arguments, BlockStatement body) : base(NodeType.Function)
-        {
-            Name = name;
-            Arguments = arguments;
-            Body = body;
+            Member = member;
         }
 
         public override bool Equals(object obj)
@@ -37,15 +29,13 @@ namespace FluidScript.Compiler.SyntaxTree
             return Name;
         }
 
-        public FunctionPartBuilder GetPartBuilder()
+        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
         {
-            return new FunctionPartBuilder(Arguments.Length, Invoke, Scope);
-        }
-
-        private Object Invoke(NodeVisitor visitor, Node[] args)
-        {
-            visitor = new NodeVisitor(visitor);
-            return visitor.VisitFunction(this, args.Select(arg => arg.Accept(visitor)).ToArray());
+            Body.GenerateCode(generator, info);
+            if (info.ReturnTarget != null)
+                generator.DefineLabelPosition(info.ReturnTarget);
+            if (info.ReturnVariable != null)
+                generator.LoadVariable(info.ReturnVariable);
         }
 
         public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
@@ -57,7 +47,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var hashCode = 1062545247;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
-            hashCode = hashCode * -1521134295 + EqualityComparer<Node[]>.Default.GetHashCode(Arguments);
+            hashCode = hashCode * -1521134295 + EqualityComparer<ArgumentInfo[]>.Default.GetHashCode(Arguments);
             hashCode = hashCode * -1521134295 + EqualityComparer<Statement>.Default.GetHashCode(Body);
             hashCode = hashCode * -1521134295 + NodeType.GetHashCode();
             return hashCode;

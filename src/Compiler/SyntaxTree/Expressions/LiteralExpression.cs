@@ -1,27 +1,42 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using System;
+using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
     public class LiteralExpression : Expression
     {
-        public readonly Object Value;
+        public readonly object Value;
 
-        public LiteralExpression(double value) : base(NodeType.Numeric)
-        {
-            Value = new Object(value);
-        }
-
-        public LiteralExpression(string value) : base(NodeType.String)
-        {
-            Value = new Object(value);
-        }
-
-        public LiteralExpression(Object value) : base(NodeType.Literal)
+        public LiteralExpression(double value) : base(ExpressionType.Numeric)
         {
             Value = value;
+            ResultType = PrimitiveType.Double;
         }
 
-        public override ObjectType ResultType => Value.Type;
+        public LiteralExpression(string value) : base(ExpressionType.String)
+        {
+            Value = value;
+            ResultType = PrimitiveType.String;
+        }
+
+        public LiteralExpression(object value) : base(ExpressionType.Literal)
+        {
+            Value = value;
+            //must be primitive
+            ResultType = TypeUtils.PrimitiveTypes[value.GetType()];
+        }
+
+        public override Type Type
+        {
+            get
+            {
+                if (Value == null)
+                    return null;
+                return Value.GetType();
+            }
+        }
+
+        public override PrimitiveType ResultType { get; }
 
         public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
         {
@@ -30,64 +45,63 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
         {
-            var type = Value.Type;
-            if (type == ObjectType.Null)
+            var type = ResultType;
+            if (type == PrimitiveType.Null)
                 generator.LoadNull();
-            if (type == ObjectType.Bool)
-                generator.LoadBool(Value.ToBool());
-            if (type == ObjectType.String)
+            if (type == PrimitiveType.Bool)
+                generator.LoadBool((bool)Value);
+            if (type == PrimitiveType.String)
                 generator.LoadString(Value.ToString());
-            if (type == ObjectType.Char)
-                generator.LoadChar(Value.ToChar());
-            bool isNumber = (type & ObjectType.Number) == ObjectType.Number;
+            if (type == PrimitiveType.Char)
+                generator.LoadChar((char)Value);
+            bool isNumber = (type & PrimitiveType.Number) == PrimitiveType.Number;
             if (isNumber)
             {
-                var value = Value.Raw;
                 //Unset ObjectType.Number
-                switch (type & (~ObjectType.Number))
+                switch (type)
                 {
-                    case ObjectType.Byte:
-                        generator.LoadByte((sbyte)value);
+                    case PrimitiveType.Byte:
+                        generator.LoadByte((sbyte)Value);
                         break;
-                    case ObjectType.UByte:
-                        generator.LoadByte((byte)value);
+                    case PrimitiveType.UByte:
+                        generator.LoadByte((byte)Value);
                         break;
-                    case ObjectType.Int16:
-                        generator.LoadInt16((short)value);
+                    case PrimitiveType.Int16:
+                        generator.LoadInt16((short)Value);
                         break;
-                    case ObjectType.UInt16:
-                        generator.LoadInt16((ushort)value);
+                    case PrimitiveType.UInt16:
+                        generator.LoadInt16((ushort)Value);
                         break;
-                    case ObjectType.Int32:
-                        generator.LoadInt32((int)value);
+                    case PrimitiveType.Int32:
+                        generator.LoadInt32((int)Value);
                         break;
-                    case ObjectType.UInt32:
-                        generator.LoadInt32((uint)value);
+                    case PrimitiveType.UInt32:
+                        generator.LoadInt32((uint)Value);
                         break;
-                    case ObjectType.Int64:
-                        generator.LoadInt64((long)value);
+                    case PrimitiveType.Int64:
+                        generator.LoadInt64((long)Value);
                         break;
-                    case ObjectType.UInt64:
-                        generator.LoadInt64((ulong)value);
+                    case PrimitiveType.UInt64:
+                        generator.LoadInt64((ulong)Value);
                         break;
-                    case ObjectType.Float:
-                        generator.LoadSingle((float)value);
+                    case PrimitiveType.Float:
+                        generator.LoadSingle((float)Value);
                         break;
-                    case ObjectType.Double:
-                        generator.LoadDouble((double)value);
+                    case PrimitiveType.Double:
+                        generator.LoadDouble((double)Value);
                         break;
                 }
             }
         }
 
-        public override Object GetValue()
+        public override object GetValue()
         {
             return Value;
         }
 
         public override string ToString()
         {
-            return Value.GetTypeName();
+            return Value.ToString();
         }
     }
 }

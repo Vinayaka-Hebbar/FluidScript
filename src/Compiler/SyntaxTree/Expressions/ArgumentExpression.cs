@@ -6,7 +6,7 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly Object Value;
 
-        public ArgumentExpression(Object value) : base(NodeType.Argument)
+        public ArgumentExpression(Object value) 
         {
             Value = value;
         }

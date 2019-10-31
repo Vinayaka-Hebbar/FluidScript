@@ -17,7 +17,7 @@ namespace FluidScript.Compiler
         IFunction Function { get; }
         int Count { get; }
         CodeScope Scope { get; }
-        TResult Invoke(NodeVisitor context, TArg[] args);
+        TResult Invoke(INodeVisitor<Object> context, TArg[] args);
     }
 
     public interface IFunction : IFunction<Node, Object>, ICollection<IFunctionPart<Node, Object>>
@@ -29,10 +29,10 @@ namespace FluidScript.Compiler
     public struct FunctionPartBuilder
     {
         public readonly int Count;
-        public readonly Func<NodeVisitor, Node[], Object> Invoke;
+        public readonly Func<INodeVisitor<Object>, Node[], Object> Invoke;
         public readonly CodeScope PartType;
 
-        public FunctionPartBuilder(int count, Func<NodeVisitor, Node[], Object> invoke, CodeScope partType = CodeScope.Any)
+        public FunctionPartBuilder(int count, Func<INodeVisitor<Object>, Node[], Object> invoke, CodeScope partType = CodeScope.Any)
         {
             PartType = partType;
             Count = count;
@@ -42,8 +42,8 @@ namespace FluidScript.Compiler
 
     public sealed class FunctionPart : IFunctionPart<Node, Object>
     {
-        private readonly Func<NodeVisitor, Node[], Object> _onInvoke;
-        public FunctionPart(IFunction function, int count, Func<NodeVisitor, Node[], Object> onInvoke)
+        private readonly Func<INodeVisitor<Object>, Node[], Object> _onInvoke;
+        public FunctionPart(IFunction function, int count, Func<INodeVisitor<Object>, Node[], Object> onInvoke)
         {
             Function = function;
             Count = count;
@@ -63,7 +63,7 @@ namespace FluidScript.Compiler
 
         public CodeScope Scope { get; } = CodeScope.Any;
 
-        public Object Invoke(NodeVisitor context, Node[] args)
+        public Object Invoke(INodeVisitor<Object> context, Node[] args)
         {
             return _onInvoke(context, args);
         }
@@ -100,7 +100,7 @@ namespace FluidScript.Compiler
             Parts = new List<IFunctionPart<Node, Object>>(function);
         }
 
-        public Function(string name, int count, Func<NodeVisitor, Node[], Object> onInvoke)
+        public Function(string name, int count, Func<INodeVisitor<Object>, Node[], Object> onInvoke)
         {
             Name = name;
             Parts = new List<IFunctionPart<Node, Object>>
@@ -168,7 +168,7 @@ namespace FluidScript.Compiler
             Parts.Add(new FunctionPart(this, builder));
         }
 
-        private static Object ThrowNotFound(NodeVisitor arg1, Node[] arg2)
+        private static Object ThrowNotFound(INodeVisitor<Object> arg1, Node[] arg2)
         {
             throw new Exception("method not found");
         }

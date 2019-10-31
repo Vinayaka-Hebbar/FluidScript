@@ -6,9 +6,9 @@ namespace FluidScript.Core
     public struct ClassContext : IInvocationContext
     {
         public readonly IOperationContext Context;
-        public readonly NodeType ParentKind;
+        public readonly ExpressionType ParentKind;
 
-        public ClassContext(IOperationContext context, NodeType parentKind)
+        public ClassContext(IOperationContext context, ExpressionType parentKind)
         {
             Context = context;
             ParentKind = parentKind;

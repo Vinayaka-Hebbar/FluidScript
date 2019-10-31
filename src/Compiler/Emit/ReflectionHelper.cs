@@ -8,15 +8,15 @@ namespace FluidScript.Compiler.Emit
     {
         private const string Separator = ", ";
         #region Object
-        internal static MethodInfo ObjectEquals_Two_Object;
-        internal static MethodInfo Object_ToString;
-        internal static MethodInfo StringConcat_Two_String;
-        internal static MethodInfo StringConcat_Two_Object;
+        internal static readonly MethodInfo ObjectEquals_Two_Object;
+        internal static readonly MethodInfo Object_ToString;
+        internal static readonly MethodInfo StringConcat_Two_String;
+        internal static readonly MethodInfo StringConcat_Two_Object;
         #endregion
 
         static ReflectionHelpers()
         {
-            ObjectEquals_Two_Object = GetInstanceMethod(typeof(object), "Equals", typeof(object), typeof(object));
+            ObjectEquals_Two_Object = GetInstanceMethod(typeof(object), "Equals", typeof(object));
             Object_ToString = GetInstanceMethod(typeof(object), "ToString");
             StringConcat_Two_String = GetStaticMethod(typeof(string), "Concat", typeof(string), typeof(string));
             StringConcat_Two_Object = GetStaticMethod(typeof(string), "Concat", typeof(object), typeof(object));

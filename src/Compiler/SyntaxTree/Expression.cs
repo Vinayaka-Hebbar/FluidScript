@@ -5,15 +5,20 @@ namespace FluidScript.Compiler.SyntaxTree
     public abstract class Expression : Node
     {
         internal static readonly Expression Empty = new EmptyExpression();
+        protected System.Type ResolvedType = null;
 
-        public Expression(NodeType opCode) : base(opCode)
+        public Expression(ExpressionType nodeType)
         {
-            
+            NodeType = nodeType;
         }
+        public ExpressionType NodeType { get; }
 
-        public virtual ObjectType ResultType => ObjectType.Object;
+        public string TypeName { get; }
 
-        public override Object GetValue()
+        public virtual System.Type Type => ResolvedType;
+        public virtual PrimitiveType ResultType { get; } = PrimitiveType.Any;
+
+        public override object GetValue()
         {
             return null;
         }
@@ -26,13 +31,13 @@ namespace FluidScript.Compiler.SyntaxTree
 
     internal sealed class EmptyExpression : Expression
     {
-        public EmptyExpression() : base(NodeType.Unknown)
+        public EmptyExpression() : base(ExpressionType.Unknown)
         {
         }
 
         public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
         {
-            return default(TReturn);
+            return default;
         }
 
         public override void GenerateCode(ILGenerator generator, OptimizationInfo info)

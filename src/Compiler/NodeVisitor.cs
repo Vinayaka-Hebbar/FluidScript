@@ -6,26 +6,20 @@ namespace FluidScript.Compiler
 {
     public class NodeVisitor : INodeVisitor<Object>
     {
-        public readonly IOperationContext Context;
+        public readonly Scopes.Scope Context;
         public readonly NodeVisitor Root;
 
-        public NodeVisitor(IOperationContext context)
+        public NodeVisitor(Scopes.Scope scope)
         {
-            Context = context;
+            Context = scope;
             Root = this;
-        }
-
-        public NodeVisitor(NodeVisitor other)
-        {
-            Context = new OperationContextWrapper(other.Context);
-            Root = other.Root;
         }
 
         public Object VisitUnaryOperator(UnaryOperatorExpression unary)
         {
             var opCode = unary.NodeType;
             var operand = unary.Operand;
-            if (opCode == NodeType.Parenthesized)
+            if (opCode == ExpressionType.Parenthesized)
                 return operand.Accept(this);
             var result = Object.Zero;
             if (operand is ValueAccessExpression expression)
@@ -34,35 +28,34 @@ namespace FluidScript.Compiler
                 Object value = result;
                 switch (opCode)
                 {
-                    case NodeType.PostfixPlusPlus:
+                    case ExpressionType.PostfixPlusPlus:
                         value = value + 1;
                         break;
-                    case NodeType.PostfixMinusMinus:
+                    case ExpressionType.PostfixMinusMinus:
                         value = value - 1;
                         break;
-                    case NodeType.PrefixPlusPlus:
+                    case ExpressionType.PrefixPlusPlus:
                         result = value = value + 1;
                         break;
-                    case NodeType.PrefixMinusMinus:
+                    case ExpressionType.PrefixMinusMinus:
                         result = value = value - 1;
                         break;
-                    case NodeType.Bang:
+                    case ExpressionType.Bang:
                         result = !value;
                         break;
                 }
-
-                Context.Variables[expression.Id] = value;
+                Context.G[expression.Name] = value;
                 return result;
             }
             switch (opCode)
             {
-                case NodeType.Bang:
+                case ExpressionType.Bang:
                     return !operand.Accept(this);
-                case NodeType.Plus:
+                case ExpressionType.Plus:
                     return +operand.Accept(this);
-                case NodeType.Minus:
+                case ExpressionType.Minus:
                     return -operand.Accept(this);
-                case NodeType.Out:
+                case ExpressionType.Out:
                     return operand.Accept(this);
             }
             return result;
@@ -78,10 +71,10 @@ namespace FluidScript.Compiler
         {
             foreach (var statement in block.Statements)
             {
-                if (statement.NodeType == NodeType.Return)
+                if (statement.NodeType == StatementType.Return)
                     return statement.Accept(this);
                 var result = statement.Accept(this);
-                if ((result.Type & ObjectType.Void) == ObjectType.Void)
+                if ((result.Type & ObjectType.Any) == ObjectType.Any)
                 {
                     return result;
                 }
@@ -115,7 +108,7 @@ namespace FluidScript.Compiler
         {
             var target = expression.Target;
             var args = expression.Arguments;
-            if (target.NodeType == NodeType.Identifier)
+            if (target.NodeType == ExpressionType.Identifier)
             {
                 if (target is IdentifierExpression identifier)
                 {
@@ -130,11 +123,11 @@ namespace FluidScript.Compiler
         {
             var root = Root;
             var target = expression.Target;
-            if (target.NodeType == NodeType.This)
+            if (target.NodeType == ExpressionType.This)
             {
                 switch (expression.NodeType)
                 {
-                    case NodeType.Identifier:
+                    case ExpressionType.Identifier:
                         return root.Context.GetFunctionPart(expression.Identifier.Id, args.Length, CodeScope.Class).Invoke(this, args);
                 }
             }
@@ -147,12 +140,12 @@ namespace FluidScript.Compiler
             var statements = expression.Statements;
             foreach (var statement in statements)
             {
-                if (statement.NodeType == NodeType.Return)
+                if (statement.NodeType == ExpressionType.Return)
                 {
                     return statement.Accept(visitor);
                 }
                 var result = statement.Accept(visitor);
-                if (result.Type != ObjectType.Void)
+                if (result.Type != ObjectType.Any)
                     return result;
             }
             return Object.Void;
@@ -162,7 +155,7 @@ namespace FluidScript.Compiler
         {
             var left = expression.Left;
             var right = expression.Right;
-            if (left.NodeType == NodeType.Variable || left.NodeType == NodeType.Constant)
+            if (left.NodeType == ExpressionType.Variable || left.NodeType == ExpressionType.Constant)
             {
                 var identifier = (ValueAccessExpression)left;
                 var value = identifier.Accept(this);
@@ -171,11 +164,11 @@ namespace FluidScript.Compiler
                 var result = right.Accept(this);
                 switch (left.NodeType)
                 {
-                    case NodeType.Variable:
-                        Context.Variables[identifier.Id] = result;
+                    case ExpressionType.Variable:
+                        Context.Variables[identifier.Name] = result;
                         break;
-                    case NodeType.Constant:
-                        Context.Constants.Add(identifier.Id, result);
+                    case ExpressionType.Constant:
+                        Context.Constants.Add(identifier.Name, result);
                         break;
                 }
                 return result;
@@ -192,7 +185,7 @@ namespace FluidScript.Compiler
                 Object arg = args[i];
                 Context[arguments[i].ToString()] = arg;
             }
-            var outExpression = arguments.FirstOrDefault(arg => arg.NodeType == NodeType.Out);
+            var outExpression = arguments.FirstOrDefault(arg => arg.NodeType == ExpressionType.Out);
 
             if (outExpression != null)
             {
@@ -209,43 +202,43 @@ namespace FluidScript.Compiler
             var right = expression.Right;
             switch (expression.NodeType)
             {
-                case NodeType.Plus:
+                case ExpressionType.Plus:
                     return left.Accept(this) + right.Accept(this);
-                case NodeType.Minus:
+                case ExpressionType.Minus:
                     return left.Accept(this) - right.Accept(this);
-                case NodeType.Multiply:
+                case ExpressionType.Multiply:
                     return left.Accept(this) * right.Accept(this);
-                case NodeType.Divide:
+                case ExpressionType.Divide:
                     return left.Accept(this) / right.Accept(this);
-                case NodeType.Percent:
+                case ExpressionType.Percent:
                     return left.Accept(this) % right.Accept(this);
-                case NodeType.Circumflex:
+                case ExpressionType.Circumflex:
                     return left.Accept(this) ^ right.Accept(this);
-                case NodeType.EqualEqual:
+                case ExpressionType.EqualEqual:
                     return left.Accept(this) == right.Accept(this);
-                case NodeType.BangEqual:
+                case ExpressionType.BangEqual:
                     return left.Accept(this) != right.Accept(this);
-                case NodeType.Less:
+                case ExpressionType.Less:
                     return left.Accept(this) < right.Accept(this);
-                case NodeType.LessEqual:
+                case ExpressionType.LessEqual:
                     return left.Accept(this) <= right.Accept(this);
-                case NodeType.LessLess:
+                case ExpressionType.LessLess:
                     return left.Accept(this) << right.Accept(this).ToInt32();
-                case NodeType.Greater:
+                case ExpressionType.Greater:
                     return left.Accept(this) > right.Accept(this);
-                case NodeType.GreaterEqual:
+                case ExpressionType.GreaterEqual:
                     return left.Accept(this) >= right.Accept(this);
-                case NodeType.GreaterGreater:
+                case ExpressionType.GreaterGreater:
                     return left.Accept(this) >> (int)right.Accept(this);
-                case NodeType.And:
+                case ExpressionType.And:
                     return left.Accept(this) & right.Accept(this);
-                case NodeType.AndAnd:
+                case ExpressionType.AndAnd:
                     return new Object(left.Accept(this).ToBool() && right.Accept(this).ToBool());
-                case NodeType.Or:
+                case ExpressionType.Or:
                     return left.Accept(this) | right.Accept(this);
-                case NodeType.OrOr:
+                case ExpressionType.OrOr:
                     return new Object(left.Accept(this).ToBool() || right.Accept(this).ToBool());
-                case NodeType.Equal:
+                case ExpressionType.Equal:
                     if (left is IdentifierExpression identifier)
                     {
                         var value = right.Accept(this);
@@ -253,7 +246,7 @@ namespace FluidScript.Compiler
                         return value;
                     }
                     return Object.Zero;
-                case NodeType.Comma:
+                case ExpressionType.Comma:
                     left.Accept(this);
                     return right.Accept(this);
                 default:
@@ -264,7 +257,7 @@ namespace FluidScript.Compiler
         public Object VisitValueAccess(ValueAccessExpression expression)
         {
             var context = Context;
-            var id = expression.Id;
+            var id = expression.Name;
             if (expression.CanAccess(context, id))
                 return expression.Access(context, id);
             return Object.NaN;
@@ -288,7 +281,7 @@ namespace FluidScript.Compiler
 
         public Object VisitVarDeclaration(VariableDeclarationExpression declaration)
         {
-            var id = declaration.Id;
+            var id = declaration.Name;
             Context[id] = Object.Null;
             return Object.Void;
         }
@@ -302,12 +295,12 @@ namespace FluidScript.Compiler
         {
             var root = Root;
             var Target = expression.Target;
-            if (Target.NodeType == NodeType.This)
+            if (Target.NodeType == ExpressionType.This)
             {
                 IdentifierExpression identifier = expression.Identifier;
                 switch (identifier.NodeType)
                 {
-                    case NodeType.Variable:
+                    case ExpressionType.Variable:
                         return root.Context[identifier.Id];
                 }
             }
@@ -317,11 +310,11 @@ namespace FluidScript.Compiler
         public Object VisitInitializer(InitializerExpression initializerExpression)
         {
             var value = Object.Void;
-            var id = initializerExpression.Id;
+            var id = initializerExpression.Name;
             var Target = initializerExpression.Target;
             switch (Target.NodeType)
             {
-                case NodeType.Function:
+                case ExpressionType.Function:
                     Context.Add(id, (Target as IFunctionExpression).GetPartBuilder());
                     break;
                 default:
@@ -352,9 +345,9 @@ namespace FluidScript.Compiler
         public Object VisitReturnOrThrow(ReturnOrThrowStatement statement)
         {
             var expression = statement.Expression;
-            if (statement.NodeType == NodeType.Return)
+            if (statement.NodeType == ExpressionType.Return)
             {
-                return new Object(expression.Accept(this), ObjectType.Void);
+                return new Object(expression.Accept(this), ObjectType.Any);
             }
             throw new Exception(expression.Accept(this).ToString());
         }

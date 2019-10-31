@@ -8,7 +8,7 @@
 
         public readonly Expression Third;
 
-        public TernaryOperatorExpression(Expression first, Expression second, Expression third) : base(NodeType.Question)
+        public TernaryOperatorExpression(Expression first, Expression second, Expression third) : base(ExpressionType.Question)
         {
             First = first;
             Second = second;

@@ -20,7 +20,6 @@ namespace FluidScript.Compiler
         Object GetConstant(string name);
         bool ContainsConstant(string name);
         void Add(string name, FunctionPartBuilder function);
-        IDictionary<string, TSource> UserDefinedValues<TSource>();
     }
 
     public interface IReadOnlyOperationContext

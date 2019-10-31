@@ -11,13 +11,31 @@ namespace FluidScript.Compiler.SyntaxTree
         public readonly Expression Left;
         public readonly Expression Right;
 
-        public BinaryOperationExpression(Expression left, Expression right, NodeType opCode) : base(opCode)
+        public BinaryOperationExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
         {
             Left = left;
             Right = right;
         }
 
         public override IEnumerable<Node> ChildNodes => Childs(Left, Right);
+
+        public override PrimitiveType ResultType
+        {
+            get
+            {
+                var leftType = Left.ResultType;
+                var rightType = Right.ResultType;
+                if (TypeUtils.CheckType(leftType, PrimitiveType.String) || TypeUtils.CheckType(rightType, PrimitiveType.String))
+                {
+                    return PrimitiveType.String;
+                }
+                if (leftType != PrimitiveType.Any && rightType != PrimitiveType.Any)
+                {
+                    return leftType & rightType;
+                }
+                return PrimitiveType.Any;
+            }
+        }
 
         public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
         {
@@ -28,7 +46,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             switch (NodeType)
             {
-                case NodeType.Plus:
+                case ExpressionType.Plus:
                     GenerateAdd(generator, info);
                     break;
             }
@@ -38,9 +56,11 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var leftType = Left.ResultType;
             var rightType = Right.ResultType;
+            var resultType = ResultType;
             //if any of the values is string concat it
-            if (TypeUtils.CheckType(leftType, ObjectType.String) || TypeUtils.CheckType(rightType, ObjectType.String))
+            if (resultType == PrimitiveType.String)
             {
+                ResolvedType = typeof(string);
                 //todo result optimization
                 //load the left into stack
                 Left.GenerateCode(generator, info);
@@ -57,11 +77,12 @@ namespace FluidScript.Compiler.SyntaxTree
                 }
                 generator.Call(ReflectionHelpers.StringConcat_Two_Object);
             }
-            if (leftType != ObjectType.Object && rightType != ObjectType.Object)
+            if (resultType != PrimitiveType.Any)
             {
-                var resultType = leftType & rightType;
+                resultType = leftType & rightType;
+                ResolvedType = TypeUtils.ToType(resultType);
                 Left.GenerateCode(generator, info);
-                if (leftType == ObjectType.Char && rightType == ObjectType.Char)
+                if (leftType == PrimitiveType.Char && rightType == PrimitiveType.Char)
                 {
                     generator.ConvertToInt32();
                     Right.GenerateCode(generator, info);
@@ -70,15 +91,14 @@ namespace FluidScript.Compiler.SyntaxTree
                     return;
                 }
                 if (leftType != resultType)
-                    EmitConvertion.ToNumber(generator, resultType);
+                    EmitConvertion.ToPrimitive(generator, resultType);
                 Right.GenerateCode(generator, info);
                 if (rightType != resultType)
-                    EmitConvertion.ToNumber(generator, rightType);
+                    EmitConvertion.ToPrimitive(generator, resultType);
                 generator.Add();
             }
             else
             {
-                //Handle custom convertion
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using FluidScript.Compiler;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -14,58 +13,58 @@ namespace FluidScript
     public class Object : System.IConvertible, ISerializable, System.IEquatable<Object>, IRuntimeObject
     {
 
-        public static readonly Object Zero = new Object(0, ObjectType.Double | ObjectType.Inbuilt);
-        public static readonly Object True = new Object(true, ObjectType.Bool | ObjectType.Inbuilt);
-        public static readonly Object False = new Object(false, ObjectType.Bool | ObjectType.Inbuilt);
-        public static readonly Object NaN = new Object(double.NaN, ObjectType.Double | ObjectType.Inbuilt);
+        public static readonly Object Zero = new Object(0, PrimitiveType.Double);
+        public static readonly Object True = new Object(true, PrimitiveType.Bool);
+        public static readonly Object False = new Object(false, PrimitiveType.Bool);
+        public static readonly Object NaN = new Object(double.NaN, PrimitiveType.Double);
         private static readonly object Any = new object();
-        public static readonly Object Void = new Object(Any, ObjectType.Void | ObjectType.Inbuilt);
-        public static readonly Object Null = new Object(Any, ObjectType.Null | ObjectType.Inbuilt);
-        public static readonly Object Empty = new Object(string.Empty, ObjectType.String | ObjectType.Inbuilt);
+        public static readonly Object Void = new Object(Any, PrimitiveType.Any);
+        public static readonly Object Null = new Object(Any, PrimitiveType.Null);
+        public static readonly Object Empty = new Object(string.Empty, PrimitiveType.String);
 
         public readonly object Raw;
-        public readonly ObjectType Type;
+        public readonly PrimitiveType Type;
 
-        internal static readonly IDictionary<string, ObjectType> PrimitiveTypes;
-        internal static readonly IDictionary<ObjectType, string> Types;
+        internal static readonly IDictionary<string, PrimitiveType> PrimitiveTypes;
+        internal static readonly IDictionary<PrimitiveType, string> Types;
 
         static Object()
         {
-            PrimitiveTypes = new Dictionary<string, ObjectType>
+            PrimitiveTypes = new Dictionary<string, PrimitiveType>
             {
-                {"byte", ObjectType.UByte },
-                {"sbyte", ObjectType.Byte },
-                {"short", ObjectType.Int16 },
-                {"ushort", ObjectType.UInt16 },
-                {"int", ObjectType.Int32 },
-                {"uint",ObjectType.UInt32 },
-                {"long", ObjectType.Int64 },
-                {"ulong", ObjectType.UInt64 },
-                {"float", ObjectType.Float },
-                {"double", ObjectType.Double },
-                {"bool", ObjectType.Bool },
-                {"string", ObjectType.String },
-                {"char", ObjectType.Char },
+                {"byte", PrimitiveType.UByte },
+                {"sbyte", PrimitiveType.Byte },
+                {"short", PrimitiveType.Int16 },
+                {"ushort", PrimitiveType.UInt16 },
+                {"int", PrimitiveType.Int32 },
+                {"uint",PrimitiveType.UInt32 },
+                {"long", PrimitiveType.Int64 },
+                {"ulong", PrimitiveType.UInt64 },
+                {"float", PrimitiveType.Float },
+                {"double", PrimitiveType.Double },
+                {"bool", PrimitiveType.Bool },
+                {"string", PrimitiveType.String },
+                {"char", PrimitiveType.Char },
             };
-            Types = new Dictionary<ObjectType, string>
+            Types = new Dictionary<PrimitiveType, string>
             {
-                {ObjectType.UByte, typeof(byte).FullName },
-                { ObjectType.Byte, typeof(sbyte).FullName },
-                { ObjectType.Int16 , typeof(short).FullName},
-                { ObjectType.UInt16, typeof(ushort).FullName },
-                { ObjectType.Int32 , typeof(int).FullName},
-                {ObjectType.UInt32, typeof(uint).FullName },
-                {ObjectType.Int64 , typeof(long).FullName},
-                { ObjectType.UInt64, typeof(ulong).FullName },
-                { ObjectType.Float , typeof(float).FullName},
-                { ObjectType.Double , typeof(double).FullName},
-                { ObjectType.Bool , typeof(bool).FullName},
-                { ObjectType.String , typeof(string).FullName},
-                { ObjectType.Char , typeof(char).FullName}
+                {PrimitiveType.UByte, typeof(byte).FullName },
+                { PrimitiveType.Byte, typeof(sbyte).FullName },
+                { PrimitiveType.Int16 , typeof(short).FullName},
+                { PrimitiveType.UInt16, typeof(ushort).FullName },
+                { PrimitiveType.Int32 , typeof(int).FullName},
+                {PrimitiveType.UInt32, typeof(uint).FullName },
+                {PrimitiveType.Int64 , typeof(long).FullName},
+                { PrimitiveType.UInt64, typeof(ulong).FullName },
+                { PrimitiveType.Float , typeof(float).FullName},
+                { PrimitiveType.Double , typeof(double).FullName},
+                { PrimitiveType.Bool , typeof(bool).FullName},
+                { PrimitiveType.String , typeof(string).FullName},
+                { PrimitiveType.Char , typeof(char).FullName}
             };
         }
 
-        internal Object(object value, ObjectType type)
+        internal Object(object value, PrimitiveType type)
         {
             Raw = value;
             Type = type;
@@ -80,7 +79,7 @@ namespace FluidScript
 
         internal Object(SerializationInfo info, StreamingContext context)
         {
-            Type = (ObjectType)info.GetInt32("type");
+            Type = (PrimitiveType)info.GetInt32("type");
             Raw = info.GetValue("value", GetType(Type));
         }
 
@@ -90,58 +89,52 @@ namespace FluidScript
             Type = GetType(value);
         }
 
-        public Object(IFunction function)
-        {
-            Raw = function;
-            Type = ObjectType.Function;
-        }
-
         public Object(object[] value)
         {
             Raw = value;
-            Type = ObjectType.Array;
+            Type = PrimitiveType.Array;
         }
 
         public Object(Object[] value)
         {
             Raw = value;
-            Type = ObjectType.Array;
+            Type = PrimitiveType.Array;
         }
 
         public Object(double value)
         {
             Raw = value;
-            Type = ObjectType.Double;
+            Type = PrimitiveType.Double;
         }
 
         public Object(float value)
         {
             Raw = value;
-            Type = ObjectType.Float;
+            Type = PrimitiveType.Float;
         }
 
         public Object(int value)
         {
             Raw = value;
-            Type = ObjectType.Int32;
+            Type = PrimitiveType.Int32;
         }
 
         public Object(char value)
         {
             Raw = value;
-            Type = ObjectType.Char;
+            Type = PrimitiveType.Char;
         }
 
         public Object(string value)
         {
             Raw = value;
-            Type = ObjectType.String;
+            Type = PrimitiveType.String;
         }
 
         public Object(bool value)
         {
             Raw = value;
-            Type = ObjectType.Bool;
+            Type = PrimitiveType.Bool;
         }
 
         public override string ToString()
@@ -151,41 +144,41 @@ namespace FluidScript
 
         public double ToDouble()
         {
-            if ((Type & ObjectType.Double) == ObjectType.Double)
+            if ((Type & PrimitiveType.Double) == PrimitiveType.Double)
                 return (double)Raw;
-            if ((Type & ObjectType.Number) == ObjectType.Number)
+            if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
                 return System.Convert.ToDouble(Raw);
             return double.NaN;
         }
 
         public float ToFloat()
         {
-            if ((Type & ObjectType.Float) == ObjectType.Float)
+            if ((Type & PrimitiveType.Float) == PrimitiveType.Float)
                 return (float)Raw;
-            if ((Type & ObjectType.Number) == ObjectType.Number)
+            if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
                 return System.Convert.ToSingle(Raw);
             return float.NaN;
         }
 
         public int ToInt32()
         {
-            if ((Type & ObjectType.Int32) == ObjectType.Int32)
+            if ((Type & PrimitiveType.Int32) == PrimitiveType.Int32)
                 return (int)Raw;
-            if ((Type & ObjectType.Number) == ObjectType.Number)
+            if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
                 return System.Convert.ToInt32(Raw);
             return 0;
         }
 
         public char ToChar()
         {
-            if ((Type & ObjectType.Char) == ObjectType.Char)
+            if ((Type & PrimitiveType.Char) == PrimitiveType.Char)
                 return (char)Raw;
             return char.MinValue;
         }
 
         public bool ToBool()
         {
-            if ((Type & ObjectType.Bool) == ObjectType.Bool)
+            if ((Type & PrimitiveType.Bool) == PrimitiveType.Bool)
                 return (bool)Raw;
             return false;
         }
@@ -198,13 +191,13 @@ namespace FluidScript
         public double ToNumber()
         {
             //Check Cast
-            if ((Type & ObjectType.Double) == ObjectType.Double)
+            if ((Type & PrimitiveType.Double) == PrimitiveType.Double)
                 return (double)Raw;
-            if ((Type & ObjectType.Float) == ObjectType.Float)
+            if ((Type & PrimitiveType.Float) == PrimitiveType.Float)
                 return (float)Raw;
-            if ((Type & ObjectType.Int32) == ObjectType.Int32)
+            if ((Type & PrimitiveType.Int32) == PrimitiveType.Int32)
                 return (int)Raw;
-            if ((Type & ObjectType.Bool) == ObjectType.Bool)
+            if ((Type & PrimitiveType.Bool) == PrimitiveType.Bool)
                 return (bool)Raw ? 1 : 0;
             //force convert
             return System.Convert.ToDouble(Raw);
@@ -212,10 +205,10 @@ namespace FluidScript
 
         public object[] ToArray()
         {
-            if ((Type & ObjectType.Array) == ObjectType.Array)
+            if ((Type & PrimitiveType.Array) == PrimitiveType.Array)
             {
                 //Check Cast
-                if ((Type ^ ObjectType.Array) == ObjectType.Object)
+                if ((Type ^ PrimitiveType.Array) == PrimitiveType.Object)
                     return ((Object[])Raw).Select(obj => obj.Raw).ToArray();
                 return (object[])Raw;
                 //force convert
@@ -228,44 +221,42 @@ namespace FluidScript
             return Raw.GetType();
         }
 
-        public static System.Type GetType(ObjectType type)
+        public static System.Type GetType(PrimitiveType type)
         {
-            if ((type & ObjectType.Int32) == ObjectType.Int32)
+            if ((type & PrimitiveType.Int32) == PrimitiveType.Int32)
                 return typeof(int);
-            if ((type & ObjectType.Float) == ObjectType.Float)
+            if ((type & PrimitiveType.Float) == PrimitiveType.Float)
                 return typeof(float);
-            if ((type & ObjectType.Double) == ObjectType.Double)
+            if ((type & PrimitiveType.Double) == PrimitiveType.Double)
                 return typeof(double);
-            if ((type & ObjectType.Char) == ObjectType.Char)
+            if ((type & PrimitiveType.Char) == PrimitiveType.Char)
                 return typeof(char);
-            if ((type & ObjectType.String) == ObjectType.String)
+            if ((type & PrimitiveType.String) == PrimitiveType.String)
                 return typeof(string);
-            if ((type & ObjectType.Bool) == ObjectType.Bool)
+            if ((type & PrimitiveType.Bool) == PrimitiveType.Bool)
                 return typeof(bool);
             return typeof(object);
         }
 
-        public bool IsNumber() => (Type & ObjectType.Number) == ObjectType.Number;
+        public bool IsNumber() => (Type & PrimitiveType.Number) == PrimitiveType.Number;
 
-        public bool IsString() => (Type & ObjectType.String) == ObjectType.String;
+        public bool IsString() => (Type & PrimitiveType.String) == PrimitiveType.String;
 
-        public bool IsBool() => (Type & ObjectType.Bool) == ObjectType.Bool;
+        public bool IsBool() => (Type & PrimitiveType.Bool) == PrimitiveType.Bool;
 
-        public bool IsInbuilt() => (Type & ObjectType.Inbuilt) == ObjectType.Inbuilt;
+        public bool IsChar() => (Type & PrimitiveType.Char) == PrimitiveType.Char;
 
-        public bool IsChar() => (Type & ObjectType.Char) == ObjectType.Char;
-
-        public bool IsArray() => (Type & ObjectType.Array) == ObjectType.Array;
+        public bool IsArray() => (Type & PrimitiveType.Array) == PrimitiveType.Array;
 
         public bool IsNull
         {
             get
             {
-                if ((Type & ObjectType.Number) == ObjectType.Number)
+                if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
                 {
-                    if ((Type & ObjectType.Double) == ObjectType.Double)
+                    if ((Type & PrimitiveType.Double) == PrimitiveType.Double)
                         return double.IsNaN((double)Raw);
-                    if ((Type & ObjectType.Float) == ObjectType.Float)
+                    if ((Type & PrimitiveType.Float) == PrimitiveType.Float)
                         return float.IsNaN((float)Raw);
                 }
                 return Raw == null;
@@ -509,28 +500,26 @@ namespace FluidScript
             return new Object(value);
         }
 
-        private static ObjectType GetType(object value)
+        private static PrimitiveType GetType(object value)
         {
             switch (value)
             {
                 case string _:
-                    return ObjectType.String;
+                    return PrimitiveType.String;
                 case double _:
-                    return ObjectType.Double;
+                    return PrimitiveType.Double;
                 case float _:
-                    return ObjectType.Float;
+                    return PrimitiveType.Float;
                 case int _:
-                    return ObjectType.Int32;
+                    return PrimitiveType.Int32;
                 case char _:
-                    return ObjectType.Char;
+                    return PrimitiveType.Char;
                 case bool _:
-                    return ObjectType.Bool;
-                case System.Action _:
-                    return ObjectType.Function;
+                    return PrimitiveType.Bool;
             }
             if (value.GetType().IsArray)
-                return ObjectType.Array;
-            return ObjectType.Null;
+                return PrimitiveType.Array;
+            return PrimitiveType.Null;
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -539,17 +528,17 @@ namespace FluidScript
             info.AddValue("type", (int)Type);
         }
 
-        public static Object Attach(Object value, ObjectType type)
+        public static Object Attach(Object value, PrimitiveType type)
         {
             return new Object(value.Raw, value.Type | type);
         }
 
 
-        public static ObjectType GetType(string value)
+        public static PrimitiveType GetType(string value)
         {
             if (PrimitiveTypes.ContainsKey(value))
                 return PrimitiveTypes[value];
-            return ObjectType.Object;
+            return PrimitiveType.Object;
         }
 
         #region Convertible
@@ -557,19 +546,19 @@ namespace FluidScript
         {
             switch (Type)
             {
-                case ObjectType.Int32:
+                case PrimitiveType.Int32:
                     return System.TypeCode.Int32;
-                case ObjectType.Float:
+                case PrimitiveType.Float:
                     return System.TypeCode.Single;
-                case ObjectType.Double:
+                case PrimitiveType.Double:
                     return System.TypeCode.Double;
-                case ObjectType.Char:
+                case PrimitiveType.Char:
                     return System.TypeCode.Char;
-                case ObjectType.String:
+                case PrimitiveType.String:
                     return System.TypeCode.String;
-                case ObjectType.Bool:
+                case PrimitiveType.Bool:
                     return System.TypeCode.Boolean;
-                case ObjectType.Null:
+                case PrimitiveType.Null:
                 default:
                     if (Raw != null)
                     {

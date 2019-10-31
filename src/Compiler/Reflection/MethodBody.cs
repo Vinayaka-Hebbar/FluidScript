@@ -6,7 +6,7 @@ namespace FluidScript.Compiler.Reflection
     public class MethodBody
     {
         public readonly MethodBase DeclaredMethod;
-        private IList<LocalVariableInfo> localVariables;
+        private IList<DeclaredMember> localVariables;
         private BlockStatement syntaxTree;
 
         public MethodBody(MethodBase declaredMethod)
@@ -14,11 +14,11 @@ namespace FluidScript.Compiler.Reflection
             DeclaredMethod = declaredMethod;
         }
 
-        public LocalVariableInfo DeclareLocalVariable(string name, TypeInfo type)
+        public DeclaredMember DeclareLocalVariable(string name, TypeInfo type)
         {
             if (localVariables == null)
-                localVariables = new List<LocalVariableInfo>();
-            var localVariable = new LocalVariableInfo(name, type, localVariables.Count);
+                localVariables = new List<DeclaredMember>();
+            var localVariable = new DeclaredMember(name, type, localVariables.Count);
             localVariables.Add(localVariable);
             return localVariable;
         }

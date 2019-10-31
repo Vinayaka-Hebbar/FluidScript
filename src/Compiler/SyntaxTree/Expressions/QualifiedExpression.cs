@@ -3,9 +3,9 @@
     public class QualifiedExpression : Expression
     {
         public readonly Expression Target;
-        public readonly IdentifierExpression Identifier;
+        public readonly NameExpression Identifier;
 
-        public QualifiedExpression(Expression target, IdentifierExpression identifier, NodeType opCode) : base(opCode)
+        public QualifiedExpression(Expression target, NameExpression identifier, ExpressionType opCode) : base(opCode)
         {
             Target = target;
             Identifier = identifier;
@@ -13,7 +13,7 @@
 
         public override string ToString()
         {
-            if (NodeType == NodeType.QualifiedNamespace)
+            if (NodeType == ExpressionType.QualifiedNamespace)
             {
                 return Target.ToString() + '.' + Identifier;
             }

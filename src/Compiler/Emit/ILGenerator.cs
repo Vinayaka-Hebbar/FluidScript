@@ -215,7 +215,7 @@ namespace FluidScript.Compiler.Emit
         /// <param name="type"> The type of the local variable. </param>
         /// <param name="name"> The name of the local variable. Can be <c>null</c>. </param>
         /// <returns> A new local variable. </returns>
-        public ILLocalVariable DeclareVariable(ObjectType type, string name = null)
+        public ILLocalVariable DeclareVariable(PrimitiveType type, string name = null)
         {
             return DeclareVariable(TypeUtils.ToType(type), name);
         }
@@ -276,7 +276,7 @@ namespace FluidScript.Compiler.Emit
         /// </summary>
         /// <param name="type"> The type of variable to create. </param>
         /// <returns> A temporary variable  </returns>
-        public ILLocalVariable CreateTemporaryVariable(ObjectType type)
+        public ILLocalVariable CreateTemporaryVariable(PrimitiveType type)
         {
             return CreateTemporaryVariable(TypeUtils.ToType(type));
         }
@@ -500,7 +500,7 @@ namespace FluidScript.Compiler.Emit
         /// the stack.
         /// </summary>
         /// <param name="type"> The type of value to box.  This should be a value type. </param>
-        public void Box(ObjectType type)
+        public void Box(PrimitiveType type)
         {
             Box(TypeUtils.ToType(type));
         }
@@ -517,7 +517,7 @@ namespace FluidScript.Compiler.Emit
         /// address, then pushes that address onto the stack.
         /// </summary>
         /// <param name="type"> The type of the boxed value.  This should be a value type. </param>
-        public void Unbox(ObjectType type)
+        public void Unbox(PrimitiveType type)
         {
             Box(TypeUtils.ToType(type));
         }
@@ -534,7 +534,7 @@ namespace FluidScript.Compiler.Emit
         /// then pushes the value onto the stack.
         /// </summary>
         /// <param name="type"> The type of the boxed value.  This should be a value type. </param>
-        public void UnboxObject(ObjectType type)
+        public void UnboxObject(PrimitiveType type)
         {
             UnboxObject(TypeUtils.ToType(type));
         }
@@ -747,7 +747,7 @@ namespace FluidScript.Compiler.Emit
         /// Pops the array and index off the stack and pushes the element value onto the stack.
         /// </summary>
         /// <param name="type"> The element type. </param>
-        public void LoadArrayElement(ObjectType type)
+        public void LoadArrayElement(PrimitiveType type)
         {
             LoadArrayElement(TypeUtils.ToType(type));
         }
@@ -758,7 +758,7 @@ namespace FluidScript.Compiler.Emit
         /// <param name="type"> The element type. </param>
         public abstract void StoreArrayElement(Type type);
 
-        public void StoreArrayElement(ObjectType type)
+        public void StoreArrayElement(PrimitiveType type)
         {
             StoreArrayElement(TypeUtils.ToType(type));
         }

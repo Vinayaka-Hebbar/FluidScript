@@ -8,7 +8,6 @@ namespace FluidScript
         bool IsArray();
         bool IsBool();
         bool IsChar();
-        bool IsInbuilt();
         bool IsNumber();
         bool IsString();
         bool IsTypeOf<TSource>();

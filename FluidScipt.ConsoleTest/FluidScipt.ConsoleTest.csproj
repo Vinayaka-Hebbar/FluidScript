@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net45</TargetFramework>
+    <ApplicationIcon />
+    <OutputType>Exe</OutputType>
+    <StartupObject>FluidScipt.ConsoleTest.Class1</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="source.rs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="source.rs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\FluidScript.csproj" />
+  </ItemGroup>
+
+</Project>

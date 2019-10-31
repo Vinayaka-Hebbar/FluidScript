@@ -4,20 +4,16 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public class ValueAccessExpression : Expression
     {
-        public readonly string Id;
-        public readonly Func<IOperationContext, string, Object> Access;
-        public readonly Func<IOperationContext, string, bool> CanAccess;
+        public readonly string Name;
 
-        public ValueAccessExpression(string id, Func<IOperationContext, string, Object> access, Func<IOperationContext, string, bool> canAccess, NodeType opCode) : base(opCode)
+        public ValueAccessExpression(string name, ExpressionType opCode) : base(opCode)
         {
-            Id = id;
-            Access = access;
-            CanAccess = canAccess;
+            Name = name;
         }
 
         public override string ToString()
         {
-            return Id;
+            return Name;
         }
 
         public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)

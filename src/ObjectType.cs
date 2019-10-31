@@ -1,7 +1,7 @@
 ﻿namespace FluidScript
 {
     [System.Flags]
-    public enum ObjectType : uint
+    public enum PrimitiveType : uint
     {
         Object = 0,
         Null = 1,
@@ -21,10 +21,8 @@
         UByte = Int16 | Unsigned,
         Bool = 2048,
         Array = 4096,
-        Function = 8192,
-        ConcatenatedString = String | 16384,
-        Inbuilt = 32768,
+        ConcatenatedString = String | 8192,
         //Return
-        Void = 65536,
+        Any = 16384,
     }
 }

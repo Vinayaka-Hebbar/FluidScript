@@ -2,7 +2,7 @@
 {
     public class SyntaxExpression : Expression
     {
-        public SyntaxExpression(NodeType opCode) : base(opCode)
+        public SyntaxExpression(ExpressionType opCode) : base(opCode)
         {
         }
 

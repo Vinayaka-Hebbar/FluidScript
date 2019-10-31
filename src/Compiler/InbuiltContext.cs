@@ -23,7 +23,8 @@ namespace FluidScript.Compiler
                 {"this", IdentifierType.This },
                 {"true",IdentifierType.True },
                 {"false",IdentifierType.False },
-                {"out", IdentifierType.Out },
+                {"out", IdentifierType.Return },
+                {"return", IdentifierType.Return },
                 {"var", IdentifierType.Var },
                 {"function", IdentifierType.Function },
                 {"lamda", IdentifierType.Lamda },
@@ -35,7 +36,8 @@ namespace FluidScript.Compiler
                 {"continue",IdentifierType.Continue },
                 {"switch", IdentifierType.Switch },
                 {"break", IdentifierType.Break },
-                {"throw", IdentifierType.Throw }
+                {"throw", IdentifierType.Throw },
+                {"class", IdentifierType.Class }
             };
             functions = new Dictionary<string, IFunction>();
             mathConstants = new Dictionary<string, Object>();
@@ -48,7 +50,6 @@ namespace FluidScript.Compiler
             Add("sqrt", Sqrt);
             Add(new Function("iterate", 2, (visitor, args) =>
              {
-                 visitor = new NodeVisitor(visitor);
                  var n = args[1].Accept(visitor).ToDouble();
                  var ex = args[0];
                  for (int i = 0; i < n; i++)
@@ -87,9 +88,9 @@ namespace FluidScript.Compiler
             Add(new Function("parseFloat", 1, ParseFloat));
             Add(new Function("parseDouble", 1, ParseDouble));
             //Constants
-            mathConstants.Add("pi", new Object(PI, ObjectType.Double | ObjectType.Inbuilt));
-            mathConstants.Add("e", new Object(E, ObjectType.Double | ObjectType.Inbuilt));
-            mathConstants.Add("NaN", new Object(double.NaN, ObjectType.Double | ObjectType.Inbuilt));
+            mathConstants.Add("pi", new Object(PI, PrimitiveType.Double));
+            mathConstants.Add("e", new Object(E, PrimitiveType.Double ));
+            mathConstants.Add("NaN", new Object(double.NaN, PrimitiveType.Double ));
             #endregion
         }
 
@@ -122,7 +123,7 @@ namespace FluidScript.Compiler
             functions.Add(function.Name, function);
         }
 
-        internal static Object Print(NodeVisitor visitor, Node[] expressions)
+        internal static Object Print(INodeVisitor<Object> visitor, Node[] expressions)
         {
 #if NET35
             System.Console.WriteLine(string.Join(",", expressions.Select(exp => exp.Accept(visitor).ToString()).ToArray()));
@@ -132,33 +133,33 @@ namespace FluidScript.Compiler
             return Object.Void;
         }
 
-        internal static Object Sum(NodeVisitor visitor, Node[] expressions)
+        internal static Object Sum(INodeVisitor<Object> visitor, Node[] expressions)
         {
             return new Object(expressions.Select(exp => exp.Accept(visitor).ToNumber()).Sum());
         }
 
-        internal static Object Average(NodeVisitor visitor, Node[] expressions)
+        internal static Object Average(INodeVisitor<Object> visitor, Node[] expressions)
         {
             return new Object(expressions.Select(exp => exp.Accept(visitor).ToNumber()).Average());
         }
 
-        internal static Object Max(NodeVisitor visitor, Node[] expressions)
+        internal static Object Max(INodeVisitor<Object> visitor, Node[] expressions)
         {
             return new Object(expressions.Select(exp => exp.Accept(visitor).ToNumber()).Max());
         }
 
-        internal static Object Min(NodeVisitor visitor, Node[] expressions)
+        internal static Object Min(INodeVisitor<Object> visitor, Node[] expressions)
         {
             return new Object(expressions.Select(exp => exp.Accept(visitor).ToNumber()).Min());
         }
 
-        internal static Object ParseInt(NodeVisitor visitor, Node[] expressions)
+        internal static Object ParseInt(INodeVisitor<Object> visitor, Node[] expressions)
         {
             int.TryParse(expressions.First().Accept(visitor).Raw.ToString(), out int value);
             return new Object(value);
         }
 
-        internal static Object ParseFloat(NodeVisitor visitor, Node[] expressions)
+        internal static Object ParseFloat(INodeVisitor<Object> visitor, Node[] expressions)
         {
             if (expressions.Length == 1)
             {
@@ -168,7 +169,7 @@ namespace FluidScript.Compiler
             return Object.Zero;
         }
 
-        internal static Object ParseDouble(NodeVisitor visitor, Node[] expressions)
+        internal static Object ParseDouble(INodeVisitor<Object> visitor, Node[] expressions)
         {
             if (expressions.Length == 1)
             {
