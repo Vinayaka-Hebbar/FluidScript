@@ -42,7 +42,9 @@
     <Compile Remove="Compiler\Reflection\PropertyInfo.cs" />
     <Compile Remove="Compiler\Reflection\TypeInfo.cs" />
     <Compile Remove="Compiler\SyntaxTree\Expressions\ArgumentExpression.cs" />
+    <Compile Remove="IRuntimeObject.cs" />
     <Compile Remove="NamedObject.cs" />
+    <Compile Remove="Object.cs" />
   </ItemGroup>
 
   <ItemGroup>

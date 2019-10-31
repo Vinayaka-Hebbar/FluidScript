@@ -7,10 +7,5 @@
         {
             Expressions = expressions;
         }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitExpressions(this);
-        }
     }
 }

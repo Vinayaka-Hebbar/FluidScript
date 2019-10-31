@@ -6,16 +6,16 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public class FunctionDefinitionStatement : FunctionDeclarationStatement
     {
-        public readonly Scopes.Scope Scope;
+        public readonly Scopes.DeclarativeScope Scope;
 
         internal readonly Reflection.DeclaredMember Member;
 
         public BlockStatement Body { get; }
 
-        internal FunctionDefinitionStatement(FunctionDeclaration declaration, BlockStatement body, Scopes.Scope scope, Reflection.DeclaredMember member) : base(declaration, StatementType.Function)
+        internal FunctionDefinitionStatement(FunctionDeclaration declaration, BlockStatement body, Reflection.DeclaredMember member) : base(declaration, StatementType.Function)
         {
             Body = body;
-            Scope = scope;
+            Scope = declaration.Scope;
             Member = member;
         }
 
@@ -36,11 +36,6 @@ namespace FluidScript.Compiler.SyntaxTree
                 generator.DefineLabelPosition(info.ReturnTarget);
             if (info.ReturnVariable != null)
                 generator.LoadVariable(info.ReturnVariable);
-        }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitFunctionDefinition(this);
         }
 
         public override int GetHashCode()

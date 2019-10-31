@@ -10,10 +10,5 @@
             Left = left;
             Right = right;
         }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitNullPropagator(this);
-        }
     }
 }

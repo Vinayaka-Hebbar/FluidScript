@@ -37,11 +37,6 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitBinaryOperation(this);
-        }
-
         public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
         {
             switch (NodeType)

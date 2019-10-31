@@ -10,10 +10,5 @@
             Target = target;
             Arguments = arguments;
         }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitInvocation(this);
-        }
     }
 }

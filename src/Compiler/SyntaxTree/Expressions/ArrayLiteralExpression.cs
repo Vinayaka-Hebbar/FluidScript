@@ -7,7 +7,7 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly Expression[] Expressions;
 
-        public readonly string TypeName;
+        public override string TypeName { get; }
 
         public ArrayLiteralExpression(Expression[] expressions, string typeName) : base(ExpressionType.Array)
         {
@@ -15,15 +15,10 @@ namespace FluidScript.Compiler.SyntaxTree
             TypeName = typeName;
         }
 
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            throw new NotImplementedException();
-        }
-
         public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
         {
             generator.LoadInt32(Expressions.Length);
-            Type type = info.ToType(TypeName);
+            Type type = info.TypeProvider.GetType(TypeName);
             generator.NewArray(type);
             for (int i = 0; i < Expressions.Length; i++)
             {

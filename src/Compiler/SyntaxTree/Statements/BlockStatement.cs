@@ -14,11 +14,6 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override IEnumerable<Node> ChildNodes => Statements;
 
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitBlock(this);
-        }
-
         public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
         {
             var statementLocals = new StatementLocals() { NonDefaultSourceSpanBehavior = true };

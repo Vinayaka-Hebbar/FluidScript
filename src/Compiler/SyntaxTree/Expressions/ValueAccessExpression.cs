@@ -15,11 +15,6 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             return Name;
         }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitValueAccess(this);
-        }
     }
 
 }

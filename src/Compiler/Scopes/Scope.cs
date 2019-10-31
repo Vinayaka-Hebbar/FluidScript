@@ -15,10 +15,6 @@ namespace FluidScript.Compiler.Scopes
             CanDeclareVariables = canDeclareVariables;
         }
 
-        internal virtual DeclaredType DeclareType(Declaration declaration, BindingFlags binding, TypeDefinitionStatement statement)
-        {
-            throw new System.InvalidOperationException("Cannot delcare type here");
-        }
         internal virtual DeclaredMember DeclareMember(Declaration declaration, BindingFlags binding, MemberTypes memberType, Statement statement = null)
         {
             throw new System.InvalidOperationException("Cannot delcare member here");

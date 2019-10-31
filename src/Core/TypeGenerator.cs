@@ -12,7 +12,7 @@
 
         public readonly Compiler.SyntaxVisitor SyntaxVisitor;
 
-        public Compiler.SyntaxTree.TypeDeclaration Generate()
+        public Compiler.SyntaxTree.TypeDefinitionStatement Generate()
         {
             SyntaxVisitor.Reset();
             SyntaxVisitor.MoveNext();

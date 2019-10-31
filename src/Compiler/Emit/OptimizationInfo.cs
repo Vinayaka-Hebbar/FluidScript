@@ -46,18 +46,7 @@ namespace FluidScript.Compiler.Emit
             get;
             set;
         }
-
-        internal Type ToType(string typeName)
-        {
-            var type = Object.GetType(typeName);
-            if (type == PrimitiveType.Object)
-            {
-                //Todo if typename is class type
-                return typeof(object);
-            }
-
-            return TypeUtils.ToType(type);
-        }
+        
 
         /// <summary>
         /// Gets or sets the name of the function that is being generated.

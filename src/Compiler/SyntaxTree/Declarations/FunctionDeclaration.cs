@@ -7,11 +7,14 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly ArgumentInfo[] Arguments;
 
+        public readonly Scopes.DeclarativeScope Scope;
+
         public readonly string ReturnTypeName;
-        public FunctionDeclaration(string name, string returnTypeName, ArgumentInfo[] arguments) : base(name)
+        public FunctionDeclaration(string name, string returnTypeName, ArgumentInfo[] arguments, Scopes.DeclarativeScope scope) : base(name)
         {
             ReturnTypeName = returnTypeName;
             Arguments = arguments;
+            Scope = scope;
         }
 
         public System.Type[] ArgumentTypes(Emit.TypeProvider provider)

@@ -485,11 +485,6 @@ namespace FluidScript
             return new Object(value);
         }
 
-        public static implicit operator Object(Function function)
-        {
-            return new Object(function);
-        }
-
         public static implicit operator Object(object[] value)
         {
             return new Object(value);

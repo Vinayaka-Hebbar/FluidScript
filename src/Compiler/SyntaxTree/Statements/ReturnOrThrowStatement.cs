@@ -10,11 +10,6 @@ namespace FluidScript.Compiler.SyntaxTree
             Expression = expression;
         }
 
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitReturnOrThrow(this);
-        }
-
         public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
         {
             // Generate code for the start of the statement.

@@ -12,11 +12,6 @@ namespace FluidScript.Compiler.SyntaxTree
             Operand = operand;
         }
 
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitUnaryOperator(this);
-        }
-
         public override PrimitiveType ResultType
         {
             get

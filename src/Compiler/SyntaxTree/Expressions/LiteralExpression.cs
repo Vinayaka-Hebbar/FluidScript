@@ -19,6 +19,12 @@ namespace FluidScript.Compiler.SyntaxTree
             ResultType = PrimitiveType.String;
         }
 
+        public LiteralExpression(bool value):base(ExpressionType.Bool)
+        {
+            Value = value;
+            ResultType = PrimitiveType.Bool;
+        }
+
         public LiteralExpression(object value) : base(ExpressionType.Literal)
         {
             Value = value;
@@ -30,18 +36,17 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             get
             {
-                if (Value == null)
-                    return null;
-                return Value.GetType();
+                if (ResolvedType == null)
+                {
+                    if (Value == null)
+                        return null;
+                    ResolvedType = Value.GetType();
+                }
+                return ResolvedType;
             }
         }
 
         public override PrimitiveType ResultType { get; }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitLiteral(this);
-        }
 
         public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
         {

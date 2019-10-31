@@ -6,17 +6,20 @@ namespace FluidScript.Compiler.Scopes
 {
     public class GlobalScope : Scope
     {
-        private  List<DeclaredType> declaredTypes;
+        private  IList<DeclaredType> declaredTypes;
         public GlobalScope() : base(null, false)
         {
         }
 
-        internal override DeclaredType DeclareType(Declaration declaration, BindingFlags binding)
+        internal override DeclaredMember DeclareMember(Declaration declaration, BindingFlags binding, MemberTypes memberType, Statement statement = null)
         {
             if (declaredTypes == null)
                 declaredTypes = new List<DeclaredType>();
-            var type = new DeclaredType(declaration, declaredTypes.Count, binding);
-            return type;
+            if(memberType == MemberTypes.Type)
+            {
+                return new DeclaredType(declaration, declaredTypes.Count, binding);
+            }
+            throw new System.Exception("Cannot declaration member other than type");
         }
     }
 }

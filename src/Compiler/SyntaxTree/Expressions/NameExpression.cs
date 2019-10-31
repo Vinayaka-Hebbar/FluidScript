@@ -18,12 +18,6 @@ namespace FluidScript.Compiler.SyntaxTree
             return Name;
         }
 
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitIdentifier(this);
-        }
-
         public override PrimitiveType ResultType
         {
             get

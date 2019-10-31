@@ -21,9 +21,5 @@
             ReturnTypeName = declaration.ReturnTypeName;
             Arguments = declaration.Arguments;
         }
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitVoid();
-        }
     }
 }

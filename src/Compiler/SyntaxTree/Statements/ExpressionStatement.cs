@@ -8,10 +8,5 @@
         {
             Expression = expression;
         }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return Expression.Accept(visitor);
-        }
     }
 }

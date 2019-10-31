@@ -13,11 +13,9 @@ namespace FluidScript.Compiler.Reflection
 
         public System.Type Create(string assemblyName)
         {
-            if (ValueAtTop is SyntaxTree.TypeDefinitionStatement declaration)
+            if (Declaration is SyntaxTree.TypeDeclaration declaration)
             {
-                var domain = System.Threading.Thread.GetDomain().DefineDynamicAssembly(new AssemblyName(assemblyName), System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave);
-                var module = domain.DefineDynamicModule(assemblyName);
-                return declaration.Generate(module).CreateType();
+                return declaration.Create(assemblyName);
             }
             return typeof(object);
         }

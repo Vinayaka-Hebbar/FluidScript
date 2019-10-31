@@ -14,10 +14,5 @@
             Second = second;
             Third = third;
         }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return First.Accept(visitor).ToBool() ? Second.Accept(visitor) : Third.Accept(visitor);
-        }
     }
 }

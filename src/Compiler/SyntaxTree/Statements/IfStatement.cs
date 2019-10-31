@@ -12,10 +12,5 @@
             Body = body;
             Other = other;
         }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitIfElse(this);
-        }
     }
 }

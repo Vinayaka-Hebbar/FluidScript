@@ -48,7 +48,8 @@ namespace FluidScript.Compiler.Reflection
     {
         Field = 2,
         Property = 4,
-        Function = 5,
+        Function = 8,
+        Type = 16
     }
 
     

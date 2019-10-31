@@ -256,7 +256,7 @@ namespace FluidScript.Compiler
             }
         }
 
-        internal TypeDeclaration VisitTypeDeclaration()
+        internal TypeDefinitionStatement VisitTypeDeclaration()
         {
             MoveNext();
             if (TokenType == TokenType.Identifier)
@@ -283,18 +283,20 @@ namespace FluidScript.Compiler
                         implements = Split(TokenType.Comma).ToArray();
                     }
                 }
-                TypeDeclaration declaration = new TypeDeclaration(typeName, baseTypeName, implements);
-                var type = Scope.DeclareType(declaration, BindingFlags.Public);
+                TypeDeclaration declaration = null;
+                Statement[] statements = null;
                 using (var scope = new ObjectScope(this))
                 {
-                    Statement[] statements = null;
+                    declaration = new TypeDeclaration(typeName, baseTypeName, implements, scope);
                     if (TokenType == TokenType.LeftBrace)
                     {
                         MoveNext();
                         statements = VisitProgram().ToArray();
                     }
                 }
-                return declaration;
+
+                var type = Scope.DeclareMember(declaration, BindingFlags.Public, MemberTypes.Type);
+                return new TypeDefinitionStatement(declaration, statements, type);
             }
             throw new System.Exception("Syntax error");
         }
@@ -397,6 +399,7 @@ namespace FluidScript.Compiler
             BlockStatement body = null;
             //return type
             string type = null;
+            FunctionDeclaration declaration = null;
             using (var scope = new DeclarativeScope(this))
             {
                 IEnumerable<ArgumentInfo> arguments = Enumerable.Empty<ArgumentInfo>();
@@ -411,19 +414,19 @@ namespace FluidScript.Compiler
                     type = GetName();
                     MoveNext();
                 }
+                declaration = new FunctionDeclaration(name, type, argumentsList, scope);
                 if (TokenType == TokenType.LeftBrace)
                 {
                     //todo abstract, virtual functions
                     //To avoid block function
                     body = VisitBlock();
                 }
-            }
 
-            FunctionDeclaration declaration = new FunctionDeclaration(name, type, argumentsList);
+            }
             var memeber = Scope.DeclareMember(declaration, BindingFlags.Public, MemberTypes.Function, body);
             if (body != null)
             {
-                return new FunctionDefinitionStatement(declaration, body, Scope, memeber);
+                return new FunctionDefinitionStatement(declaration, body, memeber);
             }
             return new FunctionDeclarationStatement(declaration);
 
@@ -806,14 +809,14 @@ namespace FluidScript.Compiler
                     }
                     return new InvocationExpression(target, arguments, ExpressionType.New);
                 case IdentifierType.True:
-                    return new LiteralExpression(Object.True);
+                    return new LiteralExpression(true);
                 case IdentifierType.False:
-                    return new LiteralExpression(Object.False);
+                    return new LiteralExpression(false);
                 case IdentifierType.Lamda:
                     MoveNext();
                     return VisitLamdaExpression();
                 case IdentifierType.This:
-                    return new SyntaxExpression(ExpressionType.This);
+                    return new Expression(ExpressionType.This);
             }
             return Expression.Empty;
         }
@@ -1229,27 +1232,6 @@ namespace FluidScript.Compiler
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this;
-        }
-
-
-        public static Object GetVariable(IOperationContext context, string name)
-        {
-            return context.Variables[name];
-        }
-
-        public static bool ContainsVariable(IOperationContext context, string name)
-        {
-            return context.Variables.ContainsKey(name);
-        }
-
-        public static Object GetConstant(IOperationContext context, string name)
-        {
-            return context.GetConstant(name);
-        }
-
-        public static bool ContainsConstant(IOperationContext context, string name)
-        {
-            return context.ContainsConstant(name);
         }
 
         private class CharEnumerable : IEnumerable<char>

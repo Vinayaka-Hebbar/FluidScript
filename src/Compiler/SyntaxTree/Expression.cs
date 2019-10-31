@@ -2,7 +2,7 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public abstract class Expression : Node
+    public class Expression : Node
     {
         internal static readonly Expression Empty = new EmptyExpression();
         protected System.Type ResolvedType = null;
@@ -13,7 +13,15 @@ namespace FluidScript.Compiler.SyntaxTree
         }
         public ExpressionType NodeType { get; }
 
-        public string TypeName { get; }
+        public virtual string TypeName
+        {
+            get
+            {
+                if (Type == null)
+                    return string.Empty;
+                return Type.FullName;
+            }
+        }
 
         public virtual System.Type Type => ResolvedType;
         public virtual PrimitiveType ResultType { get; } = PrimitiveType.Any;
@@ -33,11 +41,6 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public EmptyExpression() : base(ExpressionType.Unknown)
         {
-        }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return default;
         }
 
         public override void GenerateCode(ILGenerator generator, OptimizationInfo info)

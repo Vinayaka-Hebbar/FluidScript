@@ -19,10 +19,5 @@
             }
             return Identifier.ToString();
         }
-
-        public override TReturn Accept<TReturn>(INodeVisitor<TReturn> visitor)
-        {
-            return visitor.VisitQualifiedExpression(this);
-        }
     }
 }
