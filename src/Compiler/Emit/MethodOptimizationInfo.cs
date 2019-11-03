@@ -35,7 +35,6 @@ namespace FluidScript.Compiler.Emit
         {
         }
 
-        public System.Type DeclareType { get; set; }
         public Node SyntaxTree { get; set; }
 
         public Type ReturnType { get; set; }

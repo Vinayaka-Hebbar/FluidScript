@@ -86,6 +86,21 @@ namespace FluidScript.Compiler.Emit
             return PrimitiveNames.ContainsKey(typeName);
         }
 
+        internal static PrimitiveType ToPrimitive(System.Type type)
+        {
+            PrimitiveType primitive = PrimitiveType.Any;
+            if (type.IsArray)
+            {
+                type = type.GetElementType();
+                primitive |= PrimitiveType.Array;
+            }
+            if (type.IsPrimitive)
+            {
+                primitive |= PrimitiveTypes[type];
+            }
+            return primitive;
+        }
+
         public static bool CheckType(PrimitiveType leftType, PrimitiveType expected)
         {
             return (leftType & expected) == expected;
@@ -96,7 +111,7 @@ namespace FluidScript.Compiler.Emit
             switch (type)
             {
                 case PrimitiveType.Any:
-                case PrimitiveType.Null:
+                case PrimitiveType.Undefined:
                 case PrimitiveType.Array:
                     return false;
                 default:

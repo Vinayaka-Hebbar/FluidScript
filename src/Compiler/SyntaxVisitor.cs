@@ -289,7 +289,7 @@ namespace FluidScript.Compiler
                 }
                 TypeDeclaration declaration = null;
                 Node[] nodes = null;
-                using (var scope = new ObjectScope(this))
+                using (var scope = new ObjectScope(this, typeName))
                 {
                     declaration = new TypeDeclaration(typeName, baseTypeName, implements, scope);
                     if (TokenType == TokenType.LeftBrace)
@@ -511,7 +511,7 @@ namespace FluidScript.Compiler
             //return type
             string type = null;
             FunctionDeclaration declaration = null;
-            using (var scope = new DeclarativeScope(this))
+            using (var scope = new DeclarativeScope(this, name))
             {
                 //todo not required when the method is static
                 scope.DeclareVariable("this", Emit.TypeName.Empty, null, VariableType.Argument);
@@ -937,6 +937,8 @@ namespace FluidScript.Compiler
                     return new LiteralExpression(true);
                 case IdentifierType.False:
                     return new LiteralExpression(false);
+                case IdentifierType.Null:
+                    return LiteralExpression.Null;
                 case IdentifierType.Lamda:
                     MoveNext();
                     return VisitLamdaExpression();

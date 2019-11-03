@@ -7,7 +7,7 @@
         /// <summary>
         /// todo for resolve result type assign resolve type if not any
         /// </summary>
-        protected PrimitiveType ResolvedPrimitiveType;
+        protected PrimitiveType ResolvedPrimitiveType = FluidScript.PrimitiveType.Undefined;
 
         public Expression(ExpressionType nodeType)
         {
@@ -25,8 +25,25 @@
             }
         }
 
-        public virtual System.Type ResultType(System.Type declaredType) => ResolvedType;
-        public virtual PrimitiveType PrimitiveType(System.Type declaredType) => ResolvedPrimitiveType;
+
+        public System.Type ResultType(Emit.OptimizationInfo info)
+        {
+            if (ResolvedType == null)
+                ResolveType(info);
+            return ResolvedType;
+        }
+
+        protected virtual void ResolveType(Emit.OptimizationInfo info)
+        {
+            
+        }
+
+        public PrimitiveType PrimitiveType(Emit.OptimizationInfo info)
+        {
+            if (ResolvedPrimitiveType == FluidScript.PrimitiveType.Undefined)
+                ResolveType(info);
+            return ResolvedPrimitiveType;
+        }
 
         public virtual void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
         {

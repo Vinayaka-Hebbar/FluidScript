@@ -29,8 +29,14 @@ namespace FluidScript.Compiler.Reflection
         }
 
         public bool IsGenerated { get; protected set; }
+
+        /// <summary>
+        /// Either return type , property type or field type
+        /// </summary>
         public abstract Type ResolvedType { get; }
         public bool IsField => MemberType == System.Reflection.MemberTypes.Field;
+
+        public bool IsMethod => MemberType == System.Reflection.MemberTypes.Method;
 
         internal virtual void Generate(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
         {

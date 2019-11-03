@@ -20,42 +20,46 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override IEnumerable<Node> ChildNodes => Childs(Left, Right);
 
-        public override PrimitiveType PrimitiveType()
+        /// <summary>
+        /// Todo remove arguments by 
+        /// </summary>
+        /// <param name="info"></param>
+        protected override void ResolveType(OptimizationInfo info)
         {
-            if (ResolvedPrimitiveType == FluidScript.PrimitiveType.Any)
+            var leftType = Left.PrimitiveType(info);
+            var rightType = Right.PrimitiveType(info);
+            if (leftType != FluidScript.PrimitiveType.Any && rightType != FluidScript.PrimitiveType.Any)
             {
-                var leftType = Left.PrimitiveType();
-                var rightType = Right.PrimitiveType();
-                if (leftType != FluidScript.PrimitiveType.Any && rightType != FluidScript.PrimitiveType.Any)
+                switch (NodeType)
                 {
-                    switch (NodeType)
-                    {
-                        case ExpressionType.Plus:
-                            if (TypeUtils.CheckType(leftType, FluidScript.PrimitiveType.String) || TypeUtils.CheckType(rightType, FluidScript.PrimitiveType.String))
-                            {
-                                ResolvedPrimitiveType = FluidScript.PrimitiveType.String;
-                                break;
-                            }
-                            ResolvedPrimitiveType = leftType & rightType;
-                            break;
-                        case ExpressionType.Minus:
-                        case ExpressionType.Multiply:
-                        case ExpressionType.Divide:
-                            ResolvedPrimitiveType = leftType & rightType;
-                            break;
-                        case ExpressionType.BangEqual:
-                        case ExpressionType.EqualEqual:
-                        case ExpressionType.Less:
-                        case ExpressionType.LessEqual:
-                        case ExpressionType.Greater:
-                        case ExpressionType.GreaterEqual:
-                            ResolvedPrimitiveType = FluidScript.PrimitiveType.Bool;
-                            break;
-
-                    }
+                    case ExpressionType.Plus:
+                        if (TypeUtils.CheckType(leftType, FluidScript.PrimitiveType.String) || TypeUtils.CheckType(rightType, FluidScript.PrimitiveType.String))
+                        {
+                            ResolvedPrimitiveType = FluidScript.PrimitiveType.String;
+                            ResolvedType = typeof(string);
+                            return;
+                        }
+                        ResolvedPrimitiveType = leftType & rightType;
+                        ResolvedType = Emit.TypeUtils.ToType(ResolvedPrimitiveType);
+                        break;
+                    case ExpressionType.Minus:
+                    case ExpressionType.Multiply:
+                    case ExpressionType.Divide:
+                        ResolvedPrimitiveType = leftType & rightType;
+                        ResolvedType = Emit.TypeUtils.ToType(ResolvedPrimitiveType);
+                        break;
+                    case ExpressionType.BangEqual:
+                    case ExpressionType.EqualEqual:
+                    case ExpressionType.Less:
+                    case ExpressionType.LessEqual:
+                    case ExpressionType.Greater:
+                    case ExpressionType.GreaterEqual:
+                        ResolvedPrimitiveType = FluidScript.PrimitiveType.Bool;
+                        ResolvedType = typeof(bool);
+                        break;
                 }
+
             }
-            return ResolvedPrimitiveType;
         }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
@@ -63,7 +67,7 @@ namespace FluidScript.Compiler.SyntaxTree
             switch (NodeType)
             {
                 case ExpressionType.Plus:
-                    var resultType = PrimitiveType();
+                    var resultType = PrimitiveType(info);
                     if (resultType == FluidScript.PrimitiveType.String)
                     {
                         GenerateStringAdd(generator, info);
@@ -100,7 +104,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 case ExpressionType.LessEqual:
                     LoadValues(generator, info);
-                    if (Left.PrimitiveType() == FluidScript.PrimitiveType.Double || Right.PrimitiveType() == FluidScript.PrimitiveType.Double)
+                    if (Left.PrimitiveType(info) == FluidScript.PrimitiveType.Double || Right.PrimitiveType(info) == FluidScript.PrimitiveType.Double)
                         generator.CompareGreaterThanUnsigned();
                     else
                         generator.CompareGreaterThan();
@@ -113,7 +117,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 case ExpressionType.GreaterEqual:
                     LoadValues(generator, info);
-                    if (Left.PrimitiveType() == FluidScript.PrimitiveType.Double || Right.PrimitiveType() == FluidScript.PrimitiveType.Double)
+                    if (Left.PrimitiveType(info) == FluidScript.PrimitiveType.Double || Right.PrimitiveType(info) == FluidScript.PrimitiveType.Double)
                         generator.CompareLessThanUnsigned();
                     else
                         generator.CompareLessThan();
@@ -128,8 +132,8 @@ namespace FluidScript.Compiler.SyntaxTree
 
         private void LoadValues(ILGenerator generator, MethodOptimizationInfo info)
         {
-            var leftType = Left.PrimitiveType();
-            var rightType = Right.PrimitiveType();
+            var leftType = Left.PrimitiveType(info);
+            var rightType = Right.PrimitiveType(info);
             var expectedType = leftType & rightType;
             Left.GenerateCode(generator, info);
             if (leftType == FluidScript.PrimitiveType.Char && rightType == FluidScript.PrimitiveType.Char)
@@ -144,15 +148,12 @@ namespace FluidScript.Compiler.SyntaxTree
             Right.GenerateCode(generator, info);
             if (rightType != expectedType)
                 EmitConvertion.ToPrimitive(generator, expectedType);
-
-            PrimitiveType type = PrimitiveType();
-            ResolvedType = TypeUtils.ToType(type);
         }
 
         private void GenerateStringAdd(ILGenerator generator, MethodOptimizationInfo info)
         {
-            var leftType = Left.PrimitiveType();
-            var rightType = Right.PrimitiveType();
+            var leftType = Left.PrimitiveType(info);
+            var rightType = Right.PrimitiveType(info);
             ResolvedType = typeof(string);
             //todo result optimization
             //load the left into stack

@@ -12,16 +12,16 @@ namespace FluidScript.Compiler.SyntaxTree
             Operand = operand;
         }
 
-        public override PrimitiveType PrimitiveType()
+        protected override void ResolveType(OptimizationInfo info)
         {
-            return Operand.PrimitiveType();
+            ResolvedType = Operand.ResultType(info);
+            ResolvedPrimitiveType = Operand.PrimitiveType(info);
         }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
             if (NodeType == ExpressionType.Parenthesized)
                 Operand.GenerateCode(generator, info);
-            ResolvedType = Operand.ResultType();
         }
     }
 }

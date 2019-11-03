@@ -31,13 +31,14 @@ namespace FluidScipt.ConsoleTest
         public void Test()
         {
             var type = System.Type.GetType("System.Int32[]");
+            var memebers = type.GetMembers();
             Console.WriteLine();
         }
 
         public int Test2()
         {
-            var get = new int[] { 1 };
-            return get[0];
+            var get = new int[] { 1 ,2};
+            return 0;
         }
 
         public double get(int x)

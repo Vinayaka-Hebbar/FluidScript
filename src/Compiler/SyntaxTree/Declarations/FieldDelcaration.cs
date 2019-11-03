@@ -20,7 +20,7 @@ namespace FluidScript.Compiler.SyntaxTree
                         if (member.ValueAtTop.NodeType == StatementType.Expression)
                         {
                             var statement = (ExpressionStatement)member.ValueAtTop;
-                            ResolvedType = statement.Expression.ResultType();
+                            ResolvedType = statement.Expression.ResultType(info);
                         }
                     }
                 }

@@ -11,7 +11,10 @@
         protected OptimizationInfo(Emit.OptimizationInfo info)
         {
             ResolveType = info.ResolveType;
+            DeclaringType = info.DeclaringType;
         }
+
+        public System.Type DeclaringType { get; set; }
 
         private System.Type GetSystemType(TypeName name, bool throwOnError = false)
         {

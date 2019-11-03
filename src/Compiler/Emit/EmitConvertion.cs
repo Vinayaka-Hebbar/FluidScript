@@ -22,7 +22,7 @@ namespace FluidScript.Compiler.Emit
                 return;
             switch (fromType)
             {
-                case PrimitiveType.Null:
+                case PrimitiveType.Undefined:
                     //Push empty string if null
                     generator.Pop();
                     generator.LoadString(string.Empty);

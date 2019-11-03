@@ -6,8 +6,8 @@ namespace FluidScript.Compiler.Scopes
 {
     public class GlobalScope : Scope
     {
-        private  IList<DeclaredType> declaredTypes;
-        public GlobalScope(string name) : base(null, false)
+        private IList<DeclaredType> declaredTypes;
+        public GlobalScope(string name) : base(null, name, false)
         {
         }
 
@@ -17,7 +17,7 @@ namespace FluidScript.Compiler.Scopes
         {
             if (declaredTypes == null)
                 declaredTypes = new List<DeclaredType>();
-            if(memberType == MemberTypes.Type)
+            if (memberType == MemberTypes.Type)
             {
                 return new DeclaredType(declaration, declaredTypes.Count, binding);
             }

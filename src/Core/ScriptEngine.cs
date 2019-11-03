@@ -24,23 +24,23 @@ namespace FluidScript
 
         public TypeGenerator CreateTypeGenerator(string text)
         {
-            return new TypeGenerator(this, new StringSource(text), new GlobalScope());
+            return new TypeGenerator(this, new StringSource(text), new GlobalScope("Dummy"));
         }
 
         public TypeGenerator CreateTypeGenerator(System.IO.FileInfo fileInfo)
         {
-            return new TypeGenerator(this, new FileSource(fileInfo), new GlobalScope());
+            return new TypeGenerator(this, new FileSource(fileInfo), new GlobalScope("Dummy"));
         }
         public MethodGenerator CreateMethodGenerator(string text)
         {
-            var global = new GlobalScope();
-            return new MethodGenerator(this, new StringSource(text), new ObjectScope(global));
+            var global = new GlobalScope("Dummy");
+            return new MethodGenerator(this, new StringSource(text), new ObjectScope(global, "Dummy"));
         }
 
         public MethodGenerator CreateMethodGenerator(System.IO.FileInfo fileInfo)
         {
-            var global = new GlobalScope();
-            return new MethodGenerator(this, new FileSource(fileInfo), new ObjectScope(global));
+            var global = new GlobalScope("Dummy");
+            return new MethodGenerator(this, new FileSource(fileInfo), new ObjectScope(global, "Dummy"));
         }
     }
 }

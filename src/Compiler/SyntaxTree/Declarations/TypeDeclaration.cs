@@ -23,6 +23,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 TryResolveType(info);
             }
             var typeBuilder = builder.DefineType(Name, System.Reflection.TypeAttributes.Public, ResolvedType);
+            info.DeclaringType = typeBuilder;
             foreach (var member in scope.Members)
             {
                 switch (member.MemberType)
@@ -48,7 +49,10 @@ namespace FluidScript.Compiler.SyntaxTree
                 //Initialize
                 var initializer = typeBuilder.DefineConstructor(System.Reflection.MethodAttributes.Public, System.Reflection.CallingConventions.Standard, new System.Type[0]);
                 var generator = new Emit.ReflectionILGenerator(initializer.GetILGenerator(), false);
-                var constructorInfo = new Emit.MethodOptimizationInfo(info);
+                var constructorInfo = new Emit.MethodOptimizationInfo(info)
+                {
+                    DeclaringType = typeBuilder
+                };
                 generator.LoadArgument(0);
                 var ctor = typeBuilder.BaseType.GetConstructor(new System.Type[0]);
                 generator.Call(ctor);
@@ -74,10 +78,7 @@ namespace FluidScript.Compiler.SyntaxTree
             var module = domain.DefineDynamicModule(assemblyName);
             var moduleInfo = new Emit.OptimizationInfo(domain.GetType);
             System.Reflection.Emit.TypeBuilder typeBuilder = Declare(module, moduleInfo);
-            using (Scopes.ScopeRepository.Add(typeBuilder, Scope))
-            {
-                return typeBuilder.CreateType();
-            }
+            return typeBuilder.CreateType();
         }
     }
 }

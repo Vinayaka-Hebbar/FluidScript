@@ -16,20 +16,11 @@ namespace FluidScript.Compiler.SyntaxTree
             ResolvedPrimitiveType = FluidScript.PrimitiveType.Array;
         }
 
-        public override PrimitiveType PrimitiveType()
-        {
-            if(ResolvedPrimitiveType == FluidScript.PrimitiveType.Array)
-            {
-                ResolvedPrimitiveType |= TypeUtils.From(TypeName.FullName).Enum;
-            }
-            return ResolvedPrimitiveType;
-        }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
             generator.LoadInt32(Expressions.Length);
-            Type type = info.GetType(TypeName);
-            ResolvedType = type.MakeArrayType();
+            Type type = ResultType(info).GetElementType();
             generator.NewArray(type);
             for (int i = 0; i < Expressions.Length; i++)
             {
@@ -46,6 +37,13 @@ namespace FluidScript.Compiler.SyntaxTree
                 }
                 generator.StoreArrayElement(type);
             }
+        }
+
+        protected override void ResolveType(OptimizationInfo info)
+        {
+            ResolvedPrimitiveType |= TypeUtils.From(TypeName.FullName).Enum;
+            Type type = info.GetType(TypeName);
+            ResolvedType = type.MakeArrayType();
         }
     }
 }

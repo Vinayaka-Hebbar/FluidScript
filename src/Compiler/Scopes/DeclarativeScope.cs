@@ -10,13 +10,13 @@ namespace FluidScript.Compiler.Scopes
         private readonly SyntaxVisitor visitor;
         private List<DeclaredMember> localMembers;
         private IDictionary<string, DeclaredVariable> localVaribales;
-        public DeclarativeScope(SyntaxVisitor visitor) : base(visitor.Scope, true)
+        public DeclarativeScope(SyntaxVisitor visitor, string name) : base(visitor.Scope, name, true)
         {
             this.visitor = visitor;
             visitor.Scope = this;
         }
 
-        public DeclarativeScope(Scope parentScope) : base(parentScope, true)
+        public DeclarativeScope(Scope parentScope, string name) : base(parentScope, name, true)
         {
         }
 

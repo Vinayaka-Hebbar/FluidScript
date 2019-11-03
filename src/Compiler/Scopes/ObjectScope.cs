@@ -10,12 +10,12 @@ namespace FluidScript.Compiler.Scopes
     {
         private List<DeclaredMember> localMembers;
         private readonly SyntaxVisitor visitor;
-        public ObjectScope(SyntaxVisitor visitor) : base(visitor.Scope, false)
+        public ObjectScope(SyntaxVisitor visitor, string name) : base(visitor.Scope, name, false)
         {
             this.visitor = visitor;
             visitor.Scope = this;
         }
-        public ObjectScope(Scope parentScope) : base(parentScope, false)
+        public ObjectScope(Scope parentScope, string name) : base(parentScope, name, false)
         {
         }
 
@@ -84,9 +84,9 @@ namespace FluidScript.Compiler.Scopes
             return (DeclaredProperty)localMembers.FirstOrDefault(member => member.MemberType == System.Reflection.MemberTypes.Property && member.Name.Equals(name));
         }
 
-        internal DeclaredMember GetMember(string name)
+        internal IEnumerable<DeclaredMember> GetMember(string name)
         {
-            return localMembers.FirstOrDefault(member => member.Name.Equals(name));
+            return localMembers.Where(member => member.Name.Equals(name));
         }
 
         internal IEnumerable<DeclaredMember> Members

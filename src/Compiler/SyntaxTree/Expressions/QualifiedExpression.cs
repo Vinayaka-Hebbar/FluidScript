@@ -1,5 +1,6 @@
-﻿using System;
+﻿using FluidScript.Compiler.Emit;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -24,49 +25,62 @@ namespace FluidScript.Compiler.SyntaxTree
             return Name.ToString();
         }
 
-        public override PrimitiveType PrimitiveType(System.Type declaredType)
+        protected override void ResolveType(OptimizationInfo info)
         {
-            if (ResolvedPrimitiveType == FluidScript.PrimitiveType.Any)
+            if (Target.NodeType == ExpressionType.Identifier)
             {
-                if (Target.NodeType == ExpressionType.Identifier)
+                var value = (NameExpression)Target;
+                var name = value.Name;
+                var scope = value.Scope;
+                do
                 {
-                    var value = (NameExpression)Target;
-                    var name = value.Name;
-                    var scope = value.Scope;
-                    do
+                    switch (scope.Context)
                     {
-                        switch (scope.Context)
-                        {
-                            case Scopes.ScopeContext.Local:
-                                var local = (Scopes.DeclarativeScope)scope;
-                                var variable = local.GetVariable(name);
-                                if(variable != null)
+                        case Scopes.ScopeContext.Local:
+                            var local = (Scopes.DeclarativeScope)scope;
+                            var variable = local.GetVariable(name);
+                            if (variable != null)
+                            {
+                                ResolvedPrimitiveType = variable.PrimitiveType;
+                                ResolvedType = variable.ResolveType(info);
+
+                            }
+                            break;
+                        case Scopes.ScopeContext.Type:
+                            var type = (Scopes.ObjectScope)scope;
+                            Reflection.DeclaredMember member = type.GetMember(name).FirstOrDefault(item => item.IsMethod == false);
+                            if (member != null)
+                            {
+                                ResolvedType = member.Declaration.ResolvedType;
+                            }
+                            else
+                            {
+                                System.Type resolvedType = null;
+                                var declaredMember = info.DeclaringType.GetMember(name)
+                                    .FirstOrDefault(item => item.MemberType != System.Reflection.MemberTypes.Method);
+                                if (declaredMember.MemberType == System.Reflection.MemberTypes.Property)
                                 {
-                                    return variable.PrimitiveType;
+                                    var property = (System.Reflection.PropertyInfo)declaredMember;
+                                    resolvedType = property.PropertyType;
                                 }
-                                break;
-                            case Scopes.ScopeContext.Type:
-                                var type = (Scopes.ObjectScope)scope;
-                                var method = type.GetMember(name);
-                                if (method != null)
+                                else if (declaredMember.MemberType == System.Reflection.MemberTypes.Field)
                                 {
-                                    ResolvedPrimitiveType = method.Declaration.PrimitiveType;
+                                    var field = (System.Reflection.FieldInfo)declaredMember;
+                                    resolvedType = field.FieldType;
                                 }
-                                else
+                                if (resolvedType != null)
                                 {
-                                    //should be type
+                                    ResolvedType = resolvedType;
+                                    ResolvedPrimitiveType = Emit.TypeUtils.ToPrimitive(resolvedType);
                                 }
-                                break;
-                            case Scopes.ScopeContext.Global:
-                                break;
-                            default:
-                                break;
-                        }
-                        scope = scope.ParentScope;
-                    } while (scope != null);
-                }
+                            }
+                            break;
+                        case Scopes.ScopeContext.Global:
+                            break;
+                    }
+                    scope = scope.ParentScope;
+                } while (scope != null);
             }
-            return ResolvedPrimitiveType;
         }
     }
 }

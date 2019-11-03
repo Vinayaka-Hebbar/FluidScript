@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -18,47 +19,46 @@ namespace FluidScript.Compiler.SyntaxTree
             return Name;
         }
 
-        public override PrimitiveType PrimitiveType(Emit.MethodOptimizationInfo info)
+        protected override void ResolveType(OptimizationInfo info)
         {
-            if (ResolvedPrimitiveType == FluidScript.PrimitiveType.Any)
+            Scopes.Scope scope = Scope;
+            do
             {
-                Scopes.Scope scope = Scope;
-                do
+                switch (scope.Context)
                 {
-                    switch (scope.Context)
-                    {
-                        case Scopes.ScopeContext.Local:
-                            if (scope.CanDeclareVariables && scope is Scopes.DeclarativeScope)
+                    case Scopes.ScopeContext.Local:
+                        if (scope.CanDeclareVariables && scope is Scopes.DeclarativeScope)
+                        {
+                            var declarative = (Scopes.DeclarativeScope)scope;
+                            var variable = declarative.GetVariable(Name);
+                            if (variable != null)
                             {
-                                var declarative = (Scopes.DeclarativeScope)scope;
-                                var variable = declarative.GetVariable(Name);
-                                if (variable != null)
-                                {
-                                    ResolvedPrimitiveType = variable.PrimitiveType;
-                                }
+                                ResolvedPrimitiveType = variable.PrimitiveType;
+                                ResolvedType = variable.Store.Type;
+                                return;
                             }
-                            break;
-                        case Scopes.ScopeContext.Type:
-                            if (scope is Scopes.ObjectScope type)
+                        }
+                        break;
+                    case Scopes.ScopeContext.Type:
+                        if (scope is Scopes.ObjectScope type)
+                        {
+                            var memeber = type.GetMember(Name).FirstOrDefault(item => item.IsMethod == false);
+                            if (memeber != null)
                             {
-                                var memeber = type.GetMember(Name);
-                                if (memeber != null)
-                                {
-                                    ResolvedPrimitiveType = memeber.Declaration.PrimitiveType;
-                                    break;
-                                }
+                                ResolvedPrimitiveType = memeber.Declaration.PrimitiveType;
+                                ResolvedType = memeber.Declaration.ResolvedType;
+                                return;
                             }
-                            break;
-                        case Scopes.ScopeContext.Global:
-                            break;
-                        default:
-                            break;
-                    }
-                    scope = scope.ParentScope;
+                        }
+                        break;
+                    case Scopes.ScopeContext.Global:
+                        break;
+                    default:
+                        break;
+                }
+                scope = scope.ParentScope;
 
-                } while (scope != null);
-            }
-            return ResolvedPrimitiveType;
+            } while (scope != null);
         }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
@@ -75,7 +75,7 @@ namespace FluidScript.Compiler.SyntaxTree
                             var variable = declarative.GetVariable(Name);
                             if (variable != null)
                             {
-                                ResolvedType = variable.GetType(info);
+                                ResolvedType = variable.ResolveType(info);
                                 if (variable.VariableType == Reflection.VariableType.Argument)
                                 {
                                     generator.LoadArgument(variable.Index);
@@ -92,7 +92,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     case Scopes.ScopeContext.Type:
                         if (scope is Scopes.ObjectScope type)
                         {
-                            var memeber = type.GetMember(Name);
+                            var memeber = type.GetMember(Name).FirstOrDefault(item => item.IsMethod == false);
                             if (memeber != null)
                             {
                                 if (memeber.IsGenerated == false)

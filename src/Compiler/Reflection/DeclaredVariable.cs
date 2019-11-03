@@ -25,7 +25,11 @@ namespace FluidScript.Compiler.Reflection
             VariableType = variableType;
         }
 
-        public System.Type GetType(Emit.OptimizationInfo info)
+        /// <summary>
+        /// will resolve the delcared type if not declared type there
+        /// </summary>
+        /// <param name="type"></param>
+        public System.Type ResolveType(Emit.OptimizationInfo info)
         {
             if (type == null && typeName.FullName != null)
             {
@@ -52,21 +56,10 @@ namespace FluidScript.Compiler.Reflection
             }
         }
 
-        /// <summary>
-        /// will resolve the delcared type if not declared type there
-        /// </summary>
-        /// <param name="type"></param>
         internal void ResolveType(Type type)
         {
             this.type = type;
-            if (type.IsPrimitive)
-            {
-                PrimitiveType = Emit.TypeUtils.PrimitiveTypes[type];
-            }
-            else
-            {
-                PrimitiveType = PrimitiveType.Any;
-            }
+            PrimitiveType = Emit.TypeUtils.ToPrimitive(type);
         }
     }
 }

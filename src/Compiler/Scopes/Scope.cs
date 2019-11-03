@@ -7,12 +7,14 @@ namespace FluidScript.Compiler.Scopes
 {
     public abstract class Scope
     {
+        public readonly string Name;
         public readonly Scope ParentScope;
         public readonly bool CanDeclareVariables;
 
         public abstract ScopeContext Context { get; }
-        protected Scope(Scope scope, bool canDeclareVariables)
+        protected Scope(Scope scope, string name, bool canDeclareVariables)
         {
+            Name = name;
             ParentScope = scope;
             CanDeclareVariables = canDeclareVariables;
         }

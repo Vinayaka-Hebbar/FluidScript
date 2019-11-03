@@ -29,14 +29,7 @@
             protected set
             {
                 resolvedType = value;
-                if(value.IsPrimitive)
-                {
-                    PrimitiveType = Emit.TypeUtils.PrimitiveTypes[value];
-                }
-                else
-                {
-                    PrimitiveType = PrimitiveType.Any;
-                }
+                PrimitiveType = Emit.TypeUtils.ToPrimitive(value);
             }
         }
 

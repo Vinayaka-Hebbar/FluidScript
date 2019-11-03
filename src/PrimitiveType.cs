@@ -1,10 +1,10 @@
 ﻿namespace FluidScript
 {
     [System.Flags]
-    public enum PrimitiveType : uint
+    public enum PrimitiveType : short
     {
+        Undefined = -1,
         Any = 0,
-        Null = 1,
         Number = 2,
         String = 4,
         Double = Number | 8,

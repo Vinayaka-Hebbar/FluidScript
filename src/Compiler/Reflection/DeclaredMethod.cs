@@ -39,7 +39,8 @@ namespace FluidScript.Compiler.Reflection
                 {
                     SyntaxTree = ValueAtTop,
                     FunctionName = Name,
-                    ReturnType = Store.ReturnType
+                    ReturnType = Store.ReturnType,
+                    DeclaringType = Store.DeclaringType
                 };
                 ValueAtTop.GenerateCode(generator, methodInfo);
 

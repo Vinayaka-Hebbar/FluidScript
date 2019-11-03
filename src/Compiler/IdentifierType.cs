@@ -9,6 +9,7 @@
         This,
         True,
         False,
+        Null,
         Return,
         Var,
         Function,

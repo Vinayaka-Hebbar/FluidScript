@@ -18,12 +18,16 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
 
-        public override PrimitiveType PrimitiveType()
+        protected override void ResolveType(OptimizationInfo info)
         {
             Expression valueAtTop = Variable.ValueAtTop;
             if (valueAtTop == null)
-                return FluidScript.PrimitiveType.Null;
-            return valueAtTop.PrimitiveType();
+                return;
+            else
+            {
+                ResolvedPrimitiveType = valueAtTop.PrimitiveType(info);
+                ResolvedType = valueAtTop.ResultType(info);
+            }
         }
 
         public override object GetValue()
@@ -42,11 +46,10 @@ namespace FluidScript.Compiler.SyntaxTree
             }
             if (Variable.Store == null)
             {
-                Type type = Variable.GetType(info);
-                if (type == null && Variable.ValueAtTop != null)
+                Type type = Variable.ResolveType(info);
+                if (type == null)
                 {
-                    type = Variable.ValueAtTop.ResultType();
-                    ResolvedType = type;
+                    type = ResultType(info);
                     Variable.ResolveType(type);
                 }
                 Variable.Store = generator.DeclareVariable(type, Name);
