@@ -9,15 +9,16 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public Reflection.DeclaredMember DeclaredType;
 
-        public readonly IList<Statement> Statements;
-        public TypeDefinitionStatement(TypeDeclaration declaration, Statement[] statements, Reflection.DeclaredMember type) : base(StatementType.Class)
+        public readonly IList<Node> Nodes;
+        public TypeDefinitionStatement(TypeDeclaration declaration, Node[] nodes, Reflection.DeclaredMember type) : base(StatementType.Class)
         {
             Declaration = declaration;
             Scope = declaration.Scope;
-            Statements = new List<Statement>(statements);
+            Nodes = new List<Node>(nodes);
             DeclaredType = type;
-
         }
+
+        public override IEnumerable<Node> ChildNodes => Nodes;
 
         public System.Type Create(string assemblyName)
         {

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace FluidScript.Compiler.Reflection
 {
@@ -11,22 +12,44 @@ namespace FluidScript.Compiler.Reflection
         {
         }
 
-        public override MemberInfo Memeber => Store;
+        public override MemberInfo Info
+        {
+            get
+            {
+                return Store;
+            }
+        }
 
-        internal override void Generate(Emit.TypeProvider typeProvider)
+        public override Type ResolvedType
+        {
+            get
+            {
+                if (Store == null)
+                    return null;
+                return Store.ReturnType;
+            }
+        }
+
+        internal override void Generate(Emit.OptimizationInfo info)
         {
             if (ValueAtTop != null)
             {
                 var generator = new Emit.ReflectionILGenerator(Store.GetILGenerator(), false);
-                var info = new Emit.OptimizationInfo(typeProvider)
+                var methodInfo = new Emit.MethodOptimizationInfo(info)
                 {
                     SyntaxTree = ValueAtTop,
                     FunctionName = Name,
                     ReturnType = Store.ReturnType
                 };
-                ValueAtTop.GenerateCode(generator, info);
+                ValueAtTop.GenerateCode(generator, methodInfo);
+
+                if (methodInfo.ReturnTarget != null)
+                    generator.DefineLabelPosition(methodInfo.ReturnTarget);
+                if (methodInfo.ReturnVariable != null)
+                    generator.LoadVariable(methodInfo.ReturnVariable);
                 generator.Complete();
             }
+            IsGenerated = true;
         }
     }
 }

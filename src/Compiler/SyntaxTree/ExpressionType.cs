@@ -18,21 +18,22 @@
         /// method call
         /// </summary>
         Invocation = 12,
-        AnonymousMethod = 13,
+        Indexer = 13,
+        AnonymousMethod = 14,
         //either 0->x or x = 0
-        Declaration = 14,
+        Declaration = 15,
         //Known types
         /// <summary>
         /// array block initailization
         /// </summary>
-        Block = 15,
-        Function = 16,
-        Argument = 17,
+        Block = 16,
+        Function = 17,
+        Argument = 18,
         //Stop
         Comma = 24,
         //?
         Question = 27,
-        PropertyAccess = 29,
+        MemberAccess = 29,
         QualifiedNamespace = 30,
         New = 31,
         Array = 32,

@@ -15,8 +15,11 @@
         Identifier = 10,
         Parenthesized = 11,
         Invocation = 12,
-        AnnonymousMethod = 13,
-        Initializer = 14,
+        AnonymousMethod = 13,
+        /// <summary>
+        /// ->
+        /// </summary>
+        Initializer = 15,
         //15 skip
         //Reserved
         // Other

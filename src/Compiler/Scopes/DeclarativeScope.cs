@@ -20,6 +20,8 @@ namespace FluidScript.Compiler.Scopes
         {
         }
 
+        public override ScopeContext Context { get; } = ScopeContext.Local;
+
         public void Dispose()
         {
             if (visitor != null)
@@ -54,7 +56,7 @@ namespace FluidScript.Compiler.Scopes
             return null;
         }
 
-        internal override DeclaredVariable DeclareVariable(string name, string typeName, Expression expression = null, VariableType variableType = VariableType.Local)
+        internal override DeclaredVariable DeclareVariable(string name, TypeName typeName, Expression expression = null, VariableType variableType = VariableType.Local)
         {
             if (localVaribales == null)
                 localVaribales = new Dictionary<string, DeclaredVariable>();
@@ -65,7 +67,7 @@ namespace FluidScript.Compiler.Scopes
             return variable;
         }
 
-        internal override void GenerateDeclarations(ILGenerator generator, OptimizationInfo info)
+        internal override void GenerateDeclarations(ILGenerator generator, MethodOptimizationInfo info)
         {
             if (localMembers != null)
             {

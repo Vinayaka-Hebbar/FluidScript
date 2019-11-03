@@ -26,6 +26,6 @@ namespace FluidScript.Core
 
         void SeekTo(long pos);
 
-        char FallBack();
+        void FallBack();
     }
 }

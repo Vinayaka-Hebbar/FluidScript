@@ -94,7 +94,7 @@ namespace FluidScript.Compiler.Emit
                     generator.ConvertToUnsignedByte();
                     break;
                 case PrimitiveType.String:
-                case PrimitiveType.Object:
+                case PrimitiveType.Any:
                     throw new InvalidCastException("cannot convert to number");
                 default:
                     throw new System.InvalidOperationException("type not found");

@@ -1,11 +1,13 @@
-﻿using FluidScript.Compiler.Emit;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public class Expression : Node
     {
         internal static readonly Expression Empty = new EmptyExpression();
         protected System.Type ResolvedType = null;
+        /// <summary>
+        /// todo for resolve result type assign resolve type if not any
+        /// </summary>
+        protected PrimitiveType ResolvedPrimitiveType;
 
         public Expression(ExpressionType nodeType)
         {
@@ -13,24 +15,20 @@ namespace FluidScript.Compiler.SyntaxTree
         }
         public ExpressionType NodeType { get; }
 
-        public virtual string TypeName
+        public virtual Emit.TypeName TypeName
         {
             get
             {
-                if (Type == null)
-                    return string.Empty;
-                return Type.FullName;
+                if (ResolvedType == null)
+                    return Emit.TypeName.Empty;
+                return new Emit.TypeName(ResolvedType);
             }
         }
 
-        public virtual System.Type Type => ResolvedType;
-        public virtual PrimitiveType ResultType { get; } = PrimitiveType.Any;
+        public virtual System.Type ResultType(System.Type declaredType) => ResolvedType;
+        public virtual PrimitiveType PrimitiveType(System.Type declaredType) => ResolvedPrimitiveType;
 
-        public override object GetValue()
-        {
-            return null;
-        }
-        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
+        public virtual void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
         {
             generator.NoOperation();
         }
@@ -41,11 +39,6 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public EmptyExpression() : base(ExpressionType.Unknown)
         {
-        }
-
-        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
-        {
-            generator.NoOperation();
         }
     }
 }

@@ -1,12 +1,35 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Compiler.Emit;
+using System.Reflection.Emit;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class FieldDelcaration : Declaration
     {
-        public readonly string TypeName;
-
-        public FieldDelcaration(string name, string typeName) : base(name)
+        public FieldDelcaration(string name, TypeName typeName) : base(name, typeName)
         {
-            TypeName = typeName;
+        }
+
+        internal FieldBuilder Declare(Reflection.DeclaredMember member, System.Reflection.Emit.TypeBuilder builder, Emit.OptimizationInfo info)
+        {
+            if (ResolvedType == null)
+            {
+                if (TypeName.FullName == null)
+                {
+                    if (member.ValueAtTop != null)
+                    {
+                        if (member.ValueAtTop.NodeType == StatementType.Expression)
+                        {
+                            var statement = (ExpressionStatement)member.ValueAtTop;
+                            ResolvedType = statement.Expression.ResultType();
+                        }
+                    }
+                }
+                else
+                {
+                    TryResolveType(info);
+                }
+            }
+            return builder.DefineField(Name, ResolvedType, System.Reflection.FieldAttributes.Private);
         }
     }
 }

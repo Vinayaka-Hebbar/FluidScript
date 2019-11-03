@@ -3,7 +3,7 @@
     [System.Flags]
     public enum PrimitiveType : uint
     {
-        Object = 0,
+        Any = 0,
         Null = 1,
         Number = 2,
         String = 4,
@@ -22,7 +22,5 @@
         Bool = 2048,
         Array = 4096,
         ConcatenatedString = String | 8192,
-        //Return
-        Any = 16384,
     }
 }

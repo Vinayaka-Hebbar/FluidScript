@@ -14,9 +14,9 @@ namespace FluidScript.Compiler.Reflection
 
         public PrimitiveType PrimitiveType;
         private System.Type type;
-        private string typeName;
+        private Emit.TypeName typeName;
 
-        public DeclaredVariable(string name, string typeName, int index, SyntaxTree.Expression valueAtTop, VariableType variableType)
+        public DeclaredVariable(string name, Emit.TypeName typeName, int index, SyntaxTree.Expression valueAtTop, VariableType variableType )
         {
             Name = name;
             TypeName = typeName;
@@ -25,27 +25,27 @@ namespace FluidScript.Compiler.Reflection
             VariableType = variableType;
         }
 
-        public System.Type GetType(Emit.TypeProvider provider)
+        public System.Type GetType(Emit.OptimizationInfo info)
         {
-            if (type == null && typeName != null)
+            if (type == null && typeName.FullName != null)
             {
                 //this is not a primitive
-                type = provider.GetType(TypeName);
+                type = info.GetType(TypeName);
             }
 
             return type;
         }
 
 
-        public string TypeName
+        public Emit.TypeName TypeName
         {
             get => typeName;
             set
             {
                 typeName = value;
-                if (value != null)
+                if (value.FullName != null)
                 {
-                    var primitive = Emit.TypeUtils.From(value);
+                    var primitive = Emit.TypeUtils.From(value.FullName);
                     type = primitive.Type;
                     PrimitiveType = primitive.Enum;
                 }
@@ -68,14 +68,5 @@ namespace FluidScript.Compiler.Reflection
                 PrimitiveType = PrimitiveType.Any;
             }
         }
-    }
-}
-
-namespace FluidScript.Compiler.Reflection
-{
-    public enum VariableType
-    {
-        Local,
-        Argument
     }
 }

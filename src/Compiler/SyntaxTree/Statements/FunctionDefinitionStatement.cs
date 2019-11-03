@@ -29,7 +29,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return Name;
         }
 
-        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
+        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
             Body.GenerateCode(generator, info);
             if (info.ReturnTarget != null)

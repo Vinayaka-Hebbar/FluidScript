@@ -9,10 +9,13 @@ namespace FluidScript.Compiler.Reflection
         {
         }
 
-        public override MemberInfo Memeber => Store;
+        public override MemberInfo Info => Store;
+
+        public override System.Type ResolvedType => Store;
 
         public System.Type Create(string assemblyName)
         {
+            IsGenerated = true;
             if (Declaration is SyntaxTree.TypeDeclaration declaration)
             {
                 return declaration.Create(assemblyName);

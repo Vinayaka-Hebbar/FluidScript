@@ -3,6 +3,8 @@
     public enum IdentifierType
     {
         Class,
+        Public,
+        Private,
         New,
         This,
         True,

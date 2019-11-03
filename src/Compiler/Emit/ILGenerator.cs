@@ -61,11 +61,6 @@ namespace FluidScript.Compiler.Emit
         /// <param name="label"> The label to branch to. </param>
         public abstract void BranchIfZero(ILLabel label);
 
-        internal void Call(object concat_String)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Branches to the given label if the value on the top of the stack is non-zero, true or
         /// non-null.
@@ -538,6 +533,13 @@ namespace FluidScript.Compiler.Emit
         {
             UnboxObject(TypeUtils.ToType(type));
         }
+
+
+        /// <summary>
+        /// Pops a value from the stack, converts it to a bool, then pushes it back onto
+        /// the stack.
+        /// </summary>
+        public abstract void ConvertToBool();
 
         /// <summary>
         /// Pops a value from the stack, converts it to a signed byte, then pushes it back onto

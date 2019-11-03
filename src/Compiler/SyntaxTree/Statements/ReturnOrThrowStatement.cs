@@ -10,7 +10,7 @@ namespace FluidScript.Compiler.SyntaxTree
             Expression = expression;
         }
 
-        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
+        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
             // Generate code for the start of the statement.
             var statementLocals = new StatementLocals();
@@ -31,23 +31,23 @@ namespace FluidScript.Compiler.SyntaxTree
                     //todo variable name not used
                     if (info.ReturnVariable == null)
                         info.ReturnVariable = generator.DeclareVariable(info.ReturnType);
-                    if (info.ReturnType != null && info.ReturnType != Expression.Type)
+                    if (info.ReturnType != null && info.ReturnType != Expression.ResultType(info))
                     {
                         if (info.ReturnType.IsPrimitive)
                             TypeUtils.ConvertToPrimitive(generator, info.ReturnType);
-                        if(info.ReturnType == typeof(object) && Expression.Type.IsPrimitive)
+                        if (info.ReturnType == typeof(object) && Expression.ResultType(info).IsPrimitive)
                         {
                             //box
-                            generator.Box(Expression.Type);
+                            generator.Box(Expression.ResultType(info));
                         }
                     }
                     generator.StoreVariable(info.ReturnVariable);
                 }
+                if (info.ReturnTarget == null)
+                    info.ReturnTarget = generator.CreateLabel();
                 //last statement is not a return
                 if (lastStatement == false)
                 {
-                    if (info.ReturnTarget == null)
-                        info.ReturnTarget = generator.CreateLabel();
                     //if iniside try finally block 
                     info.EmitLongJump(generator, info.ReturnTarget);
                 }

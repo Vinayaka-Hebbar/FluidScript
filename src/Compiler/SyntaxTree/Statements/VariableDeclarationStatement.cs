@@ -10,7 +10,7 @@ namespace FluidScript.Compiler.SyntaxTree
             DeclarationExpressions = declarationExpressions;
         }
 
-        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
+        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
             foreach (var declaration in DeclarationExpressions)
             {

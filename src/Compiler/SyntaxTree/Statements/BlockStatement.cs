@@ -14,7 +14,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override IEnumerable<Node> ChildNodes => Statements;
 
-        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
+        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
             var statementLocals = new StatementLocals() { NonDefaultSourceSpanBehavior = true };
             GenerateStartOfStatement(generator, info, statementLocals);

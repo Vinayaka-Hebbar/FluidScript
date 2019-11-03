@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
+using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.Reflection
 {
@@ -9,6 +11,27 @@ namespace FluidScript.Compiler.Reflection
         {
         }
 
-        public override MemberInfo Memeber => Store;
+        public override MemberInfo Info => Store;
+
+        public override Type ResolvedType
+        {
+            get
+            {
+                if (Store == null)
+                    return null;
+                return Store.FieldType;
+            }
+        }
+
+        internal override void Generate(ILGenerator generator, MethodOptimizationInfo info)
+        {
+            if (ValueAtTop != null)
+            {
+                generator.LoadArgument(0);
+                ValueAtTop.GenerateCode(generator, info);
+                generator.StoreField(Store);
+            }
+            IsGenerated = true;
+        }
     }
 }

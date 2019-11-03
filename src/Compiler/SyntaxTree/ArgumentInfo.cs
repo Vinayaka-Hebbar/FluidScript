@@ -5,10 +5,11 @@
         public static readonly ArgumentInfo[] Empty = new ArgumentInfo[0];
 
         public readonly string Name;
-        public readonly string TypeName;
+
+        public readonly Emit.TypeName TypeName;
         public Expression DefaultValue { get; set; }
 
-        public ArgumentInfo(string name, string typeName)
+        public ArgumentInfo(string name, Emit.TypeName typeName)
         {
             Name = name;
             TypeName = typeName;

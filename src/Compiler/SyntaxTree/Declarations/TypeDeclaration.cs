@@ -1,28 +1,28 @@
-﻿
+﻿using System.Linq;
+
 namespace FluidScript.Compiler.SyntaxTree
 {
     public class TypeDeclaration : Declaration
     {
-        public readonly string BaseTypeName;
         public readonly string[] Implements;
         public readonly Scopes.ObjectScope Scope;
         public TypeDeclaration(string name, string baseTypeName, string[] implements, Scopes.ObjectScope scope) : base(name)
         {
-            BaseTypeName = baseTypeName;
+            TypeName = new Emit.TypeName(baseTypeName);
             Implements = implements;
             Scope = scope;
         }
 
-        internal System.Reflection.Emit.TypeBuilder Generate(System.Reflection.Emit.ModuleBuilder builder)
+        public override Emit.TypeName TypeName { get; }
+
+        internal System.Reflection.Emit.TypeBuilder Declare(System.Reflection.Emit.ModuleBuilder builder, Emit.OptimizationInfo info)
         {
             var scope = Scope;
-            var typeBuilder = builder.DefineType(Name, System.Reflection.TypeAttributes.Public, BaseTypeName == null ? null : builder.GetType(BaseTypeName));
-            var typeProvider = new Emit.TypeProvider((name, throwOnError) =>
+            if (ResolvedType == null)
             {
-                if (Emit.TypeUtils.PrimitiveNames.ContainsKey(name))
-                    return Emit.TypeUtils.PrimitiveNames[name].Type;
-                return builder.GetType(name, throwOnError);
-            });
+                TryResolveType(info);
+            }
+            var typeBuilder = builder.DefineType(Name, System.Reflection.TypeAttributes.Public, ResolvedType);
             foreach (var member in scope.Members)
             {
                 switch (member.MemberType)
@@ -31,20 +31,38 @@ namespace FluidScript.Compiler.SyntaxTree
                         var method = (Reflection.DeclaredMethod)member;
                         if (method.Declaration is FunctionDeclaration declaration)
                         {
-                            method.Store = declaration.Declare(member, typeBuilder, typeProvider);
+                            method.Store = declaration.Declare(method, typeBuilder, info);
+                        }
+                        break;
+                    case System.Reflection.MemberTypes.Field:
+                        var field = (Reflection.DeclaredField)member;
+                        if (member.Declaration is FieldDelcaration delcaration)
+                        {
+                            field.Store = delcaration.Declare(field, typeBuilder, info);
                         }
                         break;
                 }
             }
-
+            if (!scope.Members.Any(memeber => memeber.MemberType == System.Reflection.MemberTypes.Constructor))
+            {
+                //Initialize
+                var initializer = typeBuilder.DefineConstructor(System.Reflection.MethodAttributes.Public, System.Reflection.CallingConventions.Standard, new System.Type[0]);
+                var generator = new Emit.ReflectionILGenerator(initializer.GetILGenerator(), false);
+                var constructorInfo = new Emit.MethodOptimizationInfo(info);
+                generator.LoadArgument(0);
+                var ctor = typeBuilder.BaseType.GetConstructor(new System.Type[0]);
+                generator.Call(ctor);
+                foreach (Reflection.DeclaredMember field in scope.Fields)
+                {
+                    field.Generate(generator, constructorInfo);
+                }
+                generator.Complete();
+            }
             foreach (var member in scope.Members)
             {
-                switch (member.MemberType)
+                if (member.MemberType == System.Reflection.MemberTypes.Method || member.MemberType == System.Reflection.MemberTypes.Property)
                 {
-                    case System.Reflection.MemberTypes.Method:
-                        var method = (Reflection.DeclaredMethod)member;
-                        member.Generate(typeProvider);
-                        break;
+                    member.Generate(info);
                 }
             }
             return typeBuilder;
@@ -54,7 +72,12 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var domain = System.Threading.Thread.GetDomain().DefineDynamicAssembly(new System.Reflection.AssemblyName(assemblyName), System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave);
             var module = domain.DefineDynamicModule(assemblyName);
-            return Generate(module).CreateType();
+            var moduleInfo = new Emit.OptimizationInfo(domain.GetType);
+            System.Reflection.Emit.TypeBuilder typeBuilder = Declare(module, moduleInfo);
+            using (Scopes.ScopeRepository.Add(typeBuilder, Scope))
+            {
+                return typeBuilder.CreateType();
+            }
         }
     }
 }

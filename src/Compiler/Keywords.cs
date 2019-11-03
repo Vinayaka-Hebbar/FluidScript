@@ -30,7 +30,9 @@ namespace FluidScript.Compiler
                 {"switch", IdentifierType.Switch },
                 {"break", IdentifierType.Break },
                 {"throw", IdentifierType.Throw },
-                {"class", IdentifierType.Class }
+                {"class", IdentifierType.Class },
+                {"public", IdentifierType.Public },
+                {"private", IdentifierType.Private }
             };
         }
 

@@ -7,29 +7,26 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly ArgumentInfo[] Arguments;
 
-        public readonly Scopes.DeclarativeScope Scope;
+        public System.Type[] ArgumentTypes;
 
-        public readonly string ReturnTypeName;
-        public FunctionDeclaration(string name, string returnTypeName, ArgumentInfo[] arguments, Scopes.DeclarativeScope scope) : base(name)
+        public readonly Scopes.DeclarativeScope Scope;
+        public FunctionDeclaration(string name, Emit.TypeName returnTypeName, ArgumentInfo[] arguments, Scopes.DeclarativeScope scope) : base(name, returnTypeName)
         {
-            ReturnTypeName = returnTypeName;
             Arguments = arguments;
             Scope = scope;
         }
 
-        public System.Type[] ArgumentTypes(Emit.TypeProvider provider)
+        protected override void TryResolveType(Emit.OptimizationInfo info)
         {
-            return Arguments.Select(arg => provider.GetType(arg.TypeName)).ToArray();
+
+            base.TryResolveType(info);
+            ArgumentTypes = Arguments.Select(arg => info.GetType(arg.TypeName)).ToArray();
         }
 
-        public System.Type ReturnType(Emit.TypeProvider provider)
+        internal MethodBuilder Declare(Reflection.DeclaredMethod method, TypeBuilder builder, Emit.OptimizationInfo info)
         {
-            return provider.GetType(ReturnTypeName);
-        }
-
-        internal MethodBuilder Declare(Reflection.DeclaredMember member, TypeBuilder typeBuilder, Emit.TypeProvider typeProvider)
-        {
-            return typeBuilder.DefineMethod(Name, System.Reflection.MethodAttributes.Public, ReturnType(typeProvider), ArgumentTypes(typeProvider));
+            TryResolveType(info);
+            return builder.DefineMethod(Name, System.Reflection.MethodAttributes.Public, ResolvedType, ArgumentTypes);
         }
     }
 }

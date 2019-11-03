@@ -1,6 +1,8 @@
 ﻿class Sample {
-	function read(a:int):object { 
-		var x = true, y = 20.1;
-		return y;
+	x = 1, y = 1.1;
+
+	function read(a:int):int { 
+		var val = <int>[2,1];
+		return val[0];
 	}
 }

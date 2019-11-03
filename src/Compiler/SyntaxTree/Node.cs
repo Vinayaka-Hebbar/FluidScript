@@ -1,5 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -35,9 +34,15 @@ namespace FluidScript.Compiler.SyntaxTree
             return values;
         }
 
-        public abstract void GenerateCode(ILGenerator generator, OptimizationInfo info);
-
-
-        public abstract object GetValue();
+        /// <summary>
+        /// Get Value for the scope
+        /// </summary>
+        /// <param name="scope"></param>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        public virtual object GetValue()
+        {
+            return null;
+        }
     }
 }

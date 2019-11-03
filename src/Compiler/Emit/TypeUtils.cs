@@ -39,20 +39,27 @@ namespace FluidScript.Compiler.Emit
                 {"bool", new Primitive(typeof(bool) , PrimitiveType.Bool)},
                 {"string", new Primitive(typeof(string), PrimitiveType.String) },
                 {"char", new Primitive(typeof(char), PrimitiveType.Char) },
-                {"object", new Primitive(typeof(object), PrimitiveType.Object) }
+                {"object", new Primitive(typeof(object), PrimitiveType.Any) }
             };
             PrimitiveTypes = PrimitiveNames
                 .Select(item => item.Value)
                 .ToDictionary(element => element.Type, element => element.Enum);
         }
 
-        internal static Type GetType(string typeName)
+        internal static Type GetType(Emit.TypeName name)
         {
-            if (typeName == null)
-                return typeof(object);
-            if (PrimitiveNames.ContainsKey(typeName))
-                return PrimitiveNames[typeName].Type;
-            return System.Type.GetType(typeName);
+            if (name.FullName == null)
+                return null;
+            if (PrimitiveNames.ContainsKey(name.FullName))
+            {
+                if (name.IsArray())
+                    PrimitiveNames[name.FullName].Type.MakeArrayType();
+                return PrimitiveNames[name.FullName].Type;
+            }
+            System.Type type = System.Type.GetType(name.FullName);
+            if (name.IsArray())
+                return type.MakeArrayType();
+            return type;
         }
 
         internal static Type GetPrimitive(string typeName)
@@ -88,12 +95,9 @@ namespace FluidScript.Compiler.Emit
         {
             switch (type)
             {
-                case PrimitiveType.Object:
-                    return false;
-                case PrimitiveType.Null:
-                    return false;
-                case PrimitiveType.Array:
                 case PrimitiveType.Any:
+                case PrimitiveType.Null:
+                case PrimitiveType.Array:
                     return false;
                 default:
                     return true;

@@ -1,6 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public abstract class Statement : Node
     {
@@ -24,12 +22,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public bool HasLabels => Labels.Length > 0;
 
-        public override object GetValue()
-        {
-            return null;
-        }
-
-        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
+        public virtual void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
         {
             generator.NoOperation();
         }
@@ -54,7 +47,7 @@ namespace FluidScript.Compiler.SyntaxTree
             /// <summary>
             /// Gets or sets a label marking the end of the statement.
             /// </summary>
-            public ILLabel EndOfStatement;
+            public Emit.ILLabel EndOfStatement;
 
 #if DEBUG
             /// <summary>
@@ -70,7 +63,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="generator"> The generator to output the CIL to. </param>
         /// <param name="info"> Information about any optimizations that should be performed. </param>
         /// <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
-        public void GenerateStartOfStatement(ILGenerator generator, OptimizationInfo info, StatementLocals locals)
+        public void GenerateStartOfStatement(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info, StatementLocals locals)
         {
 #if DEBUG && USE_DYNAMIC_IL_INFO
             // Statements must not produce or consume any values on the stack.
@@ -89,7 +82,7 @@ namespace FluidScript.Compiler.SyntaxTree
             if (locals.NonDefaultSourceSpanBehavior == false)
             {
                 //todo span
-               // optimizationInfo.MarkSequencePoint(generator, this.SourceSpan);
+                // optimizationInfo.MarkSequencePoint(generator, this.SourceSpan);
             }
         }
 
@@ -99,7 +92,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="generator"> The generator to output the CIL to. </param>
         /// <param name="info"> Information about any optimizations that should be performed. </param>
         /// <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
-        public void GenerateEndOfStatement(ILGenerator generator, OptimizationInfo info, StatementLocals locals)
+        public void GenerateEndOfStatement(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info, StatementLocals locals)
         {
             if (locals.NonDefaultBreakStatementBehavior == false && this.HasLabels == true)
             {

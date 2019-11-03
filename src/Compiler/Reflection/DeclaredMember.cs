@@ -1,5 +1,4 @@
 ﻿using System;
-using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.Reflection
 {
@@ -20,7 +19,7 @@ namespace FluidScript.Compiler.Reflection
         /// </summary>
         public SyntaxTree.Statement ValueAtTop;
 
-        public abstract System.Reflection.MemberInfo Memeber { get; }
+        public abstract System.Reflection.MemberInfo Info { get; }
         protected DeclaredMember(SyntaxTree.Declaration declaration, int index, BindingFlags binding, System.Reflection.MemberTypes memberType)
         {
             Index = index;
@@ -29,7 +28,15 @@ namespace FluidScript.Compiler.Reflection
             MemberType = memberType;
         }
 
-        internal virtual void Generate(TypeProvider typeProvider)
+        public bool IsGenerated { get; protected set; }
+        public abstract Type ResolvedType { get; }
+        public bool IsField => MemberType == System.Reflection.MemberTypes.Field;
+
+        internal virtual void Generate(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
+        {
+            throw new NotImplementedException();
+        }
+        internal virtual void Generate(Emit.OptimizationInfo info)
         {
             throw new NotImplementedException();
         }
@@ -52,5 +59,5 @@ namespace FluidScript.Compiler.Reflection
         Type = 16
     }
 
-    
+
 }

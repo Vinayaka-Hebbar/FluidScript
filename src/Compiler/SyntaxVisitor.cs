@@ -2,6 +2,7 @@
 using FluidScript.Compiler.Scopes;
 using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Core;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,6 @@ namespace FluidScript.Compiler
         public readonly IScriptSource Source;
         private readonly IList<string> _currentLabels = new List<string>();
         public TokenType TokenType;
-
         private char c;
         /// <summary>
         /// Current Scope
@@ -75,6 +75,10 @@ namespace FluidScript.Compiler
                     return TokenType.LeftBrace;
                 case '}':
                     return TokenType.RightBrace;
+                case '[':
+                    return TokenType.LeftBracket;
+                case ']':
+                    return TokenType.RightBracket;
                 case '@':
                     c = Source.ReadChar();
                     return TokenType.Variable;
@@ -161,7 +165,7 @@ namespace FluidScript.Compiler
                     if (n == '>')
                     {
                         c = Source.ReadChar();
-                        return TokenType.AnnonymousMethod;
+                        return TokenType.AnonymousMethod;
                     }
                     if (n == '=')
                     {
@@ -284,30 +288,61 @@ namespace FluidScript.Compiler
                     }
                 }
                 TypeDeclaration declaration = null;
-                Statement[] statements = null;
+                Node[] nodes = null;
                 using (var scope = new ObjectScope(this))
                 {
                     declaration = new TypeDeclaration(typeName, baseTypeName, implements, scope);
                     if (TokenType == TokenType.LeftBrace)
                     {
                         MoveNext();
-                        statements = VisitProgram().ToArray();
+                        nodes = VisitNodes().ToArray();
                     }
                 }
 
                 var type = Scope.DeclareMember(declaration, BindingFlags.Public, MemberTypes.Type);
-                return new TypeDefinitionStatement(declaration, statements, type);
+                return new TypeDefinitionStatement(declaration, nodes, type);
             }
             throw new System.Exception("Syntax error");
         }
 
-        public IEnumerable<Statement> VisitProgram()
+        public IEnumerable<Node> VisitNodes()
         {
             while (TokenType != TokenType.RightBrace)
             {
-                yield return VisitStatement();
+                yield return VisitNode();
                 if (TokenType == TokenType.SemiColon)
                     MoveNext();
+            }
+        }
+
+        public Node VisitNode()
+        {
+            switch (TokenType)
+            {
+                case TokenType.Identifier:
+                    return VisitIdentifierNode();
+                default:
+                    throw new Exception(string.Format("Invalid Token type {0}", TokenType));
+            }
+        }
+
+        private Node VisitIdentifierNode()
+        {
+            var name = GetName();
+            if (Keywords.TryGetIdentifier(name, out IdentifierType type))
+            {
+                switch (type)
+                {
+                    case IdentifierType.Function:
+                        return VisitFunctionDefinition();
+                    //default label statment
+                    default:
+                        throw new Exception("Unexpected Keyword");
+                }
+            }
+            else
+            {
+                return VisitLabeledNode(name);
             }
         }
 
@@ -363,6 +398,82 @@ namespace FluidScript.Compiler
             return VisitExpressionStatement();
         }
 
+        private Node VisitLabeledNode(string name)
+        {
+            MoveNext();
+            string typeName = null;
+            if (TokenType == TokenType.Colon)
+            {
+                MoveNext();
+                typeName = GetName();
+                MoveNext();
+            }
+            DeclaredFlags flags = DeclaredFlags.None;
+            if (TokenType == TokenType.LeftBracket)
+            {
+                MoveNext();
+                if (TokenType == TokenType.RightBracket)
+                {
+                    flags |= DeclaredFlags.Array;
+                    MoveNext();
+                }
+            }
+            Expression expression = null;
+            if (TokenType == TokenType.Equal)
+            {
+                MoveNext();
+                expression = VisitConditionalExpression();
+            }
+            var member = Scope.DeclareMember(new FieldDelcaration(name, new Emit.TypeName(typeName, flags)), BindingFlags.Private, MemberTypes.Field, new ExpressionStatement(expression));
+            var initial = new FieldDeclarationExpression(name, member);
+            if (TokenType == TokenType.Comma)
+            {
+                var declarations = VisitFieldDeclarations(initial).ToArray();
+                return new FieldDeclarationStatement(declarations);
+            }
+            return new FieldDeclarationStatement(initial);
+
+        }
+
+        private IEnumerable<FieldDeclarationExpression> VisitFieldDeclarations(FieldDeclarationExpression initial)
+        {
+            yield return initial;
+            MoveNext();
+            while (TokenType != TokenType.SemiColon && TokenType != TokenType.End)
+            {
+                if (TokenType == TokenType.Identifier)
+                {
+                    string name = GetName();
+                    MoveNext();
+                    string typeName = null;
+                    if (TokenType == TokenType.Colon)
+                    {
+                        MoveNext();
+                        typeName = GetName();
+                        MoveNext();
+                    }
+                    DeclaredFlags flags = DeclaredFlags.None;
+                    if (TokenType == TokenType.LeftBracket)
+                    {
+                        MoveNext();
+                        if (TokenType == TokenType.RightBracket)
+                        {
+                            flags |= DeclaredFlags.Array;
+                            MoveNext();
+                        }
+                    }
+                    Expression expression = null;
+                    if (TokenType == TokenType.Equal)
+                    {
+                        MoveNext();
+                        expression = VisitConditionalExpression();
+                    }
+                    var member = Scope.DeclareMember(new FieldDelcaration(name, new Emit.TypeName(typeName, flags)), BindingFlags.Private, MemberTypes.Field, new ExpressionStatement(expression));
+                    yield return new FieldDeclarationExpression(name, member);
+                }
+            }
+        }
+
         protected Statement VisitIfStatement()
         {
             MoveNext();
@@ -392,7 +503,7 @@ namespace FluidScript.Compiler
         {
             MoveNext();
             string name = null;
-            if (CheckSyntaxExpected(TokenType.Identifier))
+            if (TokenType == TokenType.Identifier)
                 name = GetName();
             MoveNext();
             ArgumentInfo[] argumentsList;
@@ -402,6 +513,8 @@ namespace FluidScript.Compiler
             FunctionDeclaration declaration = null;
             using (var scope = new DeclarativeScope(this))
             {
+                //todo not required when the method is static
+                scope.DeclareVariable("this", Emit.TypeName.Empty, null, VariableType.Argument);
                 IEnumerable<ArgumentInfo> arguments = Enumerable.Empty<ArgumentInfo>();
                 if (CheckSyntaxExpected(TokenType.LeftParenthesis))
                     arguments = VisitFunctionArguments();
@@ -414,7 +527,17 @@ namespace FluidScript.Compiler
                     type = GetName();
                     MoveNext();
                 }
-                declaration = new FunctionDeclaration(name, type, argumentsList, scope);
+                DeclaredFlags flags = DeclaredFlags.None;
+                if (TokenType == TokenType.LeftBracket)
+                {
+                    MoveNext();
+                    if (TokenType == TokenType.RightBracket)
+                    {
+                        flags |= DeclaredFlags.Array;
+                        MoveNext();
+                    }
+                }
+                declaration = new FunctionDeclaration(name, new Emit.TypeName(type, flags), argumentsList, scope);
                 if (TokenType == TokenType.LeftBrace)
                 {
                     //todo abstract, virtual functions
@@ -435,7 +558,7 @@ namespace FluidScript.Compiler
         private Statement VisitExpressionStatement()
         {
             Expression expression = VisitExpression();
-            return new ExpressionStatement(expression, StatementType.Expression);
+            return new ExpressionStatement(expression);
         }
 
         public BlockStatement VisitBlock()
@@ -450,7 +573,7 @@ namespace FluidScript.Compiler
                     MoveNext();
                 return new BlockStatement(statements, CurrentLabels);
             }
-            if (CheckSyntaxExpected(TokenType.AnnonymousMethod))
+            if (CheckSyntaxExpected(TokenType.AnonymousMethod))
             {
                 MoveNext();
                 return VisitBlock();
@@ -774,10 +897,12 @@ namespace FluidScript.Compiler
                     case TokenType.Qualified:
                     case TokenType.Dot:
                         MoveNext();
-                        if (TokenType == TokenType.Identifier || TokenType == TokenType.Variable)
-                        {
-                            exp = new QualifiedExpression(exp, new NameExpression(GetName(), Scope, (ExpressionType)TokenType), (ExpressionType)type);
-                        }
+                        exp = new QualifiedExpression(exp, GetName(), (ExpressionType)type);
+                        break;
+                    case TokenType.LeftBracket:
+                        MoveNext();
+                        args = VisitExpressionList(TokenType.Comma, TokenType.RightBracket).ToArray();
+                        exp = new InvocationExpression(exp, args, ExpressionType.Indexer);
                         break;
                     case TokenType.SemiColon:
                     case TokenType.End:
@@ -828,15 +953,33 @@ namespace FluidScript.Compiler
         /// <returns></returns>
         private Expression VisitArrayLiteral()
         {
-            //Next <
-            MoveNext();
-            var value = new string(ReadString().ToArray());
-            //>
-            MoveNext();
+            string typeName = null;
+            DeclaredFlags flags = DeclaredFlags.None;
+            if (TokenType == TokenType.Less)
+            {
+                //Next <
+                MoveNext();
+                typeName = GetName();
+                //>
+                MoveNext();
+                if (TokenType == TokenType.LeftBracket)
+                {
+                    MoveNext();
+                    if (TokenType == TokenType.RightBracket)
+                    {
+                        flags |= DeclaredFlags.Array;
+                        MoveNext();
+                    }
+                }
+                if (TokenType == TokenType.Greater)
+                    MoveNext();
+            }
             if (CheckSyntaxExpected(TokenType.LeftBracket))
             {
-                var list = VisitExpressionList(TokenType.Comma);
-                return new ArrayLiteralExpression(list.ToArray(), value);
+                //[
+                MoveNext();
+                var list = VisitExpressionList(TokenType.Comma, TokenType.RightBracket).ToArray();
+                return new ArrayLiteralExpression(list, new Emit.TypeName(typeName, flags));
             }
             throw new System.InvalidOperationException(string.Format("Invalid array declaration at column = {0}, line = {1}", Source.Column, Source.Line));
         }
@@ -912,6 +1055,7 @@ namespace FluidScript.Compiler
                 {
                     var name = GetName();
                     string typeName = null;
+                    DeclaredFlags flags = DeclaredFlags.None;
                     MoveNext();
                     if (TokenType == TokenType.Colon)
                     {
@@ -920,13 +1064,24 @@ namespace FluidScript.Compiler
                         //after type name next
                         MoveNext();
                     }
-                    var parameter = new ArgumentInfo(name, typeName);
+                    if (TokenType == TokenType.LeftBracket)
+                    {
+                        MoveNext();
+                        if (TokenType == TokenType.RightBracket)
+                        {
+                            flags |= DeclaredFlags.Array;
+                            MoveNext();
+                        }
+                    }
+                    var parameter = new ArgumentInfo(name, new Emit.TypeName(typeName, flags));
                     if (TokenType == TokenType.Equal)
                     {
                         MoveNext();
                         parameter.DefaultValue = VisitConditionalExpression();
                     }
+
                     Scope.DeclareVariable(parameter.Name, parameter.TypeName, parameter.DefaultValue, VariableType.Argument);
+
                     //todo check if method arguments needs any scopes
                     if (TokenType == TokenType.Comma)
                         MoveNext();
@@ -936,11 +1091,9 @@ namespace FluidScript.Compiler
             }
         }
 
-        public IEnumerable<Expression> VisitExpressionList(TokenType splitToken)
+        public IEnumerable<Expression> VisitExpressionList(TokenType splitToken, TokenType endToken)
         {
-            CheckSyntaxExpected(TokenType.LeftBrace);
-            MoveNext();
-            for (TokenType type = TokenType; type != TokenType.RightBrace; type = TokenType)
+            for (TokenType type = TokenType; type != endToken; type = TokenType)
             {
                 if (type == splitToken)
                 {
@@ -949,9 +1102,9 @@ namespace FluidScript.Compiler
                     continue;
                 }
                 Expression exp = VisitConditionalExpression();
+                yield return exp;
                 if (CheckSyntaxExpected(splitToken))
                     MoveNext();
-                yield return exp;
             }
         }
 
@@ -967,6 +1120,7 @@ namespace FluidScript.Compiler
                     name = GetName();
                 MoveNext();
                 string typeName = null;
+                DeclaredFlags flags = DeclaredFlags.None;
                 Expression expression = null;
                 if (TokenType == TokenType.Colon)
                 {
@@ -974,12 +1128,21 @@ namespace FluidScript.Compiler
                     typeName = GetName();
                     MoveNext();
                 }
+                if (TokenType == TokenType.LeftBracket)
+                {
+                    MoveNext();
+                    if (TokenType == TokenType.RightBracket)
+                    {
+                        flags |= DeclaredFlags.Array;
+                        MoveNext();
+                    }
+                }
                 if (TokenType == TokenType.Equal)
                 {
                     MoveNext();
                     expression = VisitAssignmentExpression();
                 }
-                yield return new VariableDeclarationExpression(name, Scope, Scope.DeclareVariable(name, typeName, expression));
+                yield return new VariableDeclarationExpression(name, Scope, Scope.DeclareVariable(name, new Emit.TypeName(typeName, flags), expression));
             } while (TokenType == TokenType.Comma);
         }
 
@@ -1003,8 +1166,9 @@ namespace FluidScript.Compiler
         #region Interger
         private object GetNumeric()
         {
-            char first = Source.FallBack();
-            char next = Source.ReadChar();
+            Source.FallBack();
+            char first = Source.ReadChar();
+            char next = Source.PeekChar();
             if (first == '0')
             {
                 if (next == 'x' || next == 'X')

@@ -1,8 +1,8 @@
 ﻿using FluidScript.Compiler.Reflection;
 using FluidScript.Compiler.SyntaxTree;
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 
 namespace FluidScript.Compiler.Scopes
 {
@@ -18,6 +18,8 @@ namespace FluidScript.Compiler.Scopes
         public ObjectScope(Scope parentScope) : base(parentScope, false)
         {
         }
+
+        public override ScopeContext Context { get; } = ScopeContext.Type;
 
         internal override DeclaredMember DeclareMember(Declaration declaration, Reflection.BindingFlags binding, Reflection.MemberTypes memberType, Statement statement = null)
         {
@@ -44,6 +46,49 @@ namespace FluidScript.Compiler.Scopes
             return member;
         }
 
+        internal DeclaredMethod GetMethod(string name, Type[] argumentTypes)
+        {
+            var methods = localMembers.Where(member => member.MemberType == System.Reflection.MemberTypes.Method && member.Name.Equals(name))
+                .Select(member => (DeclaredMethod)member);
+            foreach (var item in methods)
+            {
+                System.Type[] array = ((FunctionDeclaration)item.Declaration).ArgumentTypes;
+                if (argumentTypes.Length == array.Length)
+                {
+                    bool status = true;
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        System.Type paramater = array[i];
+                        if (paramater != argumentTypes[i])
+                        {
+                            status = false;
+                            break;
+                        }
+                    }
+                    if (status == true)
+                    {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }
+
+        internal DeclaredField GetField(string name)
+        {
+            return (DeclaredField)localMembers.FirstOrDefault(member => member.MemberType == System.Reflection.MemberTypes.Field && member.Name.Equals(name));
+        }
+
+        internal DeclaredProperty GetProperty(string name)
+        {
+            return (DeclaredProperty)localMembers.FirstOrDefault(member => member.MemberType == System.Reflection.MemberTypes.Property && member.Name.Equals(name));
+        }
+
+        internal DeclaredMember GetMember(string name)
+        {
+            return localMembers.FirstOrDefault(member => member.Name.Equals(name));
+        }
+
         internal IEnumerable<DeclaredMember> Members
         {
             get
@@ -53,6 +98,9 @@ namespace FluidScript.Compiler.Scopes
                 return localMembers;
             }
         }
+
+        public IEnumerable<DeclaredMember> Fields => localMembers.Where(member => member.IsField);
+
         public void Dispose()
         {
             if (visitor != null)

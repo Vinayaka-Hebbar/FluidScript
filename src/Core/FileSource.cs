@@ -257,17 +257,15 @@ namespace FluidScript.Core
             }
             return charBuffer[charPos];
         }
-        public char FallBack()
+        public void FallBack()
         {
             if (charPos == 0)
             {
                 _stream.Position--;
                 Discard();
-                return PeekChar();
             }
 
             charPos--;
-            return PeekChar();
         }
         public void Reset()
         {

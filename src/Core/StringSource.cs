@@ -70,10 +70,9 @@
             return _text;
         }
 
-        public char FallBack()
+        public void FallBack()
         {
             pos--;
-            return _text[pos];
         }
     }
 }

@@ -228,6 +228,11 @@ namespace FluidScript.Compiler.Emit
             Return();
         }
 
+        public override void ConvertToBool()
+        {
+            Generator.Emit(OpCodes.Conv_I1);
+        }
+
         public override void ConvertToByte()
         {
             Generator.Emit(OpCodes.Conv_I1);

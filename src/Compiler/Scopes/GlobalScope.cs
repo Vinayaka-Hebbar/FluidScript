@@ -7,9 +7,11 @@ namespace FluidScript.Compiler.Scopes
     public class GlobalScope : Scope
     {
         private  IList<DeclaredType> declaredTypes;
-        public GlobalScope() : base(null, false)
+        public GlobalScope(string name) : base(null, false)
         {
         }
+
+        public override ScopeContext Context { get; } = ScopeContext.Global;
 
         internal override DeclaredMember DeclareMember(Declaration declaration, BindingFlags binding, MemberTypes memberType, Statement statement = null)
         {

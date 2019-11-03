@@ -1,34 +1,39 @@
-﻿using System;
-using FluidScript.Compiler.Emit;
-using FluidScript.Compiler.Reflection;
+﻿using FluidScript.Compiler.Emit;
+using System;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
     public class VariableDeclarationExpression : Expression
     {
         public readonly string Name;
-        protected readonly Scopes.Scope Scope;
-        protected readonly DeclaredVariable Variable;
+        public readonly Scopes.Scope Scope;
+        public readonly Reflection.DeclaredVariable Variable;
 
-        public VariableDeclarationExpression(string name, Scopes.Scope scope, DeclaredVariable variable) : base(ExpressionType.Declaration)
+        public VariableDeclarationExpression(string name, Scopes.Scope scope, Reflection.DeclaredVariable variable) : base(ExpressionType.Declaration)
         {
             Name = name;
             Scope = scope;
             Variable = variable;
+
         }
 
-        public override PrimitiveType ResultType
+
+        public override PrimitiveType PrimitiveType()
         {
-            get
-            {
-                Expression valueAtTop = Variable.ValueAtTop;
-                if (valueAtTop == null)
-                    return PrimitiveType.Null;
-                return valueAtTop.ResultType;
-            }
+            Expression valueAtTop = Variable.ValueAtTop;
+            if (valueAtTop == null)
+                return FluidScript.PrimitiveType.Null;
+            return valueAtTop.PrimitiveType();
         }
 
-        public override void GenerateCode(ILGenerator generator, OptimizationInfo info)
+        public override object GetValue()
+        {
+            if (Variable.ValueAtTop == null)
+                return null;
+            return Variable.ValueAtTop.GetValue();
+        }
+
+        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
             //initialize
             if (Variable.ValueAtTop != null)
@@ -37,10 +42,10 @@ namespace FluidScript.Compiler.SyntaxTree
             }
             if (Variable.Store == null)
             {
-                Type type = Variable.GetType(info.TypeProvider);
+                Type type = Variable.GetType(info);
                 if (type == null && Variable.ValueAtTop != null)
                 {
-                    type = Variable.ValueAtTop.Type;
+                    type = Variable.ValueAtTop.ResultType();
                     ResolvedType = type;
                     Variable.ResolveType(type);
                 }
