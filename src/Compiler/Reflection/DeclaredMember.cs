@@ -14,6 +14,8 @@ namespace FluidScript.Compiler.Reflection
         public readonly int Index;
         public readonly BindingFlags Binding;
         public readonly System.Reflection.MemberTypes MemberType;
+
+        public Core.RuntimeObject Runtime;
         /// <summary>
         /// May be field , property or method initailization
         /// </summary>

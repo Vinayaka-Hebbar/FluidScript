@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Core;
 using System;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -17,7 +18,6 @@ namespace FluidScript.Compiler.SyntaxTree
 
         }
 
-
         protected override void ResolveType(OptimizationInfo info)
         {
             Expression valueAtTop = Variable.ValueAtTop;
@@ -30,11 +30,11 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        public override object GetValue()
+        public override RuntimeObject Evaluate()
         {
             if (Variable.ValueAtTop == null)
-                return null;
-            return Variable.ValueAtTop.GetValue();
+                return RuntimeObject.Null;
+            return Variable.ValueAtTop.Evaluate();
         }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)

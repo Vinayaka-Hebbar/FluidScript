@@ -11,7 +11,6 @@ namespace FluidScript.Compiler
 {
     public class SyntaxVisitor : IEnumerable<TokenType>, IEnumerator<TokenType>
     {
-        internal static readonly Keywords InbuiltKeywords = new Keywords();
         public readonly IScriptSource Source;
         private readonly IList<string> _currentLabels = new List<string>();
         public TokenType TokenType;
@@ -20,7 +19,6 @@ namespace FluidScript.Compiler
         /// Current Scope
         /// </summary>
         public Scope Scope;
-        internal readonly Keywords Keywords;
         public readonly ParserSettings Settings;
 
         public SyntaxVisitor(IScriptSource source, Scope initialScope, ParserSettings settings)
@@ -28,7 +26,6 @@ namespace FluidScript.Compiler
             Source = source;
             Scope = initialScope;
             Settings = settings;
-            Keywords = InbuiltKeywords;
         }
 
         /// <summary>
@@ -470,6 +467,8 @@ namespace FluidScript.Compiler
                     }
                     var member = Scope.DeclareMember(new FieldDelcaration(name, new Emit.TypeName(typeName, flags)), BindingFlags.Private, MemberTypes.Field, new ExpressionStatement(expression));
                     yield return new FieldDeclarationExpression(name, member);
+                    if (TokenType == TokenType.Comma)
+                        MoveNext();
                 }
             }
         }
@@ -866,10 +865,8 @@ namespace FluidScript.Compiler
                     exp = VisitArrayLiteral();
                     break;
             }
-            //End of left
-            if (TokenType == TokenType.SemiColon)
-                return exp;
             MoveNext();
+            //End of left
             return VisitRightExpression(exp);
         }
 
@@ -1036,7 +1033,7 @@ namespace FluidScript.Compiler
                     continue;
                 }
 
-                Expression exp = VisitConditionalExpression();
+                Expression exp = VisitAssignmentExpression();
                 if (CheckSyntaxExpected(TokenType.Comma))
                     MoveNext();
                 yield return exp;
@@ -1103,7 +1100,7 @@ namespace FluidScript.Compiler
                     MoveNext();
                     continue;
                 }
-                Expression exp = VisitConditionalExpression();
+                Expression exp = VisitAssignmentExpression();
                 yield return exp;
                 if (CheckSyntaxExpected(splitToken))
                     MoveNext();
@@ -1360,10 +1357,12 @@ namespace FluidScript.Compiler
         {
             return new string(ReadString().ToArray());
         }
+
         public string GetName()
         {
             return new string(ReadVariableName().ToArray());
         }
+
         private IEnumerable<char> ReadVariableName()
         {
             for (; c != char.MinValue; c = Source.ReadChar())

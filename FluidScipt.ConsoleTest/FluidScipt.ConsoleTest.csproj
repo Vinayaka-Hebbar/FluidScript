@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\FluidScript.csproj" />
+    <ProjectReference Include="..\FluidScript.Runtime\FluidScript.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

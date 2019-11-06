@@ -9,9 +9,9 @@
             Expression = expression;
         }
 
-        public override object GetValue()
+        public override object Evaluate()
         {
-            return Expression.GetValue();
+            return Expression.Evaluate();
         }
 
         public override void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)

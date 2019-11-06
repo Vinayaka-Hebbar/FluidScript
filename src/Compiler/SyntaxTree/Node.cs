@@ -40,9 +40,9 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="scope"></param>
         /// <param name="provider"></param>
         /// <returns></returns>
-        public virtual object GetValue()
+        public virtual Core.RuntimeObject Evaluate()
         {
-            return null;
+            return Core.RuntimeObject.Null;
         }
     }
 }

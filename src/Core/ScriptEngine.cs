@@ -31,16 +31,10 @@ namespace FluidScript
         {
             return new TypeGenerator(this, new FileSource(fileInfo), new GlobalScope("Dummy"));
         }
-        public MethodGenerator CreateMethodGenerator(string text)
+        public MethodGenerator CreateMethodGenerator()
         {
             var global = new GlobalScope("Dummy");
-            return new MethodGenerator(this, new StringSource(text), new ObjectScope(global, "Dummy"));
-        }
-
-        public MethodGenerator CreateMethodGenerator(System.IO.FileInfo fileInfo)
-        {
-            var global = new GlobalScope("Dummy");
-            return new MethodGenerator(this, new FileSource(fileInfo), new ObjectScope(global, "Dummy"));
+            return new MethodGenerator(this, new ObjectScope(global, "Dummy"));
         }
     }
 }

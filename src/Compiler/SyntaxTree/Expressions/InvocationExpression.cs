@@ -116,6 +116,13 @@ namespace FluidScript.Compiler.SyntaxTree
                                     ResolvedPrimitiveType = method.Declaration.PrimitiveType;
                                     return;
                                 }
+                                var targetMethod = info.DeclaringType.BaseType.GetMethod(name, ArgumentTypes(info));
+                                if(targetMethod != null)
+                                {
+                                    ResolvedType = targetMethod.ReturnType;
+                                    ResolvedPrimitiveType = Emit.TypeUtils.ToPrimitive(ResolvedType);
+                                    return;
+                                }
                                 break;
                             case Scopes.ScopeContext.Global:
                                 break;

@@ -39,7 +39,7 @@ namespace FluidScript.Compiler.Emit
                 {"bool", new Primitive(typeof(bool) , PrimitiveType.Bool)},
                 {"string", new Primitive(typeof(string), PrimitiveType.String) },
                 {"char", new Primitive(typeof(char), PrimitiveType.Char) },
-                {"object", new Primitive(typeof(object), PrimitiveType.Any) }
+                {"any", new Primitive(typeof(object), PrimitiveType.Any) }
             };
             PrimitiveTypes = PrimitiveNames
                 .Select(item => item.Value)
@@ -53,7 +53,7 @@ namespace FluidScript.Compiler.Emit
             if (PrimitiveNames.ContainsKey(name.FullName))
             {
                 if (name.IsArray())
-                    PrimitiveNames[name.FullName].Type.MakeArrayType();
+                    return PrimitiveNames[name.FullName].Type.MakeArrayType();
                 return PrimitiveNames[name.FullName].Type;
             }
             System.Type type = System.Type.GetType(name.FullName);
@@ -97,6 +97,10 @@ namespace FluidScript.Compiler.Emit
             if (type.IsPrimitive)
             {
                 primitive |= PrimitiveTypes[type];
+            }
+            else if (type == typeof(string))
+            {
+                primitive |= PrimitiveType.String;
             }
             return primitive;
         }

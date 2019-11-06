@@ -1,11 +1,9 @@
 ﻿using FluidScript.Compiler.Emit;
-using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    [System.Serializable]
     [DataContract]
     public class BinaryOperationExpression : Expression
     {
@@ -170,6 +168,24 @@ namespace FluidScript.Compiler.SyntaxTree
                 return;
             }
             generator.Call(ReflectionHelpers.StringConcat_Two_Object);
+        }
+
+        public override Core.RuntimeObject Evaluate()
+        {
+            var left = Left.Evaluate();
+            var right = Right.Evaluate();
+            switch (NodeType)
+            {
+                case ExpressionType.Plus:
+                    return left + right;
+                case ExpressionType.Minus:
+                    return left - right;
+                case ExpressionType.Multiply:
+                    return left * right;
+                case ExpressionType.Divide:
+                    return left / right;
+            }
+            return Core.RuntimeObject.NaN;
         }
     }
 }

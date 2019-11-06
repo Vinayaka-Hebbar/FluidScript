@@ -1,44 +1,60 @@
 ﻿using FluidScript.Compiler.Scopes;
-using System.Linq;
 
 namespace FluidScript.Core
 {
     public class MethodGenerator
     {
-        public MethodGenerator(ScriptEngine scriptEngine, IScriptSource source, ObjectScope objectScope)
+        public readonly ObjectScope Scope;
+        public readonly ScriptEngine Engine;
+
+        public MethodGenerator(ScriptEngine scriptEngine, ObjectScope objectScope)
         {
-            this.SyntaxVisitor = new Compiler.SyntaxVisitor(source, objectScope, scriptEngine.Settings);
+            Scope = objectScope;
+            Engine = scriptEngine;
         }
 
-        public Compiler.SyntaxVisitor SyntaxVisitor { get; }
-
-        public System.Reflection.MethodInfo Generate()
+        public FluidScript.Compiler.SyntaxTree.FunctionDeclarationStatement Generate(IScriptSource source)
         {
-            SyntaxVisitor.Reset();
-            SyntaxVisitor.MoveNext();
-            var name=  SyntaxVisitor.GetName();
+            var syntaxVisitor = new Compiler.SyntaxVisitor(source, Scope, Engine.Settings);
+            syntaxVisitor.MoveNext();
+            var name = syntaxVisitor.GetName();
             if (name == "function")
             {
-                var statement = SyntaxVisitor.VisitFunctionDefinition();
-                System.Type returnType = null;
-                if(statement.ReturnTypeName.FullName != null)
-                returnType = Compiler.Emit.TypeUtils.GetType(statement.ReturnTypeName);
-                System.Reflection.Emit.DynamicMethod dynamicMethod = new System.Reflection.Emit.DynamicMethod(statement.Name, returnType, 
-                    statement.Arguments
-                    .Select(arg => Compiler.Emit.TypeUtils.GetType(arg.TypeName))
-                    .ToArray());
-                var generator = new Compiler.Emit.ReflectionILGenerator(dynamicMethod.GetILGenerator(), false);
-                var info = new Compiler.Emit.MethodOptimizationInfo(System.Type.GetType)
-                {
-                    SyntaxTree = statement,
-                    FunctionName = statement.Name,
-                    ReturnType = returnType
-                };
-                statement.GenerateCode(generator, info);
-                generator.Complete();
-                return dynamicMethod.GetBaseDefinition();
+                var statement = syntaxVisitor.VisitFunctionDefinition();
+                return statement;
             }
             throw new System.InvalidOperationException("cannot find function");
+        }
+
+        public void DefineField(string name, int value)
+        {
+            Compiler.SyntaxTree.Declaration declaration = new Compiler.SyntaxTree.FieldDelcaration(name, value.GetType());
+            Compiler.SyntaxTree.ExpressionStatement valueAtTop = new Compiler.SyntaxTree.ExpressionStatement(new Compiler.SyntaxTree.LiteralExpression(value));
+            Scope.DeclareMember(declaration, Compiler.Reflection.BindingFlags.Private, Compiler.Reflection.MemberTypes.Field, valueAtTop);
+        }
+
+        public FluidScript.Compiler.SyntaxTree.FunctionDeclarationStatement Generate(System.IO.FileInfo info)
+        {
+            return Generate(new FileSource(info));
+        }
+
+        public FluidScript.Compiler.SyntaxTree.FunctionDeclarationStatement Generate(string text)
+        {
+            return Generate(new StringSource(text));
+        }
+
+        public Compiler.SyntaxTree.Statement GetStatement(string text)
+        {
+            var syntaxVisitor = new Compiler.SyntaxVisitor(new StringSource(text), Scope, Engine.Settings);
+            syntaxVisitor.MoveNext();
+            return syntaxVisitor.VisitStatement();
+        }
+
+        public Compiler.SyntaxTree.Expression GetExpression(string text)
+        {
+            var syntaxVisitor = new Compiler.SyntaxVisitor(new StringSource(text), Scope, Engine.Settings);
+            syntaxVisitor.MoveNext();
+            return syntaxVisitor.VisitExpression();
         }
     }
 }

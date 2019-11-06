@@ -1,6 +1,4 @@
-﻿using System;
-using FluidScript.Compiler.Emit;
-using FluidScript.Compiler.Scopes;
+﻿using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -51,9 +49,9 @@ namespace FluidScript.Compiler.SyntaxTree
             ResolvedPrimitiveType = TypeUtils.PrimitiveTypes[value.GetType()];
         }
 
-        public override object GetValue()
+        public override Core.RuntimeObject Evaluate()
         {
-            return Value;
+            return new Core.RuntimeObject(Value, ResolvedPrimitiveType);
         }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
@@ -67,6 +65,9 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 case FluidScript.PrimitiveType.UByte:
                     generator.LoadByte((byte)Value);
+                    break;
+                case FluidScript.PrimitiveType.Char:
+                    generator.LoadChar((char)Value);
                     break;
                 case FluidScript.PrimitiveType.Int16:
                     generator.LoadInt16((short)Value);
@@ -94,9 +95,6 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 case FluidScript.PrimitiveType.Bool:
                     generator.LoadBool((bool)Value);
-                    break;
-                case FluidScript.PrimitiveType.Char:
-                    generator.LoadChar((char)Value);
                     break;
                 case FluidScript.PrimitiveType.String:
                     generator.LoadString(Value.ToString());
