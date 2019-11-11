@@ -24,7 +24,6 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override RuntimeObject Evaluate()
         {
-
             if (NodeType == ExpressionType.Invocation)
             {
                 var types = new PrimitiveType[Arguments.Length];
@@ -46,9 +45,9 @@ namespace FluidScript.Compiler.SyntaxTree
                             case Scopes.ScopeContext.Type:
                                 var type = (Scopes.ObjectScope)scope;
                                 var method = type.GetMethod(value.Name, types);
-                                if(method != null)
+                                if (method != null)
                                 {
-                                    if(method.Delegate == null)
+                                    if (method.Delegate == null)
                                     {
                                         method.Delegate = method.Create();
                                     }
@@ -60,8 +59,96 @@ namespace FluidScript.Compiler.SyntaxTree
                     } while (scope != null);
                 }
             }
+            if (NodeType == ExpressionType.Indexer)
+            {
+                if (Target.NodeType == ExpressionType.Identifier)
+                {
+                    var identifier = (NameExpression)Target;
+                    var value = identifier.Evaluate();
+                    return GetArrayAtIndex(Arguments, value);
+                }
+            }
             return RuntimeObject.Null;
         }
+
+        internal void SetArray(RuntimeObject value)
+        {
+            if (Target.NodeType == ExpressionType.Identifier)
+            {
+                var identifier = (NameExpression)Target;
+                var result = identifier.Evaluate();
+                RuntimeObject[] org = result.ToArray();
+                var array = org;
+                var modified = SetArrayAtIndex(Arguments, ref array, value);
+                if (!ReferenceEquals(org, modified))
+                {
+                    identifier.Set(new RuntimeObject(modified));
+                }
+            }
+        }
+
+        internal static RuntimeObject GetArrayAtIndex(Expression[] args, RuntimeObject value)
+        {
+            if ((value.Type & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+            {
+                var array = (RuntimeObject[])value.Store;
+                for (int i = 0; i < args.Length; i++)
+                {
+                    Expression arg = args[i];
+                    int index = arg.Evaluate().ToInt32();
+                    value = array[index];
+                    if ((value.Type & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+                    {
+                        array = (RuntimeObject[])value.Store;
+                    }
+                }
+            }
+            return value;
+        }
+
+        internal static RuntimeObject[] SetArrayAtIndex(Expression[] args, ref RuntimeObject[] target, RuntimeObject value)
+        {
+            RuntimeObject current = RuntimeObject.Null;
+            var indexes = SkipLast(args).Select(arg => arg.Evaluate().ToInt32()).ToArray();
+            var index = args.Last().Evaluate().ToInt32();
+            target = GetArray(indexes, ref target);
+            if ((target.Length > index) == false)
+            {
+                System.Array.Resize(ref target, index + 1);
+            }
+            target[index] = value;
+            return target;
+        }
+
+        private static RuntimeObject[] GetArray(int[] indexes, ref RuntimeObject[] target)
+        {
+            RuntimeObject[] array = target;
+            for (int i = 0; i < indexes.Length; i++)
+            {
+                int index = indexes[i];
+                if ((array.Length > index) == false)
+                {
+                    System.Array.Resize(ref array, index + 1);
+                }
+                var current = array[index];
+                if ((current.Type & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+                {
+                    var innerArray = (RuntimeObject[])current.Store;
+                    array = GetArray(indexes.Skip(i + 1).Take(indexes.Length - 1).ToArray(), ref innerArray);
+                }
+
+            }
+            return array;
+        }
+
+        private static System.Collections.Generic.IEnumerable<Expression> SkipLast(Expression[] expressions)
+        {
+            for (int i = 0; i < expressions.Length - 1; i++)
+            {
+                yield return expressions[i];
+            }
+        }
+
 
 #if Emit
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
@@ -184,5 +271,10 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 #endif
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
     }
 }

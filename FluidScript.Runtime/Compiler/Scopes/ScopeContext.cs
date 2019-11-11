@@ -2,6 +2,7 @@
 {
     public enum ScopeContext
     {
+        Block,
         Local,
         Type,
         Global

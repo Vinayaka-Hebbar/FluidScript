@@ -3,14 +3,23 @@
     public sealed class IfStatement : Statement
     {
         public readonly Expression Expression;
-        public readonly Statement Body;
+        public readonly Statement Then;
         public readonly Statement Other;
 
-        public IfStatement(Expression expression, Statement body, Statement other) : base(StatementType.If)
+        public IfStatement(Expression expression, Statement then, Statement other) : base(StatementType.If)
         {
             Expression = expression;
-            Body = body;
+            Then = then;
             Other = other;
         }
+
+        public override RuntimeObject Evaluate()
+        {
+            if (Expression.Evaluate().ToBool())
+                return Then.Evaluate();
+            return Other != null ? Other.Evaluate() : RuntimeObject.Null;
+        }
+
+
     }
 }

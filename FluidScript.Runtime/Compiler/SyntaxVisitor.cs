@@ -51,7 +51,7 @@ namespace FluidScript.Compiler
         {
             c = Source.ReadChar();
             TokenType = GetTokenType();
-            return true;
+            return c != char.MinValue;
         }
 
         public void Reset()
@@ -287,7 +287,10 @@ namespace FluidScript.Compiler
             switch (TokenType)
             {
                 case TokenType.LeftBrace:
-                    return VisitBlock();
+                    using (var scope = new DeclarativeScope(this, ScopeContext.Block))
+                    {
+                        return VisitBlock();
+                    }
                 case TokenType.Identifier:
                     return VisitIdentifierStatement();
                 case TokenType.SemiColon:
@@ -304,10 +307,10 @@ namespace FluidScript.Compiler
             var name = GetName();
             if (Keywords.TryGetIdentifier(name, out IdentifierType type))
             {
+                MoveNext();
                 switch (type)
                 {
                     case IdentifierType.Return:
-                        MoveNext();
                         Expression expression = null;
                         if (!CheckSyntaxExpected(TokenType.SemiColon))
                         {
@@ -320,10 +323,13 @@ namespace FluidScript.Compiler
                         return new VariableDeclarationStatement(declarations);
                     case IdentifierType.Function:
                         return VisitFunctionDefinition();
+                    case IdentifierType.Loop:
+                    case IdentifierType.For:
+                    case IdentifierType.Do:
+                        return VisitLoopStatement(StatementType.Loop);
                     case IdentifierType.If:
                         return VisitIfStatement();
                     case IdentifierType.Else:
-                        MoveNext();
                         return VisitStatement();
                         //default label statment
                 }
@@ -332,6 +338,28 @@ namespace FluidScript.Compiler
             Source.SeekTo(start - 1);
             MoveNext();
             return VisitExpressionStatement();
+        }
+
+        private Statement VisitLoopStatement(StatementType type)
+        {
+            if (TokenType == TokenType.LeftParenthesis)
+            {
+                MoveNext();
+                var list = VisitExpressionList(TokenType.SemiColon, TokenType.RightParenthesis).ToArray();
+                Statement statement = null;
+                if (TokenType == TokenType.RightParenthesis)
+                    MoveNext();
+                if (TokenType == TokenType.LeftBrace)
+                {
+                    statement = VisitBlock();
+                }
+                else
+                {
+                    statement = VisitStatement();
+                }
+                return new LoopStatement(list, statement, type);
+            }
+            return Statement.Empty;
         }
 
         private Node VisitLabeledNode(string name)
@@ -397,7 +425,6 @@ namespace FluidScript.Compiler
 
         protected Statement VisitIfStatement()
         {
-            MoveNext();
             if (TokenType == TokenType.LeftParenthesis)
             {
                 var expression = VisitExpression();
@@ -422,7 +449,6 @@ namespace FluidScript.Compiler
 
         public FunctionDeclarationStatement VisitFunctionDefinition()
         {
-            MoveNext();
             string name = null;
             if (TokenType == TokenType.Identifier)
                 name = GetName();
@@ -432,7 +458,7 @@ namespace FluidScript.Compiler
             //return type
             string type = null;
             FunctionDeclaration declaration = null;
-            using (var scope = new DeclarativeScope(this))
+            using (var scope = new DeclarativeScope(this, ScopeContext.Local))
             {
                 //todo not required when the method is static
                 scope.DeclareVariable("this", null, VariableType.Argument);
@@ -767,14 +793,15 @@ namespace FluidScript.Compiler
                     break;
                 case TokenType.Variable:
                     var name = GetName();
-                    exp = new ValueAccessExpression(name, ExpressionType.Variable);
+                    exp = new NameExpression(name, Scope, ExpressionType.Identifier);
                     break;
                 case TokenType.Constant:
                     name = GetName();
-                    exp = new ValueAccessExpression(name, ExpressionType.Constant);
+                    exp = new ConstantExpression(name, Scope);
                     break;
                 case TokenType.LeftBrace:
-                    var list = VisitListStatement().ToArray();
+                    MoveNext();
+                    var list = VisitExpressionList(TokenType.Comma, TokenType.RightBracket).ToArray();
                     exp = new BlockExpression(list);
                     break;
                 case TokenType.LeftParenthesis:
@@ -782,6 +809,7 @@ namespace FluidScript.Compiler
                     exp = new UnaryOperatorExpression(VisitConditionalExpression(), ExpressionType.Parenthesized);
                     CheckSyntaxExpected(TokenType.RightParenthesis);
                     break;
+                case TokenType.LeftBracket:
                 case TokenType.Less:
                     //Might be array
                     exp = VisitArrayLiteral();
@@ -799,14 +827,27 @@ namespace FluidScript.Compiler
                 switch (type)
                 {
                     case TokenType.LeftParenthesis:
-                        var args = VisitArgumentList().ToArray();
+                        MoveNext();
+                        var args = VisitArgumentList(TokenType.Comma, TokenType.RightParenthesis).ToArray();
                         exp = new InvocationExpression(exp, args, ExpressionType.Invocation);
                         break;
                     case TokenType.Initializer:
                         //0->x
                         MoveNext();
-                        var identifierName = GetName();
-                        var variable = Scope.DeclareLocalVariable(identifierName, exp);
+                        var identifierName = string.Empty;
+                        DeclaredVariable variable = null;
+                        if (TokenType == TokenType.Identifier)
+                        {
+                            identifierName = GetName();
+                            variable = Scope.DeclareLocalVariable(identifierName, exp);
+                        }
+                        else if (TokenType == TokenType.Constant)
+                        {
+                            identifierName = GetName();
+                            MoveNext();
+                            Scope.DefineConstant(identifierName, exp.Evaluate());
+                            return exp;
+                        }
                         exp = new VariableDeclarationExpression(identifierName, Scope, variable);
                         break;
                     case TokenType.NullPropagator:
@@ -820,7 +861,7 @@ namespace FluidScript.Compiler
                         break;
                     case TokenType.LeftBracket:
                         MoveNext();
-                        args = VisitExpressionList(TokenType.Comma, TokenType.RightBracket).ToArray();
+                        args = VisitArgumentList(TokenType.Comma, TokenType.RightBracket).ToArray();
                         exp = new InvocationExpression(exp, args, ExpressionType.Indexer);
                         break;
                     case TokenType.SemiColon:
@@ -845,7 +886,8 @@ namespace FluidScript.Compiler
                     Expression[] arguments;
                     if (CheckSyntaxExpected(TokenType.LeftParenthesis))
                     {
-                        arguments = VisitArgumentList().ToArray();
+                        MoveNext();
+                        arguments = VisitArgumentList(TokenType.Comma, TokenType.LeftParenthesis).ToArray();
                     }
                     else
                     {
@@ -899,7 +941,7 @@ namespace FluidScript.Compiler
             {
                 //[
                 MoveNext();
-                var list = VisitExpressionList(TokenType.Comma, TokenType.RightBracket).ToArray();
+                var list = VisitArgumentList(TokenType.Comma, TokenType.RightBracket).ToArray();
                 return new ArrayLiteralExpression(list, new Emit.TypeName(typeName, flags));
             }
             throw new System.InvalidOperationException(string.Format("Invalid array declaration at column = {0}, line = {1}", Source.Column, Source.Line));
@@ -924,7 +966,8 @@ namespace FluidScript.Compiler
         {
             if (TokenType == TokenType.LeftParenthesis)
             {
-                var args = VisitArgumentList().ToArray();
+                MoveNext();
+                var args = VisitArgumentList(TokenType.Comma, TokenType.RightParenthesis).ToArray();
                 if (TokenType == TokenType.RightParenthesis)
                 {
                     MoveNext();
@@ -940,25 +983,37 @@ namespace FluidScript.Compiler
         /// Dont Forget to Call ToArray
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Expression> VisitArgumentList()
+        public IEnumerable<Expression> VisitArgumentList(TokenType splitToken, TokenType endToken)
         {
-            TokenType type = TokenType;
-            if (type == TokenType.LeftParenthesis)
-                MoveNext();
-            for (type = TokenType; type != TokenType.RightParenthesis; type = TokenType)
+            for (TokenType type = TokenType; type != endToken; type = TokenType)
             {
-                if (type == TokenType.Comma)
+                if (type == splitToken)
                 {
+                    yield return Expression.Empty;
                     MoveNext();
-                    if (TokenType != TokenType.RightParenthesis)
-                        yield return Expression.Empty;
                     continue;
                 }
-
                 Expression exp = VisitAssignmentExpression();
-                if (CheckSyntaxExpected(TokenType.Comma))
-                    MoveNext();
                 yield return exp;
+                if (CheckSyntaxExpected(splitToken))
+                    MoveNext();
+            }
+        }
+
+        public IEnumerable<Expression> VisitExpressionList(TokenType splitToken, TokenType endToken)
+        {
+            for (TokenType type = TokenType; type != endToken; type = TokenType)
+            {
+                if (type == splitToken)
+                {
+                    yield return Expression.Empty;
+                    MoveNext();
+                    continue;
+                }
+                Expression exp = VisitExpression();
+                yield return exp;
+                if (CheckSyntaxExpected(splitToken))
+                    MoveNext();
             }
         }
 
@@ -1012,59 +1067,46 @@ namespace FluidScript.Compiler
             }
         }
 
-        public IEnumerable<Expression> VisitExpressionList(TokenType splitToken, TokenType endToken)
-        {
-            for (TokenType type = TokenType; type != endToken; type = TokenType)
-            {
-                if (type == splitToken)
-                {
-                    yield return Expression.Empty;
-                    MoveNext();
-                    continue;
-                }
-                Expression exp = VisitAssignmentExpression();
-                yield return exp;
-                if (CheckSyntaxExpected(splitToken))
-                    MoveNext();
-            }
-        }
+
 
 
         public IEnumerable<VariableDeclarationExpression> VisitDeclarations()
         {
-            do
+            while (TokenType != TokenType.SemiColon)
             {
-                //todo remove initializer and declations
-                MoveNext();
                 string name = string.Empty;
                 if (CheckSyntaxExpected(TokenType.Identifier))
+                {
                     name = GetName();
-                MoveNext();
-                string typeName = null;
-                DeclaredFlags flags = DeclaredFlags.None;
-                Expression expression = null;
-                if (TokenType == TokenType.Colon)
-                {
                     MoveNext();
-                    typeName = GetName();
-                    MoveNext();
-                }
-                if (TokenType == TokenType.LeftBracket)
-                {
-                    MoveNext();
-                    if (TokenType == TokenType.RightBracket)
+                    string typeName = null;
+                    DeclaredFlags flags = DeclaredFlags.None;
+                    Expression expression = null;
+                    if (TokenType == TokenType.Colon)
                     {
-                        flags |= DeclaredFlags.Array;
+                        MoveNext();
+                        typeName = GetName();
                         MoveNext();
                     }
+                    if (TokenType == TokenType.LeftBracket)
+                    {
+                        MoveNext();
+                        if (TokenType == TokenType.RightBracket)
+                        {
+                            flags |= DeclaredFlags.Array;
+                            MoveNext();
+                        }
+                    }
+                    if (TokenType == TokenType.Equal)
+                    {
+                        MoveNext();
+                        expression = VisitAssignmentExpression();
+                    }
+                    yield return new VariableDeclarationExpression(name, Scope, Scope.DeclareVariable(name, expression));
                 }
-                if (TokenType == TokenType.Equal)
-                {
+                if (TokenType == TokenType.Comma)
                     MoveNext();
-                    expression = VisitAssignmentExpression();
-                }
-                yield return new VariableDeclarationExpression(name, Scope, Scope.DeclareVariable(name, expression));
-            } while (TokenType == TokenType.Comma);
+            }
         }
 
         private IEnumerable<string> Split(TokenType split)

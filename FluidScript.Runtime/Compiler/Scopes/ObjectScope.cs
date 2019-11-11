@@ -9,7 +9,7 @@ namespace FluidScript.Compiler.Scopes
     public class ObjectScope : Scope, IDisposable
     {
         private readonly IList<Reflection.DeclaredMethod> methods = new List<Reflection.DeclaredMethod>();
-        private readonly IDictionary<string, RuntimeObject> constants = new Dictionary<string, RuntimeObject>();
+        private IDictionary<string, RuntimeObject> constants;
         private IDictionary<string, Reflection.DeclaredVariable> variables;
 
         private readonly SyntaxVisitor visitor;
@@ -21,32 +21,33 @@ namespace FluidScript.Compiler.Scopes
 
         }
 
+        public ObjectScope() : base(null, ScopeContext.Type)
+        {
+
+        }
+
         public ObjectScope(SyntaxVisitor visitor) : base(visitor.Scope, ScopeContext.Type)
         {
             this.visitor = visitor;
+            visitor.Scope = this;
         }
 
-        internal void DefineMethod(string name, PrimitiveType[] types, Func<RuntimeObject[], RuntimeObject> onInvoke)
+        public void DefineMethod(string name, PrimitiveType[] types, Func<RuntimeObject[], RuntimeObject> onInvoke)
         {
             methods.Add(new DeclaredMethod(name, methods.Count, types) { Delegate = onInvoke });
         }
 
-        internal void DefineVariable(string name, RuntimeObject value)
+        public override void DefineVariable(string name, RuntimeObject value)
         {
             if (variables == null)
                 variables = new Dictionary<string, DeclaredVariable>();
-            variables.Add(name, new DeclaredVariable(name, variables.Count) { Value = value });
+            variables.Add(name, new Reflection.DeclaredVariable(name, variables.Count) { Value = value });
         }
 
-        public Reflection.DeclaredMethod DeclareMethod(string name, SyntaxTree.FunctionDeclaration declaration, SyntaxTree.BlockStatement body)
+        public override void DefineConstant(string name, RuntimeObject value)
         {
-            var declaredMethod = new Reflection.DeclaredMethod(name, methods.Count) { Declaration = declaration, ValueAtTop = body };
-            methods.Add(declaredMethod);
-            return declaredMethod;
-        }
-
-        public void DefineConstant(string name, RuntimeObject value)
-        {
+            if (constants == null)
+                constants = new Dictionary<string, RuntimeObject>();
             if (constants.ContainsKey(name))
             {
                 if (value.IsNull() == false)
@@ -58,6 +59,13 @@ namespace FluidScript.Compiler.Scopes
             constants.Add(name, value);
         }
 
+        public Reflection.DeclaredMethod DeclareMethod(string name, SyntaxTree.FunctionDeclaration declaration, SyntaxTree.BlockStatement body)
+        {
+            var declaredMethod = new Reflection.DeclaredMethod(name, methods.Count) { Declaration = declaration, ValueAtTop = body };
+            methods.Add(declaredMethod);
+            return declaredMethod;
+        }
+
         public override DeclaredVariable DeclareVariable(string name, Expression expression, VariableType type = VariableType.Local)
         {
             if (variables == null)
@@ -65,6 +73,7 @@ namespace FluidScript.Compiler.Scopes
             if (variables.TryGetValue(name, out Reflection.DeclaredVariable variable) == false)
             {
                 variable = new DeclaredVariable(name, variables.Count, type);
+                variables.Add(name, variable);
             }
             variable.ValueAtTop = expression;
             return variable;
@@ -81,18 +90,30 @@ namespace FluidScript.Compiler.Scopes
             return methods.FirstOrDefault(method => method.Name.Equals(name) && TypesEqual(method.Types, types));
         }
 
-        private static bool TypesEqual(PrimitiveType[] left, PrimitiveType[] right)
+        internal override RuntimeObject GetConstant(string name)
+        {
+            if (constants == null)
+                return RuntimeObject.Zero;
+            return constants[name];
+        }
+
+        private static bool TypesEqual(PrimitiveType[] types, PrimitiveType[] calledTypes)
         {
             bool isEquals = true;
-            for (int i = 0; i < left.Length; i++)
+            for (int i = 0; i < types.Length; i++)
             {
-                if(left[i] != right[i])
+                if ((calledTypes[i] & types[i]) != types[i])
                 {
                     isEquals = false;
                     break;
                 }
             }
             return isEquals;
+        }
+
+        internal override bool HasVariable(string name)
+        {
+            return variables != null ? variables.ContainsKey(name) : false;
         }
     }
 }

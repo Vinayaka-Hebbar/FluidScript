@@ -10,60 +10,66 @@ namespace FluidScript
         public static readonly RuntimeObject True = new RuntimeObject(true, PrimitiveType.Bool);
         public static readonly RuntimeObject False = new RuntimeObject(false, PrimitiveType.Bool);
         public static readonly RuntimeObject NaN = new RuntimeObject(double.NaN, PrimitiveType.Double);
-        public readonly object Value;
+        internal readonly object Store;
         public readonly PrimitiveType Type;
+
+        internal bool IsReturn;
 
         public RuntimeObject(object value, PrimitiveType type)
         {
-            Value = value;
+            Store = value;
             Type = type;
         }
 
         public RuntimeObject(RuntimeObject[] value)
         {
-            Value = value;
+            Store = value;
             Type = PrimitiveType.Array;
         }
 
         public RuntimeObject(double value)
         {
-            Value = value;
+            Store = value;
             Type = PrimitiveType.Double;
         }
 
         public RuntimeObject(float value)
         {
-            Value = value;
+            Store = value;
             Type = PrimitiveType.Float;
         }
 
         public RuntimeObject(int value)
         {
-            Value = value;
+            Store = value;
             Type = PrimitiveType.Int32;
         }
 
         public RuntimeObject(char value)
         {
-            Value = value;
+            Store = value;
             Type = PrimitiveType.Char;
         }
 
         public RuntimeObject(string value)
         {
-            Value = value;
+            Store = value;
             Type = PrimitiveType.String;
         }
 
         public RuntimeObject(bool value)
         {
-            Value = value;
+            Store = value;
             Type = PrimitiveType.Bool;
         }
 
         public override string ToString()
         {
-            return Value.ToString();
+            if((Type & PrimitiveType.Array) == PrimitiveType.Array)
+            {
+                return string.Concat("[",string.Join(",", ((RuntimeObject[])Store).Select(value=>value.ToString())),"]");
+            }
+            return Store.ToString();
         }
 
         public bool IsNumber() => (Type & PrimitiveType.Number) == PrimitiveType.Number;
@@ -81,51 +87,45 @@ namespace FluidScript
             if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
             {
                 if ((Type & PrimitiveType.Double) == PrimitiveType.Double)
-                    return double.IsNaN((double)Value);
+                    return double.IsNaN((double)Store);
                 if ((Type & PrimitiveType.Float) == PrimitiveType.Float)
-                    return float.IsNaN((float)Value);
+                    return float.IsNaN((float)Store);
             }
-            return Value == null;
+            return Store == Any;
         }
 
         public double ToDouble()
         {
             if ((Type & PrimitiveType.Double) == PrimitiveType.Double)
-                return (double)Value;
-            if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
-                return System.Convert.ToDouble(Value);
+                return System.Convert.ToDouble(Store);
             return double.NaN;
         }
 
         public float ToFloat()
         {
-            if ((Type & PrimitiveType.Float) == PrimitiveType.Float)
-                return (float)Value;
-            if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
-                return System.Convert.ToSingle(Value);
+            if ((Type & PrimitiveType.Float) == PrimitiveType.Float || (Type & PrimitiveType.Number) == PrimitiveType.Number)
+                return System.Convert.ToSingle(Store);
             return float.NaN;
         }
 
         public int ToInt32()
         {
-            if ((Type & PrimitiveType.Int32) == PrimitiveType.Int32)
-                return (int)Value;
-            if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
-                return System.Convert.ToInt32(Value);
+            if ((Type & PrimitiveType.Int32) == PrimitiveType.Int32 || (Type & PrimitiveType.Number) == PrimitiveType.Number)
+                return System.Convert.ToInt32(Store);
             return 0;
         }
 
         public char ToChar()
         {
             if ((Type & PrimitiveType.Char) == PrimitiveType.Char)
-                return (char)Value;
+                return System.Convert.ToChar(Store);
             return char.MinValue;
         }
 
         public bool ToBool()
         {
             if ((Type & PrimitiveType.Bool) == PrimitiveType.Bool)
-                return (bool)Value;
+                return (bool)Store;
             return false;
         }
 
@@ -133,56 +133,53 @@ namespace FluidScript
         {
             //Check Cast
             if (Type == PrimitiveType.Double)
-                return (double)Value;
+                return System.Convert.ToDouble(Store);
             if (Type == PrimitiveType.Float)
-                return (float)Value;
+                return System.Convert.ToSingle(Store);
             if (Type == PrimitiveType.Int32)
-                return (int)Value;
+                return System.Convert.ToInt32(Store);
             if (Type == PrimitiveType.Bool)
-                return (bool)Value ? 1 : 0;
+                return (bool)Store ? 1 : 0;
             //force convert
-            return System.Convert.ToDouble(Value);
+            return System.Convert.ToDouble(Store);
         }
 
-        public object[] ToArray()
+        public RuntimeObject[] ToArray()
         {
             if ((Type & PrimitiveType.Array) == PrimitiveType.Array)
             {
-                //Check Cast
-                if ((Type ^ PrimitiveType.Array) == PrimitiveType.Any)
-                    return ((RuntimeObject[])Value).Select(obj => obj.Value).ToArray();
-                return (object[])Value;
+                return (RuntimeObject[])Store;
                 //force convert
             }
-            return new object[0];
+            return new RuntimeObject[0];
         }
 
         public bool IsTypeOf<TSource>()
         {
-            return Value != null && Value.GetType() == typeof(TSource);
+            return Store != null && Store.GetType() == typeof(TSource);
         }
 
         public override bool Equals(object obj)
         {
             if (obj == null)
             {
-                return Value == null;
+                return Store == null;
             }
             if (obj is RuntimeObject result)
             {
-                return Value != null && Value.Equals(result.Value);
+                return Store != null && Store.Equals(result.Store);
             }
-            return Value != null && Value.Equals(obj);
+            return Store != null && Store.Equals(obj);
         }
 
         public bool Equals(RuntimeObject other)
         {
-            return Value != null && Value.Equals(other.Value);
+            return Store != null && Store.Equals(other.Store);
         }
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return Store.GetHashCode();
         }
 
         public static implicit operator RuntimeObject(float value)
@@ -246,23 +243,23 @@ namespace FluidScript
 
         public static RuntimeObject operator &(RuntimeObject result1, RuntimeObject result2)
         {
-            return new RuntimeObject((int)result1.Value & (int)result2.Value);
+            return new RuntimeObject((int)result1.Store & (int)result2.Store);
         }
 
         public static RuntimeObject operator |(RuntimeObject result1, RuntimeObject result2)
         {
-            return new RuntimeObject((int)result1.Value | (int)result2.Value);
+            return new RuntimeObject((int)result1.Store | (int)result2.Store);
         }
 
         public static RuntimeObject operator ^(RuntimeObject result1, RuntimeObject result2)
         {
-            return new RuntimeObject((int)result1.Value ^ (int)result2.Value);
+            return new RuntimeObject((int)result1.Store ^ (int)result2.Store);
         }
 
         public static RuntimeObject operator ~(RuntimeObject result1)
         {
             result1++;
-            return new RuntimeObject((int)result1.Value);
+            return new RuntimeObject((int)result1.Store);
         }
 
         public static RuntimeObject operator ++(RuntimeObject result1)
@@ -301,12 +298,12 @@ namespace FluidScript
 
         public static RuntimeObject operator ==(RuntimeObject result1, RuntimeObject result2)
         {
-            return new RuntimeObject(result1.Equals(result2.Value));
+            return new RuntimeObject(result1.Equals(result2.Store));
         }
 
         public static RuntimeObject operator !=(RuntimeObject result1, RuntimeObject result2)
         {
-            return new RuntimeObject(!result1.Equals(result2.Value));
+            return new RuntimeObject(!result1.Equals(result2.Store));
         }
 
         public static RuntimeObject operator !(RuntimeObject result1)
@@ -344,42 +341,42 @@ namespace FluidScript
 
         public static RuntimeObject operator <<(RuntimeObject result1, int value)
         {
-            return new RuntimeObject((int)result1.Value << value);
+            return new RuntimeObject((int)result1.Store << value);
         }
 
         public static RuntimeObject operator >>(RuntimeObject result1, int value)
         {
-            return new RuntimeObject((int)result1.Value >> value);
+            return new RuntimeObject((int)result1.Store >> value);
         }
 
         public static explicit operator int(RuntimeObject result)
         {
-            return (int)result.Value;
+            return (int)result.Store;
         }
 
         public static explicit operator float(RuntimeObject result)
         {
-            return (float)result.Value;
+            return (float)result.Store;
         }
 
         public static explicit operator double(RuntimeObject result)
         {
-            return (double)result.Value;
+            return (double)result.Store;
         }
 
         public static explicit operator string(RuntimeObject result)
         {
-            return result.Value.ToString();
+            return result.Store.ToString();
         }
 
         public static explicit operator char(RuntimeObject result)
         {
-            return (char)result.Value;
+            return (char)result.Store;
         }
 
         public static explicit operator bool(RuntimeObject result)
         {
-            return (bool)result.Value;
+            return (bool)result.Store;
         }
     }
 }

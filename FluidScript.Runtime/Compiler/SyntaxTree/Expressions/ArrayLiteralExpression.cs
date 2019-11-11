@@ -1,5 +1,4 @@
 ﻿using FluidScript.Compiler.Emit;
-using FluidScript.Core;
 using System;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -22,8 +21,10 @@ namespace FluidScript.Compiler.SyntaxTree
             RuntimeObject[] array = new RuntimeObject[Expressions.Length];
             for (int i = 0; i < Expressions.Length; i++)
             {
-                Expression expression = Expressions[i];
-                array[i] = expression.Evaluate();
+                var value = Expressions[i].Evaluate();
+                value.IsReturn = false;
+                array[i] = value;
+
             }
             return new RuntimeObject(array);
         }

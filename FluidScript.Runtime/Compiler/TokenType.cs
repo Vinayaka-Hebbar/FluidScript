@@ -24,6 +24,9 @@
         //15 skip
         //Reserved
         // Other
+        /// <summary>
+        /// {
+        /// </summary>
         LeftBracket = 18,
         RightBracket = 19,
         /// <summary>

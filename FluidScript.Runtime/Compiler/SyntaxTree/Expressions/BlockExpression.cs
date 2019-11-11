@@ -2,10 +2,10 @@
 {
     public class BlockExpression : Expression
     {
-        public readonly Statement[] Statements;
-        public BlockExpression(Statement[] statements) : base(ExpressionType.Block)
+        public readonly Expression[] expressions;
+        public BlockExpression(Expression[] expressions) : base(ExpressionType.Block)
         {
-            Statements = statements;
+            this.expressions = expressions;
         }
 
         public override RuntimeObject Evaluate()

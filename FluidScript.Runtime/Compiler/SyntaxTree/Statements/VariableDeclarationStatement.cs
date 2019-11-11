@@ -17,5 +17,16 @@ namespace FluidScript.Compiler.SyntaxTree
                 declaration.GenerateCode(generator, info);
             }
         }
+
+        public override RuntimeObject Evaluate()
+        {
+            RuntimeObject[] objects = new RuntimeObject[DeclarationExpressions.Length];
+            for (int i = 0; i < DeclarationExpressions.Length; i++)
+            {
+                VariableDeclarationExpression declaration = DeclarationExpressions[i];
+                objects[i] = declaration.Evaluate();
+            }
+            return new RuntimeObject(objects);
+        }
     }
 }

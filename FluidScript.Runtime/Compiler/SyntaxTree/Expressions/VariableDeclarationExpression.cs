@@ -30,8 +30,10 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override RuntimeObject Evaluate()
         {
-            Variable.Value = Variable.Evaluate();
-            return Variable.Value;
+            var value = Variable.Evaluate();
+            value.IsReturn = false;
+            Variable.Value = value;
+            return value;
         }
 
 #if Emit
@@ -56,5 +58,11 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
 #endif
+
+        public override string ToString()
+        {
+            string value = Variable.ValueAtTop != null ? Variable.ValueAtTop.ToString() : !ReferenceEquals(Variable.Value, null) ? Variable.Value.ToString() : "null";
+            return string.Concat(Variable.Name, "=", value);
+        }
     }
 }

@@ -17,7 +17,7 @@
 
         public override RuntimeObject Evaluate()
         {
-            var variable = Scope.GetVariable(Name);
+            Reflection.DeclaredVariable variable = Scope.GetVariable(Name);
             if (variable != null)
             {
                 if (ReferenceEquals(null, variable.Value))
@@ -26,7 +26,16 @@
                 }
                 return variable.Value;
             }
-            return base.Evaluate();
+            return RuntimeObject.Null;
+        }
+
+        internal virtual void Set(RuntimeObject value)
+        {
+            Reflection.DeclaredVariable variable = Scope.GetVariable(Name);
+            if (variable != null)
+            {
+                variable.Value = value;
+            }
         }
 
 #if Emit
@@ -133,5 +142,6 @@
             } while (scope != null);
         }
 #endif
+
     }
 }

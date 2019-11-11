@@ -25,6 +25,7 @@ namespace FluidScript.Compiler
                 {"while",IdentifierType.While },
                 {"do", IdentifierType.Do },
                 {"for", IdentifierType.For },
+                {"loop", IdentifierType.Loop },
                 {"continue",IdentifierType.Continue },
                 {"switch", IdentifierType.Switch },
                 {"break", IdentifierType.Break },

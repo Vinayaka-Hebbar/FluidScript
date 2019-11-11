@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Scripting.Runtime" Version="1.0.19" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FluidScript.Runtime\FluidScript.Runtime.csproj" />
   </ItemGroup>
 

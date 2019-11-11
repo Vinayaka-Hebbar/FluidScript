@@ -18,9 +18,12 @@ namespace FluidScript
             Settings = settings;
         }
 
-        public MethodGenerator CreateMethodGenerator()
+        public FluidScript.Compiler.SyntaxTree.Statement GetStatement(string text, Scope scope)
         {
-            return new MethodGenerator(this, new ObjectScope((Scope)null));
+            var syntaxVisitor = new Compiler.SyntaxVisitor(new StringSource(text), scope, Settings);
+            if (syntaxVisitor.MoveNext())
+                return syntaxVisitor.VisitStatement();
+            return Compiler.SyntaxTree.Statement.Empty;
         }
     }
 }

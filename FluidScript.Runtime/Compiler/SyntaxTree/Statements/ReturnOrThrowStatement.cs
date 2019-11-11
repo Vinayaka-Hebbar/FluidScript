@@ -10,6 +10,21 @@ namespace FluidScript.Compiler.SyntaxTree
             Expression = expression;
         }
 
+        public override RuntimeObject Evaluate()
+        {
+            if(NodeType == StatementType.Return)
+            {
+                var value = Expression.Evaluate();
+                value.IsReturn = true;
+                return value;
+            }
+            if(NodeType == StatementType.Throw)
+            {
+                throw new System.Exception(Expression.Evaluate().ToString());
+            }
+            return base.Evaluate();
+        }
+
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
             // Generate code for the start of the statement.
@@ -53,6 +68,15 @@ namespace FluidScript.Compiler.SyntaxTree
                 }
             }
             GenerateEndOfStatement(generator, info, statementLocals);
+        }
+
+        public override string ToString()
+        {
+            if (NodeType == StatementType.Return)
+            {
+                return string.Concat("return ", Expression.ToString());
+            }
+            return string.Concat("throw ", Expression.ToString());
         }
     }
 }

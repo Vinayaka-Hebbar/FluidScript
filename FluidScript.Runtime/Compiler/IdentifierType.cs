@@ -19,6 +19,7 @@
         While,
         Do,
         For,
+        Loop,
         Continue,
         Switch,
         Break,

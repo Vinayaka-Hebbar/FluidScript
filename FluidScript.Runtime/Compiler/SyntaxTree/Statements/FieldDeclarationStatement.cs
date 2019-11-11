@@ -8,6 +8,7 @@
         {
             Declarations = declarations;
         }
+
         public FieldDeclarationStatement(FieldDeclarationExpression declaration)
         {
             Declarations = new FieldDeclarationExpression[1] { declaration };

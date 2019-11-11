@@ -18,5 +18,10 @@
         {
             Expression.GenerateCode(generator, info);
         }
+
+        public override string ToString()
+        {
+            return Expression.ToString();
+        }
     }
 }

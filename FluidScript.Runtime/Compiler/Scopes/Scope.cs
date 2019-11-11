@@ -23,9 +23,19 @@ namespace FluidScript.Compiler.Scopes
             throw new System.Exception("Can't declare local variable inside " + GetType());
         }
 
+        public virtual void DefineConstant(string name, RuntimeObject value)
+        {
+            throw new System.Exception("Can't define constant inside " + GetType());
+        }
+
         public virtual Reflection.DeclaredVariable DeclareVariable(string name, SyntaxTree.Expression expression, Reflection.VariableType type = Reflection.VariableType.Local)
         {
             throw new System.Exception("Can't declare variable inside " + GetType());
+        }
+
+        internal virtual RuntimeObject GetConstant(string name)
+        {
+            throw new System.NotImplementedException();
         }
 
         public abstract IDictionary<string, Reflection.DeclaredVariable> Variables { get; }
@@ -38,8 +48,14 @@ namespace FluidScript.Compiler.Scopes
             {
                 return Parent.GetVariable(name);
             }
-            throw new System.Exception(string.Format("Variable {0}", name));
+            return null;
         }
 
+        internal abstract bool HasVariable(string name);
+
+        public virtual void DefineVariable(string name, RuntimeObject value)
+        {
+            throw new System.Exception("Can't declare variable inside " + GetType());
+        }
     }
 }

@@ -20,12 +20,70 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override RuntimeObject Evaluate()
         {
-            var left = Left.Evaluate();
-            var right = Right.Evaluate();
             switch (NodeType)
             {
                 case ExpressionType.Plus:
-                    return left + right;
+                    return Left.Evaluate() + Right.Evaluate();
+                case ExpressionType.Minus:
+                    return Left.Evaluate() - Right.Evaluate();
+                case ExpressionType.Multiply:
+                    return Left.Evaluate() * Right.Evaluate();
+                case ExpressionType.Divide:
+                    return Left.Evaluate() / Right.Evaluate();
+                case ExpressionType.Percent:
+                    return Left.Evaluate() % Right.Evaluate();
+                case ExpressionType.Circumflex:
+                    return Left.Evaluate() ^ Right.Evaluate();
+                case ExpressionType.EqualEqual:
+                    return Left.Evaluate() == Right.Evaluate();
+                case ExpressionType.BangEqual:
+                    return Left.Evaluate() != Right.Evaluate();
+                case ExpressionType.Less:
+                    return Left.Evaluate() < Right.Evaluate();
+                case ExpressionType.LessEqual:
+                    return Left.Evaluate() <= Right.Evaluate();
+                case ExpressionType.LessLess:
+                    return Left.Evaluate() << Right.Evaluate().ToInt32();
+                case ExpressionType.Greater:
+                    return Left.Evaluate() > Right.Evaluate();
+                case ExpressionType.GreaterEqual:
+                    return Left.Evaluate() >= Right.Evaluate();
+                case ExpressionType.GreaterGreater:
+                    return Left.Evaluate() >> (int)Right.Evaluate();
+                case ExpressionType.And:
+                    return Left.Evaluate() & Right.Evaluate();
+                case ExpressionType.AndAnd:
+                    return new RuntimeObject(Left.Evaluate().ToBool() && Right.Evaluate().ToBool());
+                case ExpressionType.Or:
+                    return Left.Evaluate() | Right.Evaluate();
+                case ExpressionType.OrOr:
+                    return new RuntimeObject(Left.Evaluate().ToBool() || Right.Evaluate().ToBool());
+                case ExpressionType.Equal:
+                    var value = Right.Evaluate();
+                    if (Left.NodeType == ExpressionType.Identifier)
+                    {
+                        var exp = (NameExpression)Left;
+                        Scopes.Scope scope = exp.Scope;
+                        Reflection.DeclaredVariable variable = null;
+                        if (scope.HasVariable(exp.Name))
+                        {
+                            variable = scope.GetVariable(exp.Name);
+                        }
+                        else
+                        {
+                            variable = scope.DeclareVariable(exp.Name, Right);
+                        }
+                        if (variable != null)
+                        {
+                            variable.Value = value;
+                        }
+                    }
+                    else if (Left.NodeType == ExpressionType.Indexer)
+                    {
+                        var array = (InvocationExpression)Left;
+                        array.SetArray(value);
+                    }
+                    return value;
             }
             return base.Evaluate();
         }
@@ -201,5 +259,71 @@ namespace FluidScript.Compiler.SyntaxTree
             return Core.RuntimeObject.NaN;
         }
 #endif
+
+        public override string ToString()
+        {
+            var operation = string.Empty;
+            switch (NodeType)
+            {
+                case ExpressionType.Plus:
+                    operation = "+";
+                    break;
+                case ExpressionType.Minus:
+                    operation = "-";
+                    break;
+                case ExpressionType.Multiply:
+                    operation = "*";
+                    break;
+                case ExpressionType.Divide:
+                    operation = "/";
+                    break;
+                case ExpressionType.Percent:
+                    operation = "%";
+                    break;
+                case ExpressionType.Circumflex:
+                    operation = "^";
+                    break;
+                case ExpressionType.EqualEqual:
+                    operation = "==";
+                    break;
+                case ExpressionType.BangEqual:
+                    operation = "!=";
+                    break;
+                case ExpressionType.Less:
+                    operation = "<";
+                    break;
+                case ExpressionType.LessEqual:
+                    operation = "<=";
+                    break;
+                case ExpressionType.LessLess:
+                    operation = "<<";
+                    break;
+                case ExpressionType.Greater:
+                    operation = ">";
+                    break;
+                case ExpressionType.GreaterEqual:
+                    operation = ">=";
+                    break;
+                case ExpressionType.GreaterGreater:
+                    operation = ">>";
+                    break;
+                case ExpressionType.And:
+                    operation = "&";
+                    break;
+                case ExpressionType.AndAnd:
+                    operation = "&&";
+                    break;
+                case ExpressionType.Or:
+                    operation = "|";
+                    break;
+                case ExpressionType.OrOr:
+                    operation = "||";
+                    break;
+                case ExpressionType.Equal:
+                    operation = "=";
+                    break;
+            }
+            return string.Concat(Left.ToString(), operation, Right.ToString());
+        }
     }
 }

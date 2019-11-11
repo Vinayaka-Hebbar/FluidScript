@@ -17,6 +17,11 @@ namespace FluidScript.Compiler.SyntaxTree
             Third = third;
         }
 
+        public override RuntimeObject Evaluate()
+        {
+            return First.Evaluate().ToBool() ? Second.Evaluate() : Third.Evaluate();
+        }
+
         protected override void ResolveType(OptimizationInfo info)
         {
             var condition = First.PrimitiveType(info);

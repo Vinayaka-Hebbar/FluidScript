@@ -10,8 +10,6 @@
         Unicode = 5,
         String = 6,
         Bool = 7,
-        Variable = 8,
-        Constant = 9,
         Identifier = 10,
         Parenthesized = 11,
         /// <summary>
@@ -47,7 +45,7 @@
         Multiply = 68,
         Divide = 69,
         Percent = 70,
-        //^
+        ///^
         Circumflex = 71,
         #endregion
         #region Logical & Shift
