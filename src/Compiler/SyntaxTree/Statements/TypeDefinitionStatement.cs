@@ -5,7 +5,7 @@ namespace FluidScript.Compiler.SyntaxTree
     public class TypeDefinitionStatement : Statement
     {
         public readonly TypeDeclaration Declaration;
-        public readonly Scopes.ObjectScope Scope;
+        public readonly Metadata.ObjectScope Scope;
 
         public Reflection.DeclaredMember DeclaredType;
 

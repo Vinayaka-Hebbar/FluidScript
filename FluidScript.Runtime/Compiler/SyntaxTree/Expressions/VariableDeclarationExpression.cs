@@ -5,10 +5,10 @@ namespace FluidScript.Compiler.SyntaxTree
     public class VariableDeclarationExpression : Expression
     {
         public readonly string Name;
-        public readonly Scopes.Scope Scope;
+        public readonly Metadata.Prototype Scope;
         public readonly Reflection.DeclaredVariable Variable;
 
-        public VariableDeclarationExpression(string name, Scopes.Scope scope, Reflection.DeclaredVariable variable) : base(ExpressionType.Declaration)
+        public VariableDeclarationExpression(string name, Metadata.Prototype scope, Reflection.DeclaredVariable variable) : base(ExpressionType.Declaration)
         {
             Name = name;
             Scope = scope;

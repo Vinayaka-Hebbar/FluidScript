@@ -4,7 +4,7 @@
     {
         public readonly ScriptEngine engine;
 
-        public TypeGenerator(ScriptEngine engine, IScriptSource source, Compiler.Scopes.Scope scope)
+        public TypeGenerator(ScriptEngine engine, IScriptSource source, Compiler.Metadata.Scope scope)
         {
             this.engine = engine;
             SyntaxVisitor = new Compiler.SyntaxVisitor(source, scope, engine.Settings);

@@ -5,8 +5,8 @@ namespace FluidScript.Compiler.SyntaxTree
     public class TypeDeclaration : Declaration
     {
         public readonly string[] Implements;
-        public readonly Scopes.ObjectScope Scope;
-        public TypeDeclaration(string name, string baseTypeName, string[] implements, Scopes.ObjectScope scope) : base(name)
+        public readonly Metadata.ObjectPrototype Scope;
+        public TypeDeclaration(string name, string baseTypeName, string[] implements, Metadata.ObjectPrototype scope) : base(name)
         {
             TypeName = new Emit.TypeName(baseTypeName);
             Implements = implements;

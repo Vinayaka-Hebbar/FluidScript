@@ -32,31 +32,37 @@ namespace FluidScript.Compiler.SyntaxTree
                 {
                     var value = Arguments[i].Evaluate();
                     args[i] = value;
-                    types[i] = value.Type;
+                    types[i] = value.RuntimeType;
                 }
                 if (Target.NodeType == ExpressionType.Identifier)
                 {
                     var value = (NameExpression)Target;
-                    var scope = value.Scope;
+                    var scope = value.Prototype;
                     do
                     {
                         switch (scope.Context)
                         {
-                            case Scopes.ScopeContext.Type:
-                                var type = (Scopes.ObjectScope)scope;
+                            case Metadata.ScopeContext.Type:
+                                var type = (Metadata.ObjectPrototype)scope;
                                 var method = type.GetMethod(value.Name, types);
                                 if (method != null)
                                 {
                                     if (method.Delegate == null)
                                     {
-                                        method.Delegate = method.Create();
+                                        method.Delegate = method.Create(scope);
                                     }
                                     return method.Delegate(args);
                                 }
                                 break;
                         }
                         scope = scope.Parent;
-                    } while (scope != null);
+                    } while (!ReferenceEquals(scope, null));
+                }
+                else if (Target.NodeType == ExpressionType.MemberAccess)
+                {
+                    var qualified = (QualifiedExpression)Target;
+                    var value = qualified.Target.Evaluate();
+                    return value.Call(qualified.Name, args);
                 }
             }
             if (NodeType == ExpressionType.Indexer)
@@ -77,36 +83,36 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 var identifier = (NameExpression)Target;
                 var result = identifier.Evaluate();
-                RuntimeObject[] org = result.ToArray();
+                Core.ArrayObject org = (Core.ArrayObject)result;
                 var array = org;
                 var modified = SetArrayAtIndex(Arguments, ref array, value);
                 if (!ReferenceEquals(org, modified))
                 {
-                    identifier.Set(new RuntimeObject(modified));
+                    identifier.Set(modified);
                 }
             }
         }
 
         internal static RuntimeObject GetArrayAtIndex(Expression[] args, RuntimeObject value)
         {
-            if ((value.Type & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+            if ((value.RuntimeType & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
             {
-                var array = (RuntimeObject[])value.Store;
+                var array = (Core.ArrayObject)value;
                 for (int i = 0; i < args.Length; i++)
                 {
                     Expression arg = args[i];
                     int index = arg.Evaluate().ToInt32();
                     value = array[index];
-                    if ((value.Type & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+                    if ((value.RuntimeType & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
                     {
-                        array = (RuntimeObject[])value.Store;
+                        array = (Core.ArrayObject)value;
                     }
                 }
             }
             return value;
         }
 
-        internal static RuntimeObject[] SetArrayAtIndex(Expression[] args, ref RuntimeObject[] target, RuntimeObject value)
+        internal static Core.ArrayObject SetArrayAtIndex(Expression[] args, ref Core.ArrayObject target, RuntimeObject value)
         {
             RuntimeObject current = RuntimeObject.Null;
             var indexes = SkipLast(args).Select(arg => arg.Evaluate().ToInt32()).ToArray();
@@ -114,26 +120,26 @@ namespace FluidScript.Compiler.SyntaxTree
             target = GetArray(indexes, ref target);
             if ((target.Length > index) == false)
             {
-                System.Array.Resize(ref target, index + 1);
+                target.Resize(index + 1);
             }
             target[index] = value;
             return target;
         }
 
-        private static RuntimeObject[] GetArray(int[] indexes, ref RuntimeObject[] target)
+        private static Core.ArrayObject GetArray(int[] indexes, ref Core.ArrayObject target)
         {
-            RuntimeObject[] array = target;
+            Core.ArrayObject array = target;
             for (int i = 0; i < indexes.Length; i++)
             {
                 int index = indexes[i];
                 if ((array.Length > index) == false)
                 {
-                    System.Array.Resize(ref array, index + 1);
+                    array.Resize(index + 1);
                 }
                 var current = array[index];
-                if ((current.Type & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+                if ((current.RuntimeType & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
                 {
-                    var innerArray = (RuntimeObject[])current.Store;
+                    var innerArray = (Core.ArrayObject)current;
                     array = GetArray(indexes.Skip(i + 1).Take(indexes.Length - 1).ToArray(), ref innerArray);
                 }
 

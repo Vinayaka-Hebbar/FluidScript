@@ -3,11 +3,11 @@
     public class NameExpression : Expression
     {
         public readonly string Name;
-        public readonly Scopes.Scope Scope;
-        public NameExpression(string name, Scopes.Scope scope, ExpressionType opCode) : base(opCode)
+        public readonly Metadata.Prototype Prototype;
+        public NameExpression(string name, Metadata.Prototype prototype, ExpressionType opCode) : base(opCode)
         {
             Name = name;
-            Scope = scope;
+            Prototype = prototype;
         }
 
         public override string ToString()
@@ -17,7 +17,7 @@
 
         public override RuntimeObject Evaluate()
         {
-            Reflection.DeclaredVariable variable = Scope.GetVariable(Name);
+            Reflection.DeclaredVariable variable = Prototype.GetVariable(Name);
             if (variable != null)
             {
                 if (ReferenceEquals(null, variable.Value))
@@ -31,7 +31,7 @@
 
         internal virtual void Set(RuntimeObject value)
         {
-            Reflection.DeclaredVariable variable = Scope.GetVariable(Name);
+            Reflection.DeclaredVariable variable = Prototype.GetVariable(Name);
             if (variable != null)
             {
                 variable.Value = value;

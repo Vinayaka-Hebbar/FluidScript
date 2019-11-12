@@ -36,8 +36,8 @@ namespace FluidScript.Compiler.SyntaxTree
                 {
                     switch (scope.Context)
                     {
-                        case Scopes.ScopeContext.Local:
-                            var local = (Scopes.DeclarativeScope)scope;
+                        case Metadata.ScopeContext.Local:
+                            var local = (Metadata.DeclarativeScope)scope;
                             var variable = local.GetVariable(name);
                             if (variable != null)
                             {
@@ -46,8 +46,8 @@ namespace FluidScript.Compiler.SyntaxTree
 
                             }
                             break;
-                        case Scopes.ScopeContext.Type:
-                            var type = (Scopes.ObjectScope)scope;
+                        case Metadata.ScopeContext.Type:
+                            var type = (Metadata.ObjectScope)scope;
                             Reflection.DeclaredMember member = type.GetMember(name).FirstOrDefault(item => item.IsMethod == false);
                             if (member != null)
                             {
@@ -75,7 +75,7 @@ namespace FluidScript.Compiler.SyntaxTree
                                 }
                             }
                             break;
-                        case Scopes.ScopeContext.Global:
+                        case Metadata.ScopeContext.Global:
                             break;
                     }
                     scope = scope.ParentScope;

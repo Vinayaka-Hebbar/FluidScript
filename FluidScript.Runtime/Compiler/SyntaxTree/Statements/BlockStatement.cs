@@ -33,11 +33,6 @@ namespace FluidScript.Compiler.SyntaxTree
             GenerateEndOfStatement(generator, info, statementLocals);
         }
 
-        internal Func<RuntimeObject[], RuntimeObject> Invoke()
-        {
-            throw new NotImplementedException();
-        }
-
         public override RuntimeObject Evaluate()
         {
             var result = RuntimeObject.Null;

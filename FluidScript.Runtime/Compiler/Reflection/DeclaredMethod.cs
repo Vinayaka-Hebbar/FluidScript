@@ -40,10 +40,20 @@ namespace FluidScript.Compiler.Reflection
             Types = types;
         }
 
-        internal Func<RuntimeObject[], RuntimeObject> Create()
+        internal Func<RuntimeObject[], RuntimeObject> Create(Metadata.Prototype prototype)
         {
             if (ValueAtTop != null)
-                return ValueAtTop.Invoke();
+            {
+                return (args) =>
+                {
+                    for (int i = 0; i < Declaration.Arguments.Length; i++)
+                    {
+                        prototype.DefineVariable(Declaration.Arguments[i].Name, args[i]);
+                    }
+                    return ValueAtTop.Evaluate();
+                };
+            }
+
             return (args) => { return RuntimeObject.Null; };
         }
     }

@@ -49,11 +49,11 @@ namespace FluidScript.Compiler.SyntaxTree
                 {
                     switch (scope.Context)
                     {
-                        case Scopes.ScopeContext.Local:
+                        case Metadata.ScopeContext.Local:
                             //todo inner method
                             break;
-                        case Scopes.ScopeContext.Type:
-                            var type = (Scopes.ObjectScope)scope;
+                        case Metadata.ScopeContext.Type:
+                            var type = (Metadata.ObjectScope)scope;
                             DeclaredMethod method = type.GetMethod(name, ArgumentTypes(info));
                             if (method != null)
                             {
@@ -66,7 +66,7 @@ namespace FluidScript.Compiler.SyntaxTree
                                 Call(targetMethod, generator, info);
                             }
                             break;
-                        case Scopes.ScopeContext.Global:
+                        case Metadata.ScopeContext.Global:
                             break;
                         default:
                             break;
@@ -104,11 +104,11 @@ namespace FluidScript.Compiler.SyntaxTree
                     {
                         switch (scope.Context)
                         {
-                            case Scopes.ScopeContext.Local:
+                            case Metadata.ScopeContext.Local:
                                 //todo inner method
                                 break;
-                            case Scopes.ScopeContext.Type:
-                                var type = (Scopes.ObjectScope)scope;
+                            case Metadata.ScopeContext.Type:
+                                var type = (Metadata.ObjectScope)scope;
                                 DeclaredMethod method = type.GetMethod(name, ArgumentTypes(info));
                                 if (method != null)
                                 {
@@ -124,7 +124,7 @@ namespace FluidScript.Compiler.SyntaxTree
                                     return;
                                 }
                                 break;
-                            case Scopes.ScopeContext.Global:
+                            case Metadata.ScopeContext.Global:
                                 break;
                             default:
                                 break;

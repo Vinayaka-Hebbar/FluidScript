@@ -1,4 +1,4 @@
-﻿namespace FluidScript.Compiler.Scopes
+﻿namespace FluidScript.Compiler.Metadata
 {
     public enum ScopeContext
     {

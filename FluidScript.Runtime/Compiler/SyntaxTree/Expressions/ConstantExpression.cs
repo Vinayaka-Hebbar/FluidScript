@@ -1,16 +1,16 @@
-﻿using FluidScript.Compiler.Scopes;
+﻿using FluidScript.Compiler.Metadata;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
     public class ConstantExpression : NameExpression
     {
-        public ConstantExpression(string name, Scope scope) : base(name, scope, ExpressionType.Identifier)
+        public ConstantExpression(string name, Prototype scope) : base(name, scope, ExpressionType.Identifier)
         {
         }
 
         public override RuntimeObject Evaluate()
         {
-            return Scope.GetConstant(Name);
+            return Prototype.GetConstant(Name);
         }
 
         internal override void Set(RuntimeObject value)

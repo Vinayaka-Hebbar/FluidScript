@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Scopes;
+﻿using FluidScript.Compiler.Metadata;
 
 namespace FluidScript.Core
 {

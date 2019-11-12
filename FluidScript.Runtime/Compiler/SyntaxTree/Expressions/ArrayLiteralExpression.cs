@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 array[i] = value;
 
             }
-            return new RuntimeObject(array);
+            return new Core.ArrayObject(array, FluidScript.PrimitiveType.Array);
         }
 
 

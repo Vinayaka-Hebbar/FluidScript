@@ -1,5 +1,5 @@
-﻿using FluidScript.Compiler.Reflection;
-using FluidScript.Compiler.Scopes;
+﻿using FluidScript.Compiler.Metadata;
+using FluidScript.Compiler.Reflection;
 using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Core;
 using System;
@@ -18,13 +18,13 @@ namespace FluidScript.Compiler
         /// <summary>
         /// Current Scope
         /// </summary>
-        public Scope Scope;
+        public Prototype Prototype;
         public readonly ParserSettings Settings;
 
-        public SyntaxVisitor(IScriptSource source, Scope initialScope, ParserSettings settings)
+        public SyntaxVisitor(IScriptSource source, Prototype initialPrototype, ParserSettings settings)
         {
             Source = source;
-            Scope = initialScope;
+            Prototype = initialPrototype;
             Settings = settings;
         }
 
@@ -287,7 +287,7 @@ namespace FluidScript.Compiler
             switch (TokenType)
             {
                 case TokenType.LeftBrace:
-                    using (var scope = new DeclarativeScope(this, ScopeContext.Block))
+                    using (var scope = new FunctionPrototype(this, ScopeContext.Block))
                     {
                         return VisitBlock();
                     }
@@ -388,7 +388,7 @@ namespace FluidScript.Compiler
                 MoveNext();
                 expression = VisitConditionalExpression();
             }
-            var member = Scope.DeclareVariable(name, expression);
+            var member = Prototype.DeclareVariable(name, expression);
             var initial = new FieldDeclarationExpression(name, member);
             if (TokenType == TokenType.Comma)
             {
@@ -415,7 +415,7 @@ namespace FluidScript.Compiler
                         MoveNext();
                         expression = VisitConditionalExpression();
                     }
-                    var member = Scope.DeclareVariable(name, expression);
+                    var member = Prototype.DeclareVariable(name, expression);
                     yield return new FieldDeclarationExpression(name, member);
                     if (TokenType == TokenType.Comma)
                         MoveNext();
@@ -447,9 +447,8 @@ namespace FluidScript.Compiler
             throw new System.Exception($"Syntax Error at line {Source.Line}, pos {Source.Position}");
         }
 
-        public FunctionDeclarationStatement VisitFunctionDefinition()
+        public FunctionDeclarationStatement VisitFunctionDefinition(string name = null)
         {
-            string name = null;
             if (TokenType == TokenType.Identifier)
                 name = GetName();
             MoveNext();
@@ -458,7 +457,7 @@ namespace FluidScript.Compiler
             //return type
             string type = null;
             FunctionDeclaration declaration = null;
-            using (var scope = new DeclarativeScope(this, ScopeContext.Local))
+            using (var scope = new FunctionPrototype(this, ScopeContext.Local))
             {
                 //todo not required when the method is static
                 scope.DeclareVariable("this", null, VariableType.Argument);
@@ -485,15 +484,12 @@ namespace FluidScript.Compiler
                     }
                 }
                 declaration = new FunctionDeclaration(name, new Emit.TypeName(type, flags), argumentsList, scope);
-                if (TokenType == TokenType.LeftBrace)
-                {
-                    //todo abstract, virtual functions
-                    //To avoid block function
-                    body = VisitBlock();
-                }
+                //todo abstract, virtual functions
+                //To avoid block function
+                body = VisitBlock();
 
             }
-            var memeber = Scope.DeclareMethod(declaration, body);
+            var memeber = Prototype.DeclareMethod(declaration, body);
             if (body != null)
             {
                 return new FunctionDefinitionStatement(declaration, body, memeber);
@@ -523,9 +519,22 @@ namespace FluidScript.Compiler
             if (CheckSyntaxExpected(TokenType.AnonymousMethod))
             {
                 MoveNext();
-                return VisitBlock();
+                return VisitAnonymousBlock();
             }
-            BlockStatement blockStatement = new BlockStatement(new Statement[] { new ReturnOrThrowStatement(VisitExpression(), StatementType.Return) }, CurrentLabels);
+            throw new Exception("Invalid Function declaration");
+        }
+
+        private BlockStatement VisitAnonymousBlock()
+        {
+            if (TokenType == TokenType.LeftBrace)
+            {
+                MoveNext();
+                Statement[] statements = VisitListStatement().ToArray();
+                if (TokenType == TokenType.RightBrace)
+                    MoveNext();
+                return new BlockStatement(statements, CurrentLabels);
+            }
+            BlockStatement blockStatement = new BlockStatement(new Statement[] { new ReturnOrThrowStatement(VisitConditionalExpression(), StatementType.Return) }, CurrentLabels);
             return blockStatement;
         }
 
@@ -793,16 +802,19 @@ namespace FluidScript.Compiler
                     break;
                 case TokenType.Variable:
                     var name = GetName();
-                    exp = new NameExpression(name, Scope, ExpressionType.Identifier);
+                    exp = new NameExpression(name, Prototype, ExpressionType.Identifier);
                     break;
                 case TokenType.Constant:
                     name = GetName();
-                    exp = new ConstantExpression(name, Scope);
+                    exp = new ConstantExpression(name, Prototype);
                     break;
                 case TokenType.LeftBrace:
                     MoveNext();
-                    var list = VisitExpressionList(TokenType.Comma, TokenType.RightBracket).ToArray();
-                    exp = new BlockExpression(list);
+                    using (var scope = new FunctionPrototype(this, ScopeContext.Block))
+                    {
+                        var list = VisitBlockArguments().ToArray();
+                        exp = new BlockExpression(list, Prototype);
+                    }
                     break;
                 case TokenType.LeftParenthesis:
                     MoveNext();
@@ -839,16 +851,16 @@ namespace FluidScript.Compiler
                         if (TokenType == TokenType.Identifier)
                         {
                             identifierName = GetName();
-                            variable = Scope.DeclareLocalVariable(identifierName, exp);
+                            variable = Prototype.DeclareLocalVariable(identifierName, exp);
                         }
                         else if (TokenType == TokenType.Constant)
                         {
                             identifierName = GetName();
                             MoveNext();
-                            Scope.DefineConstant(identifierName, exp.Evaluate());
+                            Prototype.DefineConstant(identifierName, exp.Evaluate());
                             return exp;
                         }
-                        exp = new VariableDeclarationExpression(identifierName, Scope, variable);
+                        exp = new VariableDeclarationExpression(identifierName, Prototype, variable);
                         break;
                     case TokenType.NullPropagator:
                         MoveNext();
@@ -877,7 +889,7 @@ namespace FluidScript.Compiler
         {
             var name = GetName();
             if (!Keywords.TryGetIdentifier(name, out IdentifierType type))
-                return new NameExpression(name, Scope, ExpressionType.Identifier);
+                return new NameExpression(name, Prototype, ExpressionType.Identifier);
             switch (type)
             {
                 case IdentifierType.New:
@@ -904,7 +916,7 @@ namespace FluidScript.Compiler
                     MoveNext();
                     return VisitLamdaExpression();
                 case IdentifierType.This:
-                    return new Expression(ExpressionType.This);
+                    return new ThisExpression(Prototype);
             }
             return Expression.Empty;
         }
@@ -1056,7 +1068,7 @@ namespace FluidScript.Compiler
                         parameter.DefaultValue = VisitConditionalExpression();
                     }
 
-                    Scope.DeclareVariable(parameter.Name, parameter.DefaultValue, VariableType.Argument);
+                    Prototype.DeclareVariable(parameter.Name, parameter.DefaultValue, VariableType.Argument);
 
                     //todo check if method arguments needs any scopes
                     if (TokenType == TokenType.Comma)
@@ -1067,7 +1079,34 @@ namespace FluidScript.Compiler
             }
         }
 
-
+        /// <summary>
+        /// {x:1, add()=> {}}
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Statement> VisitBlockArguments()
+        {
+            while (TokenType != TokenType.RightBrace)
+            {
+                if (TokenType == TokenType.Identifier)
+                {
+                    var name = GetName();
+                    MoveNext();
+                    if (TokenType == TokenType.Colon)
+                    {
+                        MoveNext();
+                        var exp = VisitConditionalExpression();
+                        Prototype.DeclareLocalVariable(name, exp);
+                        yield return new LabeledStatement(name, exp);
+                    }
+                    else if (TokenType == TokenType.LeftParenthesis)
+                    {
+                        yield return VisitFunctionDefinition(name);
+                    }
+                }
+                if (TokenType == TokenType.Comma)
+                    MoveNext();
+            }
+        }
 
 
         public IEnumerable<VariableDeclarationExpression> VisitDeclarations()
@@ -1102,7 +1141,7 @@ namespace FluidScript.Compiler
                         MoveNext();
                         expression = VisitAssignmentExpression();
                     }
-                    yield return new VariableDeclarationExpression(name, Scope, Scope.DeclareVariable(name, expression));
+                    yield return new VariableDeclarationExpression(name, Prototype, Prototype.DeclareVariable(name, expression));
                 }
                 if (TokenType == TokenType.Comma)
                     MoveNext();

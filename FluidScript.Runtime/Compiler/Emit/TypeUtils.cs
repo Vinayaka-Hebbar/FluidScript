@@ -137,5 +137,19 @@ namespace FluidScript.Compiler.Emit
                     return true;
             }
         }
+
+        internal static bool TypesEqual(PrimitiveType[] types, PrimitiveType[] calledTypes)
+        {
+            bool isEquals = true;
+            for (int i = 0; i < types.Length; i++)
+            {
+                if ((calledTypes[i] & types[i]) != types[i])
+                {
+                    isEquals = false;
+                    break;
+                }
+            }
+            return isEquals;
+        }
     }
 }

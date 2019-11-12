@@ -16,5 +16,6 @@
         /// </summary>
         Loop = 43,
         Class = 44,
+        Labeled = 50,
     }
 }

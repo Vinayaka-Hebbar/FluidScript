@@ -1,5 +1,5 @@
 ﻿using FluidScript.Compiler;
-using FluidScript.Compiler.Scopes;
+using FluidScript.Compiler.Metadata;
 using FluidScript.Core;
 
 namespace FluidScript
@@ -18,9 +18,9 @@ namespace FluidScript
             Settings = settings;
         }
 
-        public FluidScript.Compiler.SyntaxTree.Statement GetStatement(string text, Scope scope)
+        public FluidScript.Compiler.SyntaxTree.Statement GetStatement(string text, Prototype prototype)
         {
-            var syntaxVisitor = new Compiler.SyntaxVisitor(new StringSource(text), scope, Settings);
+            var syntaxVisitor = new Compiler.SyntaxVisitor(new StringSource(text), prototype, Settings);
             if (syntaxVisitor.MoveNext())
                 return syntaxVisitor.VisitStatement();
             return Compiler.SyntaxTree.Statement.Empty;

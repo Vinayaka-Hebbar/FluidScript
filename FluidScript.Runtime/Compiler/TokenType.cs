@@ -16,6 +16,9 @@
         Parenthesized = 11,
         Invocation = 12,
         Indexer = 13,
+        /// <summary>
+        /// =>
+        /// </summary>
         AnonymousMethod = 14,
         /// <summary>
         /// ->

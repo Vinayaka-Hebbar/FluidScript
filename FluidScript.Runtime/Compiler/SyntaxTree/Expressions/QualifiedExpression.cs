@@ -1,6 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -16,6 +14,7 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
         public override IEnumerable<Node> ChildNodes => Childs(Target);
+
         public override string ToString()
         {
             if (NodeType == ExpressionType.QualifiedNamespace)
@@ -23,6 +22,16 @@ namespace FluidScript.Compiler.SyntaxTree
                 return Target.ToString() + '.' + Name;
             }
             return Name.ToString();
+        }
+
+        public override RuntimeObject Evaluate()
+        {
+            if (NodeType == ExpressionType.MemberAccess)
+            {
+                var value = Target.Evaluate();
+                return value[Name];
+            }
+            return base.Evaluate();
         }
 
 

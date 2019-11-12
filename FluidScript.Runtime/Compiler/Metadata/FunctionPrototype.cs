@@ -2,24 +2,35 @@
 using FluidScript.Compiler.SyntaxTree;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace FluidScript.Compiler.Scopes
+namespace FluidScript.Compiler.Metadata
 {
-    public class DeclarativeScope : Scopes.Scope, IDisposable
+    public class FunctionPrototype : Metadata.Prototype, IDisposable
     {
         private IDictionary<string, Reflection.DeclaredVariable> variables;
         private IDictionary<string, RuntimeObject> constants;
+        private IList<Reflection.DeclaredMethod> inner;
 
         public readonly SyntaxVisitor visitor;
 
-        public DeclarativeScope(Scope parent) : base(parent, ScopeContext.Local)
+        public FunctionPrototype(Prototype parent) : base(parent, ScopeContext.Local)
         {
         }
 
-        public DeclarativeScope(SyntaxVisitor visitor, ScopeContext context) : base(visitor.Scope, context)
+        public FunctionPrototype(SyntaxVisitor visitor, ScopeContext context) : base(visitor.Prototype, context)
         {
             this.visitor = visitor;
-            visitor.Scope = this;
+            visitor.Prototype = this;
+        }
+
+        public override DeclaredMethod DeclareMethod(FunctionDeclaration declaration, BlockStatement body)
+        {
+            if (inner == null)
+                inner = new List<DeclaredMethod>();
+            var declaredMethod = new Reflection.DeclaredMethod(declaration.Name, inner.Count) { Declaration = declaration, ValueAtTop = body };
+            inner.Add(declaredMethod);
+            return declaredMethod;
         }
 
         public override DeclaredVariable DeclareLocalVariable(string name, Expression expression, VariableType type = VariableType.Local)
@@ -69,6 +80,24 @@ namespace FluidScript.Compiler.Scopes
 
         }
 
+        public override Reflection.DeclaredMethod GetMethod(string name, PrimitiveType[] types)
+        {
+            if (inner == null)
+                Parent.GetMethod(name, types);
+            return inner.FirstOrDefault(method => method.Name.Equals(name) && Emit.TypeUtils.TypesEqual(method.Types, types));
+        }
+
+        public override RuntimeObject this[string name]
+        {
+            get
+            {
+                var variable = GetVariable(name);
+                if (!ReferenceEquals(variable, null))
+                    return variable.Value;
+                return Null;
+            }
+        }
+
         public override IDictionary<string, DeclaredVariable> Variables
         {
             get
@@ -80,7 +109,7 @@ namespace FluidScript.Compiler.Scopes
         public void Dispose()
         {
             if (visitor != null)
-                visitor.Scope = Parent;
+                visitor.Prototype = Parent;
         }
 
         internal override bool HasVariable(string name)

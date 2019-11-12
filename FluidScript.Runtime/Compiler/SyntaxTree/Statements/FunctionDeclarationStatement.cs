@@ -20,6 +20,7 @@
 
         protected FunctionDeclarationStatement(FunctionDeclaration declaration, StatementType nodeType) : base(nodeType)
         {
+            Declaration = declaration;
             Name = declaration.Name;
             ReturnTypeName = declaration.TypeName;
             Arguments = declaration.Arguments;
@@ -28,6 +29,11 @@
         public virtual System.Reflection.MethodInfo Create()
         {
             throw new System.Exception("Method not declared");
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

@@ -31,6 +31,9 @@
         Comma = 24,
         //?
         Question = 27,
+        /// <summary>
+        /// .
+        /// </summary>
         MemberAccess = 29,
         QualifiedNamespace = 30,
         New = 31,
@@ -38,7 +41,7 @@
         Out = 33,
         In = 34,
         This = 35,
-
+        Labeled = 50,
         #region Math
         Plus = 66,
         Minus = 67,

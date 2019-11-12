@@ -3,7 +3,7 @@ using FluidScript.Compiler.Emit;
 using FluidScript.Compiler.Reflection;
 using FluidScript.Compiler.SyntaxTree;
 
-namespace FluidScript.Compiler.Scopes
+namespace FluidScript.Compiler.Metadata
 {
     public abstract class Scope
     {

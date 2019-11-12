@@ -53,17 +53,17 @@ namespace FluidScript.Compiler.SyntaxTree
                 case ExpressionType.And:
                     return Left.Evaluate() & Right.Evaluate();
                 case ExpressionType.AndAnd:
-                    return new RuntimeObject(Left.Evaluate().ToBool() && Right.Evaluate().ToBool());
+                    return new Core.PrimitiveObject(Left.Evaluate().ToBool() && Right.Evaluate().ToBool());
                 case ExpressionType.Or:
                     return Left.Evaluate() | Right.Evaluate();
                 case ExpressionType.OrOr:
-                    return new RuntimeObject(Left.Evaluate().ToBool() || Right.Evaluate().ToBool());
+                    return new Core.PrimitiveObject(Left.Evaluate().ToBool() || Right.Evaluate().ToBool());
                 case ExpressionType.Equal:
                     var value = Right.Evaluate();
                     if (Left.NodeType == ExpressionType.Identifier)
                     {
                         var exp = (NameExpression)Left;
-                        Scopes.Scope scope = exp.Scope;
+                        Metadata.Prototype scope = exp.Prototype;
                         Reflection.DeclaredVariable variable = null;
                         if (scope.HasVariable(exp.Name))
                         {

@@ -7,8 +7,8 @@ namespace FluidScript.Compiler.SyntaxTree
     public class NameExpression : Expression
     {
         public readonly string Name;
-        public readonly Scopes.Scope Scope;
-        public NameExpression(string name, Scopes.Scope scope, ExpressionType opCode) : base(opCode)
+        public readonly Metadata.Scope Scope;
+        public NameExpression(string name, Metadata.Scope scope, ExpressionType opCode) : base(opCode)
         {
             Name = name;
             Scope = scope;
@@ -21,15 +21,15 @@ namespace FluidScript.Compiler.SyntaxTree
 
         protected override void ResolveType(OptimizationInfo info)
         {
-            Scopes.Scope scope = Scope;
+            Metadata.Scope scope = Scope;
             do
             {
                 switch (scope.Context)
                 {
-                    case Scopes.ScopeContext.Local:
-                        if (scope.CanDeclareVariables && scope is Scopes.DeclarativeScope)
+                    case Metadata.ScopeContext.Local:
+                        if (scope.CanDeclareVariables && scope is Metadata.DeclarativeScope)
                         {
-                            var declarative = (Scopes.DeclarativeScope)scope;
+                            var declarative = (Metadata.DeclarativeScope)scope;
                             var variable = declarative.GetVariable(Name);
                             if (variable != null)
                             {
@@ -39,8 +39,8 @@ namespace FluidScript.Compiler.SyntaxTree
                             }
                         }
                         break;
-                    case Scopes.ScopeContext.Type:
-                        if (scope is Scopes.ObjectScope type)
+                    case Metadata.ScopeContext.Type:
+                        if (scope is Metadata.ObjectScope type)
                         {
                             var memeber = type.GetMember(Name).FirstOrDefault(item => item.IsMethod == false);
                             if (memeber != null)
@@ -51,7 +51,7 @@ namespace FluidScript.Compiler.SyntaxTree
                             }
                         }
                         break;
-                    case Scopes.ScopeContext.Global:
+                    case Metadata.ScopeContext.Global:
                         break;
                     default:
                         break;
@@ -63,15 +63,15 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
-            Scopes.Scope scope = Scope;
+            Metadata.Scope scope = Scope;
             do
             {
                 switch (scope.Context)
                 {
-                    case Scopes.ScopeContext.Local:
-                        if (scope.CanDeclareVariables && scope is Scopes.DeclarativeScope)
+                    case Metadata.ScopeContext.Local:
+                        if (scope.CanDeclareVariables && scope is Metadata.DeclarativeScope)
                         {
-                            var declarative = (Scopes.DeclarativeScope)scope;
+                            var declarative = (Metadata.DeclarativeScope)scope;
                             var variable = declarative.GetVariable(Name);
                             if (variable != null)
                             {
@@ -89,8 +89,8 @@ namespace FluidScript.Compiler.SyntaxTree
                             }
                         }
                         break;
-                    case Scopes.ScopeContext.Type:
-                        if (scope is Scopes.ObjectScope type)
+                    case Metadata.ScopeContext.Type:
+                        if (scope is Metadata.ObjectScope type)
                         {
                             var memeber = type.GetMember(Name).FirstOrDefault(item => item.IsMethod == false);
                             if (memeber != null)
@@ -112,7 +112,7 @@ namespace FluidScript.Compiler.SyntaxTree
                             }
                         }
                         break;
-                    case Scopes.ScopeContext.Global:
+                    case Metadata.ScopeContext.Global:
                         break;
                     default:
                         break;

@@ -6,7 +6,7 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public class FunctionDefinitionStatement : FunctionDeclarationStatement
     {
-        public readonly Scopes.DeclarativeScope Scope;
+        public readonly Metadata.FunctionPrototype Scope;
 
         internal readonly Reflection.DeclaredMethod Member;
 

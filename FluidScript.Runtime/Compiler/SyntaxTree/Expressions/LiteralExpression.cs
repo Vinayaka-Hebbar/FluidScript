@@ -51,7 +51,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override RuntimeObject Evaluate()
         {
-            return new RuntimeObject(Value, ResolvedPrimitiveType);
+            return new Core.PrimitiveObject(Value, ResolvedPrimitiveType);
         }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)

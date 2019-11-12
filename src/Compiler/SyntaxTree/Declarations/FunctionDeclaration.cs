@@ -9,9 +9,9 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public System.Type[] ArgumentTypes;
 
-        public readonly Scopes.DeclarativeScope Scope;
+        public readonly Metadata.DeclarativeScope Scope;
 
-        public FunctionDeclaration(string name, Emit.TypeName returnTypeName, ArgumentInfo[] arguments, Scopes.DeclarativeScope scope) : base(name, returnTypeName)
+        public FunctionDeclaration(string name, Emit.TypeName returnTypeName, ArgumentInfo[] arguments, Metadata.DeclarativeScope scope) : base(name, returnTypeName)
         {
             Arguments = arguments;
             Scope = scope;

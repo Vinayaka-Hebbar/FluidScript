@@ -3,7 +3,7 @@ using FluidScript.Compiler.Reflection;
 using FluidScript.Compiler.SyntaxTree;
 using System.Collections.Generic;
 
-namespace FluidScript.Compiler.Scopes
+namespace FluidScript.Compiler.Metadata
 {
     public class DeclarativeScope : Scope, System.IDisposable
     {

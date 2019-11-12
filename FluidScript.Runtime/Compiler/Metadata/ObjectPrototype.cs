@@ -4,10 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FluidScript.Compiler.Scopes
+namespace FluidScript.Compiler.Metadata
 {
-    public class ObjectScope : Scope, IDisposable
+    public class ObjectPrototype : Prototype, IDisposable
     {
+        //todo lazy init
         private readonly IList<Reflection.DeclaredMethod> methods = new List<Reflection.DeclaredMethod>();
         private IDictionary<string, RuntimeObject> constants;
         private IDictionary<string, Reflection.DeclaredVariable> variables;
@@ -16,25 +17,33 @@ namespace FluidScript.Compiler.Scopes
 
         public override IDictionary<string, DeclaredVariable> Variables => variables;
 
-        public ObjectScope(Scope parent) : base(parent, ScopeContext.Type)
+        public ObjectPrototype(Prototype parent) : base(parent, ScopeContext.Type)
         {
 
         }
 
-        public ObjectScope() : base(null, ScopeContext.Type)
+        public ObjectPrototype() : base(null, ScopeContext.Type)
         {
 
         }
 
-        public ObjectScope(SyntaxVisitor visitor) : base(visitor.Scope, ScopeContext.Type)
+        public ObjectPrototype(SyntaxVisitor visitor) : base(visitor.Prototype, ScopeContext.Type)
         {
             this.visitor = visitor;
-            visitor.Scope = this;
+            visitor.Prototype = this;
         }
 
         public void DefineMethod(string name, PrimitiveType[] types, Func<RuntimeObject[], RuntimeObject> onInvoke)
         {
             methods.Add(new DeclaredMethod(name, methods.Count, types) { Delegate = onInvoke });
+        }
+
+
+        public override DeclaredMethod DeclareMethod(FunctionDeclaration declaration, BlockStatement body)
+        {
+            var declaredMethod = new Reflection.DeclaredMethod(declaration.Name, methods.Count) { Declaration = declaration, ValueAtTop = body };
+            methods.Add(declaredMethod);
+            return declaredMethod;
         }
 
         public override void DefineVariable(string name, RuntimeObject value)
@@ -82,33 +91,19 @@ namespace FluidScript.Compiler.Scopes
         public void Dispose()
         {
             if (visitor != null)
-                visitor.Scope = Parent;
+                visitor.Prototype = Parent;
         }
 
-        internal Reflection.DeclaredMethod GetMethod(string name, PrimitiveType[] types)
+        public override Reflection.DeclaredMethod GetMethod(string name, PrimitiveType[] types)
         {
-            return methods.FirstOrDefault(method => method.Name.Equals(name) && TypesEqual(method.Types, types));
+            return methods.FirstOrDefault(method => method.Name.Equals(name) && Emit.TypeUtils.TypesEqual(method.Types, types));
         }
 
         internal override RuntimeObject GetConstant(string name)
         {
             if (constants == null)
-                return RuntimeObject.Zero;
+                return Zero;
             return constants[name];
-        }
-
-        private static bool TypesEqual(PrimitiveType[] types, PrimitiveType[] calledTypes)
-        {
-            bool isEquals = true;
-            for (int i = 0; i < types.Length; i++)
-            {
-                if ((calledTypes[i] & types[i]) != types[i])
-                {
-                    isEquals = false;
-                    break;
-                }
-            }
-            return isEquals;
         }
 
         internal override bool HasVariable(string name)

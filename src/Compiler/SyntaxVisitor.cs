@@ -1,5 +1,5 @@
 ﻿using FluidScript.Compiler.Reflection;
-using FluidScript.Compiler.Scopes;
+using FluidScript.Compiler.Metadata;
 using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Core;
 using System;

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FluidScript.Compiler.Scopes
+namespace FluidScript.Compiler.Metadata
 {
     public class ObjectScope : Scope, System.IDisposable
     {
