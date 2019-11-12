@@ -8,13 +8,13 @@ namespace FluidScript.Compiler.Reflection
         public readonly string Name;
         public readonly int Index;
         public SyntaxTree.FunctionDeclaration Declaration;
-        private PrimitiveType[] types;
-        public PrimitiveType[] Types
+        private Emit.ArgumentType[] types;
+        public Emit.ArgumentType[] Types
         {
             get
             {
                 if (types == null && Declaration != null)
-                    types = Declaration.PrimitiveArguments().ToArray();
+                    types = Declaration.ArgumentTypes().ToArray();
                 return types;
             }
             set
@@ -33,7 +33,7 @@ namespace FluidScript.Compiler.Reflection
             Index = index;
         }
 
-        public DeclaredMethod(string name, int index, PrimitiveType[] types)
+        public DeclaredMethod(string name, int index, Emit.ArgumentType[] types)
         {
             Name = name;
             Index = index;
@@ -55,6 +55,29 @@ namespace FluidScript.Compiler.Reflection
             }
 
             return (args) => { return RuntimeObject.Null; };
+        }
+
+
+        internal RuntimeObject Exec(object instance, System.Reflection.MethodInfo method, RuntimeObject[] args)
+        {
+            var parameters = GetParameters(Types, args).ToArray();
+            return (RuntimeObject)method.Invoke(instance, parameters);
+        }
+
+        private static System.Collections.Generic.IEnumerable<object> GetParameters(Emit.ArgumentType[] types, RuntimeObject[] args)
+        {
+            for (int i = 0; i < types.Length; i++)
+            {
+                var type = types[i];
+                if (type.Flags == Emit.ArgumentFlags.VarArg)
+                {
+                    yield return args.Skip(i).ToArray();
+                }
+                else
+                {
+                    yield return args[i];
+                }
+            }
         }
     }
 }

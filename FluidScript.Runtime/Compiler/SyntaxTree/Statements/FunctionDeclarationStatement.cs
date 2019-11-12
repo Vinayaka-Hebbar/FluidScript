@@ -4,26 +4,18 @@
     {
         public readonly string Name;
 
-        public readonly ArgumentInfo[] Arguments;
-
-        public readonly Emit.TypeName ReturnTypeName;
-
         public readonly FunctionDeclaration Declaration;
 
         public FunctionDeclarationStatement(FunctionDeclaration declaration) : base(StatementType.Declaration)
         {
-            Declaration = declaration;
             Name = declaration.Name;
-            ReturnTypeName = declaration.TypeName;
-            Arguments = declaration.Arguments;
+            Declaration = declaration;
         }
 
         protected FunctionDeclarationStatement(FunctionDeclaration declaration, StatementType nodeType) : base(nodeType)
         {
-            Declaration = declaration;
             Name = declaration.Name;
-            ReturnTypeName = declaration.TypeName;
-            Arguments = declaration.Arguments;
+            Declaration = declaration;
         }
 
         public virtual System.Reflection.MethodInfo Create()

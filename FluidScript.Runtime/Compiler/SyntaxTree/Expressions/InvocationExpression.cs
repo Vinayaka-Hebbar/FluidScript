@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             if (NodeType == ExpressionType.Invocation)
             {
-                var types = new PrimitiveType[Arguments.Length];
+                var types = new RuntimeType[Arguments.Length];
                 var args = new RuntimeObject[Arguments.Length];
                 for (int i = 0; i < Arguments.Length; i++)
                 {
@@ -95,7 +95,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         internal static RuntimeObject GetArrayAtIndex(Expression[] args, RuntimeObject value)
         {
-            if ((value.RuntimeType & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+            if ((value.RuntimeType & FluidScript.RuntimeType.Array) == FluidScript.RuntimeType.Array)
             {
                 var array = (Core.ArrayObject)value;
                 for (int i = 0; i < args.Length; i++)
@@ -103,7 +103,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     Expression arg = args[i];
                     int index = arg.Evaluate().ToInt32();
                     value = array[index];
-                    if ((value.RuntimeType & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+                    if ((value.RuntimeType & FluidScript.RuntimeType.Array) == FluidScript.RuntimeType.Array)
                     {
                         array = (Core.ArrayObject)value;
                     }
@@ -137,7 +137,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     array.Resize(index + 1);
                 }
                 var current = array[index];
-                if ((current.RuntimeType & FluidScript.PrimitiveType.Array) == FluidScript.PrimitiveType.Array)
+                if ((current.RuntimeType & FluidScript.RuntimeType.Array) == FluidScript.RuntimeType.Array)
                 {
                     var innerArray = (Core.ArrayObject)current;
                     array = GetArray(indexes.Skip(i + 1).Take(indexes.Length - 1).ToArray(), ref innerArray);

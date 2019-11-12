@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 
 namespace FluidScript.Compiler.Emit
 {
-    internal class ReflectionILGenerator : ILGenerator
+    internal sealed class ReflectionILGenerator : ILGenerator
     {
         public readonly System.Reflection.Emit.ILGenerator Generator;
         public readonly bool EmitDebugInfo;

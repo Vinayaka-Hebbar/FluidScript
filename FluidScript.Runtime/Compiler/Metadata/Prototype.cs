@@ -33,7 +33,7 @@ namespace FluidScript.Compiler.Metadata
             throw new System.Exception("Can't define constant inside " + GetType());
         }
 
-        public virtual Reflection.DeclaredMethod GetMethod(string name, PrimitiveType[] primitiveType)
+        public virtual Reflection.DeclaredMethod GetMethod(string name, RuntimeType[] primitiveType)
         {
             throw new NotImplementedException();
         }
@@ -61,7 +61,9 @@ namespace FluidScript.Compiler.Metadata
             return null;
         }
 
-        internal abstract bool HasVariable(string name);
+        public abstract bool HasVariable(string name);
+
+        public abstract bool HasConstant(string name);
 
         public virtual void DefineVariable(string name, RuntimeObject value)
         {
@@ -74,6 +76,11 @@ namespace FluidScript.Compiler.Metadata
             {
                 throw new System.Exception("Instance not found");
             }
+        }
+
+        public virtual void Bind<TInstance>() where TInstance : RuntimeObject
+        {
+
         }
 
         public override RuntimeObject Call(string name, params RuntimeObject[] args)

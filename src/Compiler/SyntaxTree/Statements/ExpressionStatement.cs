@@ -9,7 +9,9 @@
             Expression = expression;
         }
 
+#pragma warning disable CS0508 // 'ExpressionStatement.Evaluate()': return type must be 'RuntimeObject' to match overridden member 'Node.Evaluate()'
         public override object Evaluate()
+#pragma warning restore CS0508 // 'ExpressionStatement.Evaluate()': return type must be 'RuntimeObject' to match overridden member 'Node.Evaluate()'
         {
             return Expression.Evaluate();
         }

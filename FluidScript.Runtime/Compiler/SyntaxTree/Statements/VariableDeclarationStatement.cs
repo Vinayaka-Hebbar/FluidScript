@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 VariableDeclarationExpression declaration = DeclarationExpressions[i];
                 objects[i] = declaration.Evaluate();
             }
-            return new Core.ArrayObject(objects, PrimitiveType.Array);
+            return new Core.ArrayObject(objects, RuntimeType.Array);
         }
     }
 }

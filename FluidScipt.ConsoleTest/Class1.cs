@@ -15,7 +15,6 @@ namespace FluidScipt.ConsoleTest
 
         public void Run()
         {
-
             var path = System.AppDomain.CurrentDomain.BaseDirectory + "source.rs";
             ScriptEngine engine = new FluidScript.ScriptEngine();
             var scope = new ObjectPrototype();
@@ -24,11 +23,8 @@ namespace FluidScipt.ConsoleTest
             prototype.DefineVariable("a", 4);
             prototype.DefineVariable("b", 2);
             prototype.DefineVariable("c", 1);
-            scope.DefineMethod("pow", new PrimitiveType[2] { PrimitiveType.Double, PrimitiveType.Double }, (args) =>
-              {
-                  return Math.Pow(args[0].ToDouble(), args[1].ToDouble());
-              });
-            var valie = engine.GetStatement("1", prototype);
+            scope.Bind<FluidScript.Library.MathObject>();
+            var valie = engine.GetStatement("{a=[5,6];out a}", prototype);
             RuntimeObject output = valie.Evaluate();
             Console.WriteLine(output);
         }

@@ -4,12 +4,12 @@ namespace FluidScript.Compiler.Emit
 {
     public struct Primitive
     {
-        public static readonly Primitive Any = new Primitive(null, PrimitiveType.Any);
+        public static readonly Primitive Any = new Primitive(null, RuntimeType.Any);
 
         public readonly Type Type;
-        public readonly PrimitiveType Enum;
+        public readonly RuntimeType Enum;
 
-        public Primitive(Type type, PrimitiveType @enum)
+        public Primitive(Type type, RuntimeType @enum)
         {
             Type = type;
             Enum = @enum;

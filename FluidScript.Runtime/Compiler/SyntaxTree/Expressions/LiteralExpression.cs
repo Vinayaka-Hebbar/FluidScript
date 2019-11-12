@@ -12,7 +12,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             Value = value;
             ResolvedType = typeof(double);
-            ResolvedPrimitiveType = FluidScript.PrimitiveType.Double;
+            ResolvedPrimitiveType = FluidScript.RuntimeType.Double;
         }
 
         private LiteralExpression() : base(ExpressionType.Literal)
@@ -24,21 +24,21 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             Value = value;
             ResolvedType = typeof(string);
-            ResolvedPrimitiveType = FluidScript.PrimitiveType.String;
+            ResolvedPrimitiveType = FluidScript.RuntimeType.String;
         }
 
         public LiteralExpression(bool value) : base(ExpressionType.Bool)
         {
             Value = value;
             ResolvedType = typeof(bool);
-            ResolvedPrimitiveType = FluidScript.PrimitiveType.Bool;
+            ResolvedPrimitiveType = FluidScript.RuntimeType.Bool;
         }
 
         public LiteralExpression(int value) : base(ExpressionType.Numeric)
         {
             Value = value;
             ResolvedType = typeof(int);
-            ResolvedPrimitiveType = FluidScript.PrimitiveType.Int32;
+            ResolvedPrimitiveType = FluidScript.RuntimeType.Int32;
         }
 
         public LiteralExpression(object value) : base(ExpressionType.Literal)
@@ -60,46 +60,46 @@ namespace FluidScript.Compiler.SyntaxTree
             //Unset ObjectType.Number
             switch (type)
             {
-                case FluidScript.PrimitiveType.Byte:
+                case FluidScript.RuntimeType.Byte:
                     generator.LoadByte((sbyte)Value);
                     break;
-                case FluidScript.PrimitiveType.UByte:
+                case FluidScript.RuntimeType.UByte:
                     generator.LoadByte((byte)Value);
                     break;
-                case FluidScript.PrimitiveType.Char:
+                case FluidScript.RuntimeType.Char:
                     generator.LoadChar((char)Value);
                     break;
-                case FluidScript.PrimitiveType.Int16:
+                case FluidScript.RuntimeType.Int16:
                     generator.LoadInt16((short)Value);
                     break;
-                case FluidScript.PrimitiveType.UInt16:
+                case FluidScript.RuntimeType.UInt16:
                     generator.LoadInt16((ushort)Value);
                     break;
-                case FluidScript.PrimitiveType.Int32:
+                case FluidScript.RuntimeType.Int32:
                     generator.LoadInt32((int)Value);
                     break;
-                case FluidScript.PrimitiveType.UInt32:
+                case FluidScript.RuntimeType.UInt32:
                     generator.LoadInt32((uint)Value);
                     break;
-                case FluidScript.PrimitiveType.Int64:
+                case FluidScript.RuntimeType.Int64:
                     generator.LoadInt64((long)Value);
                     break;
-                case FluidScript.PrimitiveType.UInt64:
+                case FluidScript.RuntimeType.UInt64:
                     generator.LoadInt64((ulong)Value);
                     break;
-                case FluidScript.PrimitiveType.Float:
+                case FluidScript.RuntimeType.Float:
                     generator.LoadSingle((float)Value);
                     break;
-                case FluidScript.PrimitiveType.Double:
+                case FluidScript.RuntimeType.Double:
                     generator.LoadDouble((double)Value);
                     break;
-                case FluidScript.PrimitiveType.Bool:
+                case FluidScript.RuntimeType.Bool:
                     generator.LoadBool((bool)Value);
                     break;
-                case FluidScript.PrimitiveType.String:
+                case FluidScript.RuntimeType.String:
                     generator.LoadString(Value.ToString());
                     break;
-                case FluidScript.PrimitiveType.Undefined:
+                case FluidScript.RuntimeType.Undefined:
                     generator.LoadNull();
                     break;
             }

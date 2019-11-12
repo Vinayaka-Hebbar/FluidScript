@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace FluidScript.Compiler.Metadata
 {
-    public class FunctionPrototype : Metadata.Prototype, IDisposable
+    public sealed class FunctionPrototype : Prototype, IDisposable
     {
-        private IDictionary<string, Reflection.DeclaredVariable> variables;
+        private IDictionary<string, DeclaredVariable> variables;
         private IDictionary<string, RuntimeObject> constants;
-        private IList<Reflection.DeclaredMethod> inner;
+        private IList<DeclaredMethod> inner;
 
         public readonly SyntaxVisitor visitor;
 
@@ -80,7 +80,7 @@ namespace FluidScript.Compiler.Metadata
 
         }
 
-        public override Reflection.DeclaredMethod GetMethod(string name, PrimitiveType[] types)
+        public override Reflection.DeclaredMethod GetMethod(string name, RuntimeType[] types)
         {
             if (inner == null)
                 Parent.GetMethod(name, types);
@@ -112,9 +112,29 @@ namespace FluidScript.Compiler.Metadata
                 visitor.Prototype = Parent;
         }
 
-        internal override bool HasVariable(string name)
+        public override bool HasVariable(string name)
         {
             return variables != null ? variables.ContainsKey(name) ? true : Parent.HasVariable(name) : Parent.HasVariable(name);
+        }
+
+        public override bool HasConstant(string name)
+        {
+            return constants != null ? constants.ContainsKey(name) ? true : Parent.HasConstant(name) : Parent.HasConstant(name);
+        }
+
+        public override void Bind<TInstance>()
+        {
+            if (inner == null)
+                inner = new List<DeclaredMethod>();
+            var methods = typeof(TInstance).GetMethods(MemberInvoker.Any)
+               .Where(m => m.IsDefined(typeof(Callable), false));
+            foreach (var method in methods)
+            {
+                var attribute = (Callable)method.GetCustomAttributes(typeof(Callable), false).First();
+                DeclaredMethod item = new DeclaredMethod(attribute.Name, inner.Count, attribute.GetArgumentTypes());
+                item.Delegate = (args) => item.Exec(null, method, args);
+                inner.Add(item);
+            }
         }
     }
 }

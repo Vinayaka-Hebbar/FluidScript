@@ -7,7 +7,7 @@
         /// <summary>
         /// todo for resolve result type assign resolve type if not any
         /// </summary>
-        protected PrimitiveType ResolvedPrimitiveType = FluidScript.PrimitiveType.Undefined;
+        protected RuntimeType ResolvedPrimitiveType = FluidScript.RuntimeType.Undefined;
 
         public Expression(ExpressionType nodeType)
         {
@@ -42,9 +42,9 @@
 
         }
 
-        public PrimitiveType PrimitiveType(Emit.OptimizationInfo info)
+        public RuntimeType PrimitiveType(Emit.OptimizationInfo info)
         {
-            if (ResolvedPrimitiveType == FluidScript.PrimitiveType.Undefined)
+            if (ResolvedPrimitiveType == FluidScript.RuntimeType.Undefined)
                 ResolveType(info);
             return ResolvedPrimitiveType;
         }

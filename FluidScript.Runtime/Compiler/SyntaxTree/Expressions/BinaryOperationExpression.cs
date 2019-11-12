@@ -96,14 +96,14 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var leftType = Left.PrimitiveType(info);
             var rightType = Right.PrimitiveType(info);
-            if (leftType != FluidScript.PrimitiveType.Any && rightType != FluidScript.PrimitiveType.Any)
+            if (leftType != FluidScript.RuntimeType.Any && rightType != FluidScript.RuntimeType.Any)
             {
                 switch (NodeType)
                 {
                     case ExpressionType.Plus:
-                        if (TypeUtils.CheckType(leftType, FluidScript.PrimitiveType.String) || TypeUtils.CheckType(rightType, FluidScript.PrimitiveType.String))
+                        if (TypeUtils.CheckType(leftType, FluidScript.RuntimeType.String) || TypeUtils.CheckType(rightType, FluidScript.RuntimeType.String))
                         {
-                            ResolvedPrimitiveType = FluidScript.PrimitiveType.String;
+                            ResolvedPrimitiveType = FluidScript.RuntimeType.String;
                             ResolvedType = typeof(string);
                             return;
                         }
@@ -122,7 +122,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     case ExpressionType.LessEqual:
                     case ExpressionType.Greater:
                     case ExpressionType.GreaterEqual:
-                        ResolvedPrimitiveType = FluidScript.PrimitiveType.Bool;
+                        ResolvedPrimitiveType = FluidScript.RuntimeType.Bool;
                         ResolvedType = typeof(bool);
                         break;
                 }

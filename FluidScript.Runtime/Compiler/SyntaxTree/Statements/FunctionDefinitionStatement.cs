@@ -15,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
         internal FunctionDefinitionStatement(FunctionDeclaration declaration, BlockStatement body, Reflection.DeclaredMethod member) : base(declaration, StatementType.Function)
         {
             Body = body;
-            Scope = declaration.Scope;
+            Scope = declaration.Prototype;
             Member = member;
         }
 
@@ -42,7 +42,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var hashCode = 1062545247;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
-            hashCode = hashCode * -1521134295 + EqualityComparer<ArgumentInfo[]>.Default.GetHashCode(Arguments);
+            hashCode = hashCode * -1521134295 + EqualityComparer<FunctionDeclaration>.Default.GetHashCode(Declaration);
             hashCode = hashCode * -1521134295 + EqualityComparer<Statement>.Default.GetHashCode(Body);
             hashCode = hashCode * -1521134295 + NodeType.GetHashCode();
             return hashCode;

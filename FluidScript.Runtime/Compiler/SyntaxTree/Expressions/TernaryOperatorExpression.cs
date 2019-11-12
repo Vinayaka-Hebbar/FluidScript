@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.SyntaxTree
         protected override void ResolveType(OptimizationInfo info)
         {
             var condition = First.PrimitiveType(info);
-            if (condition == FluidScript.PrimitiveType.Bool)
+            if (condition == FluidScript.RuntimeType.Bool)
             {
                 var a = Second.PrimitiveType(info);
                 var b = Third.PrimitiveType(info);
@@ -36,14 +36,14 @@ namespace FluidScript.Compiler.SyntaxTree
                 }
                 else
                 {
-                    if (a != FluidScript.PrimitiveType.Any && b != FluidScript.PrimitiveType.Any)
+                    if (a != FluidScript.RuntimeType.Any && b != FluidScript.RuntimeType.Any)
                     {
                         ResolvedPrimitiveType = a & b;
                         ResolvedType = TypeUtils.ToType(ResolvedPrimitiveType);
                     }
                     else
                     {
-                        ResolvedPrimitiveType = FluidScript.PrimitiveType.Any;
+                        ResolvedPrimitiveType = FluidScript.RuntimeType.Any;
                         ResolvedType = typeof(object);
                     }
                 }

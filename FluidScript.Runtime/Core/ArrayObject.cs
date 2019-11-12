@@ -1,13 +1,15 @@
-﻿using System.Linq;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FluidScript.Core
 {
-    public sealed class ArrayObject : RuntimeObject
+    public sealed class ArrayObject : RuntimeObject, IEnumerable<RuntimeObject>
     {
         private RuntimeObject[] store;
-        private readonly PrimitiveType type;
+        private readonly RuntimeType type;
 
-        public ArrayObject(RuntimeObject[] store, PrimitiveType type)
+        public ArrayObject(RuntimeObject[] store, RuntimeType type)
         {
             this.store = store;
             this.type = type;
@@ -29,7 +31,7 @@ namespace FluidScript.Core
             }
         }
 
-        public override PrimitiveType RuntimeType => type;
+        public override RuntimeType RuntimeType => type;
 
         public int Length => store.Length;
 
@@ -104,9 +106,25 @@ namespace FluidScript.Core
             return double.NaN;
         }
 
+        [Compiler.Reflection.Callable("indexOf", Compiler.Emit.ArgumentTypes.Double)]
+        public RuntimeObject IndexOf(RuntimeObject arg1)
+        {
+            return System.Array.IndexOf(store, arg1);
+        }
+
         public override string ToString()
         {
             return string.Concat("[", string.Join(",", store.Select(value => value.ToString())), "]");
+        }
+
+        public IEnumerator<RuntimeObject> GetEnumerator()
+        {
+            return ((IEnumerable<RuntimeObject>)store).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return store.GetEnumerator();
         }
     }
 }

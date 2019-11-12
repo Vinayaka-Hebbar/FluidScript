@@ -4,11 +4,11 @@
     {
         protected static readonly object Any = new object();
 
-        public static readonly RuntimeObject Null = new Core.PrimitiveObject(Any, PrimitiveType.Any);
-        public static readonly RuntimeObject Zero = new Core.PrimitiveObject(0, PrimitiveType.Double);
-        public static readonly RuntimeObject True = new Core.PrimitiveObject(true, PrimitiveType.Bool);
-        public static readonly RuntimeObject False = new Core.PrimitiveObject(false, PrimitiveType.Bool);
-        public static readonly RuntimeObject NaN = new Core.PrimitiveObject(double.NaN, PrimitiveType.Double);
+        public static readonly RuntimeObject Null = new Core.PrimitiveObject(Any, RuntimeType.Any);
+        public static readonly RuntimeObject Zero = new Core.PrimitiveObject(0, RuntimeType.Double);
+        public static readonly RuntimeObject True = new Core.PrimitiveObject(true, RuntimeType.Bool);
+        public static readonly RuntimeObject False = new Core.PrimitiveObject(false, RuntimeType.Bool);
+        public static readonly RuntimeObject NaN = new Core.PrimitiveObject(double.NaN, RuntimeType.Double);
         internal bool IsReturn;
 
         public virtual RuntimeObject Call(string name, params RuntimeObject[] args)
@@ -25,36 +25,69 @@
         }
 
 
-        public abstract bool ToBool();
+        public virtual bool IsArray()
+        {
+            return false;
+        }
 
-        public abstract char ToChar();
+        public virtual bool IsBool()
+        {
+            return false;
+        }
 
-        public abstract int ToInt32();
+        public virtual bool IsChar()
+        {
+            return false;
+        }
 
-        public abstract float ToFloat();
+        public virtual bool IsNumber()
+        {
+            return false;
+        }
 
-        public abstract double ToDouble();
+        public virtual bool IsString()
+        {
+            return true;
+        }
 
-        public abstract double ToNumber();
+        public virtual bool ToBool()
+        {
+            return false;
+        }
 
-        public abstract bool IsNumber();
+        public virtual char ToChar()
+        {
+            return char.MinValue;
+        }
 
-        public abstract bool IsString();
+        public virtual double ToDouble()
+        {
+            return double.NaN;
+        }
 
-        public abstract bool IsBool();
+        public virtual float ToFloat()
+        {
+            return float.NaN;
+        }
 
-        public abstract bool IsChar();
+        public virtual int ToInt32()
+        {
+            return 0;
+        }
 
-        public abstract bool IsArray();
+        public virtual double ToNumber()
+        {
+            return double.NaN;
+        }
 
         public virtual bool IsNull()
         {
             return true;
         }
 
-        public virtual PrimitiveType RuntimeType
+        public virtual RuntimeType RuntimeType
         {
-            get => PrimitiveType.Any;
+            get => RuntimeType.Any;
         }
 
         public override string ToString()

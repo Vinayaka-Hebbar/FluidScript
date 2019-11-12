@@ -13,7 +13,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             Expressions = expressions;
             TypeName = typeName;
-            ResolvedPrimitiveType = FluidScript.PrimitiveType.Array;
+            ResolvedPrimitiveType = FluidScript.RuntimeType.Array;
         }
 
         public override RuntimeObject Evaluate()
@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 array[i] = value;
 
             }
-            return new Core.ArrayObject(array, FluidScript.PrimitiveType.Array);
+            return new Core.ArrayObject(array, FluidScript.RuntimeType.Array);
         }
 
 

@@ -3,7 +3,7 @@
     public abstract class Declaration
     {
         public readonly string Name;
-        public PrimitiveType PrimitiveType;
+        public RuntimeType PrimitiveType;
         private System.Type resolvedType;
 
         internal Declaration(string name, FluidScript.Compiler.Emit.TypeName typeName)

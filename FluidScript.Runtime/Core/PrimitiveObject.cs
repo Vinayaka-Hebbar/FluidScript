@@ -6,9 +6,9 @@ namespace FluidScript.Core
     public sealed class PrimitiveObject : RuntimeObject
     {
         private readonly object Store;
-        private readonly PrimitiveType Type;
+        private readonly RuntimeType Type;
 
-        public PrimitiveObject(object value, PrimitiveType type)
+        public PrimitiveObject(object value, RuntimeType type)
         {
             Store = value;
             Type = type;
@@ -23,43 +23,43 @@ namespace FluidScript.Core
         public PrimitiveObject(PrimitiveObject[] value)
         {
             Store = value;
-            Type = PrimitiveType.Array;
+            Type = RuntimeType.Array;
         }
 
         public PrimitiveObject(double value)
         {
             Store = value;
-            Type = PrimitiveType.Double;
+            Type = RuntimeType.Double;
         }
 
         public PrimitiveObject(float value)
         {
             Store = value;
-            Type = PrimitiveType.Float;
+            Type = RuntimeType.Float;
         }
 
         public PrimitiveObject(int value)
         {
             Store = value;
-            Type = PrimitiveType.Int32;
+            Type = RuntimeType.Int32;
         }
 
         public PrimitiveObject(char value)
         {
             Store = value;
-            Type = PrimitiveType.Char;
+            Type = RuntimeType.Char;
         }
 
         public PrimitiveObject(string value)
         {
             Store = value;
-            Type = PrimitiveType.String;
+            Type = RuntimeType.String;
         }
 
         public PrimitiveObject(bool value)
         {
             Store = value;
-            Type = PrimitiveType.Bool;
+            Type = RuntimeType.Bool;
         }
 
         public override string ToString()
@@ -67,59 +67,56 @@ namespace FluidScript.Core
             return Store.ToString();
         }
 
-        public override bool IsNumber() => (Type & PrimitiveType.Number) == PrimitiveType.Number;
+        public override bool IsNumber() => (Type & RuntimeType.Double) == RuntimeType.Double;
 
-        public override bool IsString() => (Type & PrimitiveType.String) == PrimitiveType.String;
+        public override bool IsString() => (Type & RuntimeType.String) == RuntimeType.String;
 
-        public override bool IsBool() => (Type & PrimitiveType.Bool) == PrimitiveType.Bool;
+        public override bool IsBool() => (Type & RuntimeType.Bool) == RuntimeType.Bool;
 
-        public override bool IsChar() => (Type & PrimitiveType.Char) == PrimitiveType.Char;
+        public override bool IsChar() => (Type & RuntimeType.Char) == RuntimeType.Char;
 
-        public override bool IsArray() => (Type & PrimitiveType.Array) == PrimitiveType.Array;
+        public override bool IsArray() => (Type & RuntimeType.Array) == RuntimeType.Array;
 
         public override bool IsNull()
         {
-            if ((Type & PrimitiveType.Number) == PrimitiveType.Number)
+            if ((Type & RuntimeType.Double) == RuntimeType.Double)
             {
-                if ((Type & PrimitiveType.Double) == PrimitiveType.Double)
-                    return double.IsNaN((double)Store);
-                if ((Type & PrimitiveType.Float) == PrimitiveType.Float)
-                    return float.IsNaN((float)Store);
+                return false;
             }
             return Store == Any;
         }
 
         public override double ToDouble()
         {
-            if ((Type & PrimitiveType.Double) == PrimitiveType.Double)
+            if ((Type & RuntimeType.Double) == RuntimeType.Double)
                 return System.Convert.ToDouble(Store);
             return double.NaN;
         }
 
         public override float ToFloat()
         {
-            if ((Type & PrimitiveType.Float) == PrimitiveType.Float || (Type & PrimitiveType.Number) == PrimitiveType.Number)
+            if ((Type & RuntimeType.Float) == RuntimeType.Float)
                 return System.Convert.ToSingle(Store);
             return float.NaN;
         }
 
         public override int ToInt32()
         {
-            if ((Type & PrimitiveType.Int32) == PrimitiveType.Int32 || (Type & PrimitiveType.Number) == PrimitiveType.Number)
+            if ((Type & RuntimeType.Int32) == RuntimeType.Int32)
                 return System.Convert.ToInt32(Store);
             return 0;
         }
 
         public override char ToChar()
         {
-            if ((Type & PrimitiveType.Char) == PrimitiveType.Char)
+            if ((Type & RuntimeType.Char) == RuntimeType.Char)
                 return System.Convert.ToChar(Store);
             return char.MinValue;
         }
 
         public override bool ToBool()
         {
-            if ((Type & PrimitiveType.Bool) == PrimitiveType.Bool)
+            if ((Type & RuntimeType.Bool) == RuntimeType.Bool)
                 return (bool)Store;
             return false;
         }
@@ -127,13 +124,13 @@ namespace FluidScript.Core
         public override double ToNumber()
         {
             //Check Cast
-            if (Type == PrimitiveType.Double)
+            if (Type == RuntimeType.Double)
                 return System.Convert.ToDouble(Store);
-            if (Type == PrimitiveType.Float)
+            if (Type == RuntimeType.Float)
                 return System.Convert.ToSingle(Store);
-            if (Type == PrimitiveType.Int32)
+            if (Type == RuntimeType.Int32)
                 return System.Convert.ToInt32(Store);
-            if (Type == PrimitiveType.Bool)
+            if (Type == RuntimeType.Bool)
                 return (bool)Store ? 1 : 0;
             //force convert
             return System.Convert.ToDouble(Store);
@@ -141,7 +138,7 @@ namespace FluidScript.Core
         
         public PrimitiveObject[] ToArray()
         {
-            if ((Type & PrimitiveType.Array) == PrimitiveType.Array)
+            if ((Type & RuntimeType.Array) == RuntimeType.Array)
             {
                 return (PrimitiveObject[])Store;
                 //force convert
@@ -184,7 +181,7 @@ namespace FluidScript.Core
             return Store.GetHashCode();
         }
 
-        public override PrimitiveType RuntimeType => Type;
+        public override RuntimeType RuntimeType => Type;
 
 
         public static explicit operator int(PrimitiveObject result)

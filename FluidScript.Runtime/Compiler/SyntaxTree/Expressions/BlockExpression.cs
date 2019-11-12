@@ -24,7 +24,7 @@ namespace FluidScript.Compiler.SyntaxTree
                         break;
                     case StatementType.Function:
                         var declaration = ((FunctionDeclarationStatement)item).Declaration;
-                        var method = Prototype.GetMethod(declaration.Name, declaration.PrimitiveArguments().ToArray());
+                        var method = Prototype.GetMethod(declaration.Name, declaration.ArgumentTypes().Select(arg=>arg.RuntimeType).ToArray());
                         method.Delegate = method.Create(Prototype);
                         break;
                 }

@@ -7,7 +7,7 @@ namespace FluidScript.Compiler.Emit
     public static class TypeUtils
     {
         internal static readonly IDictionary<string, Primitive> PrimitiveNames;
-        internal static readonly IDictionary<System.Type, PrimitiveType> PrimitiveTypes;
+        internal static readonly IDictionary<System.Type, RuntimeType> PrimitiveTypes;
 
         /// <summary>
         /// Must be primitive
@@ -25,20 +25,20 @@ namespace FluidScript.Compiler.Emit
         {
             PrimitiveNames = new Dictionary<string, Primitive>
             {
-                {"byte", new Primitive(typeof(byte), PrimitiveType.UByte) },
-                {"sbyte", new Primitive(typeof(sbyte), PrimitiveType.Byte) },
-                {"short", new Primitive(typeof(short), PrimitiveType.Int16) },
-                {"ushort", new Primitive(typeof(ushort), PrimitiveType.UInt16) },
-                {"int",new Primitive ( typeof(int) , PrimitiveType.Int32)},
-                {"uint",new Primitive(typeof(uint), PrimitiveType.UInt32)},
-                {"long", new Primitive(typeof(long) , PrimitiveType.Int64)},
-                {"ulong", new Primitive(typeof(ulong), PrimitiveType.UInt64) },
-                {"float", new Primitive(typeof(float), PrimitiveType.Float) },
-                {"double",new Primitive( typeof(double), PrimitiveType.Double) },
-                {"bool", new Primitive(typeof(bool) , PrimitiveType.Bool)},
-                {"string", new Primitive(typeof(string), PrimitiveType.String) },
-                {"char", new Primitive(typeof(char), PrimitiveType.Char) },
-                {"any", new Primitive(typeof(object), PrimitiveType.Any) }
+                {"byte", new Primitive(typeof(byte), RuntimeType.UByte) },
+                {"sbyte", new Primitive(typeof(sbyte), RuntimeType.Byte) },
+                {"short", new Primitive(typeof(short), RuntimeType.Int16) },
+                {"ushort", new Primitive(typeof(ushort), RuntimeType.UInt16) },
+                {"int",new Primitive ( typeof(int) , RuntimeType.Int32)},
+                {"uint",new Primitive(typeof(uint), RuntimeType.UInt32)},
+                {"long", new Primitive(typeof(long) , RuntimeType.Int64)},
+                {"ulong", new Primitive(typeof(ulong), RuntimeType.UInt64) },
+                {"float", new Primitive(typeof(float), RuntimeType.Float) },
+                {"double",new Primitive( typeof(double), RuntimeType.Double) },
+                {"bool", new Primitive(typeof(bool) , RuntimeType.Bool)},
+                {"string", new Primitive(typeof(string), RuntimeType.String) },
+                {"char", new Primitive(typeof(char), RuntimeType.Char) },
+                {"any", new Primitive(typeof(object), RuntimeType.Any) }
             };
             PrimitiveTypes = PrimitiveNames
                 .Select(item => item.Value)
@@ -61,9 +61,9 @@ namespace FluidScript.Compiler.Emit
             return type;
         }
 
-        internal static PrimitiveType GetPrimitiveType(Emit.TypeName name)
+        internal static RuntimeType GetPrimitiveType(Emit.TypeName name)
         {
-            PrimitiveType type = PrimitiveType.Any;
+            RuntimeType type = RuntimeType.Any;
             if (name.FullName == null)
                 return type;
             if (PrimitiveNames.ContainsKey(name.FullName))
@@ -71,7 +71,7 @@ namespace FluidScript.Compiler.Emit
                 type = PrimitiveNames[name.FullName].Enum;
                 if (name.IsArray())
                 {
-                    type |= PrimitiveType.Array;
+                    type |= RuntimeType.Array;
                 }
             }
             return type;
@@ -88,7 +88,7 @@ namespace FluidScript.Compiler.Emit
             EmitConvertion.ToPrimitive(generator, primitive);
         }
 
-        public static Type ToType(PrimitiveType type)
+        public static Type ToType(RuntimeType type)
         {
             var primitive = PrimitiveNames.Values.FirstOrDefault(item => item.Enum == type);
             if (primitive.Type != null)
@@ -101,13 +101,13 @@ namespace FluidScript.Compiler.Emit
             return PrimitiveNames.ContainsKey(typeName);
         }
 
-        internal static PrimitiveType ToPrimitive(System.Type type)
+        internal static RuntimeType ToPrimitive(System.Type type)
         {
-            PrimitiveType primitive = PrimitiveType.Any;
+            RuntimeType primitive = RuntimeType.Any;
             if (type.IsArray)
             {
                 type = type.GetElementType();
-                primitive |= PrimitiveType.Array;
+                primitive |= RuntimeType.Array;
             }
             if (type.IsPrimitive)
             {
@@ -115,35 +115,42 @@ namespace FluidScript.Compiler.Emit
             }
             else if (type == typeof(string))
             {
-                primitive |= PrimitiveType.String;
+                primitive |= RuntimeType.String;
             }
             return primitive;
         }
 
-        public static bool CheckType(PrimitiveType leftType, PrimitiveType expected)
+        public static bool CheckType(RuntimeType leftType, RuntimeType expected)
         {
             return (leftType & expected) == expected;
         }
 
-        public static bool IsValueType(PrimitiveType type)
+        public static bool IsValueType(RuntimeType type)
         {
             switch (type)
             {
-                case PrimitiveType.Any:
-                case PrimitiveType.Undefined:
-                case PrimitiveType.Array:
+                case RuntimeType.Any:
+                case RuntimeType.Undefined:
+                case RuntimeType.Array:
                     return false;
                 default:
                     return true;
             }
         }
 
-        internal static bool TypesEqual(PrimitiveType[] types, PrimitiveType[] calledTypes)
+        internal static bool TypesEqual(ArgumentType[] types, RuntimeType[] calledTypes)
         {
             bool isEquals = true;
             for (int i = 0; i < types.Length; i++)
             {
-                if ((calledTypes[i] & types[i]) != types[i])
+                var type = types[i];
+                var runtime = type.RuntimeType;
+                if (type.Flags == ArgumentFlags.VarArg && (calledTypes[i] & runtime) == runtime)
+                {
+                    break;
+                }
+
+                if ((calledTypes[i] & runtime) != runtime)
                 {
                     isEquals = false;
                     break;
