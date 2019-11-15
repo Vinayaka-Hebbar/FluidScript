@@ -17,10 +17,12 @@ namespace FluidScript.Compiler.SyntaxTree
             Third = third;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            return First.Evaluate().ToBool() ? Second.Evaluate() : Third.Evaluate();
+            return First.Evaluate(instance).ToBool() ? Second.Evaluate(instance) : Third.Evaluate(instance);
         }
+#endif
 
         protected override void ResolveType(OptimizationInfo info)
         {

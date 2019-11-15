@@ -3,28 +3,43 @@ using FluidScript.Compiler.SyntaxTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace FluidScript.Compiler.Metadata
 {
     public sealed class FunctionPrototype : Prototype, IDisposable
     {
         private IDictionary<string, DeclaredVariable> variables;
+#if Runtime
         private IDictionary<string, RuntimeObject> constants;
+
+        public readonly Prototype BaseProtoType = Default;
+#endif
         private IList<DeclaredMethod> inner;
 
         public readonly SyntaxVisitor visitor;
 
-        public FunctionPrototype(Prototype parent) : base(parent, ScopeContext.Local)
+        public FunctionPrototype() : base(null, string.Empty, ScopeContext.Local)
         {
         }
 
-        public FunctionPrototype(SyntaxVisitor visitor, ScopeContext context) : base(visitor.Prototype, context)
+        public FunctionPrototype(Prototype parent, string name) : base(parent, name, ScopeContext.Local)
+        {
+        }
+
+        public FunctionPrototype(SyntaxVisitor visitor, string name, ScopeContext context) : base(visitor.Prototype, name, context)
         {
             this.visitor = visitor;
             visitor.Prototype = this;
         }
 
-        public override DeclaredMethod DeclareMethod(FunctionDeclaration declaration, BlockStatement body)
+        public FunctionPrototype(SyntaxVisitor visitor, ScopeContext context) : base(visitor.Prototype, string.Empty, context)
+        {
+            this.visitor = visitor;
+            visitor.Prototype = this;
+        }
+
+        internal override DeclaredMethod DeclareMethod(FunctionDeclaration declaration, BodyStatement body)
         {
             if (inner == null)
                 inner = new List<DeclaredMethod>();
@@ -33,7 +48,7 @@ namespace FluidScript.Compiler.Metadata
             return declaredMethod;
         }
 
-        public override DeclaredVariable DeclareLocalVariable(string name, Expression expression, VariableType type = VariableType.Local)
+        internal override DeclaredVariable DeclareLocalVariable(string name, Expression expression, VariableType type = VariableType.Local)
         {
             if (variables == null)
                 variables = new Dictionary<string, Reflection.DeclaredVariable>();
@@ -46,9 +61,50 @@ namespace FluidScript.Compiler.Metadata
             return variable;
         }
 
-        public override DeclaredVariable DeclareVariable(string name, Expression expression, VariableType type = VariableType.Local)
+        internal override DeclaredVariable DeclareVariable(string name, Expression expression, VariableType type = VariableType.Local)
         {
             return Context == ScopeContext.Block ? Parent.DeclareVariable(name, expression, type) : DeclareLocalVariable(name, expression, type);
+        }
+
+        public override IEnumerable<KeyValuePair<string, DeclaredVariable>> GetVariables()
+        {
+            return variables ?? (Enumerable.Empty<KeyValuePair<string, DeclaredVariable>>());
+        }
+
+        public override IEnumerable<Reflection.DeclaredMethod> GetMethods()
+        {
+            var methods = inner ?? (new DeclaredMethod[0]);
+#if Runtime
+            return Enumerable.Concat(BaseProtoType.GetMethods(), methods);
+#else
+            return methods;
+#endif
+        }
+
+        public void Dispose()
+        {
+            if (visitor != null)
+                visitor.Prototype = Parent;
+        }
+
+        public override bool HasVariable(string name)
+        {
+            return Parent != null
+                ? variables != null ? variables.ContainsKey(name) ? true : Parent.HasVariable(name) : Parent.HasVariable(name)
+                : variables != null ? variables.ContainsKey(name) : false;
+        }
+
+#if Runtime
+        public override RuntimeObject CreateInstance()
+        {
+            if (Parent != null)
+                return new Core.FunctionInstance(this, Parent.CreateInstance());
+            return new Core.FunctionInstance(this, RuntimeObject.Undefined);
+        }
+
+        internal Core.FunctionInstance CreateInstance(RuntimeObject obj)
+        {
+            return new Core.FunctionInstance(this, obj);
         }
 
         public override void DefineConstant(string name, RuntimeObject value)
@@ -67,54 +123,16 @@ namespace FluidScript.Compiler.Metadata
         {
             if (variables == null)
                 variables = new Dictionary<string, DeclaredVariable>();
-            variables.Add(name, new Reflection.DeclaredVariable(name, variables.Count) { Value = value });
+            variables.Add(name, new Reflection.DeclaredVariable(name, variables.Count) { DefaultValue = value });
         }
 
-        internal override RuntimeObject GetConstant(string name)
+        public override RuntimeObject GetConstant(string name)
         {
             if (constants != null && constants.ContainsKey(name))
             {
                 return constants[name];
             }
             return Parent.GetConstant(name);
-
-        }
-
-        public override Reflection.DeclaredMethod GetMethod(string name, RuntimeType[] types)
-        {
-            if (inner == null)
-                Parent.GetMethod(name, types);
-            return inner.FirstOrDefault(method => method.Name.Equals(name) && Emit.TypeUtils.TypesEqual(method.Types, types));
-        }
-
-        public override RuntimeObject this[string name]
-        {
-            get
-            {
-                var variable = GetVariable(name);
-                if (!ReferenceEquals(variable, null))
-                    return variable.Value;
-                return Null;
-            }
-        }
-
-        public override IDictionary<string, DeclaredVariable> Variables
-        {
-            get
-            {
-                return variables;
-            }
-        }
-
-        public void Dispose()
-        {
-            if (visitor != null)
-                visitor.Prototype = Parent;
-        }
-
-        public override bool HasVariable(string name)
-        {
-            return variables != null ? variables.ContainsKey(name) ? true : Parent.HasVariable(name) : Parent.HasVariable(name);
         }
 
         public override bool HasConstant(string name)
@@ -122,19 +140,54 @@ namespace FluidScript.Compiler.Metadata
             return constants != null ? constants.ContainsKey(name) ? true : Parent.HasConstant(name) : Parent.HasConstant(name);
         }
 
-        public override void Bind<TInstance>()
+        public override IEnumerable<KeyValuePair<string, RuntimeObject>> GetConstants()
         {
-            if (inner == null)
-                inner = new List<DeclaredMethod>();
-            var methods = typeof(TInstance).GetMethods(MemberInvoker.Any)
-               .Where(m => m.IsDefined(typeof(Callable), false));
-            foreach (var method in methods)
-            {
-                var attribute = (Callable)method.GetCustomAttributes(typeof(Callable), false).First();
-                DeclaredMethod item = new DeclaredMethod(attribute.Name, inner.Count, attribute.GetArgumentTypes());
-                item.Delegate = (args) => item.Exec(null, method, args);
-                inner.Add(item);
-            }
+            return constants ?? Enumerable.Empty<KeyValuePair<string, RuntimeObject>>();
         }
+
+        internal override IDictionary<object, RuntimeObject> Init(RuntimeObject instance, [Optional] KeyValuePair<object, RuntimeObject> initial)
+        {
+            var values = BaseProtoType.Init(instance, initial);
+            var variables = GetVariables();
+            if (variables != null)
+            {
+                foreach (var item in variables)
+                {
+                    var value = item.Value.DefaultValue;
+                    if (value is object)
+                    {
+                        values.Add(item.Key, value);
+                    }
+
+                }
+            }
+            var methods = GetMethods();
+            if (methods != null)
+            {
+                foreach (Reflection.DeclaredMethod method in methods)
+                {
+                    if (method.Store != null)
+                    {
+                        FunctionGroup list = null;
+                        if (values.TryGetValue(method.Name, out RuntimeObject value))
+                        {
+                            if (value is FunctionGroup)
+                            {
+                                list = (FunctionGroup)value;
+                            }
+                        }
+                        if (list is null)
+                        {
+                            list = new FunctionGroup(method.Name);
+                            values.Add(method.Name, list);
+                        }
+                        list.Add(new FunctionReference(instance, method.Arguments, method.ReturnType, method.Store));
+                    }
+
+                }
+            }
+            return values;
+        }
+#endif
     }
 }

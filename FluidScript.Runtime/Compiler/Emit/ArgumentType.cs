@@ -1,25 +1,56 @@
-﻿namespace FluidScript.Compiler.Emit
+﻿using System;
+
+namespace FluidScript.Compiler.Emit
 {
     public struct ArgumentType
     {
-        public static readonly ArgumentType Double = new ArgumentType(RuntimeType.Double);
-        public static readonly ArgumentType Int32 = new ArgumentType(RuntimeType.Int32);
-        public static readonly ArgumentType String = new ArgumentType(RuntimeType.String);
-        public static readonly ArgumentType VarArg = new ArgumentType(RuntimeType.Any, ArgumentFlags.VarArg);
-
+        public readonly string Name;
         public readonly RuntimeType RuntimeType;
-        public readonly ArgumentFlags Flags;
+        public readonly Reflection.DeclaredFlags Flags;
 
-        public ArgumentType(RuntimeType type, ArgumentFlags flags = ArgumentFlags.None)
+        public ArgumentType(string name, RuntimeType type, Reflection.DeclaredFlags flags = Reflection.DeclaredFlags.None)
         {
+            Name = name;
             RuntimeType = type;
             Flags = flags;
         }
+
+        public override string ToString()
+        {
+            return RuntimeType.ToString();
+        }
+
+        public bool IsVarArgs()
+        {
+            return (Flags & Reflection.DeclaredFlags.VarArgs) == Reflection.DeclaredFlags.VarArgs;
+        }
     }
 
-    public enum ArgumentFlags
+    [System.Flags]
+    public enum ArgumentTypes
     {
-        None,
-        VarArg
+        Any = 0,
+        String = 2,
+        Double = 4,
+        Float = Double | 8,
+        Unsigned = 32,
+        Int64 = 16 | Float,
+        UInt64 = Unsigned | Float,
+        Int32 = 64 | Int64,
+        UInt32 = 128 | Int64 | UInt64,
+        Int16 = Int32 | 256,
+        UInt16 = Int32 | UInt32,
+        Char = 256 | Int32 | UInt16,
+        /// <summary>
+        /// sbyte
+        /// </summary>
+        Byte = 512 | Int16,
+        /// <summary>
+        /// byte
+        /// </summary>
+        UByte = 512 | UInt16 | Int16,
+        Bool = 1024,
+        Array = 2048,
+        VarArg = 4098
     }
 }

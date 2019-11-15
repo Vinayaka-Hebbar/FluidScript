@@ -18,15 +18,17 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             RuntimeObject[] objects = new RuntimeObject[DeclarationExpressions.Length];
             for (int i = 0; i < DeclarationExpressions.Length; i++)
             {
                 VariableDeclarationExpression declaration = DeclarationExpressions[i];
-                objects[i] = declaration.Evaluate();
+                objects[i] = declaration.Evaluate(instance);
             }
-            return new Core.ArrayObject(objects, RuntimeType.Array);
+            return new Core.ArrayObject(objects, RuntimeType.Any);
         }
+#endif
     }
 }

@@ -9,10 +9,12 @@
             Expression = expression;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            return Expression.Evaluate();
+            return Expression.Evaluate(instance);
         }
+#endif
 
         public override void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
         {

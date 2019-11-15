@@ -1,8 +1,5 @@
-﻿class Sample {
-	age = 10;
-
-	function read(a:int):any { 
+﻿
+	function read(a:int) { 
 		var val = <int>[2,4,10];
 		return `n`;
 	}
-}

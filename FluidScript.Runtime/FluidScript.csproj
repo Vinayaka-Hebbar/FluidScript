@@ -1,12 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>TRACE;Runtime</DefineConstants>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Authors>Vinayaka Hebbar</Authors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="!$(DefineConstants.Contains('Runtime'))">
+    <Title>FluidScript</Title>
+    <PackageId>FluidScript</PackageId>
+    <Product>FluidScript</Product>
+    <PackageTags>script</PackageTags>
+    <AssemblyName>FluidScript</AssemblyName>
+    <PackageReleaseNotes>Initial Release of FluidScript</PackageReleaseNotes>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="$(DefineConstants.Contains('Runtime'))">
+    <Title>FluidScript Runtime</Title>
+    <PackageId>FluidScript.Runtime</PackageId>
     <Product>FluidScript Runtime</Product>
     <Authors>Vinayaka Hebbar</Authors>
+    <Version>1.0.1</Version>
+    <AssemblyName>FluidScript.Runtime</AssemblyName>
     <PackageTags>runtime,script</PackageTags>
     <PackageReleaseNotes>Initial Release of FluidScript Runtime</PackageReleaseNotes>
   </PropertyGroup>

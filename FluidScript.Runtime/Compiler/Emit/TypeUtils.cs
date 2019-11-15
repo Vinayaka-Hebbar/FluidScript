@@ -38,7 +38,8 @@ namespace FluidScript.Compiler.Emit
                 {"bool", new Primitive(typeof(bool) , RuntimeType.Bool)},
                 {"string", new Primitive(typeof(string), RuntimeType.String) },
                 {"char", new Primitive(typeof(char), RuntimeType.Char) },
-                {"any", new Primitive(typeof(object), RuntimeType.Any) }
+                {"any", new Primitive(typeof(object), RuntimeType.Any) },
+                {"void", new Primitive(typeof(void), RuntimeType.Void) }
             };
             PrimitiveTypes = PrimitiveNames
                 .Select(item => item.Value)
@@ -117,6 +118,10 @@ namespace FluidScript.Compiler.Emit
             {
                 primitive |= RuntimeType.String;
             }
+            else if (type == typeof(void))
+            {
+                primitive |= RuntimeType.Void;
+            }
             return primitive;
         }
 
@@ -140,12 +145,20 @@ namespace FluidScript.Compiler.Emit
 
         internal static bool TypesEqual(ArgumentType[] types, RuntimeType[] calledTypes)
         {
+            int length = types.Length;
+            if (calledTypes.Length < length) return false;
+
             bool isEquals = true;
-            for (int i = 0; i < types.Length; i++)
+            for (int i = 0; i < calledTypes.Length; i++)
             {
+                if (i >= length)
+                {
+                    isEquals = false;
+                    break;
+                }
                 var type = types[i];
                 var runtime = type.RuntimeType;
-                if (type.Flags == ArgumentFlags.VarArg && (calledTypes[i] & runtime) == runtime)
+                if (type.Flags == Reflection.DeclaredFlags.VarArgs && (calledTypes[i] & runtime) == runtime)
                 {
                     break;
                 }

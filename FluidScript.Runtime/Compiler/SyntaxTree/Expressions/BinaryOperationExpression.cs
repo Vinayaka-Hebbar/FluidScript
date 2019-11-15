@@ -18,75 +18,53 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override IEnumerable<Node> ChildNodes => Childs(Left, Right);
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
+            var left = Left.Evaluate(instance);
+            var right = Right.Evaluate(instance);
             switch (NodeType)
             {
                 case ExpressionType.Plus:
-                    return Left.Evaluate() + Right.Evaluate();
+                    return left + right;
                 case ExpressionType.Minus:
-                    return Left.Evaluate() - Right.Evaluate();
+                    return left - right;
                 case ExpressionType.Multiply:
-                    return Left.Evaluate() * Right.Evaluate();
+                    return left * right;
                 case ExpressionType.Divide:
-                    return Left.Evaluate() / Right.Evaluate();
+                    return left / right;
                 case ExpressionType.Percent:
-                    return Left.Evaluate() % Right.Evaluate();
+                    return left % right;
                 case ExpressionType.Circumflex:
-                    return Left.Evaluate() ^ Right.Evaluate();
+                    return left ^ right;
                 case ExpressionType.EqualEqual:
-                    return Left.Evaluate() == Right.Evaluate();
+                    return left == right;
                 case ExpressionType.BangEqual:
-                    return Left.Evaluate() != Right.Evaluate();
+                    return left != right;
                 case ExpressionType.Less:
-                    return Left.Evaluate() < Right.Evaluate();
+                    return left < right;
                 case ExpressionType.LessEqual:
-                    return Left.Evaluate() <= Right.Evaluate();
+                    return left <= right;
                 case ExpressionType.LessLess:
-                    return Left.Evaluate() << Right.Evaluate().ToInt32();
+                    return left << right.ToInt32();
                 case ExpressionType.Greater:
-                    return Left.Evaluate() > Right.Evaluate();
+                    return left > right;
                 case ExpressionType.GreaterEqual:
-                    return Left.Evaluate() >= Right.Evaluate();
+                    return left >= right;
                 case ExpressionType.GreaterGreater:
-                    return Left.Evaluate() >> (int)Right.Evaluate();
+                    return left >> (int)right;
                 case ExpressionType.And:
-                    return Left.Evaluate() & Right.Evaluate();
+                    return left & right;
                 case ExpressionType.AndAnd:
-                    return new Core.PrimitiveObject(Left.Evaluate().ToBool() && Right.Evaluate().ToBool());
+                    return new Core.PrimitiveObject(left.ToBool() && right.ToBool());
                 case ExpressionType.Or:
-                    return Left.Evaluate() | Right.Evaluate();
+                    return left | right;
                 case ExpressionType.OrOr:
-                    return new Core.PrimitiveObject(Left.Evaluate().ToBool() || Right.Evaluate().ToBool());
-                case ExpressionType.Equal:
-                    var value = Right.Evaluate();
-                    if (Left.NodeType == ExpressionType.Identifier)
-                    {
-                        var exp = (NameExpression)Left;
-                        Metadata.Prototype scope = exp.Prototype;
-                        Reflection.DeclaredVariable variable = null;
-                        if (scope.HasVariable(exp.Name))
-                        {
-                            variable = scope.GetVariable(exp.Name);
-                        }
-                        else
-                        {
-                            variable = scope.DeclareVariable(exp.Name, Right);
-                        }
-                        if (variable != null)
-                        {
-                            variable.Value = value;
-                        }
-                    }
-                    else if (Left.NodeType == ExpressionType.Indexer)
-                    {
-                        var array = (InvocationExpression)Left;
-                        array.SetArray(value);
-                    }
-                    return value;
+                    return new Core.PrimitiveObject(left.ToBool() || right.ToBool());
             }
-            return base.Evaluate();
+            return base.Evaluate(instance);
         }
+#endif
 
         /// <summary>
         /// Todo remove arguments by 
@@ -96,7 +74,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var leftType = Left.PrimitiveType(info);
             var rightType = Right.PrimitiveType(info);
-            if (leftType != FluidScript.RuntimeType.Any && rightType != FluidScript.RuntimeType.Any)
+            if (leftType != RuntimeType.Any && rightType != RuntimeType.Any)
             {
                 switch (NodeType)
                 {
@@ -240,24 +218,6 @@ namespace FluidScript.Compiler.SyntaxTree
             }
             generator.Call(ReflectionHelpers.StringConcat_Two_Object);
         }
-
-        public override Core.RuntimeObject Evaluate()
-        {
-            var left = Left.Evaluate();
-            var right = Right.Evaluate();
-            switch (NodeType)
-            {
-                case ExpressionType.Plus:
-                    return left + right;
-                case ExpressionType.Minus:
-                    return left - right;
-                case ExpressionType.Multiply:
-                    return left * right;
-                case ExpressionType.Divide:
-                    return left / right;
-            }
-            return Core.RuntimeObject.NaN;
-        }
 #endif
 
         public override string ToString()
@@ -318,9 +278,6 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 case ExpressionType.OrOr:
                     operation = "||";
-                    break;
-                case ExpressionType.Equal:
-                    operation = "=";
                     break;
             }
             return string.Concat(Left.ToString(), operation, Right.ToString());

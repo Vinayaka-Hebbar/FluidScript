@@ -18,9 +18,10 @@ namespace FluidScript.Compiler.SyntaxTree
             ResolvedPrimitiveType = Operand.PrimitiveType(info);
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            var result = Operand.Evaluate();
+            var result = Operand.Evaluate(instance);
             switch (NodeType)
             {
                 case ExpressionType.Parenthesized:
@@ -55,11 +56,12 @@ namespace FluidScript.Compiler.SyntaxTree
                                 result = !value;
                                 break;
                         }
-                        expression.Set(value);
+                        instance[expression.Name] = value;
                     }
                     return result;
             }
         }
+#endif
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {

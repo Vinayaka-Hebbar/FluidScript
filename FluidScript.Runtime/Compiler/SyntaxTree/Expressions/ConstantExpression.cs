@@ -1,4 +1,5 @@
-﻿using FluidScript.Compiler.Metadata;
+﻿using System.Runtime.InteropServices;
+using FluidScript.Compiler.Metadata;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -8,15 +9,12 @@ namespace FluidScript.Compiler.SyntaxTree
         {
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate([Optional] RuntimeObject instance)
         {
             return Prototype.GetConstant(Name);
         }
-
-        internal override void Set(RuntimeObject value)
-        {
-            throw new System.Exception("tring to modify read only value");
-        }
+#endif
 
         public override string ToString()
         {

@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using System.Runtime.InteropServices;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class NullPropegatorExpression : Expression
     {
@@ -11,19 +13,21 @@
             Right = right;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             if (Left.NodeType == ExpressionType.Identifier)
             {
                 var identifier = (NameExpression)Left;
-                var value = identifier.Evaluate();
+                var value = identifier.Evaluate(instance);
                 if (!value.IsNull())
                     return value;
-                var result = Right.Evaluate();
-                identifier.Set(result);
+                var result = Right.Evaluate(instance);
+                instance[identifier.Name] =result;
                 return result;
             }
             return RuntimeObject.Null;
         }
+#endif
     }
 }

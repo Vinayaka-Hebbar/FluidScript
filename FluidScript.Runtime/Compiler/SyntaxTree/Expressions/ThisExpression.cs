@@ -9,9 +9,11 @@
             this.prototype = prototype;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            return prototype;
+            return instance["this"];
         }
+#endif
     }
 }

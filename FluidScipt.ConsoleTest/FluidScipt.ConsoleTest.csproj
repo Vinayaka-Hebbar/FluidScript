@@ -22,7 +22,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FluidScript.Runtime\FluidScript.Runtime.csproj" />
+    <ProjectReference Include="..\FluidScript.Runtime\FluidScript.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
 </Project>

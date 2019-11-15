@@ -11,5 +11,6 @@
     {
         None = 0,
         Array = 1,
+        VarArgs = 2
     }
 }

@@ -10,20 +10,20 @@ namespace FluidScript.Compiler.SyntaxTree
             Expression = expression;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            if(NodeType == StatementType.Return)
+            if (NodeType == StatementType.Return)
             {
-                var value = Expression.Evaluate();
-                value.IsReturn = true;
-                return value;
+                return Expression?.Evaluate(instance);
             }
-            if(NodeType == StatementType.Throw)
+            if (NodeType == StatementType.Throw)
             {
-                throw new System.Exception(Expression.Evaluate().ToString());
+                throw new System.Exception(Expression.Evaluate(instance).ToString());
             }
-            return base.Evaluate();
+            return base.Evaluate(instance);
         }
+#endif
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {
@@ -38,9 +38,9 @@ namespace FluidScript.Compiler.SyntaxTree
                     Expression.GenerateCode(generator, info);
                     if (info.SyntaxTree is BlockStatement block)
                     {
-                        if (block.Statements.Count > 0)
+                        if (block.Statements.Length > 0)
                         {
-                            lastStatement = block.Statements[block.Statements.Count - 1] == this;
+                            lastStatement = block.Statements[block.Statements.Length - 1] == this;
                         }
                     }
                     //todo variable name not used

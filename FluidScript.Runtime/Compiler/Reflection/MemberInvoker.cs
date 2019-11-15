@@ -1,8 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace FluidScript.Compiler.Reflection
 {
+#if Runtime
     public static class MemberInvoker
     {
         internal const BindingFlags Any = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
@@ -18,6 +21,8 @@ namespace FluidScript.Compiler.Reflection
                 var attribute = m.GetCustomAttributes(typeof(Callable), false).First();
                 return ((Callable)attribute).Name == name;
             });
+            if (method == null)
+                return RuntimeObject.Undefined;
             var value = (RuntimeObject)method.Invoke(instance, args);
             return value;
         }
@@ -32,6 +37,8 @@ namespace FluidScript.Compiler.Reflection
                 var attribute = m.GetCustomAttributes(typeof(Callable), false).First();
                 return ((Callable)attribute).Name == name;
             });
+            if (member == null)
+                return RuntimeObject.Undefined;
             switch (member.MemberType)
             {
                 case MemberTypes.Property:
@@ -43,5 +50,32 @@ namespace FluidScript.Compiler.Reflection
             }
             return RuntimeObject.Null;
         }
+
+        public static IEnumerable<DeclaredMethod> GetMethods(Type type)
+        {
+            int index = 0;
+            var methods = type.GetMethods(Any)
+                 .Where(m => m.IsDefined(typeof(Callable), false));
+            foreach (MethodInfo method in methods)
+            {
+                var attribute = (Callable)method.GetCustomAttributes(typeof(Callable), false).First();
+                var parameters = method.GetParameters();
+                var argTypes = attribute.Arguments;
+                var arguments = new Emit.ArgumentType[parameters.Length];
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    var arg = argTypes[i];
+                    var flags = DeclaredFlags.None;
+                    if ((arg & Emit.ArgumentTypes.VarArg) == Emit.ArgumentTypes.VarArg)
+                    {
+                        arg ^= Emit.ArgumentTypes.VarArg;
+                        flags |= DeclaredFlags.VarArgs;
+                    }
+                    arguments[i] = new Emit.ArgumentType(parameters[i].Name, (RuntimeType)arg, flags);
+                }
+                yield return new DeclaredMethod(attribute.Name, index++, arguments, attribute.ReturnType) { Store = method };
+            }
+        }
     }
+#endif
 }

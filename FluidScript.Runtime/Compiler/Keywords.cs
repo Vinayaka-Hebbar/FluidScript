@@ -15,6 +15,7 @@ namespace FluidScript.Compiler
                 {"true",IdentifierType.True },
                 {"false",IdentifierType.False },
                 {"null", IdentifierType.Null },
+                {"undefined", IdentifierType.Undefined },
                 {"out", IdentifierType.Return },
                 {"return", IdentifierType.Return },
                 {"var", IdentifierType.Var },

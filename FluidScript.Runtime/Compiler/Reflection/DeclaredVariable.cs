@@ -12,7 +12,9 @@ namespace FluidScript.Compiler.Reflection
 
         public SyntaxTree.Expression ValueAtTop;
 
-        public RuntimeObject Value;
+#if Runtime
+        public RuntimeObject DefaultValue;
+#endif
 
         public DeclaredVariable(string name, int index)
         {
@@ -25,9 +27,11 @@ namespace FluidScript.Compiler.Reflection
             Type = type;
         }
 
-        internal RuntimeObject Evaluate()
+#if Runtime
+        internal RuntimeObject Evaluate(RuntimeObject instance)
         {
-            return ValueAtTop == null ? RuntimeObject.Null : ValueAtTop.Evaluate();
+            return ValueAtTop == null ? RuntimeObject.Null : ValueAtTop.Evaluate(instance);
         }
+#endif
     }
 }

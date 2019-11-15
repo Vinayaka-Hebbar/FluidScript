@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using FluidScript.Compiler.Emit;
+﻿using FluidScript.Compiler.Emit;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -10,9 +10,9 @@ namespace FluidScript.Compiler.SyntaxTree
 
         internal readonly Reflection.DeclaredMethod Member;
 
-        public BlockStatement Body { get; }
+        public BodyStatement Body { get; }
 
-        internal FunctionDefinitionStatement(FunctionDeclaration declaration, BlockStatement body, Reflection.DeclaredMethod member) : base(declaration, StatementType.Function)
+        internal FunctionDefinitionStatement(FunctionDeclaration declaration, BodyStatement body, Reflection.DeclaredMethod member) : base(declaration, StatementType.Function)
         {
             Body = body;
             Scope = declaration.Prototype;
@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            return Name;
+            return Declaration.ToString();
         }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
@@ -37,6 +37,15 @@ namespace FluidScript.Compiler.SyntaxTree
             if (info.ReturnVariable != null)
                 generator.LoadVariable(info.ReturnVariable);
         }
+
+#if Runtime
+        public override RuntimeObject Evaluate([Optional]RuntimeObject instance)
+        {
+            var reference = new Metadata.DynamicFunction(Member, instance, Member.DynamicInvoke);
+            instance[Name] = reference;
+            return reference;
+        }
+#endif
 
         public override int GetHashCode()
         {

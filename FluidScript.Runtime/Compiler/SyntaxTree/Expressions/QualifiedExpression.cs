@@ -24,15 +24,17 @@ namespace FluidScript.Compiler.SyntaxTree
             return Name.ToString();
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             if (NodeType == ExpressionType.MemberAccess)
             {
-                var value = Target.Evaluate();
+                var value = Target.Evaluate(instance);
                 return value[Name];
             }
-            return base.Evaluate();
+            return instance[Name];
         }
+#endif
 
 
 #if Emit

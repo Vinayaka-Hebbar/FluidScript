@@ -4,7 +4,13 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public class LiteralExpression : Expression
     {
-        public static readonly LiteralExpression Null = new LiteralExpression();
+#if Runtime
+        public static readonly LiteralExpression Null = new LiteralExpression(RuntimeObject._null, RuntimeType.Any);
+
+        public static readonly Expression Undefined = new LiteralExpression(RuntimeObject._undefined, RuntimeType.Undefined);
+#else
+        public static readonly LiteralExpression Null = new LiteralExpression(null, RuntimeType.Undefined);
+#endif
 
         public readonly object Value;
 
@@ -13,11 +19,6 @@ namespace FluidScript.Compiler.SyntaxTree
             Value = value;
             ResolvedType = typeof(double);
             ResolvedPrimitiveType = FluidScript.RuntimeType.Double;
-        }
-
-        private LiteralExpression() : base(ExpressionType.Literal)
-        {
-            Value = "null";
         }
 
         public LiteralExpression(string value) : base(ExpressionType.String)
@@ -49,10 +50,25 @@ namespace FluidScript.Compiler.SyntaxTree
             ResolvedPrimitiveType = TypeUtils.PrimitiveTypes[value.GetType()];
         }
 
-        public override RuntimeObject Evaluate()
+        public LiteralExpression(object value, RuntimeType type) : base(ExpressionType.Literal)
+        {
+            Value = value;
+            ResolvedType = typeof(object);
+            //must be primitive
+            ResolvedPrimitiveType = type;
+        }
+
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             return new Core.PrimitiveObject(Value, ResolvedPrimitiveType);
         }
+#else
+        public override object Evaluate()
+        {
+            return Value;
+        }
+#endif
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
         {

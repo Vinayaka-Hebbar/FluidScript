@@ -1,31 +1,49 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 namespace FluidScript.Compiler.Reflection
 {
+    //todo member base
     public class DeclaredMethod
     {
         public readonly string Name;
         public readonly int Index;
         public SyntaxTree.FunctionDeclaration Declaration;
-        private Emit.ArgumentType[] types;
-        public Emit.ArgumentType[] Types
+        private Emit.ArgumentType[] arguments;
+        private RuntimeType returnType = RuntimeType.Undefined;
+
+        public Emit.ArgumentType[] Arguments
         {
             get
             {
-                if (types == null && Declaration != null)
-                    types = Declaration.ArgumentTypes().ToArray();
-                return types;
+                if (arguments == null && Declaration != null)
+                    arguments = Declaration.ArgumentTypes().ToArray();
+                return arguments;
             }
-            set
+            private set
             {
-                types = value;
+                arguments = value;
             }
         }
 
-        public SyntaxTree.BlockStatement ValueAtTop;
+        public RuntimeType ReturnType
+        {
+            get
+            {
+                if (returnType == RuntimeType.Undefined)
+                {
+                    returnType = Declaration.ReturnType();
+                }
+                return returnType;
+            }
+            private set
+            {
+                returnType = value;
+            }
+        }
 
-        public System.Func<RuntimeObject[], RuntimeObject> Delegate;
+        public SyntaxTree.BodyStatement ValueAtTop;
+
+        public System.Reflection.MethodInfo Store;
 
         public DeclaredMethod(string name, int index)
         {
@@ -33,43 +51,37 @@ namespace FluidScript.Compiler.Reflection
             Index = index;
         }
 
-        public DeclaredMethod(string name, int index, Emit.ArgumentType[] types)
+        public DeclaredMethod(string name, int index, Emit.ArgumentType[] types, RuntimeType returnType)
         {
             Name = name;
             Index = index;
-            Types = types;
+            Arguments = types;
+            ReturnType = returnType;
         }
 
-        internal Func<RuntimeObject[], RuntimeObject> Create(Metadata.Prototype prototype)
+#if Runtime
+        internal RuntimeObject DynamicInvoke(RuntimeObject obj, RuntimeObject[] args)
         {
-            if (ValueAtTop != null)
+            var instance = Declaration.Prototype.CreateInstance(obj);
+            for (int index = 0; index < Arguments.Length; index++)
             {
-                return (args) =>
-                {
-                    for (int i = 0; i < Declaration.Arguments.Length; i++)
-                    {
-                        prototype.DefineVariable(Declaration.Arguments[i].Name, args[i]);
-                    }
-                    return ValueAtTop.Evaluate();
-                };
+                var arg = Arguments[index];
+                instance[arg.Name] = arg.IsVarArgs() ? new Core.ArrayObject(args.Skip(index).ToArray(), arg.RuntimeType) : args[index];
             }
-
-            return (args) => { return RuntimeObject.Null; };
+            return ValueAtTop.Evaluate(instance);
         }
 
-
-        internal RuntimeObject Exec(object instance, System.Reflection.MethodInfo method, RuntimeObject[] args)
+        public override string ToString()
         {
-            var parameters = GetParameters(Types, args).ToArray();
-            return (RuntimeObject)method.Invoke(instance, parameters);
+            return string.Concat(Name, ":(", string.Join(",", Arguments.Select(type => type.ToString())), ") => ", ReturnType.ToString());
         }
 
-        private static System.Collections.Generic.IEnumerable<object> GetParameters(Emit.ArgumentType[] types, RuntimeObject[] args)
+        internal static System.Collections.Generic.IEnumerable<object> GetParameters(Emit.ArgumentType[] types, RuntimeObject[] args)
         {
             for (int i = 0; i < types.Length; i++)
             {
                 var type = types[i];
-                if (type.Flags == Emit.ArgumentFlags.VarArg)
+                if (type.Flags == DeclaredFlags.VarArgs)
                 {
                     yield return args.Skip(i).ToArray();
                 }
@@ -79,5 +91,6 @@ namespace FluidScript.Compiler.Reflection
                 }
             }
         }
+#endif
     }
 }

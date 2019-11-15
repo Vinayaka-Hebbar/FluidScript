@@ -1,17 +1,17 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using System.Runtime.InteropServices;
+using FluidScript.Compiler.Emit;
+using FluidScript.Core;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
     public class VariableDeclarationExpression : Expression
     {
         public readonly string Name;
-        public readonly Metadata.Prototype Scope;
         public readonly Reflection.DeclaredVariable Variable;
 
-        public VariableDeclarationExpression(string name, Metadata.Prototype scope, Reflection.DeclaredVariable variable) : base(ExpressionType.Declaration)
+        public VariableDeclarationExpression(string name, Reflection.DeclaredVariable variable) : base(ExpressionType.Declaration)
         {
             Name = name;
-            Scope = scope;
             Variable = variable;
 
         }
@@ -28,13 +28,14 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            var value = Variable.Evaluate();
-            value.IsReturn = false;
-            Variable.Value = value;
+            var value = Variable.Evaluate(instance);
+            instance[Variable.Name] = value;
             return value;
         }
+#endif
 
 #if Emit
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
@@ -61,7 +62,19 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            string value = Variable.ValueAtTop != null ? Variable.ValueAtTop.ToString() : !ReferenceEquals(Variable.Value, null) ? Variable.Value.ToString() : "null";
+            //todo for not runtime
+            string value = "null";
+            if (Variable.ValueAtTop != null)
+            {
+                value = Variable.ValueAtTop.ToString();
+            }
+#if Runtime
+            else if (Variable.DefaultValue is object)
+            {
+                value = Variable.DefaultValue.ToString();
+            }
+#endif
+
             return string.Concat(Variable.Name, "=", value);
         }
     }

@@ -1,12 +1,12 @@
 ﻿namespace FluidScript
 {
     [System.Flags]
-    public enum RuntimeType : short
+    public enum RuntimeType : ushort
     {
-        Undefined = -1,
+        Undefined = 1,
         Any = 0,
         String = 2,
-        Double =  4,
+        Double = 4,
         Float = Double | 8,
         Unsigned = 32,
         Int64 = 16 | Float,
@@ -25,7 +25,9 @@
         /// </summary>
         UByte = 512 | UInt16 | Int16,
         Bool = 1024,
-        Array = 2048
+        Array = 2048,
+        Function = 4096,
+        Void = 8192
     }
 
 }

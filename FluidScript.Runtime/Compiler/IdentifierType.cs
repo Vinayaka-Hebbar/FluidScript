@@ -10,6 +10,7 @@
         True,
         False,
         Null,
+        Undefined,
         Return,
         Var,
         Function,

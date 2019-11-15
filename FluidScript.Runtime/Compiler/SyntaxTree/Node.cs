@@ -33,16 +33,5 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             return values;
         }
-
-        /// <summary>
-        /// Get Value for the scope
-        /// </summary>
-        /// <param name="scope"></param>
-        /// <param name="provider"></param>
-        /// <returns></returns>
-        public virtual RuntimeObject Evaluate()
-        {
-            return RuntimeObject.Null;
-        }
     }
 }

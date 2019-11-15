@@ -1,10 +1,13 @@
 ﻿using System;
-using System.Linq;
+using FluidScript.Compiler.Metadata;
 
 namespace FluidScript.Core
 {
-    public sealed class PrimitiveObject : RuntimeObject
+#if Runtime
+    public sealed class PrimitiveObject : ObjectInstance
     {
+        private static Compiler.Metadata.Prototype prototype;
+
         private readonly object Store;
         private readonly RuntimeType Type;
 
@@ -83,7 +86,7 @@ namespace FluidScript.Core
             {
                 return false;
             }
-            return Store == Any;
+            return Store == _null || Store == _undefined;
         }
 
         public override double ToDouble()
@@ -117,8 +120,8 @@ namespace FluidScript.Core
         public override bool ToBool()
         {
             if ((Type & RuntimeType.Bool) == RuntimeType.Bool)
-                return (bool)Store;
-            return false;
+                return System.Convert.ToBoolean(Store);
+            return Type != RuntimeType.Undefined;
         }
 
         public override double ToNumber()
@@ -135,7 +138,7 @@ namespace FluidScript.Core
             //force convert
             return System.Convert.ToDouble(Store);
         }
-        
+
         public PrimitiveObject[] ToArray()
         {
             if ((Type & RuntimeType.Array) == RuntimeType.Array)
@@ -181,7 +184,7 @@ namespace FluidScript.Core
             return Store.GetHashCode();
         }
 
-        public override RuntimeType RuntimeType => Type;
+        public override RuntimeType ReflectedType => Type;
 
 
         public static explicit operator int(PrimitiveObject result)
@@ -213,5 +216,13 @@ namespace FluidScript.Core
         {
             return (bool)result.Store;
         }
+
+        public override Prototype GetPrototype()
+        {
+            if (prototype == null)
+                prototype = Prototype.Create(GetType());
+            return prototype;
+        }
     }
+#endif
 }

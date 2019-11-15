@@ -5,31 +5,28 @@ namespace FluidScript.Compiler.SyntaxTree
     public class BlockExpression : Expression
     {
         public readonly Statement[] Statements;
-        public readonly Metadata.Prototype Prototype;
-        public BlockExpression(Statement[] expressions, Metadata.Prototype prototype) : base(ExpressionType.Block)
+        public readonly Metadata.ObjectPrototype Prototype;
+        public BlockExpression(Statement[] expressions, Metadata.ObjectPrototype prototype) : base(ExpressionType.Block)
         {
             Statements = expressions;
             Prototype = prototype;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            foreach (var item in Statements)
+            Core.ObjectInstance local = new Core.ObjectInstance(Prototype);
+            foreach (var statement in Statements)
             {
-                switch (item.NodeType)
-                {
-                    case StatementType.Labeled:
-                        var variable = Prototype.GetVariable(item.ToString());
-                        variable.Value = variable.Evaluate();
-                        break;
-                    case StatementType.Function:
-                        var declaration = ((FunctionDeclarationStatement)item).Declaration;
-                        var method = Prototype.GetMethod(declaration.Name, declaration.ArgumentTypes().Select(arg=>arg.RuntimeType).ToArray());
-                        method.Delegate = method.Create(Prototype);
-                        break;
-                }
+                statement.Evaluate(local);
             }
-            return Prototype;
+            return local;
+        }
+#endif
+
+        public override string ToString()
+        {
+            return string.Concat("{", string.Join(",", Statements.Select(s => s.ToString())), "}");
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using System;
+using System.Runtime.InteropServices;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class Expression : Node
     {
@@ -49,11 +52,28 @@
             return ResolvedPrimitiveType;
         }
 
+#if Runtime
+        /// <summary>
+        /// Get Value for the scope
+        /// </summary>
+        /// <param name="scope"></param>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        public virtual RuntimeObject Evaluate([Optional]RuntimeObject instance)
+        {
+            return RuntimeObject.Null;
+        }
+#else
+        public virtual object Evaluate()
+        {
+            return null;
+        }
+#endif
+
         public virtual void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
         {
             generator.NoOperation();
         }
-
     }
 
     internal sealed class EmptyExpression : Expression

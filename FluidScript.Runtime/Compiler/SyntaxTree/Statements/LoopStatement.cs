@@ -10,42 +10,48 @@
             Statement = statement;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             var statement = Statement;
             var expressions = Expressions;
-            RuntimeObject result = RuntimeObject.Null;
             if (NodeType == StatementType.Loop)
             {
                 if (expressions.Length == 3)
                 {
-                    for (expressions[0].Evaluate(); expressions[1].Evaluate().ToBool(); expressions[2].Evaluate())
+                    for (expressions[0].Evaluate(instance); expressions[1].Evaluate(instance).ToBool(); expressions[2].Evaluate(instance))
                     {
-                        if (statement.NodeType == StatementType.Return)
+                        StatementType nodeType = statement.NodeType;
+                        var value = statement.Evaluate(instance);
+                        if (nodeType == StatementType.Return)
                         {
-                            result = statement.Evaluate();
-                            break;
+                            return value;
                         }
-
-                        result = statement.Evaluate();
-                        if (result.IsReturn)
-                            break;
+                        if (nodeType != StatementType.Expression)
+                        {
+                            if (value is object)
+                            {
+                                return value;
+                            }
+                        }
                     }
-                    return result;
                 }
-                if (expressions.Length == 1)
+                else if (expressions.Length == 1)
                 {
-                    while (expressions[0].Evaluate().ToBool())
+                    while (expressions[0].Evaluate(instance).ToBool())
                     {
-                        if (statement.NodeType == StatementType.Return)
+                        StatementType nodeType = statement.NodeType;
+                        var value = statement.Evaluate(instance);
+                        if (nodeType == StatementType.Return)
                         {
-                            result = statement.Evaluate();
+                            return value;
                         }
-
-                        result = statement.Evaluate();
-                        if (result.IsReturn)
+                        if (nodeType != StatementType.Expression)
                         {
-                            break;
+                            if (value is object)
+                            {
+                                return value;
+                            }
                         }
                     }
                 }
@@ -54,19 +60,23 @@
             {
                 do
                 {
-                    if (statement.NodeType == StatementType.Return)
+                    StatementType nodeType = statement.NodeType;
+                    var value = statement.Evaluate(instance);
+                    if (nodeType == StatementType.Return)
                     {
-                        result = statement.Evaluate();
+                        return value;
                     }
-
-                    result = statement.Evaluate();
-                    if (result.IsReturn)
+                    if (nodeType != StatementType.Expression)
                     {
-                        break;
+                        if (value is object)
+                        {
+                            return value;
+                        }
                     }
-                } while (expressions[0].Evaluate().ToBool());
+                } while (expressions[0].Evaluate(instance).ToBool());
             }
-            return result;
+            return null;
         }
+#endif
     }
 }

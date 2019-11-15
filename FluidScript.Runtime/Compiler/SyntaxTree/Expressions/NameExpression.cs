@@ -1,4 +1,7 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using System.Runtime.InteropServices;
+using FluidScript.Core;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class NameExpression : Expression
     {
@@ -15,28 +18,12 @@
             return Name;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            Reflection.DeclaredVariable variable = Prototype.GetVariable(Name);
-            if (variable != null)
-            {
-                if (ReferenceEquals(null, variable.Value))
-                {
-                    variable.Value = variable.Evaluate();
-                }
-                return variable.Value;
-            }
-            return RuntimeObject.Null;
+            return instance[Name];
         }
-
-        internal virtual void Set(RuntimeObject value)
-        {
-            Reflection.DeclaredVariable variable = Prototype.GetVariable(Name);
-            if (variable != null)
-            {
-                variable.Value = value;
-            }
-        }
+#endif
 
 #if Emit
         protected override void ResolveType(OptimizationInfo info)

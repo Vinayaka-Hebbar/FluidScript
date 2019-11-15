@@ -18,7 +18,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             foreach (var arg in Arguments)
             {
-                yield return new Emit.ArgumentType(Emit.TypeUtils.GetPrimitiveType(arg.TypeName));
+                yield return new Emit.ArgumentType(arg.Name, Emit.TypeUtils.GetPrimitiveType(arg.TypeName), arg.TypeName.Flags);
             }
         }
 
@@ -26,5 +26,17 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             return Arguments.Select(arg => Emit.TypeUtils.GetType(arg.TypeName));
         }
+
+        public RuntimeType ReturnType()
+        {
+            return Emit.TypeUtils.GetPrimitiveType(TypeName);
+        }
+
+        public override string ToString()
+        {
+            return string.Concat(Name, "(", string.Join(",", Arguments.Select(arg => arg.ToString())), "):", TypeName.ToString());
+        }
+
+
     }
 }

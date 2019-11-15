@@ -1,160 +1,102 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FluidScript.Compiler.Metadata
 {
     /// <summary>
     /// Prototype of current method or class
     /// </summary>
-    public abstract class Prototype : RuntimeObject
+    public abstract class Prototype
     {
         public readonly Prototype Parent;
         public readonly ScopeContext Context;
+        public readonly string Name;
 
-        public Prototype(Prototype parent, ScopeContext context)
+#if Runtime
+        internal static Prototype prototype;
+        internal static Prototype Default
+        {
+            get
+            {
+                if (prototype == null)
+                {
+                    var type = typeof(RuntimeObject);
+                    var methods = Reflection.MemberInvoker.GetMethods(type);
+                    prototype = new DefaultObjectPrototype(methods);
+                }
+                return prototype;
+            }
+        }
+
+        internal static ObjectPrototype Create(Type type)
+        {
+            var constants = System.Linq.Enumerable.Empty<KeyValuePair<string, RuntimeObject>>();
+            var variables = System.Linq.Enumerable.Empty<KeyValuePair<string, Reflection.DeclaredVariable>>();
+            var methods = Reflection.MemberInvoker.GetMethods(type);
+            return new ObjectPrototype(constants, variables, methods);
+        }
+#endif
+
+        public Prototype(Prototype parent, string name, ScopeContext context)
         {
             Parent = parent;
+            Name = name;
             Context = context;
         }
 
-        public virtual Reflection.DeclaredMethod DeclareMethod(SyntaxTree.FunctionDeclaration declaration, SyntaxTree.BlockStatement body)
+        internal virtual Reflection.DeclaredMethod DeclareMethod(SyntaxTree.FunctionDeclaration declaration, SyntaxTree.BodyStatement body)
         {
             throw new System.Exception("Can't declare method inside " + GetType());
         }
 
-        public virtual Reflection.DeclaredVariable DeclareLocalVariable(string name, SyntaxTree.Expression expression, Reflection.VariableType type = Reflection.VariableType.Local)
+        internal virtual Reflection.DeclaredVariable DeclareLocalVariable(string name, SyntaxTree.Expression expression, Reflection.VariableType type = Reflection.VariableType.Local)
         {
             throw new System.Exception("Can't declare local variable inside " + GetType());
         }
 
-        public virtual void DefineConstant(string name, RuntimeObject value)
-        {
-            throw new System.Exception("Can't define constant inside " + GetType());
-        }
-
-        public virtual Reflection.DeclaredMethod GetMethod(string name, RuntimeType[] primitiveType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual Reflection.DeclaredVariable DeclareVariable(string name, SyntaxTree.Expression expression, Reflection.VariableType type = Reflection.VariableType.Local)
+        internal virtual Reflection.DeclaredVariable DeclareVariable(string name, SyntaxTree.Expression expression, Reflection.VariableType type = Reflection.VariableType.Local)
         {
             throw new System.Exception("Can't declare variable inside " + GetType());
         }
 
-        internal virtual RuntimeObject GetConstant(string name)
-        {
-            throw new System.NotImplementedException();
-        }
+        public abstract IEnumerable<KeyValuePair<string, Reflection.DeclaredVariable>> GetVariables();
 
-        public abstract IDictionary<string, Reflection.DeclaredVariable> Variables { get; }
-
-        public Reflection.DeclaredVariable GetVariable(string name)
-        {
-            if (Variables != null && Variables.ContainsKey(name))
-                return Variables[name];
-            if (!ReferenceEquals(Parent,null))
-            {
-                return Parent.GetVariable(name);
-            }
-            return null;
-        }
+        public abstract IEnumerable<Reflection.DeclaredMethod> GetMethods();
 
         public abstract bool HasVariable(string name);
 
+#if Runtime
+        public abstract void DefineConstant(string name, RuntimeObject value);
+
+        public abstract void DefineVariable(string name, RuntimeObject value);
+
+        public virtual RuntimeObject GetConstant(string name)
+        {
+            return RuntimeObject.Undefined;
+        }
+
+        public abstract RuntimeObject CreateInstance();
+
         public abstract bool HasConstant(string name);
 
-        public virtual void DefineVariable(string name, RuntimeObject value)
-        {
-            throw new System.Exception("Can't declare variable inside " + GetType());
-        }
+        public abstract IEnumerable<KeyValuePair<string, RuntimeObject>> GetConstants();
 
-        public override RuntimeObject this[string name]
-        {
-            get
-            {
-                throw new System.Exception("Instance not found");
-            }
-        }
+        internal abstract IDictionary<object, RuntimeObject> Init(RuntimeObject instance, [System.Runtime.InteropServices.Optional]KeyValuePair<object, RuntimeObject> initial);
 
-        public virtual void Bind<TInstance>() where TInstance : RuntimeObject
+        public static Prototype Merge(Prototype prototype1, Prototype prototype2)
         {
-
+            var constants = System.Linq.Enumerable.Concat(prototype1.GetConstants(), prototype2.GetConstants());
+            var variables = System.Linq.Enumerable.Concat(prototype1.GetVariables(), prototype2.GetVariables());
+            var methods = System.Linq.Enumerable.Concat(prototype1.GetMethods(), prototype2.GetMethods());
+            var prototype = new ObjectPrototype(constants, variables, methods);
+            return prototype;
         }
-
-        public override RuntimeObject Call(string name, params RuntimeObject[] args)
+#else
+        public virtual void DefineConstant(string name, object value)
         {
-            var types = args.Select(arg => arg.RuntimeType).ToArray();
-            var method = GetMethod(name, types);
-            if (method != null)
-            {
-                if (method.Delegate != null)
-                {
-                    return method.Delegate(args);
-                }
-            }
-            return base.Call(name, args);
+            throw new System.Exception("Can't define constant inside " + GetType());
         }
+#endif
 
-        public override bool IsArray()
-        {
-            return true;
-        }
-
-        public override bool IsBool()
-        {
-            return false;
-        }
-
-        public override bool IsChar()
-        {
-            return false;
-        }
-
-        public override bool IsNull()
-        {
-            return false;
-        }
-
-        public override bool IsNumber()
-        {
-            return false;
-        }
-
-        public override bool IsString()
-        {
-            return true;
-        }
-
-        public override bool ToBool()
-        {
-            return false;
-        }
-
-        public override char ToChar()
-        {
-            return char.MinValue;
-        }
-
-        public override double ToDouble()
-        {
-            return double.NaN;
-        }
-
-        public override float ToFloat()
-        {
-            return float.NaN;
-        }
-
-        public override int ToInt32()
-        {
-            return int.MinValue;
-        }
-
-        public override double ToNumber()
-        {
-            return double.NaN;
-        }
     }
 }

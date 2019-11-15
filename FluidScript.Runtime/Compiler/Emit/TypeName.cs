@@ -29,6 +29,11 @@
             return (Flags & Reflection.DeclaredFlags.Array) == Reflection.DeclaredFlags.Array;
         }
 
+        public bool IsVarArgs()
+        {
+            return (Flags & Reflection.DeclaredFlags.VarArgs) == Reflection.DeclaredFlags.VarArgs;
+        }
+
         public override string ToString()
         {
             return FullName;

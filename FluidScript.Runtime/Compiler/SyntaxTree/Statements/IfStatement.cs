@@ -13,13 +13,14 @@
             Other = other;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            if (Expression.Evaluate().ToBool())
-                return Then.Evaluate();
-            return Other != null ? Other.Evaluate() : RuntimeObject.Null;
+            if (Expression.Evaluate(instance).ToBool())
+                return Then.Evaluate(instance);
+            return Other?.Evaluate(instance);
         }
-
+#endif
 
     }
 }

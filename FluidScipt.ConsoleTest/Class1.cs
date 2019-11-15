@@ -1,6 +1,11 @@
 ﻿using FluidScript;
 using FluidScript.Compiler.Metadata;
+using FluidScript.Core;
+using Scripting.Runtime;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace FluidScipt.ConsoleTest
 {
@@ -15,19 +20,33 @@ namespace FluidScipt.ConsoleTest
 
         public void Run()
         {
-            var path = System.AppDomain.CurrentDomain.BaseDirectory + "source.rs";
+            var a = new int[] { 2, 1 }[1];
             ScriptEngine engine = new FluidScript.ScriptEngine();
-            var scope = new ObjectPrototype();
-            scope.DefineConstant("pi", 3.14);
-            var prototype = new FunctionPrototype(scope);
+            FunctionPrototype prototype = new FunctionPrototype();
             prototype.DefineVariable("a", 4);
             prototype.DefineVariable("b", 2);
-            prototype.DefineVariable("c", 1);
-            scope.Bind<FluidScript.Library.MathObject>();
-            var valie = engine.GetStatement("{a=[5,6];out a}", prototype);
-            RuntimeObject output = valie.Evaluate();
-            Console.WriteLine(output);
+            RuntimeObject instance = prototype.CreateInstance();
+            var class2 = new Class2();
+            instance["add"] = RuntimeObject.CreateReference(class2.Add);
+            instance["x"] = 1;
+            FluidScript.Library.MathObject mathObject = new FluidScript.Library.MathObject();
+            var statement = engine.GetStatement("add()", prototype);
+            var obj = statement.Evaluate(instance);
+            Console.WriteLine(obj);
         }
 
+        public void Add(RuntimeObject arg)
+        {
+            Console.WriteLine("Working", 1);
+        }
+
+    }
+
+    public class Class2
+    {
+        public void Add()
+        {
+
+        }
     }
 }

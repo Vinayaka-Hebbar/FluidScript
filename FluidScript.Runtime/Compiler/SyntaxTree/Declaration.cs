@@ -6,7 +6,7 @@
         public RuntimeType PrimitiveType;
         private System.Type resolvedType;
 
-        internal Declaration(string name, FluidScript.Compiler.Emit.TypeName typeName)
+        internal Declaration(string name, Emit.TypeName typeName)
         {
             Name = name;
             TypeName = typeName;
@@ -18,7 +18,7 @@
         }
 
 
-        public virtual FluidScript.Compiler.Emit.TypeName TypeName { get; }
+        public virtual Emit.TypeName TypeName { get; }
 
         /// <summary>
         /// either return type, field type or property type

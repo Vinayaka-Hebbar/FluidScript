@@ -1,5 +1,6 @@
 ﻿using FluidScript.Compiler.Emit;
 using System;
+using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -16,18 +17,18 @@ namespace FluidScript.Compiler.SyntaxTree
             ResolvedPrimitiveType = FluidScript.RuntimeType.Array;
         }
 
-        public override RuntimeObject Evaluate()
+#if Runtime
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             RuntimeObject[] array = new RuntimeObject[Expressions.Length];
             for (int i = 0; i < Expressions.Length; i++)
             {
-                var value = Expressions[i].Evaluate();
-                value.IsReturn = false;
-                array[i] = value;
+                array[i] = Expressions[i].Evaluate(instance);
 
             }
-            return new Core.ArrayObject(array, FluidScript.RuntimeType.Array);
+            return new Core.ArrayObject(array, FluidScript.RuntimeType.Any);
         }
+#endif
 
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
@@ -57,6 +58,11 @@ namespace FluidScript.Compiler.SyntaxTree
             ResolvedPrimitiveType |= TypeUtils.From(TypeName.FullName).Enum;
             Type type = info.GetType(TypeName);
             ResolvedType = type.MakeArrayType();
+        }
+
+        public override string ToString()
+        {
+            return string.Concat("[", string.Join(",", Expressions.Select(exp => exp.ToString())), "]");
         }
     }
 }

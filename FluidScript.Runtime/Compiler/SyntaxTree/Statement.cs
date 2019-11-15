@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using System.Runtime.InteropServices;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public abstract class Statement : Node
     {
@@ -21,6 +23,19 @@
         public StatementType NodeType { get; }
 
         public bool HasLabels => Labels.Length > 0;
+
+#if Runtime
+        /// <summary>
+        /// Get Value for the scope
+        /// </summary>
+        /// <param name="scope"></param>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        public virtual RuntimeObject Evaluate([Optional]RuntimeObject instance)
+        {
+            return RuntimeObject.Null;
+        }
+#endif
 
         public virtual void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
         {
