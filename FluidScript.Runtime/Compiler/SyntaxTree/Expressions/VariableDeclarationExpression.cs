@@ -1,17 +1,13 @@
-﻿using System.Runtime.InteropServices;
-using FluidScript.Compiler.Emit;
-using FluidScript.Core;
+﻿using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class VariableDeclarationExpression : Expression
+    public class VariableDeclarationExpression : DeclarationExpression
     {
-        public readonly string Name;
-        public readonly Reflection.DeclaredVariable Variable;
+        public readonly Reflection.DeclaredLocalVariable Variable;
 
-        public VariableDeclarationExpression(string name, Reflection.DeclaredVariable variable) : base(ExpressionType.Declaration)
+        public VariableDeclarationExpression(string name, Reflection.DeclaredLocalVariable variable) : base(name)
         {
-            Name = name;
             Variable = variable;
 
         }

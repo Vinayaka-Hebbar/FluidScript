@@ -16,6 +16,7 @@ namespace FluidScript.Compiler.SyntaxTree
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
+            //todo this.x??
             if (Left.NodeType == ExpressionType.Identifier)
             {
                 var identifier = (NameExpression)Left;
@@ -23,7 +24,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 if (!value.IsNull())
                     return value;
                 var result = Right.Evaluate(instance);
-                instance[identifier.Name] =result;
+                instance[identifier.Name] = result;
                 return result;
             }
             return RuntimeObject.Null;

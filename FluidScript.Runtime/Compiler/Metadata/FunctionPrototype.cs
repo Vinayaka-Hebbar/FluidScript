@@ -9,13 +9,32 @@ namespace FluidScript.Compiler.Metadata
 {
     public sealed class FunctionPrototype : Prototype, IDisposable
     {
-        private IDictionary<string, DeclaredVariable> variables;
+        private ICollection<DeclaredLocalVariable> variables;
 #if Runtime
-        private IDictionary<string, RuntimeObject> constants;
-
         public readonly Prototype BaseProtoType = Default;
+
+
+        private static Prototype prototype;
+        internal static Prototype Default
+        {
+            get
+            {
+                if (prototype is null)
+                {
+                    prototype = new DefaultObjectPrototype(new DeclaredMethod[0]);
+                }
+                return prototype;
+            }
+        }
 #endif
-        private IList<DeclaredMethod> inner;
+        private ICollection<DeclaredMember> inner;
+
+        public DeclaredLocalVariable GetLocalVariable(string name)
+        {
+            if (variables == null)
+                return null;
+            return variables.FirstOrDefault(v => v.Name == name);
+        }
 
         public readonly SyntaxVisitor visitor;
 
@@ -39,65 +58,106 @@ namespace FluidScript.Compiler.Metadata
             visitor.Prototype = this;
         }
 
-        internal override DeclaredMethod DeclareMethod(FunctionDeclaration declaration, BodyStatement body)
+#if Runtime
+        public FunctionPrototype(IEnumerable<DeclaredLocalVariable> variables, IEnumerable<DeclaredMember> members, string name) : base(null, name, ScopeContext.Local)
+        {
+            inner = members.ToList();
+            this.variables = variables.ToList();
+        }
+#endif
+
+        internal override DeclaredMethod DeclareMethod(string name, ArgumentInfo[] arguments, Emit.TypeName returnType, BodyStatement body)
         {
             if (inner == null)
-                inner = new List<DeclaredMethod>();
-            var declaredMethod = new Reflection.DeclaredMethod(declaration.Name, inner.Count) { Declaration = declaration, ValueAtTop = body };
+                inner = new List<DeclaredMember>();
+            DeclaredMethod declaredMethod = new DeclaredMethod(name, arguments, returnType)
+            {
+                ValueAtTop = body,
+                Attributes = System.Reflection.MethodAttributes.Public
+            };
             inner.Add(declaredMethod);
             return declaredMethod;
         }
 
-        internal override DeclaredVariable DeclareLocalVariable(string name, Expression expression, VariableType type = VariableType.Local)
+        internal override DeclaredLocalVariable DeclareLocalVariable(string name, Emit.TypeName type, Expression expression, VariableAttributes attribute = VariableAttributes.Default)
         {
             if (variables == null)
-                variables = new Dictionary<string, Reflection.DeclaredVariable>();
-            if (variables.TryGetValue(name, out Reflection.DeclaredVariable variable) == false)
+                variables = new List<DeclaredLocalVariable>();
+            DeclaredLocalVariable variable = variables.FirstOrDefault(item => item.Name == name);
+            if (variable == null)
             {
-                variable = new DeclaredVariable(name, variables.Count, type);
-                variables.Add(name, variable);
+                variable = new DeclaredLocalVariable(name, type, variables.Count, attribute)
+                {
+                    ValueAtTop = expression,
+                    DefaultValue = (attribute & VariableAttributes.Constant) == VariableAttributes.Constant ? expression.Evaluate(this) : null
+                };
+                variables.Add(variable);
+                return variable;
             }
+            if (variable.Attributes == VariableAttributes.Constant)
+                throw new System.Exception(string.Concat("cannot change readonly value ", name));
             variable.ValueAtTop = expression;
             return variable;
         }
 
-        internal override DeclaredVariable DeclareVariable(string name, Expression expression, VariableType type = VariableType.Local)
+        internal override DeclaredField DeclareField(string name, Emit.TypeName type, Expression expression)
         {
-            return Context == ScopeContext.Block ? Parent.DeclareVariable(name, expression, type) : DeclareLocalVariable(name, expression, type);
+            return Parent.DeclareField(name, type, expression);
         }
 
-        public override IEnumerable<KeyValuePair<string, DeclaredVariable>> GetVariables()
+        /// <summary>
+        /// Gets all the declared fields
+        /// </summary>
+        public override IEnumerable<DeclaredField> GetFields()
         {
-            return variables ?? (Enumerable.Empty<KeyValuePair<string, DeclaredVariable>>());
+            return Enumerable.Empty<DeclaredField>();
         }
 
-        public override IEnumerable<Reflection.DeclaredMethod> GetMethods()
+        /// <summary>
+        /// Get all the declared methods
+        /// </summary>
+        public override IEnumerable<DeclaredMethod> GetMethods()
         {
-            var methods = inner ?? (new DeclaredMethod[0]);
+            var methods = inner ?? (new DeclaredMember[0]);
 #if Runtime
-            return Enumerable.Concat(BaseProtoType.GetMethods(), methods);
+            return Enumerable.Concat(BaseProtoType.GetMethods(), methods.OfType<DeclaredMethod>());
 #else
             return methods;
 #endif
         }
 
-        public void Dispose()
+
+        public override IEnumerable<DeclaredMember> GetMembers()
+        {
+            return inner ?? (new DeclaredMember[0]);
+        }
+
+        void IDisposable.Dispose()
         {
             if (visitor != null)
                 visitor.Prototype = Parent;
         }
 
-        public override bool HasVariable(string name)
+        public override bool HasMember(string name)
         {
-            return Parent != null
-                ? variables != null ? variables.ContainsKey(name) ? true : Parent.HasVariable(name) : Parent.HasVariable(name)
-                : variables != null ? variables.ContainsKey(name) : false;
+            return Parent is object
+                ? variables != null ? variables.Any(item => item.Name == name) ? true : Parent.HasMember(name) : Parent.HasMember(name)
+                : variables != null ? variables.Any(item => item.Name == name) : false;
         }
 
 #if Runtime
+        internal override void DeclareVariable(string name, Expression expression)
+        {
+            if (IsSealed)
+                throw new Exception(string.Concat("can't declared a variable ", name, " inside " + Name));
+            if (Context == ScopeContext.Block)
+                Parent.DeclareVariable(name, expression);
+            DeclareLocalVariable(name, Emit.TypeName.Any, expression);
+        }
+
         public override RuntimeObject CreateInstance()
         {
-            if (Parent != null)
+            if (Parent is object)
                 return new Core.FunctionInstance(this, Parent.CreateInstance());
             return new Core.FunctionInstance(this, RuntimeObject.Undefined);
         }
@@ -107,64 +167,43 @@ namespace FluidScript.Compiler.Metadata
             return new Core.FunctionInstance(this, obj);
         }
 
-        public override void DefineConstant(string name, RuntimeObject value)
-        {
-            if (Context == ScopeContext.Block)
-                Parent.DefineConstant(name, value);
-            else
-            {
-                if (constants == null)
-                    constants = new Dictionary<string, RuntimeObject>();
-                constants.Add(name, value);
-            }
-        }
-
         public override void DefineVariable(string name, RuntimeObject value)
         {
+            if (IsSealed)
+                throw new Exception(string.Concat("can't declared a variable ", name, " inside " + Name));
             if (variables == null)
-                variables = new Dictionary<string, DeclaredVariable>();
-            variables.Add(name, new Reflection.DeclaredVariable(name, variables.Count) { DefaultValue = value });
+                variables = new List<DeclaredLocalVariable>();
+            variables.Add(new DeclaredLocalVariable(name, value.ReflectedType, variables.Count, VariableAttributes.Default) { DefaultValue = value });
         }
 
-        public override RuntimeObject GetConstant(string name)
+        public IEnumerable<DeclaredLocalVariable> GetVariables()
         {
-            if (constants != null && constants.ContainsKey(name))
-            {
-                return constants[name];
-            }
-            return Parent.GetConstant(name);
+            return this.variables ?? Enumerable.Empty<DeclaredLocalVariable>();
         }
 
-        public override bool HasConstant(string name)
-        {
-            return constants != null ? constants.ContainsKey(name) ? true : Parent.HasConstant(name) : Parent.HasConstant(name);
-        }
-
-        public override IEnumerable<KeyValuePair<string, RuntimeObject>> GetConstants()
-        {
-            return constants ?? Enumerable.Empty<KeyValuePair<string, RuntimeObject>>();
-        }
-
-        internal override IDictionary<object, RuntimeObject> Init(RuntimeObject instance, [Optional] KeyValuePair<object, RuntimeObject> initial)
+        internal override Instances Init(RuntimeObject instance, [Optional] KeyValuePair<object, RuntimeObject> initial)
         {
             var values = BaseProtoType.Init(instance, initial);
-            var variables = GetVariables();
             if (variables != null)
             {
                 foreach (var item in variables)
                 {
-                    var value = item.Value.DefaultValue;
+                    var value = item.DefaultValue;
                     if (value is object)
                     {
-                        values.Add(item.Key, value);
+                        values.Add(item.Name, value, (item.Attributes & VariableAttributes.Constant) == VariableAttributes.Constant);
+                    }
+                    else
+                    {
+                        values.Add(item.Name, RuntimeObject.Undefined);
                     }
 
                 }
             }
-            var methods = GetMethods();
-            if (methods != null)
+
+            if (inner != null)
             {
-                foreach (Reflection.DeclaredMethod method in methods)
+                foreach (DeclaredMethod method in inner)
                 {
                     if (method.Store != null)
                     {
@@ -181,13 +220,23 @@ namespace FluidScript.Compiler.Metadata
                             list = new FunctionGroup(method.Name);
                             values.Add(method.Name, list);
                         }
-                        list.Add(new FunctionReference(instance, method.Arguments, method.ReturnType, method.Store));
+                        if (method.Default is null)
+                            list.Add(new FunctionReference(instance, method.Arguments, method.ReflectedReturnType, method.Store));
+                        else
+                            list.Add(method.Default);
                     }
-
                 }
             }
             return values;
         }
+
+        internal override Prototype Merge(Prototype prototype2)
+        {
+            var variables = Enumerable.Concat(GetVariables(), ((FunctionPrototype)prototype2).GetVariables());
+            var methods = Enumerable.Concat(GetMethods(), prototype2.GetMethods());
+            return new FunctionPrototype(variables, methods, string.Concat(Name, "_", prototype2.Name));
+        }
+
 #endif
     }
 }

@@ -1,11 +1,13 @@
-﻿using System.Dynamic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace FluidScript.Compiler.Metadata
 {
 #if Runtime
-    internal class MetaObject : DynamicMetaObject
+    internal sealed class MetaObject : DynamicMetaObject
     {
         public MetaObject(Expression expression, object value) : base(expression, BindingRestrictions.Empty, value)
         {
@@ -50,9 +52,21 @@ namespace FluidScript.Compiler.Metadata
             return new DynamicMetaObject(Expression.Empty(), BindingRestrictions.Empty);
         }
 
+        //todo fix unknown
         public static object Return()
         {
             return string.Empty;
+        }
+
+        public override IEnumerable<string> GetDynamicMemberNames()
+        {
+            if (Value is RuntimeObject runtime)
+            {
+                foreach (var item in runtime)
+                {
+                    yield return item.ToString();
+                }
+            }
         }
     }
 #endif

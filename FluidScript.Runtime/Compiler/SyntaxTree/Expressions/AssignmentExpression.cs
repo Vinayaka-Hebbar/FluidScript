@@ -19,8 +19,8 @@ namespace FluidScript.Compiler.SyntaxTree
             if (Left.NodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)Left;
-                Metadata.Prototype proto = exp.Prototype;
-                if (!proto.HasVariable(exp.Name))
+                Metadata.Prototype proto = instance.GetPrototype();
+                if (!proto.HasMember(exp.Name))
                 {
                     proto.DeclareVariable(exp.Name, Right);
                 }
@@ -35,7 +35,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 var exp= (QualifiedExpression)Left;
                 var result = exp.Target.Evaluate(instance);
                 Metadata.Prototype proto = result.GetPrototype();
-                if (!proto.HasVariable(exp.Name))
+                if (!proto.HasMember(exp.Name))
                 {
                     proto.DeclareVariable(exp.Name, Right);
                 }

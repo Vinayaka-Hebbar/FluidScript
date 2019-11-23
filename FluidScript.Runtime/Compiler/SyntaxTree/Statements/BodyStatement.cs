@@ -32,16 +32,17 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 StatementType nodeType = statement.NodeType;
                 var value = statement.Evaluate(instance);
-                if (nodeType == StatementType.Return)
+                switch (nodeType)
                 {
-                    return value;
-                }
-                if (nodeType != StatementType.Expression)
-                {
-                    if (value is object)
-                    {
+                    case StatementType.Return:
                         return value;
-                    }
+                    case StatementType.Declaration:
+                    case StatementType.Expression:
+                        break;
+                    default:
+                        if (value is object)
+                            return value;
+                        break;
                 }
             }
             return null;

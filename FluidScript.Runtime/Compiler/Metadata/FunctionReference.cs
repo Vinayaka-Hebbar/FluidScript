@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FluidScript.Compiler.Metadata
@@ -6,6 +7,7 @@ namespace FluidScript.Compiler.Metadata
 #if Runtime
     public sealed class FunctionReference : RuntimeObject, IFunctionReference
     {
+        private static Prototype prototype;
         public ArgumentType[] Arguments { get; }
         public RuntimeType ReturnType { get; }
         public object Target { get; }
@@ -31,6 +33,20 @@ namespace FluidScript.Compiler.Metadata
         {
             var parameters = Reflection.DeclaredMethod.GetParameters(Arguments, args).ToArray();
             return (RuntimeObject)MethodInfo.Invoke(Target, parameters);
+        }
+
+        public override Prototype GetPrototype()
+        {
+            if (prototype is null)
+            {
+                var baseProto = new DefaultObjectPrototype(new Reflection.DeclaredMethod[0]);
+                var methods = Reflection.TypeHelper.GetMethods(GetType());
+                prototype = new ObjectPrototype(methods, null, baseProto, "FunctionReference")
+                {
+                    IsSealed = true
+                };
+            }
+            return prototype;
         }
     }
 #endif

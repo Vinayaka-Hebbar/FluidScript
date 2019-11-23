@@ -3,13 +3,10 @@ using FluidScript.Compiler.Reflection;
 
 namespace FluidScript.Library
 {
-#if Runtime
-    public sealed class MathObject : Core.ObjectInstance
+    public sealed class MathObject : RuntimeObject
     {
-        public MathObject(): base(Compiler.Metadata.Prototype.Create(typeof(MathObject)))
-        {
-
-        }
+        [Field("pi", RuntimeType.Double)]
+        public static readonly RuntimeObject PI = System.Math.PI;
 
         [Callable("pow", RuntimeType.Double, ArgumentTypes.Double, ArgumentTypes.Double)]
         public static RuntimeObject Pow(RuntimeObject arg1, RuntimeObject arg2)
@@ -72,7 +69,7 @@ namespace FluidScript.Library
             {
                 if (arg.IsArray())
                 {
-                    var array = (Core.ArrayObject)arg;
+                    var array = (ArrayObject)arg;
                     return System.Linq.Enumerable.Sum((System.Collections.Generic.IEnumerable<RuntimeObject>)array, selector);
                 }
                 return arg.ToNumber();
@@ -87,8 +84,10 @@ namespace FluidScript.Library
             {
                 if (arg.IsArray())
                 {
-                    var array = (Core.ArrayObject)arg;
-                    return System.Linq.Enumerable.Average((System.Collections.Generic.IEnumerable<RuntimeObject>)array, selector);
+                    var array = (ArrayObject)arg;
+                    if (array.Length > 0)
+                        return System.Linq.Enumerable.Average((System.Collections.Generic.IEnumerable<RuntimeObject>)array, selector);
+                    return 0;
                 }
                 return arg.ToNumber();
             }
@@ -102,7 +101,7 @@ namespace FluidScript.Library
             {
                 if (arg.IsArray())
                 {
-                    var array = (Core.ArrayObject)arg;
+                    var array = (ArrayObject)arg;
                     return System.Linq.Enumerable.Max((System.Collections.Generic.IEnumerable<RuntimeObject>)array, selector);
                 }
                 return arg.ToNumber();
@@ -117,7 +116,7 @@ namespace FluidScript.Library
             {
                 if (arg.IsArray())
                 {
-                    var array = (Core.ArrayObject)arg;
+                    var array = (ArrayObject)arg;
                     return System.Linq.Enumerable.Min((System.Collections.Generic.IEnumerable<RuntimeObject>)array, selector);
                 }
                 return arg.ToNumber();
@@ -148,5 +147,4 @@ namespace FluidScript.Library
             return "System.Math";
         }
     }
-#endif
 }

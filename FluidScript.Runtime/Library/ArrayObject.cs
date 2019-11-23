@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FluidScript.Core
+namespace FluidScript.Library
 {
-#if Runtime
-    public sealed class ArrayObject : ObjectInstance, IEnumerable<RuntimeObject>
+    public sealed class ArrayObject : RuntimeObject, IEnumerable<RuntimeObject>
     {
         private static Compiler.Metadata.Prototype prototype;
         private RuntimeObject[] store;
         private readonly RuntimeType type;
 
-        public ArrayObject(RuntimeObject[] store, RuntimeType type) 
+        public ArrayObject(RuntimeObject[] store, RuntimeType type)
         {
             this.store = store;
             this.type = type;
@@ -19,10 +18,7 @@ namespace FluidScript.Core
 
         public RuntimeObject this[int index]
         {
-            get
-            {
-                return store[index];
-            }
+            get => store[index];
             set
             {
                 if ((store.Length > index) == false)
@@ -37,10 +33,13 @@ namespace FluidScript.Core
 
         public int Length => store.Length;
 
-        [Compiler.Reflection.Callable("length")]
-        internal RuntimeObject Size()
+        [Compiler.Reflection.Property("length", RuntimeType.Int32)]
+        internal RuntimeObject Size
         {
-            return new PrimitiveObject(store.Length);
+            get
+            {
+                return new PrimitiveObject(store.Length);
+            }
         }
 
         public void Resize(int newSize)
@@ -96,10 +95,12 @@ namespace FluidScript.Core
 
         public override Compiler.Metadata.Prototype GetPrototype()
         {
-            if (prototype == null)
+            if (prototype is null)
+            {
                 prototype = Compiler.Metadata.Prototype.Create(GetType());
+                prototype.IsSealed = true;
+            }
             return prototype;
         }
     }
-#endif
 }

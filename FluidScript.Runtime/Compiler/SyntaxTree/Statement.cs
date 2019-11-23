@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public abstract class Statement : Node
     {
@@ -31,7 +29,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="scope"></param>
         /// <param name="provider"></param>
         /// <returns></returns>
-        public virtual RuntimeObject Evaluate([Optional]RuntimeObject instance)
+        public virtual RuntimeObject Evaluate(RuntimeObject instance)
         {
             return RuntimeObject.Null;
         }
@@ -78,7 +76,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="generator"> The generator to output the CIL to. </param>
         /// <param name="info"> Information about any optimizations that should be performed. </param>
         /// <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
-        public void GenerateStartOfStatement(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info, StatementLocals locals)
+        protected void GenerateStartOfStatement(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info, StatementLocals locals)
         {
 #if DEBUG && USE_DYNAMIC_IL_INFO
             // Statements must not produce or consume any values on the stack.
@@ -107,7 +105,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="generator"> The generator to output the CIL to. </param>
         /// <param name="info"> Information about any optimizations that should be performed. </param>
         /// <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
-        public void GenerateEndOfStatement(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info, StatementLocals locals)
+        protected void GenerateEndOfStatement(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info, StatementLocals locals)
         {
             if (locals.NonDefaultBreakStatementBehavior == false && this.HasLabels == true)
             {

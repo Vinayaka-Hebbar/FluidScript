@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.Metadata;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -21,48 +22,92 @@ namespace FluidScript.Compiler.SyntaxTree
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            var left = Left.Evaluate(instance);
-            var right = Right.Evaluate(instance);
+            RuntimeObject left = Left.Evaluate(instance);
             switch (NodeType)
             {
                 case ExpressionType.Plus:
-                    return left + right;
+                    return left + Right.Evaluate(instance);
                 case ExpressionType.Minus:
-                    return left - right;
+                    return left - Right.Evaluate(instance);
                 case ExpressionType.Multiply:
-                    return left * right;
+                    return left * Right.Evaluate(instance);
                 case ExpressionType.Divide:
-                    return left / right;
+                    return left / Right.Evaluate(instance);
                 case ExpressionType.Percent:
-                    return left % right;
+                    return left % Right.Evaluate(instance);
                 case ExpressionType.Circumflex:
-                    return left ^ right;
+                    return left ^ Right.Evaluate(instance);
                 case ExpressionType.EqualEqual:
-                    return left == right;
+                    return left == Right.Evaluate(instance);
                 case ExpressionType.BangEqual:
-                    return left != right;
+                    return left != Right.Evaluate(instance);
                 case ExpressionType.Less:
-                    return left < right;
+                    return left < Right.Evaluate(instance);
                 case ExpressionType.LessEqual:
-                    return left <= right;
+                    return left <= Right.Evaluate(instance);
                 case ExpressionType.LessLess:
-                    return left << right.ToInt32();
+                    return left << Right.Evaluate(instance).ToInt32();
                 case ExpressionType.Greater:
-                    return left > right;
+                    return left > Right.Evaluate(instance);
                 case ExpressionType.GreaterEqual:
-                    return left >= right;
+                    return left >= Right.Evaluate(instance);
                 case ExpressionType.GreaterGreater:
-                    return left >> (int)right;
+                    return left >> (int)Right.Evaluate(instance);
                 case ExpressionType.And:
-                    return left & right;
+                    return left & Right.Evaluate(instance);
                 case ExpressionType.AndAnd:
-                    return new Core.PrimitiveObject(left.ToBool() && right.ToBool());
+                    return new Library.PrimitiveObject(left.ToBool() && Right.Evaluate(instance).ToBool());
                 case ExpressionType.Or:
-                    return left | right;
+                    return left | Right.Evaluate(instance);
                 case ExpressionType.OrOr:
-                    return new Core.PrimitiveObject(left.ToBool() || right.ToBool());
+                    return new Library.PrimitiveObject(left.ToBool() || Right.Evaluate(instance).ToBool());
             }
-            return base.Evaluate(instance);
+            return RuntimeObject.Null;
+        }
+
+        public override RuntimeObject Evaluate(Prototype proto)
+        {
+            RuntimeObject left = Left.Evaluate(proto);
+            switch (NodeType)
+            {
+                case ExpressionType.Plus:
+                    return left + Right.Evaluate(proto);
+                case ExpressionType.Minus:
+                    return left - Right.Evaluate(proto);
+                case ExpressionType.Multiply:
+                    return left * Right.Evaluate(proto);
+                case ExpressionType.Divide:
+                    return left / Right.Evaluate(proto);
+                case ExpressionType.Percent:
+                    return left % Right.Evaluate(proto);
+                case ExpressionType.Circumflex:
+                    return left ^ Right.Evaluate(proto);
+                case ExpressionType.EqualEqual:
+                    return left == Right.Evaluate(proto);
+                case ExpressionType.BangEqual:
+                    return left != Right.Evaluate(proto);
+                case ExpressionType.Less:
+                    return left < Right.Evaluate(proto);
+                case ExpressionType.LessEqual:
+                    return left <= Right.Evaluate(proto);
+                case ExpressionType.LessLess:
+                    return left << Right.Evaluate(proto).ToInt32();
+                case ExpressionType.Greater:
+                    return left > Right.Evaluate(proto);
+                case ExpressionType.GreaterEqual:
+                    return left >= Right.Evaluate(proto);
+                case ExpressionType.GreaterGreater:
+                    return left >> (int)Right.Evaluate(proto);
+                case ExpressionType.And:
+                    return left & Right.Evaluate(proto);
+                case ExpressionType.AndAnd:
+                    return new Library.PrimitiveObject(left.ToBool() && Right.Evaluate(proto).ToBool());
+                case ExpressionType.Or:
+                    return left | Right.Evaluate(proto);
+                case ExpressionType.OrOr:
+                    return new Library.PrimitiveObject(left.ToBool() || Right.Evaluate(proto).ToBool());
+            }
+            return base.Evaluate(proto);
         }
 #endif
 

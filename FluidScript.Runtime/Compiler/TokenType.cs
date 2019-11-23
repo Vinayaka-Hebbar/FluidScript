@@ -20,10 +20,6 @@
         /// =>
         /// </summary>
         AnonymousMethod = 14,
-        /// <summary>
-        /// ->
-        /// </summary>
-        Initializer = 15,
         //15 skip
         //Reserved
         // Other

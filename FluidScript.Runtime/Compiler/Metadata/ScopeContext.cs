@@ -5,6 +5,7 @@
         Block,
         Local,
         Type,
-        Global
+        Module,
+        Assembly
     }
 }

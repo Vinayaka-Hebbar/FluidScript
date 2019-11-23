@@ -43,6 +43,11 @@ namespace FluidScript.Compiler.SyntaxTree
                     var value = qualified.Target.Evaluate(instance);
                     return value.Call(qualified.Name, args);
                 }
+                else
+                {
+                    var value = Target.Evaluate(instance);
+                    return value.DynamicInvoke(args);
+                }
             }
             if (NodeType == ExpressionType.Indexer)
             {
@@ -63,7 +68,7 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 var identifier = (NameExpression)Target;
                 var result = identifier.Evaluate(instance);
-                Core.ArrayObject org = (Core.ArrayObject)result;
+                Library.ArrayObject org = (Library.ArrayObject)result;
                 var array = org;
                 var modified = SetArrayAtIndex(instance, Arguments, ref array, value);
                 if (!ReferenceEquals(org, modified))
@@ -73,7 +78,7 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        internal static Core.ArrayObject SetArrayAtIndex(RuntimeObject instance, Expression[] args, ref Core.ArrayObject target, RuntimeObject value)
+        internal static Library.ArrayObject SetArrayAtIndex(RuntimeObject instance, Expression[] args, ref Library.ArrayObject target, RuntimeObject value)
         {
             RuntimeObject current = RuntimeObject.Null;
             var indexes = SkipLast(args).Select(arg => arg.Evaluate(instance).ToInt32()).ToArray();
@@ -87,9 +92,9 @@ namespace FluidScript.Compiler.SyntaxTree
             return target;
         }
 
-        private static Core.ArrayObject GetArray(int[] indexes, ref Core.ArrayObject target)
+        private static Library.ArrayObject GetArray(int[] indexes, ref Library.ArrayObject target)
         {
-            Core.ArrayObject array = target;
+            Library.ArrayObject array = target;
             for (int i = 0; i < indexes.Length; i++)
             {
                 int index = indexes[i];
@@ -100,7 +105,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 var current = array[index];
                 if ((current.ReflectedType & FluidScript.RuntimeType.Array) == FluidScript.RuntimeType.Array)
                 {
-                    var innerArray = (Core.ArrayObject)current;
+                    var innerArray = (Library.ArrayObject)current;
                     array = GetArray(indexes.Skip(i + 1).Take(indexes.Length - 1).ToArray(), ref innerArray);
                 }
 
@@ -115,7 +120,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 yield return expressions[i];
             }
         }
-        
+
 #endif
 
 #if Emit
@@ -242,7 +247,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            return string.Concat(Target.ToString(), "(", string.Join(",", Arguments.Select(arg=>arg.ToString())), ")");
+            return string.Concat(Target.ToString(), "(", string.Join(",", Arguments.Select(arg => arg.ToString())), ")");
         }
     }
 }

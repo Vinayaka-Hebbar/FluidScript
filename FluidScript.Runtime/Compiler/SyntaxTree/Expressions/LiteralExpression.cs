@@ -4,14 +4,6 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public class LiteralExpression : Expression
     {
-#if Runtime
-        public static readonly LiteralExpression Null = new LiteralExpression(RuntimeObject._null, RuntimeType.Any);
-
-        public static readonly Expression Undefined = new LiteralExpression(RuntimeObject._undefined, RuntimeType.Undefined);
-#else
-        public static readonly LiteralExpression Null = new LiteralExpression(null, RuntimeType.Undefined);
-#endif
-
         public readonly object Value;
 
         public LiteralExpression(double value) : base(ExpressionType.Numeric)
@@ -61,7 +53,16 @@ namespace FluidScript.Compiler.SyntaxTree
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            return new Core.PrimitiveObject(Value, ResolvedPrimitiveType);
+            if (ResolvedPrimitiveType == RuntimeType.String)
+                return new Library.StringObject(Value.ToString());
+            return new Library.PrimitiveObject(Value, ResolvedPrimitiveType);
+        }
+
+        public override RuntimeObject Evaluate(Metadata.Prototype prototype)
+        {
+            if (ResolvedPrimitiveType == RuntimeType.String)
+                return new Library.StringObject(Value.ToString());
+            return new Library.PrimitiveObject(Value, ResolvedPrimitiveType);
         }
 #else
         public override object Evaluate()

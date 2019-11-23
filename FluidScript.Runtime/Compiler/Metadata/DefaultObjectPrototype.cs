@@ -7,95 +7,78 @@ namespace FluidScript.Compiler.Metadata
 {
     internal sealed class DefaultObjectPrototype : Prototype
     {
-        public readonly IList<DeclaredMethod> methods;
-        public DefaultObjectPrototype(IEnumerable<DeclaredMethod> methods) : base(null, "RuntimeObject", ScopeContext.Type)
+        public readonly ICollection<DeclaredMember> members;
+        public DefaultObjectPrototype(IEnumerable<DeclaredMember> members) : base(null, "RuntimeObject", ScopeContext.Type)
         {
-            this.methods = new List<DeclaredMethod>(methods);
+            this.members = new List<DeclaredMember>(members);
         }
 
-        public override bool HasVariable(string name)
+        public override bool HasMember(string name)
         {
             return false;
         }
 
         public override IEnumerable<DeclaredMethod> GetMethods()
         {
-            return methods;
+            return members.OfType<DeclaredMethod>();
         }
 
-        public override IEnumerable<KeyValuePair<string, DeclaredVariable>> GetVariables()
+        public override IEnumerable<DeclaredField> GetFields()
         {
-            return Enumerable.Empty<KeyValuePair<string, DeclaredVariable>>();
+            return Enumerable.Empty<DeclaredField>();
+        }
+
+        public override IEnumerable<DeclaredMember> GetMembers()
+        {
+            return members;
         }
 
 #if Runtime
         public override RuntimeObject CreateInstance()
         {
-            return new Core.ObjectInstance(this);
-        }
-
-        public override bool HasConstant(string name)
-        {
-            return false;
-        }
-
-        public override void DefineConstant(string name, RuntimeObject value)
-        {
+            return new RuntimeObject(this);
         }
 
         public override void DefineVariable(string name, RuntimeObject value)
         {
+            throw new System.Exception("can't define variable");
         }
 
-        public override IEnumerable<KeyValuePair<string, RuntimeObject>> GetConstants()
+        internal override Instances Init(RuntimeObject instance, [Optional] KeyValuePair<object, RuntimeObject> initial)
         {
-            return Enumerable.Empty<KeyValuePair<string, RuntimeObject>>();
-        }
-
-        internal override IDictionary<object, RuntimeObject> Init(RuntimeObject instance, [Optional] KeyValuePair<object, RuntimeObject> initial)
-        {
-            var values = new Dictionary<object, RuntimeObject>();
+            var values = new Instances();
             if (initial.Key != null)
                 values.Add(initial.Key, initial.Value);
-            var variables = GetVariables();
-            if (variables != null)
+            foreach (DeclaredMethod method in members)
             {
-                foreach (var item in variables)
+                if (method.Store != null)
                 {
-                    var value = item.Value.DefaultValue;
-                    if (value is object)
+                    FunctionGroup list = null;
+                    if (values.TryGetValue(method.Name, out RuntimeObject existing))
                     {
-                        values.Add(item.Key, value);
+                        if (existing is FunctionGroup)
+                        {
+                            list = (FunctionGroup)existing;
+                        }
                     }
-
-                }
-            }
-            var methods = GetMethods();
-            if (methods != null)
-            {
-                foreach (Reflection.DeclaredMethod method in methods)
-                {
-                    if (method.Store != null)
+                    if (list is null)
                     {
-                        FunctionGroup list = null;
-                        if (values.TryGetValue(method.Name, out RuntimeObject value))
-                        {
-                            if (value is FunctionGroup)
-                            {
-                                list = (FunctionGroup)value;
-                            }
-                        }
-                        if (list is null)
-                        {
-                            list = new FunctionGroup(method.Name);
-                            values.Add(method.Name, list);
-                        }
-                        list.Add(new FunctionReference(instance, method.Arguments, method.ReturnType, method.Store));
+                        list = new FunctionGroup(method.Name);
+                        values.Add(method.Name, list);
                     }
-
+                    if (method.Default is null)
+                        list.Add(new FunctionReference(instance, method.Arguments, method.ReflectedReturnType, method.Store));
+                    else
+                        list.Add(method.Default);
                 }
             }
             return values;
+        }
+
+        internal override Prototype Merge(Prototype prototype2)
+        {
+            var members = Enumerable.Concat(GetMembers(), prototype2.GetMembers());
+            return new ObjectPrototype(members, null, this, string.Concat(Name, "_", prototype2.Name));
         }
 #endif
     }

@@ -1,11 +1,17 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
     public class Expression : Node
     {
         internal static readonly Expression Empty = new EmptyExpression();
+#if Runtime
+        public static readonly Expression Null = new NullExpression(RuntimeObject.Null);
+
+        public static readonly Expression Undefined = new NullExpression(RuntimeObject.Undefined);
+#else
+        public static readonly LiteralExpression Null = new LiteralExpression(null, RuntimeType.Undefined);
+#endif
         protected System.Type ResolvedType = null;
         /// <summary>
         /// todo for resolve result type assign resolve type if not any
@@ -23,7 +29,7 @@ namespace FluidScript.Compiler.SyntaxTree
             get
             {
                 if (ResolvedType == null)
-                    return Emit.TypeName.Empty;
+                    return Emit.TypeName.Any;
                 return new Emit.TypeName(ResolvedType);
             }
         }
@@ -60,6 +66,16 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="provider"></param>
         /// <returns></returns>
         public virtual RuntimeObject Evaluate([Optional]RuntimeObject instance)
+        {
+            return RuntimeObject.Null;
+        }
+
+        /// <summary>
+        /// For static evaluation
+        /// </summary>
+        /// <param name="prototype"></param>
+        /// <returns></returns>
+        public virtual RuntimeObject Evaluate(Metadata.Prototype prototype)
         {
             return RuntimeObject.Null;
         }

@@ -2,23 +2,23 @@
 {
     public struct TypeName
     {
-        public readonly static TypeName Empty = new TypeName();
+        public readonly static TypeName Any = new TypeName("any", Reflection.ArgumentFlags.None);
         public readonly string FullName;
-        public Reflection.DeclaredFlags Flags;
+        public Reflection.ArgumentFlags Flags;
 
         public TypeName(string value)
         {
             FullName = value;
-            Flags = Reflection.DeclaredFlags.None;
+            Flags = Reflection.ArgumentFlags.None;
         }
 
         public TypeName(System.Type type)
         {
             FullName = type.FullName;
-            Flags = type.IsArray ? Reflection.DeclaredFlags.Array : Reflection.DeclaredFlags.None;
+            Flags = type.IsArray ? Reflection.ArgumentFlags.Array : Reflection.ArgumentFlags.None;
         }
 
-        public TypeName(string value, Reflection.DeclaredFlags flags)
+        public TypeName(string value, Reflection.ArgumentFlags flags)
         {
             FullName = value;
             Flags = flags;
@@ -26,12 +26,17 @@
 
         public bool IsArray()
         {
-            return (Flags & Reflection.DeclaredFlags.Array) == Reflection.DeclaredFlags.Array;
+            return (Flags & Reflection.ArgumentFlags.Array) == Reflection.ArgumentFlags.Array;
+        }
+
+        internal RuntimeType GetRuntimeType()
+        {
+            return TypeUtils.GetPrimitiveType(this);
         }
 
         public bool IsVarArgs()
         {
-            return (Flags & Reflection.DeclaredFlags.VarArgs) == Reflection.DeclaredFlags.VarArgs;
+            return (Flags & Reflection.ArgumentFlags.VarArgs) == Reflection.ArgumentFlags.VarArgs;
         }
 
         public override string ToString()

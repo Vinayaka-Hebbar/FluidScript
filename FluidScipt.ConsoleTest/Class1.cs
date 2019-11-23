@@ -1,9 +1,7 @@
 ﻿using FluidScript;
 using FluidScript.Compiler.Metadata;
-using FluidScript.Core;
 using Scripting.Runtime;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -20,24 +18,16 @@ namespace FluidScipt.ConsoleTest
 
         public void Run()
         {
-            var a = new int[] { 2, 1 }[1];
-            ScriptEngine engine = new FluidScript.ScriptEngine();
-            FunctionPrototype prototype = new FunctionPrototype();
-            prototype.DefineVariable("a", 4);
-            prototype.DefineVariable("b", 2);
-            RuntimeObject instance = prototype.CreateInstance();
-            var class2 = new Class2();
-            instance["add"] = RuntimeObject.CreateReference(class2.Add);
-            instance["x"] = 1;
-            FluidScript.Library.MathObject mathObject = new FluidScript.Library.MathObject();
-            var statement = engine.GetStatement("add()", prototype);
-            var obj = statement.Evaluate(instance);
-            Console.WriteLine(obj);
-        }
+            var engine = new ScriptEngine();
+            Prototype proto = typeof(FluidScript.Library.MathObject);
+            RuntimeObject instance = proto.CreateInstance();
+            instance.Append("name", "vinayaka", true);
+            instance["density"] = 0.00786;
+            instance["totalCoils"] = 0.0;
+            var exp2 = engine.GetStatement("{var get=lamda()=>2;return get();}", proto);
+            dynamic contactStress = exp2.Evaluate(instance);
 
-        public void Add(RuntimeObject arg)
-        {
-            Console.WriteLine("Working", 1);
+            Console.WriteLine((object)contactStress);
         }
 
     }

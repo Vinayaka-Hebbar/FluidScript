@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 array[i] = Expressions[i].Evaluate(instance);
 
             }
-            return new Core.ArrayObject(array, FluidScript.RuntimeType.Any);
+            return new Library.ArrayObject(array, FluidScript.RuntimeType.Any);
         }
 #endif
 

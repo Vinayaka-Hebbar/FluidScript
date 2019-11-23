@@ -4,14 +4,14 @@ using System;
 namespace FluidScript.Compiler.Metadata
 {
 #if Runtime
-    public sealed class DynamicFunction : RuntimeObject, IFunctionReference
+    internal sealed class DynamicFunction : RuntimeObject, IFunctionReference
     {
         public readonly Reflection.DeclaredMethod DeclaredMethod;
-        public readonly RuntimeObject Target;
+        public readonly object Target;
 
         public System.Reflection.MethodInfo MethodInfo { get; }
 
-        public DynamicFunction(Reflection.DeclaredMethod declaredMethod, RuntimeObject target, Func<RuntimeObject, RuntimeObject[], RuntimeObject> method)
+        public DynamicFunction(Reflection.DeclaredMethod declaredMethod, object target, Func<RuntimeObject, RuntimeObject[], RuntimeObject> method)
         {
             DeclaredMethod = declaredMethod;
             Target = target;
@@ -22,7 +22,7 @@ namespace FluidScript.Compiler.Metadata
 
         public ArgumentType[] Arguments => DeclaredMethod.Arguments;
 
-        public RuntimeType ReturnType => DeclaredMethod.ReturnType;
+        public RuntimeType ReturnType => DeclaredMethod.ReflectedReturnType;
 
         public override string ToString()
         {

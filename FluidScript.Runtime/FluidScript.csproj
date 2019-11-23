@@ -9,6 +9,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Authors>Vinayaka Hebbar</Authors>
+    <Version>1.0.8</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="!$(DefineConstants.Contains('Runtime'))">
@@ -25,7 +26,7 @@
     <PackageId>FluidScript.Runtime</PackageId>
     <Product>FluidScript Runtime</Product>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.1</Version>
+    <Version>1.0.9</Version>
     <AssemblyName>FluidScript.Runtime</AssemblyName>
     <PackageTags>runtime,script</PackageTags>
     <PackageReleaseNotes>Initial Release of FluidScript Runtime</PackageReleaseNotes>
@@ -35,6 +36,14 @@
     <PackageReference Include="System.Reflection.Emit.ILGeneration">
       <Version>4.6.0</Version>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(DefineConstants.Contains('Runtime'))">
+    <Compile Remove="Library\**" />
+    <Compile Remove="RuntimeObject.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
   </ItemGroup>
 
   <ItemGroup>

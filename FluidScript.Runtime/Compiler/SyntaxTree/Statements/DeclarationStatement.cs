@@ -1,11 +1,12 @@
 ﻿using FluidScript.Compiler.Emit;
+using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class VariableDeclarationStatement : Statement
+    public class DeclarationStatement : Statement
     {
-        public readonly VariableDeclarationExpression[] DeclarationExpressions;
-        public VariableDeclarationStatement(VariableDeclarationExpression[] declarationExpressions) : base(StatementType.Declaration)
+        public readonly DeclarationExpression[] DeclarationExpressions;
+        public DeclarationStatement(DeclarationExpression[] declarationExpressions) : base(StatementType.Declaration)
         {
             DeclarationExpressions = declarationExpressions;
         }
@@ -24,11 +25,16 @@ namespace FluidScript.Compiler.SyntaxTree
             RuntimeObject[] objects = new RuntimeObject[DeclarationExpressions.Length];
             for (int i = 0; i < DeclarationExpressions.Length; i++)
             {
-                VariableDeclarationExpression declaration = DeclarationExpressions[i];
+                var declaration = DeclarationExpressions[i];
                 objects[i] = declaration.Evaluate(instance);
             }
-            return new Core.ArrayObject(objects, RuntimeType.Any);
+            return new Library.ArrayObject(objects, RuntimeType.Any);
         }
 #endif
+
+        public override string ToString()
+        {
+            return string.Concat("var ", string.Join(",", DeclarationExpressions.Select(e => e.ToString())));
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            Core.ObjectInstance local = new Core.ObjectInstance(Prototype);
+            var local = new Core.LocalInstance(Prototype, instance);
             foreach (var statement in Statements)
             {
                 statement.Evaluate(local);

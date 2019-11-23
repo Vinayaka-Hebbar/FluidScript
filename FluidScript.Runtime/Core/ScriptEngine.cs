@@ -4,6 +4,9 @@ using FluidScript.Core;
 
 namespace FluidScript
 {
+    /// <summary>
+    /// Generates SyntaxTree for text
+    /// </summary>
     public class ScriptEngine
     {
         public readonly ParserSettings Settings;
@@ -18,11 +21,13 @@ namespace FluidScript
             Settings = settings;
         }
 
-        public FluidScript.Compiler.SyntaxTree.Statement GetStatement(string text, Prototype prototype)
+        public Compiler.SyntaxTree.Statement GetStatement(string text, Prototype prototype)
         {
-            var syntaxVisitor = new Compiler.SyntaxVisitor(new StringSource(text), prototype, Settings);
-            if (syntaxVisitor.MoveNext())
-                return syntaxVisitor.VisitStatement();
+            using (SyntaxVisitor visitor = new SyntaxVisitor(new StringSource(text), prototype, Settings))
+            {
+                if (visitor.MoveNext())
+                    return visitor.VisitStatement();
+            }
             return Compiler.SyntaxTree.Statement.Empty;
         }
     }

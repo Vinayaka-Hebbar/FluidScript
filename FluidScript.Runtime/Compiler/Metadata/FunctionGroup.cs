@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FluidScript.Compiler.Metadata
@@ -6,10 +7,11 @@ namespace FluidScript.Compiler.Metadata
 #if Runtime
     public sealed class FunctionGroup : RuntimeObject
     {
+        private static Prototype prototype;
         public readonly string Name;
         private IFunctionReference[] References;
 
-        public FunctionGroup(string name)
+        public FunctionGroup(string name) 
         {
             Name = name;
             References = new IFunctionReference[0];
@@ -33,7 +35,7 @@ namespace FluidScript.Compiler.Metadata
             return Null;
         }
 
-        private static System.Collections.Generic.IEnumerable<RuntimeType> FilterTypes(System.Collections.Generic.IEnumerable<RuntimeObject> args)
+        private static IEnumerable<RuntimeType> FilterTypes(System.Collections.Generic.IEnumerable<RuntimeObject> args)
         {
             foreach (var arg in args)
             {
@@ -44,6 +46,20 @@ namespace FluidScript.Compiler.Metadata
         public override string ToString()
         {
             return string.Join(",", References.Select(reference => reference.ToString()));
+        }
+
+        public override Prototype GetPrototype()
+        {
+            if (prototype is null)
+            {
+                var baseProto = new DefaultObjectPrototype(new Reflection.DeclaredMethod[0]);
+                var methods = Reflection.TypeHelper.GetMethods(GetType());
+                prototype = new ObjectPrototype(methods, null, baseProto, "FunctionGroup")
+                {
+                    IsSealed = true
+                };
+            }
+            return prototype;
         }
     }
 #endif

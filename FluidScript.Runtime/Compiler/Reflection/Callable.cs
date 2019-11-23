@@ -3,30 +3,15 @@
 namespace FluidScript.Compiler.Reflection
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-    public class Callable : Attribute
+    public sealed class Callable : Accessable
     {
-        public readonly string Name;
-
         public readonly Emit.ArgumentTypes[] Arguments;
 
-        public RuntimeType ReturnType { get; }
+        public RuntimeType ReturnType => Type;
 
-        public Callable(string name)
+        public Callable(string name, RuntimeType returnType, params Emit.ArgumentTypes[] args) : base(name, returnType)
         {
-            Name = name;
-        }
-
-        public Callable(string name, Emit.ArgumentTypes[] args)
-        {
-            Name = name;
             Arguments = args;
-        }
-
-        public Callable(string name, RuntimeType returnType, params Emit.ArgumentTypes[] args)
-        {
-            Name = name;
-            Arguments = args;
-            ReturnType = returnType;
         }
     }
 }

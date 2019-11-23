@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace FluidScript.Compiler.Metadata
 {
     /// <summary>
-    /// Prototype of current method or class
+    /// Represents BluePrint of Object contains method, fields or constants
     /// </summary>
     public abstract class Prototype
     {
@@ -13,27 +12,16 @@ namespace FluidScript.Compiler.Metadata
         public readonly string Name;
 
 #if Runtime
-        internal static Prototype prototype;
-        internal static Prototype Default
+        public static Prototype Create(System.Type type)
         {
-            get
-            {
-                if (prototype == null)
-                {
-                    var type = typeof(RuntimeObject);
-                    var methods = Reflection.MemberInvoker.GetMethods(type);
-                    prototype = new DefaultObjectPrototype(methods);
-                }
-                return prototype;
-            }
-        }
-
-        internal static ObjectPrototype Create(Type type)
-        {
-            var constants = System.Linq.Enumerable.Empty<KeyValuePair<string, RuntimeObject>>();
-            var variables = System.Linq.Enumerable.Empty<KeyValuePair<string, Reflection.DeclaredVariable>>();
-            var methods = Reflection.MemberInvoker.GetMethods(type);
-            return new ObjectPrototype(constants, variables, methods);
+            if (type == null)
+                return null;
+            if (type == typeof(object) || type == typeof(RuntimeObject))
+                return ObjectPrototype.Default;
+            var parent = type.DeclaringType != null ? Create(type.DeclaringType) : null;
+            Prototype baseProto = Create(type.BaseType);
+            IEnumerable<Reflection.DeclaredMember> members = Reflection.TypeHelper.GetMembers(type);
+            return new ObjectPrototype(members, parent, baseProto, type.Name);
         }
 #endif
 
@@ -44,59 +32,83 @@ namespace FluidScript.Compiler.Metadata
             Context = context;
         }
 
-        internal virtual Reflection.DeclaredMethod DeclareMethod(SyntaxTree.FunctionDeclaration declaration, SyntaxTree.BodyStatement body)
+        internal virtual Reflection.DeclaredMethod DeclareMethod(string name, SyntaxTree.ArgumentInfo[] arguments, Emit.TypeName returnType, SyntaxTree.BodyStatement body)
         {
             throw new System.Exception("Can't declare method inside " + GetType());
         }
 
-        internal virtual Reflection.DeclaredVariable DeclareLocalVariable(string name, SyntaxTree.Expression expression, Reflection.VariableType type = Reflection.VariableType.Local)
+        internal virtual Reflection.DeclaredLocalVariable DeclareLocalVariable(string name, Emit.TypeName type, SyntaxTree.Expression expression, Reflection.VariableAttributes attribute = Reflection.VariableAttributes.Default)
         {
-            throw new System.Exception("Can't declare local variable inside " + GetType());
+            throw new System.Exception("Can't declare local field inside " + GetType());
         }
 
-        internal virtual Reflection.DeclaredVariable DeclareVariable(string name, SyntaxTree.Expression expression, Reflection.VariableType type = Reflection.VariableType.Local)
+        internal virtual Reflection.DeclaredField DeclareField(string name, Emit.TypeName type, SyntaxTree.Expression expression)
         {
-            throw new System.Exception("Can't declare variable inside " + GetType());
+            throw new System.Exception("Can't declare field inside " + GetType());
         }
 
-        public abstract IEnumerable<KeyValuePair<string, Reflection.DeclaredVariable>> GetVariables();
+        public abstract IEnumerable<Reflection.DeclaredField> GetFields();
+
+        public abstract IEnumerable<Reflection.DeclaredMember> GetMembers();
 
         public abstract IEnumerable<Reflection.DeclaredMethod> GetMethods();
 
-        public abstract bool HasVariable(string name);
+        public abstract bool HasMember(string name);
 
 #if Runtime
-        public abstract void DefineConstant(string name, RuntimeObject value);
+
+        internal virtual void DeclareVariable(string name, SyntaxTree.Expression expression)
+        {
+            if (IsSealed)
+                throw new System.Exception(string.Concat("can't declared a variable ", name, " inside " + Name));
+            DeclareField(name, Emit.TypeName.Any, expression);
+        }
+
+        public bool IsSealed { get; internal set; }
 
         public abstract void DefineVariable(string name, RuntimeObject value);
 
-        public virtual RuntimeObject GetConstant(string name)
-        {
-            return RuntimeObject.Undefined;
-        }
-
         public abstract RuntimeObject CreateInstance();
 
-        public abstract bool HasConstant(string name);
-
-        public abstract IEnumerable<KeyValuePair<string, RuntimeObject>> GetConstants();
-
-        internal abstract IDictionary<object, RuntimeObject> Init(RuntimeObject instance, [System.Runtime.InteropServices.Optional]KeyValuePair<object, RuntimeObject> initial);
+        internal abstract Reflection.Instances Init(RuntimeObject instance, [System.Runtime.InteropServices.Optional]KeyValuePair<object, RuntimeObject> initial);
 
         public static Prototype Merge(Prototype prototype1, Prototype prototype2)
         {
-            var constants = System.Linq.Enumerable.Concat(prototype1.GetConstants(), prototype2.GetConstants());
-            var variables = System.Linq.Enumerable.Concat(prototype1.GetVariables(), prototype2.GetVariables());
-            var methods = System.Linq.Enumerable.Concat(prototype1.GetMethods(), prototype2.GetMethods());
-            var prototype = new ObjectPrototype(constants, variables, methods);
-            return prototype;
+            if (prototype1.Context == prototype2.Context)
+            {
+                return prototype2.Merge(prototype2);
+            }
+            if (prototype1.Context == ScopeContext.Local && prototype2.Context == ScopeContext.Type)
+            {
+                return Merge(prototype2, (FunctionPrototype)prototype1);
+            }
+            if (prototype2.Context == ScopeContext.Local && prototype1.Context == ScopeContext.Type)
+            {
+                return Merge(prototype1, (FunctionPrototype)prototype2);
+            }
+            throw new System.Exception("Can't Merge");
+            //return new ObjectPrototype(constants, variables, methods, null, ObjectPrototype.Default, string.Concat(prototype1.Name, "_", prototype2.Name));
         }
-#else
-        public virtual void DefineConstant(string name, object value)
+
+        internal abstract Prototype Merge(Prototype prototype2);
+
+        internal static Prototype Merge(Prototype prototype1, FunctionPrototype prototype2)
         {
-            throw new System.Exception("Can't define constant inside " + GetType());
+            var fields = System.Linq.Enumerable.Select(prototype2.GetVariables(), item => new Reflection.DeclaredField(item.Name, item.ReflectedType)
+            {
+                ValueAtTop = item.ValueAtTop,
+                DefaultValue = item.DefaultValue
+            });
+            IEnumerable<Reflection.DeclaredMember> members = System.Linq.Enumerable.Concat(fields, System.Linq.Enumerable.Concat(prototype2.GetMembers(), prototype1.GetMembers()));
+            return new ObjectPrototype(members, null, ObjectPrototype.Default, string.Concat(prototype1.Name, "_", prototype2.Name));
+
         }
 #endif
+
+        public static implicit operator Prototype(System.Type type)
+        {
+            return Create(type);
+        }
 
     }
 }

@@ -4,15 +4,18 @@
     {
         public readonly Expression[] Expressions;
         public readonly Statement Statement;
-        public LoopStatement(Expression[] expressions, Statement statement, StatementType type) : base(type)
+        public readonly Metadata.FunctionPrototype Prototype;
+        public LoopStatement(Expression[] expressions, Statement statement, Metadata.FunctionPrototype prototype, StatementType type) : base(type)
         {
             Expressions = expressions;
             Statement = statement;
+            Prototype = prototype;
         }
 
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
+            instance = new Core.LocalInstance(Prototype, instance);
             var statement = Statement;
             var expressions = Expressions;
             if (NodeType == StatementType.Loop)

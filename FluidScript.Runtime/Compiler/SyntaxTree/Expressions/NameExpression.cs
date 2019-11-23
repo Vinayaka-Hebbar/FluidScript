@@ -1,7 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using FluidScript.Core;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public class NameExpression : Expression
     {
@@ -22,6 +19,20 @@ namespace FluidScript.Compiler.SyntaxTree
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             return instance[Name];
+        }
+
+        public override RuntimeObject Evaluate(Metadata.Prototype prototype)
+        {
+            if (prototype is Metadata.FunctionPrototype funcProto)
+            {
+                var localVariable = funcProto.GetLocalVariable(Name);
+                if (localVariable != null)
+                    return localVariable.DefaultValue ?? RuntimeObject.Null;
+            }
+            var field = System.Linq.Enumerable.FirstOrDefault(System.Linq.Enumerable.OfType<Reflection.DeclaredField>(prototype.GetMembers()), m => m.Name == Name);
+            if (field != null)
+                return field.DefaultValue ?? RuntimeObject.Null;
+            return RuntimeObject.Null;
         }
 #endif
 

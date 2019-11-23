@@ -6,13 +6,20 @@ namespace FluidScript.Compiler.Emit
     {
         public readonly string Name;
         public readonly RuntimeType RuntimeType;
-        public readonly Reflection.DeclaredFlags Flags;
+        public readonly Reflection.ArgumentFlags Flags;
 
-        public ArgumentType(string name, RuntimeType type, Reflection.DeclaredFlags flags = Reflection.DeclaredFlags.None)
+        public ArgumentType(string name, RuntimeType type, Reflection.ArgumentFlags flags = Reflection.ArgumentFlags.None)
         {
             Name = name;
             RuntimeType = type;
             Flags = flags;
+        }
+
+        public ArgumentType(string name, TypeName type)
+        {
+            Name = name;
+            RuntimeType = type.GetRuntimeType();
+            Flags = type.Flags;
         }
 
         public override string ToString()
@@ -22,7 +29,7 @@ namespace FluidScript.Compiler.Emit
 
         public bool IsVarArgs()
         {
-            return (Flags & Reflection.DeclaredFlags.VarArgs) == Reflection.DeclaredFlags.VarArgs;
+            return (Flags & Reflection.ArgumentFlags.VarArgs) == Reflection.ArgumentFlags.VarArgs;
         }
     }
 

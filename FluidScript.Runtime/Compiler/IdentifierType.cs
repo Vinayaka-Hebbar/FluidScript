@@ -13,6 +13,7 @@
         Undefined,
         Return,
         Var,
+        Const,
         Function,
         Lamda,
         If,

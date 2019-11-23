@@ -1,94 +1,48 @@
 ﻿using FluidScript.Compiler.Metadata;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace FluidScript.Core
 {
 #if Runtime
-    public class FunctionInstance : RuntimeObject
+    internal sealed class FunctionInstance : RuntimeObject
     {
-        private readonly Prototype prototype;
-        protected readonly IDictionary<object, RuntimeObject> values;
-        public FunctionInstance(Prototype prototype, RuntimeObject obj)
+        public FunctionInstance(Prototype prototype, RuntimeObject obj) : base(prototype, obj)
         {
-            this.prototype = prototype;
-            values = prototype.Init(this, new KeyValuePair<object, RuntimeObject>("this", obj));
         }
 
         public override RuntimeObject this[string name]
         {
             get
             {
-                if (values.ContainsKey(name))
-                    return values[name];
-                return values["this"][name];
+                if (instances.ContainsKey(name))
+                    return instances[name];
+                return instances["this"][name];
             }
             set
             {
-                if (values.ContainsKey(name))
+                if (instances.ContainsKey(name))
                 {
-                    Attach(name, value);
+                    base[name] = value;
                     return;
                 }
-                RuntimeObject top = values["this"];
+                RuntimeObject top = instances["this"];
                 if (top.ContainsKey(name))
-                    top[name] = value;
-                Attach(name, value);
-
-            }
-        }
-
-        private void Attach(string name, RuntimeObject value)
-        {
-            if (value.ReflectedType == RuntimeType.Function)
-            {
-                AttachFunction(name, value);
-                return;
-            }
-            values[name] = value;
-            return;
-        }
-
-        private void AttachFunction(string name, RuntimeObject value)
-        {
-            FunctionGroup list = null;
-            if (values.TryGetValue(name, out RuntimeObject runtime))
-            {
-                if (runtime is FunctionGroup)
                 {
-                    list = (FunctionGroup)value;
+                    top[name] = value;
+                    return;
                 }
+                base[name] = value;
+
             }
-            if (list is null)
-            {
-                list = new FunctionGroup(name);
-                values.Add(name, list);
-            }
-            list.Add((IFunctionReference)value);
         }
 
         public override RuntimeObject Call(string name, params RuntimeObject[] args)
         {
-            if (values.ContainsKey(name))
+            if (instances.ContainsKey(name))
             {
-                return values[name].DynamicInvoke(args);
+                return instances[name].DynamicInvoke(args);
             }
-            return values["this"].Call(name, args); ;
-        }
-
-        public override RuntimeObject GetConstantValue(string name)
-        {
-            return prototype.GetConstant(name);
-        }
-
-        public override string ToString()
-        {
-            return string.Concat("\n{", string.Join(",\n", values.Skip(1).Select(item => string.Concat(item.Key, ":", item.Value.ToString()))), "}");
-        }
-
-        public override Prototype GetPrototype()
-        {
-            return prototype;
+            return instances["this"].Call(name, args); ;
         }
     }
 #endif

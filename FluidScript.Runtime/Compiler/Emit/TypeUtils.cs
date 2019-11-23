@@ -158,7 +158,7 @@ namespace FluidScript.Compiler.Emit
                 }
                 var type = types[i];
                 var runtime = type.RuntimeType;
-                if (type.Flags == Reflection.DeclaredFlags.VarArgs && (calledTypes[i] & runtime) == runtime)
+                if (type.Flags == Reflection.ArgumentFlags.VarArgs && (calledTypes[i] & runtime) == runtime)
                 {
                     break;
                 }

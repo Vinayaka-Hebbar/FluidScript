@@ -27,7 +27,7 @@
 
         public string Path => null;
 
-        public void Dispose()
+        void System.IDisposable.Dispose()
         {
             System.GC.SuppressFinalize(this);
         }
