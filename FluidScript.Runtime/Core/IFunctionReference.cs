@@ -1,6 +1,6 @@
 ﻿using FluidScript.Compiler.Emit;
 
-namespace FluidScript.Compiler.Metadata
+namespace FluidScript.Core
 {
     public interface IFunctionReference
     {

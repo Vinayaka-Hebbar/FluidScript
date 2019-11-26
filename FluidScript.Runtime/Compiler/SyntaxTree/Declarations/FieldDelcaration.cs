@@ -1,17 +1,12 @@
-﻿using FluidScript.Compiler.Emit;
-using System.Reflection.Emit;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
-    public class FieldDelcaration : Declaration
+    public sealed class FieldDelcaration : MemberDeclaration
     {
-        public FieldDelcaration(string name, System.Type type) : base(name)
-        {
-            ResolvedType = type;
-        }
+        public readonly VariableDeclarationExpression[] VariableDeclarations;
 
-        public FieldDelcaration(string name, TypeName typeName) : base(name, typeName)
+        public FieldDelcaration(VariableDeclarationExpression[] variableDeclarations)
         {
+            VariableDeclarations = variableDeclarations;
         }
     }
 }

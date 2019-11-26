@@ -12,7 +12,7 @@ namespace FluidScript.Core
             top = obj;
         }
 
-        public override RuntimeObject this[string name]
+        public override RuntimeObject this[object name]
         {
             get
             {

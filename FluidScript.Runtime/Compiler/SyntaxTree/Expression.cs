@@ -65,7 +65,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="scope"></param>
         /// <param name="provider"></param>
         /// <returns></returns>
-        public virtual RuntimeObject Evaluate([Optional]RuntimeObject instance)
+        public virtual RuntimeObject Evaluate(RuntimeObject instance)
         {
             return RuntimeObject.Null;
         }
@@ -96,6 +96,11 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public EmptyExpression() : base(ExpressionType.Unknown)
         {
+        }
+
+        public override string ToString()
+        {
+            return string.Empty;
         }
     }
 }

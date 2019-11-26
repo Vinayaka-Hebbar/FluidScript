@@ -11,11 +11,13 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
 #if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
+        internal override RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
         {
             if (NodeType == StatementType.Return)
             {
-                return Expression?.Evaluate(instance);
+                if (Expression == null)
+                    return RuntimeObject.Void;
+                return Expression.Evaluate(instance);
             }
             if (NodeType == StatementType.Throw)
             {

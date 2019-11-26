@@ -10,6 +10,7 @@ namespace FluidScript
     {
         public static readonly RuntimeObject Null = new RuntimeObject(ObjectPrototype.Default);
         public static readonly RuntimeObject Undefined = new RuntimeObject(ObjectPrototype.Default, RuntimeType.Undefined);
+        public static readonly RuntimeObject Void = new RuntimeObject(ObjectPrototype.Default, RuntimeType.Void);
 
 
         internal readonly Compiler.Reflection.Instances instances;
@@ -54,7 +55,7 @@ namespace FluidScript
             return Compiler.Reflection.TypeHelper.Invoke(this, name, args);
         }
 
-        public virtual RuntimeObject this[string name]
+        public virtual RuntimeObject this[object name]
         {
             get
             {
@@ -78,22 +79,22 @@ namespace FluidScript
             instances.Add(name, value, isReadOnly: isReadOnly);
         }
 
-        private void AttachFunction(string name, RuntimeObject value)
+        private void AttachFunction(object name, RuntimeObject value)
         {
-            FunctionGroup list = null;
+            Core.FunctionGroup list = null;
             if (instances.TryGetValue(name, out RuntimeObject runtime))
             {
-                if (runtime is FunctionGroup)
+                if (runtime is Core.FunctionGroup)
                 {
-                    list = (FunctionGroup)value;
+                    list = (Core.FunctionGroup)value;
                 }
             }
             if (list is null)
             {
-                list = new FunctionGroup(name);
+                list = new Core.FunctionGroup(name.ToString());
                 instances[name] = list;
             }
-            list.Add((IFunctionReference)value);
+            list.Add((Core.IFunctionReference)value);
         }
 
         public virtual bool ContainsKey(object key)
@@ -296,7 +297,7 @@ namespace FluidScript
                 System.Reflection.ParameterInfo arg = paramters[index];
                 types[index] = new Compiler.Emit.ArgumentType(arg.Name, Compiler.Emit.TypeUtils.ToPrimitive(arg.ParameterType));
             }
-            return new FunctionReference(action.Target, types, returnType, method);
+            return new Core.FunctionReference(action.Target, types, returnType, method);
         }
         #endregion
 

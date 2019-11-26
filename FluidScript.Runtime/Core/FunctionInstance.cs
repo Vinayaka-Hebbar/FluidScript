@@ -10,7 +10,7 @@ namespace FluidScript.Core
         {
         }
 
-        public override RuntimeObject this[string name]
+        public override RuntimeObject this[object name]
         {
             get
             {
@@ -43,6 +43,11 @@ namespace FluidScript.Core
                 return instances[name].DynamicInvoke(args);
             }
             return instances["this"].Call(name, args); ;
+        }
+
+        public override string ToString()
+        {
+            return instances.ToStringLocal();
         }
     }
 #endif

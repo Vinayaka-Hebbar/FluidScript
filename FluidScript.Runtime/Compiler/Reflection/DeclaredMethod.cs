@@ -10,11 +10,11 @@ namespace FluidScript.Compiler.Reflection
         private Emit.ArgumentType[] arguments;
         private RuntimeType returnType = RuntimeType.Undefined;
 
-        internal Metadata.FunctionPrototype Prototype;
-
         public readonly Emit.TypeName ReturnType;
 
         public readonly SyntaxTree.ArgumentInfo[] ArgumentInfos;
+
+        public Metadata.Prototype DeclaredPrototype { get; internal set; }
 
         public Emit.ArgumentType[] Arguments
         {
@@ -59,7 +59,7 @@ namespace FluidScript.Compiler.Reflection
             }
         }
 
-        public SyntaxTree.BodyStatement ValueAtTop;
+        public SyntaxTree.BlockStatement ValueAtTop;
 
         public System.Reflection.MethodInfo Store;
 
@@ -84,12 +84,13 @@ namespace FluidScript.Compiler.Reflection
         /// <summary>
         /// Static Data
         /// </summary>
-        internal Metadata.IFunctionReference Default;
+        internal Core.IFunctionReference Default;
 
         internal RuntimeObject DynamicInvoke(RuntimeObject obj, RuntimeObject[] args)
         {
+            var prototype = new Metadata.FunctionPrototype(obj.GetPrototype());
             //todo default value arg
-            var instance = Prototype.CreateInstance(obj);
+            var instance = new Core.LocalInstance(prototype, obj);
             for (int index = 0; index < Arguments.Length; index++)
             {
                 var arg = Arguments[index];

@@ -21,9 +21,9 @@ namespace FluidScript
             Settings = settings;
         }
 
-        public Compiler.SyntaxTree.Statement GetStatement(string text, Prototype prototype)
+        public Compiler.SyntaxTree.Statement GetStatement(string text)
         {
-            using (SyntaxVisitor visitor = new SyntaxVisitor(new StringSource(text), prototype, Settings))
+            using (SyntaxVisitor visitor = new SyntaxVisitor(new StringSource(text), Settings))
             {
                 if (visitor.MoveNext())
                     return visitor.VisitStatement();

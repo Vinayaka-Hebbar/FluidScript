@@ -1,14 +1,18 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.Metadata;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class DeclarationStatement : Statement
+    public class LocalDeclarationStatement : Statement
     {
-        public readonly DeclarationExpression[] DeclarationExpressions;
-        public DeclarationStatement(DeclarationExpression[] declarationExpressions) : base(StatementType.Declaration)
+        public readonly VariableDeclarationExpression[] DeclarationExpressions;
+        public readonly bool IsReadOnly;
+
+        public LocalDeclarationStatement(VariableDeclarationExpression[] declarationExpressions, bool isReadOnly) : base(StatementType.Declaration)
         {
             DeclarationExpressions = declarationExpressions;
+            IsReadOnly = isReadOnly;
         }
 
         public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
@@ -20,13 +24,15 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
 #if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
+        internal override RuntimeObject Evaluate(RuntimeObject instance, Prototype prototype)
         {
             RuntimeObject[] objects = new RuntimeObject[DeclarationExpressions.Length];
             for (int i = 0; i < DeclarationExpressions.Length; i++)
             {
                 var declaration = DeclarationExpressions[i];
-                objects[i] = declaration.Evaluate(instance);
+                //todo remove value at top
+                prototype.DeclareLocalVariable(declaration.Name, declaration.Type, declaration.Value);
+                instance.Append(declaration.Name, objects[i] = declaration.Evaluate(instance), IsReadOnly);
             }
             return new Library.ArrayObject(objects, RuntimeType.Any);
         }

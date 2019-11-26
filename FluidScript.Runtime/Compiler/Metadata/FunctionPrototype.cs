@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace FluidScript.Compiler.Metadata
 {
-    public sealed class FunctionPrototype : Prototype, IDisposable
+    public sealed class FunctionPrototype : Prototype
     {
         private ICollection<DeclaredLocalVariable> variables;
 #if Runtime
@@ -36,26 +36,12 @@ namespace FluidScript.Compiler.Metadata
             return variables.FirstOrDefault(v => v.Name == name);
         }
 
-        public readonly SyntaxVisitor visitor;
-
-        public FunctionPrototype() : base(null, string.Empty, ScopeContext.Local)
+        public FunctionPrototype(Prototype parent) : base(parent, string.Empty, ScopeContext.Local)
         {
         }
 
-        public FunctionPrototype(Prototype parent, string name) : base(parent, name, ScopeContext.Local)
+        public FunctionPrototype(Prototype parent, string name, ScopeContext scope) : base(parent, name, scope)
         {
-        }
-
-        public FunctionPrototype(SyntaxVisitor visitor, string name, ScopeContext context) : base(visitor.Prototype, name, context)
-        {
-            this.visitor = visitor;
-            visitor.Prototype = this;
-        }
-
-        public FunctionPrototype(SyntaxVisitor visitor, ScopeContext context) : base(visitor.Prototype, string.Empty, context)
-        {
-            this.visitor = visitor;
-            visitor.Prototype = this;
         }
 
 #if Runtime
@@ -66,7 +52,7 @@ namespace FluidScript.Compiler.Metadata
         }
 #endif
 
-        internal override DeclaredMethod DeclareMethod(string name, ArgumentInfo[] arguments, Emit.TypeName returnType, BodyStatement body)
+        internal override DeclaredMethod DeclareMethod(string name, ArgumentInfo[] arguments, Emit.TypeName returnType, BlockStatement body)
         {
             if (inner == null)
                 inner = new List<DeclaredMember>();
@@ -126,16 +112,9 @@ namespace FluidScript.Compiler.Metadata
 #endif
         }
 
-
         public override IEnumerable<DeclaredMember> GetMembers()
         {
             return inner ?? (new DeclaredMember[0]);
-        }
-
-        void IDisposable.Dispose()
-        {
-            if (visitor != null)
-                visitor.Prototype = Parent;
         }
 
         public override bool HasMember(string name)
@@ -181,9 +160,9 @@ namespace FluidScript.Compiler.Metadata
             return this.variables ?? Enumerable.Empty<DeclaredLocalVariable>();
         }
 
-        internal override Instances Init(RuntimeObject instance, [Optional] KeyValuePair<object, RuntimeObject> initial)
+        internal override Instances Init(RuntimeObject obj, [Optional] KeyValuePair<object, RuntimeObject> initial)
         {
-            var values = BaseProtoType.Init(instance, initial);
+            var instance = BaseProtoType.Init(obj, initial);
             if (variables != null)
             {
                 foreach (var item in variables)
@@ -191,11 +170,11 @@ namespace FluidScript.Compiler.Metadata
                     var value = item.DefaultValue;
                     if (value is object)
                     {
-                        values.Add(item.Name, value, (item.Attributes & VariableAttributes.Constant) == VariableAttributes.Constant);
+                        instance.Add(item.Name, value, (item.Attributes & VariableAttributes.Constant) == VariableAttributes.Constant);
                     }
                     else
                     {
-                        values.Add(item.Name, RuntimeObject.Undefined);
+                        instance.Add(item.Name, RuntimeObject.Undefined);
                     }
 
                 }
@@ -205,29 +184,10 @@ namespace FluidScript.Compiler.Metadata
             {
                 foreach (DeclaredMethod method in inner)
                 {
-                    if (method.Store != null)
-                    {
-                        FunctionGroup list = null;
-                        if (values.TryGetValue(method.Name, out RuntimeObject value))
-                        {
-                            if (value is FunctionGroup)
-                            {
-                                list = (FunctionGroup)value;
-                            }
-                        }
-                        if (list is null)
-                        {
-                            list = new FunctionGroup(method.Name);
-                            values.Add(method.Name, list);
-                        }
-                        if (method.Default is null)
-                            list.Add(new FunctionReference(instance, method.Arguments, method.ReflectedReturnType, method.Store));
-                        else
-                            list.Add(method.Default);
-                    }
+                    instance.AttachFunction(obj, method);
                 }
             }
-            return values;
+            return instance;
         }
 
         internal override Prototype Merge(Prototype prototype2)

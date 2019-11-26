@@ -1,19 +1,18 @@
-﻿using System.Linq;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
-    public class TypeDeclaration : Declaration
+    public class TypeDeclaration : MemberDeclaration
     {
+        public readonly string Name;
+        public readonly Emit.TypeName BaseType;
         public readonly string[] Implements;
         public readonly Metadata.ObjectPrototype Scope;
-        public TypeDeclaration(string name, string baseTypeName, string[] implements, Metadata.ObjectPrototype scope) : base(name)
+        public TypeDeclaration(string name, string baseTypeName, string[] implements, Metadata.ObjectPrototype scope)
         {
-            TypeName = new Emit.TypeName(baseTypeName);
+            Name = name;
+            BaseType = new Emit.TypeName(baseTypeName);
             Implements = implements;
             Scope = scope;
         }
-
-        public override Emit.TypeName TypeName { get; }
 
 #if Emit
         internal System.Reflection.Emit.TypeBuilder Declare(System.Reflection.Emit.ModuleBuilder builder, Emit.OptimizationInfo info)

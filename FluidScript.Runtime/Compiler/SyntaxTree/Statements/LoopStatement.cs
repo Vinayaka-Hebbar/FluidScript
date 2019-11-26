@@ -4,19 +4,19 @@
     {
         public readonly Expression[] Expressions;
         public readonly Statement Statement;
-        public readonly Metadata.FunctionPrototype Prototype;
-        public LoopStatement(Expression[] expressions, Statement statement, Metadata.FunctionPrototype prototype, StatementType type) : base(type)
+        public LoopStatement(Expression[] expressions, Statement statement, StatementType type) : base(type)
         {
             Expressions = expressions;
             Statement = statement;
-            Prototype = prototype;
         }
 
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            instance = new Core.LocalInstance(Prototype, instance);
+            var prototype = new Metadata.FunctionPrototype(instance.GetPrototype(), "Loop", Metadata.ScopeContext.Local);
+            instance = new Core.LocalInstance(prototype, instance);
             var statement = Statement;
+            StatementType nodeType = statement.NodeType;
             var expressions = Expressions;
             if (NodeType == StatementType.Loop)
             {
@@ -24,18 +24,18 @@
                 {
                     for (expressions[0].Evaluate(instance); expressions[1].Evaluate(instance).ToBool(); expressions[2].Evaluate(instance))
                     {
-                        StatementType nodeType = statement.NodeType;
-                        var value = statement.Evaluate(instance);
-                        if (nodeType == StatementType.Return)
+                        var value = statement.Evaluate(instance, prototype);
+                        switch (nodeType)
                         {
-                            return value;
-                        }
-                        if (nodeType != StatementType.Expression)
-                        {
-                            if (value is object)
-                            {
+                            case StatementType.Return:
                                 return value;
-                            }
+                            case StatementType.Declaration:
+                            case StatementType.Expression:
+                                break;
+                            default:
+                                if (value is object)
+                                    return value;
+                                break;
                         }
                     }
                 }
@@ -43,18 +43,18 @@
                 {
                     while (expressions[0].Evaluate(instance).ToBool())
                     {
-                        StatementType nodeType = statement.NodeType;
                         var value = statement.Evaluate(instance);
-                        if (nodeType == StatementType.Return)
+                        switch (nodeType)
                         {
-                            return value;
-                        }
-                        if (nodeType != StatementType.Expression)
-                        {
-                            if (value is object)
-                            {
+                            case StatementType.Return:
                                 return value;
-                            }
+                            case StatementType.Declaration:
+                            case StatementType.Expression:
+                                break;
+                            default:
+                                if (value is object)
+                                    return value;
+                                break;
                         }
                     }
                 }
@@ -63,18 +63,18 @@
             {
                 do
                 {
-                    StatementType nodeType = statement.NodeType;
                     var value = statement.Evaluate(instance);
-                    if (nodeType == StatementType.Return)
+                    switch (nodeType)
                     {
-                        return value;
-                    }
-                    if (nodeType != StatementType.Expression)
-                    {
-                        if (value is object)
-                        {
+                        case StatementType.Return:
                             return value;
-                        }
+                        case StatementType.Declaration:
+                        case StatementType.Expression:
+                            break;
+                        default:
+                            if (value is object)
+                                return value;
+                            break;
                     }
                 } while (expressions[0].Evaluate(instance).ToBool());
             }

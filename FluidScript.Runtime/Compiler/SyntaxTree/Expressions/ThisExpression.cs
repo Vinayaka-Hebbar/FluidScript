@@ -2,11 +2,8 @@
 {
     public class ThisExpression : Expression
     {
-        private readonly Metadata.Prototype prototype;
-
-        public ThisExpression(Metadata.Prototype prototype) : base(ExpressionType.This)
+        public ThisExpression() : base(ExpressionType.This)
         {
-            this.prototype = prototype;
         }
 
 #if Runtime

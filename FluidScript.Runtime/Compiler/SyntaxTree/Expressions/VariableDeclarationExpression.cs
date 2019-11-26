@@ -1,35 +1,22 @@
-﻿using FluidScript.Compiler.Emit;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public class VariableDeclarationExpression : DeclarationExpression
     {
-        public readonly Reflection.DeclaredLocalVariable Variable;
+        public readonly Emit.TypeName Type;
+        public readonly Expression Value;
 
-        public VariableDeclarationExpression(string name, Reflection.DeclaredLocalVariable variable) : base(name)
+        public VariableDeclarationExpression(string name, Emit.TypeName type, Expression value) : base(name)
         {
-            Variable = variable;
+            Type = type;
+            Value = value;
 
         }
 
-        protected override void ResolveType(OptimizationInfo info)
-        {
-            Expression valueAtTop = Variable.ValueAtTop;
-            if (valueAtTop == null)
-                return;
-            else
-            {
-                ResolvedPrimitiveType = valueAtTop.PrimitiveType(info);
-                ResolvedType = valueAtTop.ResultType(info);
-            }
-        }
 
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            var value = Variable.Evaluate(instance);
-            instance[Variable.Name] = value;
-            return value;
+            return Value.Evaluate(instance);
         }
 #endif
 
@@ -60,18 +47,12 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             //todo for not runtime
             string value = "null";
-            if (Variable.ValueAtTop != null)
+            if (Value != null)
             {
-                value = Variable.ValueAtTop.ToString();
+                value = Value.ToString();
             }
-#if Runtime
-            else if (Variable.DefaultValue is object)
-            {
-                value = Variable.DefaultValue.ToString();
-            }
-#endif
 
-            return string.Concat(Variable.Name, "=", value);
+            return string.Concat(Name, "=", value);
         }
     }
 }

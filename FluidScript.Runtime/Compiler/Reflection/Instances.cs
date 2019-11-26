@@ -1,5 +1,4 @@
-﻿using FluidScript.Compiler.Metadata;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,7 +16,7 @@ namespace FluidScript.Compiler.Reflection
             values = new List<RuntimeObject>();
         }
 
-        internal RuntimeObject this[string key]
+        internal RuntimeObject this[object key]
         {
             get
             {
@@ -30,40 +29,40 @@ namespace FluidScript.Compiler.Reflection
                 {
                     var name = names[key];
                     if (name.IsReadOnly)
-                        throw new System.Exception(string.Concat("Can't modify ", key));
+                        throw new System.Exception(string.Concat("Can't modify readonly variable ", key));
                     values[name.Index] = value;
                 }
                 else
                 {
-                    names.Add(key, new InstanceName(key, values.Count, false));
+                    names[key] = new InstanceName(key, values.Count, false);
                     values.Add(value);
                 }
             }
         }
 
-        internal void AttachFunction(RuntimeObject instance, DeclaredMethod method)
+        internal void AttachFunction(RuntimeObject obj, DeclaredMethod method)
         {
             if (method.Store != null)
             {
-                FunctionGroup list = null;
+                Core.FunctionGroup list = null;
                 if (TryGetValue(method.Name, out RuntimeObject existing))
-                    if (existing is FunctionGroup)
-                        list = (FunctionGroup)existing;
+                    if (existing is Core.FunctionGroup)
+                        list = (Core.FunctionGroup)existing;
                 if (list is null)
                 {
-                    list = new FunctionGroup(method.Name);
+                    list = new Core.FunctionGroup(method.Name);
                     Add(method.Name, list);
                 }
-                IFunctionReference reference = method.Default;
+                Core.IFunctionReference reference = method.Default;
                 if (reference is null)
-                    reference = new FunctionReference(instance, method.Arguments, method.ReflectedReturnType, method.Store);
+                    reference = new Core.FunctionReference(obj, method.Arguments, method.ReflectedReturnType, method.Store);
                 list.Add(reference);
             }
         }
 
         internal void Add(object name, RuntimeObject value, bool isReadOnly = false)
         {
-            names.Add(name, new InstanceName(name, values.Count, isReadOnly));
+            names[name] = new InstanceName(name, values.Count, isReadOnly);
             values.Add(value);
         }
 
@@ -82,6 +81,11 @@ namespace FluidScript.Compiler.Reflection
         internal bool ContainsKey(object key)
         {
             return names.ContainsKey(key);
+        }
+
+        internal string ToStringLocal()
+        {
+            return string.Concat("\n{", string.Join(",", names.Skip(1).Select(item => string.Concat(item.Key, ":", values[item.Value.Index].ToString()))), "}");
         }
 
         public override string ToString()

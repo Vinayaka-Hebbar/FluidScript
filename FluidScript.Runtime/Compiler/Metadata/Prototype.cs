@@ -32,7 +32,7 @@ namespace FluidScript.Compiler.Metadata
             Context = context;
         }
 
-        internal virtual Reflection.DeclaredMethod DeclareMethod(string name, SyntaxTree.ArgumentInfo[] arguments, Emit.TypeName returnType, SyntaxTree.BodyStatement body)
+        internal virtual Reflection.DeclaredMethod DeclareMethod(string name, SyntaxTree.ArgumentInfo[] arguments, Emit.TypeName returnType, SyntaxTree.BlockStatement body)
         {
             throw new System.Exception("Can't declare method inside " + GetType());
         }

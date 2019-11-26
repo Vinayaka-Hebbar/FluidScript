@@ -2,16 +2,20 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class FunctionDeclaration : Declaration
+    public class FunctionDeclaration : MemberDeclaration
     {
+        public readonly string Name;
         public readonly ArgumentInfo[] Arguments;
+        public readonly BlockStatement Body;
+        public readonly Emit.TypeName ReturnType;
+        //todo modifiers
 
-        public readonly Metadata.FunctionPrototype Prototype;
-
-        public FunctionDeclaration(string name, Emit.TypeName returnTypeName, ArgumentInfo[] arguments, Metadata.FunctionPrototype prototype) : base(name, returnTypeName)
+        public FunctionDeclaration(string name, ArgumentInfo[] arguments, Emit.TypeName returnType, BlockStatement body)
         {
+            Name = name;
             Arguments = arguments;
-            Prototype = prototype;
+            ReturnType = returnType;
+            Body = body;
         }
 
         public System.Collections.Generic.IEnumerable<Emit.ArgumentType> ArgumentTypes()
@@ -27,14 +31,14 @@ namespace FluidScript.Compiler.SyntaxTree
             return Arguments.Select(arg => Emit.TypeUtils.GetType(arg.TypeName));
         }
 
-        public RuntimeType ReturnType()
+        public RuntimeType GetReturnType()
         {
-            return Emit.TypeUtils.GetPrimitiveType(TypeName);
+            return Emit.TypeUtils.GetPrimitiveType(ReturnType);
         }
 
         public override string ToString()
         {
-            return string.Concat("(", string.Join(",", Arguments.Select(arg => arg.ToString())), "):", TypeName.ToString());
+            return string.Concat("(", string.Join(",", Arguments.Select(arg => arg.ToString())), "):", ReturnType.ToString());
         }
 
 

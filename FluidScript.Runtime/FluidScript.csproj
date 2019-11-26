@@ -26,7 +26,7 @@
     <PackageId>FluidScript.Runtime</PackageId>
     <Product>FluidScript Runtime</Product>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.9</Version>
+    <Version>1.0.10</Version>
     <AssemblyName>FluidScript.Runtime</AssemblyName>
     <PackageTags>runtime,script</PackageTags>
     <PackageReleaseNotes>Initial Release of FluidScript Runtime</PackageReleaseNotes>
@@ -41,9 +41,6 @@
   <ItemGroup Condition="!$(DefineConstants.Contains('Runtime'))">
     <Compile Remove="Library\**" />
     <Compile Remove="RuntimeObject.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
   </ItemGroup>
 
   <ItemGroup>

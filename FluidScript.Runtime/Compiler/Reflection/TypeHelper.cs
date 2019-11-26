@@ -82,7 +82,7 @@ namespace FluidScript.Compiler.Reflection
             var declaredMethod = new DeclaredMethod(attribute.Name, arguments, attribute.ReturnType) { Store = method, Attributes = method.Attributes };
             if (method.IsStatic)
             {
-                declaredMethod.Default = new Metadata.FunctionReference(null, arguments, attribute.ReturnType, method);
+                declaredMethod.Default = new Core.FunctionReference(null, arguments, attribute.ReturnType, method);
             }
             return declaredMethod;
         }
@@ -119,7 +119,7 @@ namespace FluidScript.Compiler.Reflection
                 getter = new DeclaredMethod(attribute.Name, new Emit.ArgumentType[0], attribute.Type) { Store = getMethod, Attributes = getMethod.Attributes };
                 if (getMethod.IsStatic)
                 {
-                    getter.Default = new Metadata.FunctionReference(null, getter.Arguments, attribute.Type, getMethod);
+                    getter.Default = new Core.FunctionReference(null, getter.Arguments, attribute.Type, getMethod);
                 }
             }
             var setMethod = property.GetSetMethod(true);
@@ -128,7 +128,7 @@ namespace FluidScript.Compiler.Reflection
                 setter = new DeclaredMethod(attribute.Name, new Emit.ArgumentType[1] { new Emit.ArgumentType("value", attribute.Type) }, RuntimeType.Void) { Store = setMethod, Attributes = setMethod.Attributes };
                 if (setMethod.IsStatic)
                 {
-                    setter.Default = new Metadata.FunctionReference(null, setter.Arguments, RuntimeType.Void, setMethod);
+                    setter.Default = new Core.FunctionReference(null, setter.Arguments, RuntimeType.Void, setMethod);
                 }
             }
             return new DeclaredProperty(attribute.Name, attribute.Type, getter, setter) { Attributes = property.Attributes };

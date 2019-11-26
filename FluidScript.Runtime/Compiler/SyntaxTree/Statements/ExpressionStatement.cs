@@ -14,6 +14,11 @@
         {
             return Expression.Evaluate(instance);
         }
+
+        internal override RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
+        {
+            return Expression.Evaluate(instance);
+        }
 #endif
 
         public override void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)

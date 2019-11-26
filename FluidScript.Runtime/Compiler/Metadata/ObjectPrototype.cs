@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace FluidScript.Compiler.Metadata
 {
-    public sealed class ObjectPrototype : Prototype, IDisposable
+    public sealed class ObjectPrototype : Prototype
     {
         private ICollection<DeclaredMember> members;
 
@@ -30,7 +30,6 @@ namespace FluidScript.Compiler.Metadata
             }
         }
 #endif
-        private readonly SyntaxVisitor visitor;
 
         public override IEnumerable<DeclaredField> GetFields()
         {
@@ -58,23 +57,20 @@ namespace FluidScript.Compiler.Metadata
 #endif
         }
 
-        public ObjectPrototype(SyntaxVisitor visitor, string name) : base(visitor.Prototype, name, ScopeContext.Type)
-        {
-            this.visitor = visitor;
-            visitor.Prototype = this;
-#if Runtime
-            BaseProtoType = Default;
-#endif
-        }
 #if Runtime
         public ObjectPrototype(IEnumerable<DeclaredMember> members, Prototype parent, Prototype baseProto, string name) : base(parent, name, ScopeContext.Type)
         {
             BaseProtoType = baseProto;
             this.members = members.ToList();
         }
+
+        public ObjectPrototype(Prototype parent, string name) : base(parent, name, ScopeContext.Type)
+        {
+            BaseProtoType = Default;
+        }
 #endif
 
-        internal override DeclaredMethod DeclareMethod(string name, ArgumentInfo[] arguments, TypeName returnType, BodyStatement body)
+        internal override DeclaredMethod DeclareMethod(string name, ArgumentInfo[] arguments, TypeName returnType, BlockStatement body)
         {
             //todo access
             if (members == null)
@@ -96,12 +92,6 @@ namespace FluidScript.Compiler.Metadata
             }
             variable.ValueAtTop = expression;
             return variable;
-        }
-
-        public void Dispose()
-        {
-            if (visitor != null)
-                visitor.Prototype = Parent;
         }
 
         public override bool HasMember(string name)

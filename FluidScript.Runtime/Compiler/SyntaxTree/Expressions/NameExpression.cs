@@ -3,11 +3,9 @@
     public class NameExpression : Expression
     {
         public readonly string Name;
-        public readonly Metadata.Prototype Prototype;
-        public NameExpression(string name, Metadata.Prototype prototype, ExpressionType opCode) : base(opCode)
+        public NameExpression(string name, ExpressionType opCode) : base(opCode)
         {
             Name = name;
-            Prototype = prototype;
         }
 
         public override string ToString()

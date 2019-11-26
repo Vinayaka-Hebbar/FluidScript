@@ -44,35 +44,16 @@ namespace FluidScript.Compiler.Metadata
             throw new System.Exception("can't define variable");
         }
 
-        internal override Instances Init(RuntimeObject instance, [Optional] KeyValuePair<object, RuntimeObject> initial)
+        internal override Instances Init(RuntimeObject obj, [Optional] KeyValuePair<object, RuntimeObject> initial)
         {
-            var values = new Instances();
+            var instance = new Instances();
             if (initial.Key != null)
-                values.Add(initial.Key, initial.Value);
+                instance.Add(initial.Key, initial.Value);
             foreach (DeclaredMethod method in members)
             {
-                if (method.Store != null)
-                {
-                    FunctionGroup list = null;
-                    if (values.TryGetValue(method.Name, out RuntimeObject existing))
-                    {
-                        if (existing is FunctionGroup)
-                        {
-                            list = (FunctionGroup)existing;
-                        }
-                    }
-                    if (list is null)
-                    {
-                        list = new FunctionGroup(method.Name);
-                        values.Add(method.Name, list);
-                    }
-                    if (method.Default is null)
-                        list.Add(new FunctionReference(instance, method.Arguments, method.ReflectedReturnType, method.Store));
-                    else
-                        list.Add(method.Default);
-                }
+                instance.AttachFunction(obj, method);
             }
-            return values;
+            return instance;
         }
 
         internal override Prototype Merge(Prototype prototype2)

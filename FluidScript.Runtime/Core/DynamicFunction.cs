@@ -1,17 +1,17 @@
 ﻿using FluidScript.Compiler.Emit;
 using System;
 
-namespace FluidScript.Compiler.Metadata
+namespace FluidScript.Core
 {
 #if Runtime
     internal sealed class DynamicFunction : RuntimeObject, IFunctionReference
     {
-        public readonly Reflection.DeclaredMethod DeclaredMethod;
+        public readonly Compiler.Reflection.DeclaredMethod DeclaredMethod;
         public readonly object Target;
 
         public System.Reflection.MethodInfo MethodInfo { get; }
 
-        public DynamicFunction(Reflection.DeclaredMethod declaredMethod, object target, Func<RuntimeObject, RuntimeObject[], RuntimeObject> method)
+        public DynamicFunction(Compiler.Reflection.DeclaredMethod declaredMethod, object target, Func<RuntimeObject, RuntimeObject[], RuntimeObject> method)
         {
             DeclaredMethod = declaredMethod;
             Target = target;

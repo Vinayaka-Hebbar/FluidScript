@@ -24,12 +24,23 @@
 
 #if Runtime
         /// <summary>
-        /// Get Value for the scope
+        /// Get Value for the Instance
         /// </summary>
         /// <param name="scope"></param>
         /// <param name="provider"></param>
         /// <returns></returns>
         public virtual RuntimeObject Evaluate(RuntimeObject instance)
+        {
+            return Evaluate(instance, instance.GetPrototype());
+        }
+
+        /// <summary>
+        /// Get Value for the scope
+        /// </summary>
+        /// <param name="scope"></param>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        internal virtual RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
         {
             return RuntimeObject.Null;
         }

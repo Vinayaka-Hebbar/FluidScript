@@ -1,5 +1,4 @@
 ﻿using FluidScript.Compiler.Emit;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,12 +9,9 @@ namespace FluidScript.Compiler.SyntaxTree
         //Todo Linq
         public readonly Statement[] Statements;
 
-        public readonly Metadata.Prototype Prototype;
-
-        public BlockStatement(Statement[] statements, Metadata.Prototype prototype, string[] labels) : base(labels, StatementType.Block)
+        public BlockStatement(Statement[] statements, string[] labels) : base(labels, StatementType.Block)
         {
             Statements = statements;
-            Prototype = prototype;
         }
 
         public override IEnumerable<Node> ChildNodes => Statements;
@@ -34,7 +30,13 @@ namespace FluidScript.Compiler.SyntaxTree
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            instance = new Core.LocalInstance(Prototype, instance);
+            var proto = new Metadata.FunctionPrototype(instance.GetPrototype(), "Block", Metadata.ScopeContext.Block);
+            instance = new Core.LocalInstance(proto, instance);
+            return Evaluate(instance, proto);
+        }
+
+        internal override RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
+        {
             foreach (var statement in Statements)
             {
                 StatementType nodeType = statement.NodeType;

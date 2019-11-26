@@ -5,21 +5,23 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public class ConstantDeclarationExpression : DeclarationExpression
     {
-        public readonly RuntimeObject Value;
+        public readonly Expression Value;
 
-        public ConstantDeclarationExpression(string name, RuntimeObject value) : base(name)
+        public ConstantDeclarationExpression(string name, Expression value) : base(name)
         {
             Value = value;
         }
 
         public override RuntimeObject Evaluate(Prototype prototype)
         {
-            return Value;
+            var result = Value.Evaluate(prototype);
+            result.Append(Name, result, true);
+            return result;
         }
 
         public override RuntimeObject Evaluate([Optional] RuntimeObject instance)
         {
-            return Value;
+            return Value.Evaluate(instance.GetPrototype());
         }
 
         public override string ToString()

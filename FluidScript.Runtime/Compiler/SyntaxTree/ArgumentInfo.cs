@@ -8,13 +8,13 @@
 
         public readonly Emit.TypeName TypeName;
 
-        public Reflection.DeclaredLocalVariable Variable { get; set; }
+        public Expression DefaultValue { get; set; }
 
         public ArgumentInfo(string name, Emit.TypeName typeName)
         {
             Name = name;
             TypeName = typeName;
-            Variable = null;
+            DefaultValue = null;
         }
 
         public override string ToString()
