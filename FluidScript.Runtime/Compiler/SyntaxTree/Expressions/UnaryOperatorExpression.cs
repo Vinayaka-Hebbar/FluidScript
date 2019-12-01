@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -12,10 +12,14 @@ namespace FluidScript.Compiler.SyntaxTree
             Operand = operand;
         }
 
-        protected override void ResolveType(OptimizationInfo info)
+        protected override void ResolveType(MethodBodyGenerator generator)
         {
-            ResolvedType = Operand.ResultType(info);
-            ResolvedPrimitiveType = Operand.PrimitiveType(info);
+            switch (NodeType)
+            {
+                case ExpressionType.Parenthesized:
+                    ResolvedType = Operand.ResultType(generator);
+                    break;
+            }
         }
 
 #if Runtime
@@ -40,17 +44,18 @@ namespace FluidScript.Compiler.SyntaxTree
                         var value = result;
                         switch (NodeType)
                         {
+                            //changes compound value = value + 1
                             case ExpressionType.PostfixPlusPlus:
-                                value = value + 1;
+                                value += 1;
                                 break;
                             case ExpressionType.PostfixMinusMinus:
-                                value = value - 1;
+                                value -= 1;
                                 break;
                             case ExpressionType.PrefixPlusPlus:
-                                result = value = value + 1;
+                                result = value += 1;
                                 break;
                             case ExpressionType.PrefixMinusMinus:
-                                result = value = value - 1;
+                                result = value -= 1;
                                 break;
                             case ExpressionType.Bang:
                                 result = !value;
@@ -63,10 +68,10 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(MethodBodyGenerator generator)
         {
             if (NodeType == ExpressionType.Parenthesized)
-                Operand.GenerateCode(generator, info);
+                Operand.GenerateCode(generator);
         }
 
         public override string ToString()

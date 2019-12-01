@@ -1,11 +1,9 @@
-﻿using FluidScript.Compiler.Emit;
-using FluidScript.Compiler.Metadata;
+﻿using FluidScript.Compiler.Metadata;
+using FluidScript.Reflection.Emit;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    [DataContract]
     public class BinaryOperationExpression : Expression
     {
         public readonly Expression Left;
@@ -17,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
             Right = right;
         }
 
-        public override IEnumerable<Node> ChildNodes => Childs(Left, Right);
+        public override IEnumerable<Node> ChildNodes() => Childs(Left, Right);
 
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
@@ -111,33 +109,27 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        /// <summary>
-        /// Todo remove arguments by 
-        /// </summary>
-        /// <param name="info"></param>
-        protected override void ResolveType(OptimizationInfo info)
+        protected override void ResolveType(MethodBodyGenerator generator)
         {
-            var leftType = Left.PrimitiveType(info);
-            var rightType = Right.PrimitiveType(info);
+            //todo resolve type for operator overload
+            var leftType = Left.GetRuntimeType(generator);
+            var rightType = Right.GetRuntimeType(generator);
             if (leftType != RuntimeType.Any && rightType != RuntimeType.Any)
             {
                 switch (NodeType)
                 {
                     case ExpressionType.Plus:
-                        if (TypeUtils.CheckType(leftType, FluidScript.RuntimeType.String) || TypeUtils.CheckType(rightType, FluidScript.RuntimeType.String))
+                        if (TypeUtils.CheckType(leftType, RuntimeType.String) || TypeUtils.CheckType(rightType, RuntimeType.String))
                         {
-                            ResolvedPrimitiveType = FluidScript.RuntimeType.String;
                             ResolvedType = typeof(string);
                             return;
                         }
-                        ResolvedPrimitiveType = leftType & rightType;
-                        ResolvedType = Emit.TypeUtils.ToType(ResolvedPrimitiveType);
+                        ResolvedRuntimeType = leftType & rightType;
                         break;
                     case ExpressionType.Minus:
                     case ExpressionType.Multiply:
                     case ExpressionType.Divide:
-                        ResolvedPrimitiveType = leftType & rightType;
-                        ResolvedType = Emit.TypeUtils.ToType(ResolvedPrimitiveType);
+                        ResolvedRuntimeType = leftType & rightType;
                         break;
                     case ExpressionType.BangEqual:
                     case ExpressionType.EqualEqual:
@@ -145,58 +137,56 @@ namespace FluidScript.Compiler.SyntaxTree
                     case ExpressionType.LessEqual:
                     case ExpressionType.Greater:
                     case ExpressionType.GreaterEqual:
-                        ResolvedPrimitiveType = FluidScript.RuntimeType.Bool;
-                        ResolvedType = typeof(bool);
+                        ResolvedRuntimeType = RuntimeType.Bool;
                         break;
                 }
 
             }
         }
 
-#if Emit
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(MethodBodyGenerator generator)
         {
             switch (NodeType)
             {
                 case ExpressionType.Plus:
-                    var resultType = PrimitiveType(info);
-                    if (resultType == FluidScript.PrimitiveType.String)
+                    var resultType = GetRuntimeType(generator);
+                    if (resultType == RuntimeType.String)
                     {
-                        GenerateStringAdd(generator, info);
+                        GenerateStringAdd(generator);
                         return;
                     }
-                    LoadValues(generator, info);
+                    LoadValues(generator);
                     generator.Add();
                     break;
                 case ExpressionType.Minus:
-                    LoadValues(generator, info);
+                    LoadValues(generator);
                     generator.Subtract();
                     break;
                 case ExpressionType.Multiply:
-                    LoadValues(generator, info);
+                    LoadValues(generator);
                     generator.Multiply();
                     break;
                 case ExpressionType.Divide:
-                    LoadValues(generator, info);
+                    LoadValues(generator);
                     generator.Divide();
                     break;
                 case ExpressionType.EqualEqual:
-                    LoadValues(generator, info);
+                    LoadValues(generator);
                     generator.CompareEqual();
                     break;
                 case ExpressionType.BangEqual:
-                    LoadValues(generator, info);
+                    LoadValues(generator);
                     generator.CompareEqual();
                     generator.LoadInt32(0);
                     generator.CompareEqual();
                     break;
                 case ExpressionType.Less:
-                    LoadValues(generator, info);
+                    LoadValues(generator);
                     generator.CompareLessThan();
                     break;
                 case ExpressionType.LessEqual:
-                    LoadValues(generator, info);
-                    if (Left.PrimitiveType(info) == FluidScript.PrimitiveType.Double || Right.PrimitiveType(info) == FluidScript.PrimitiveType.Double)
+                    LoadValues(generator);
+                    if (Left.GetRuntimeType(generator) == RuntimeType.Double || Right.GetRuntimeType(generator) == RuntimeType.Double)
                         generator.CompareGreaterThanUnsigned();
                     else
                         generator.CompareGreaterThan();
@@ -204,12 +194,12 @@ namespace FluidScript.Compiler.SyntaxTree
                     generator.CompareEqual();
                     break;
                 case ExpressionType.Greater:
-                    LoadValues(generator, info);
+                    LoadValues(generator);
                     generator.CompareGreaterThan();
                     break;
                 case ExpressionType.GreaterEqual:
-                    LoadValues(generator, info);
-                    if (Left.PrimitiveType(info) == FluidScript.PrimitiveType.Double || Right.PrimitiveType(info) == FluidScript.PrimitiveType.Double)
+                    LoadValues(generator);
+                    if (Left.GetRuntimeType(generator) == RuntimeType.Double || Right.GetRuntimeType(generator) == RuntimeType.Double)
                         generator.CompareLessThanUnsigned();
                     else
                         generator.CompareLessThan();
@@ -220,40 +210,38 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-
-
-        private void LoadValues(ILGenerator generator, MethodOptimizationInfo info)
+        private void LoadValues(MethodBodyGenerator generator)
         {
-            var leftType = Left.PrimitiveType(info);
-            var rightType = Right.PrimitiveType(info);
+            var leftType = Left.GetRuntimeType(generator);
+            var rightType = Right.GetRuntimeType(generator);
             var expectedType = leftType & rightType;
-            Left.GenerateCode(generator, info);
-            if (leftType == FluidScript.PrimitiveType.Char && rightType == FluidScript.PrimitiveType.Char)
+            Left.GenerateCode(generator);
+            if (leftType == RuntimeType.Char && rightType == RuntimeType.Char)
             {
                 generator.ConvertToInt32();
-                Right.GenerateCode(generator, info);
+                Right.GenerateCode(generator);
                 generator.ConvertToInt32();
                 return;
             }
             if (leftType != expectedType)
                 EmitConvertion.ToPrimitive(generator, expectedType);
-            Right.GenerateCode(generator, info);
+            Right.GenerateCode(generator);
             if (rightType != expectedType)
                 EmitConvertion.ToPrimitive(generator, expectedType);
         }
 
-        private void GenerateStringAdd(ILGenerator generator, MethodOptimizationInfo info)
+        private void GenerateStringAdd(MethodBodyGenerator generator)
         {
-            var leftType = Left.PrimitiveType(info);
-            var rightType = Right.PrimitiveType(info);
+            var leftType = Left.GetRuntimeType(generator);
+            var rightType = Right.GetRuntimeType(generator);
             ResolvedType = typeof(string);
             //todo result optimization
             //load the left into stack
-            Left.GenerateCode(generator, info);
+            Left.GenerateCode(generator);
             //todo if need to be primitive
             //box if int ,bool or other object
             EmitConvertion.ToString(generator, leftType, Left.ToString());
-            Right.GenerateCode(generator, info);
+            Right.GenerateCode(generator);
             EmitConvertion.ToString(generator, rightType, Right.ToString());
             //check both are string
             if (leftType == rightType)
@@ -263,7 +251,6 @@ namespace FluidScript.Compiler.SyntaxTree
             }
             generator.Call(ReflectionHelpers.StringConcat_Two_Object);
         }
-#endif
 
         public override string ToString()
         {

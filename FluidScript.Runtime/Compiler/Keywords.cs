@@ -10,6 +10,11 @@ namespace FluidScript.Compiler
         {
             keywords = new Dictionary<string, IdentifierType>
             {
+                {"class", IdentifierType.Class },
+                {"public", IdentifierType.Public },
+                {"private", IdentifierType.Private },
+                {"get",  IdentifierType.Get },
+                {"set", IdentifierType.Set },
                 {"new", IdentifierType.New },
                 {"this", IdentifierType.This },
                 {"true",IdentifierType.True },
@@ -19,7 +24,8 @@ namespace FluidScript.Compiler
                 {"return", IdentifierType.Return },
                 {"var", IdentifierType.Var },
                 {"const", IdentifierType.Const },
-                {"function", IdentifierType.Function },
+                {"impl", IdentifierType.Implement },
+                {"func", IdentifierType.Function },
                 {"lamda", IdentifierType.Lamda },
                 {"if", IdentifierType.If},
                 {"else", IdentifierType.Else },
@@ -31,9 +37,6 @@ namespace FluidScript.Compiler
                 {"switch", IdentifierType.Switch },
                 {"break", IdentifierType.Break },
                 {"throw", IdentifierType.Throw },
-                {"class", IdentifierType.Class },
-                {"public", IdentifierType.Public },
-                {"private", IdentifierType.Private }
             };
         }
         

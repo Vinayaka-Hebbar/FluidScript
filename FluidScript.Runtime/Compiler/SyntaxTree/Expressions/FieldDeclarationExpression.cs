@@ -2,23 +2,23 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class FieldDeclarationExpression : Expression
+    public class FieldDeclarationExpression : DeclarationExpression
     {
-        public readonly string Name;
-        public readonly Reflection.DeclaredField Member;
 
-        public FieldDeclarationExpression(string name, Reflection.DeclaredField member) : base(ExpressionType.Declaration)
+        public readonly TypeSyntax Type;
+        public readonly Expression Value;
+
+        public FieldDeclarationExpression(string name, TypeSyntax type, Expression value) : base(name)
         {
-            Name = name;
-            Member = member;
+            Type = type;
+            Value = value;
+
         }
 
 #if Runtime
-        public override RuntimeObject Evaluate([Optional] RuntimeObject instance)
+        public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            var value = Member.Evaluate(instance);
-            instance[Member.Name] = value;
-            return value;
+            return Value.Evaluate(instance);
         }
 #endif
     }

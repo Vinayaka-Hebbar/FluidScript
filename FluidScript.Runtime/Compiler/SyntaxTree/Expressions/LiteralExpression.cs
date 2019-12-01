@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -6,63 +6,24 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly object Value;
 
-        public LiteralExpression(double value) : base(ExpressionType.Numeric)
-        {
-            Value = value;
-            ResolvedType = typeof(double);
-            ResolvedPrimitiveType = FluidScript.RuntimeType.Double;
-        }
-
-        public LiteralExpression(string value) : base(ExpressionType.String)
-        {
-            Value = value;
-            ResolvedType = typeof(string);
-            ResolvedPrimitiveType = FluidScript.RuntimeType.String;
-        }
-
-        public LiteralExpression(bool value) : base(ExpressionType.Bool)
-        {
-            Value = value;
-            ResolvedType = typeof(bool);
-            ResolvedPrimitiveType = FluidScript.RuntimeType.Bool;
-        }
-
-        public LiteralExpression(int value) : base(ExpressionType.Numeric)
-        {
-            Value = value;
-            ResolvedType = typeof(int);
-            ResolvedPrimitiveType = FluidScript.RuntimeType.Int32;
-        }
-
         public LiteralExpression(object value) : base(ExpressionType.Literal)
         {
             Value = value;
-            ResolvedType = value.GetType();
-            //must be primitive
-            ResolvedPrimitiveType = TypeUtils.PrimitiveTypes[value.GetType()];
-        }
-
-        public LiteralExpression(object value, RuntimeType type) : base(ExpressionType.Literal)
-        {
-            Value = value;
-            ResolvedType = typeof(object);
-            //must be primitive
-            ResolvedPrimitiveType = type;
         }
 
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            if (ResolvedPrimitiveType == RuntimeType.String)
+            if (Value is string)
                 return new Library.StringObject(Value.ToString());
-            return new Library.PrimitiveObject(Value, ResolvedPrimitiveType);
+            return new Library.PrimitiveObject(Value, TypeUtils.GetRuntimeType(Value.GetType()));
         }
 
         public override RuntimeObject Evaluate(Metadata.Prototype prototype)
         {
-            if (ResolvedPrimitiveType == RuntimeType.String)
+            if (Value is string)
                 return new Library.StringObject(Value.ToString());
-            return new Library.PrimitiveObject(Value, ResolvedPrimitiveType);
+            return new Library.PrimitiveObject(Value, TypeUtils.GetRuntimeType(Value.GetType()));
         }
 #else
         public override object Evaluate()
@@ -71,52 +32,57 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        protected override void ResolveType(MethodBodyGenerator method)
         {
-            var type = ResolvedPrimitiveType;
+            ResolvedType = Value.GetType();
+        }
+
+        public override void GenerateCode(MethodBodyGenerator generator)
+        {
+            var type = GetRuntimeType(generator);
             //Unset ObjectType.Number
             switch (type)
             {
-                case FluidScript.RuntimeType.Byte:
+                case RuntimeType.Byte:
                     generator.LoadByte((sbyte)Value);
                     break;
-                case FluidScript.RuntimeType.UByte:
+                case RuntimeType.UByte:
                     generator.LoadByte((byte)Value);
                     break;
-                case FluidScript.RuntimeType.Char:
+                case RuntimeType.Char:
                     generator.LoadChar((char)Value);
                     break;
-                case FluidScript.RuntimeType.Int16:
+                case RuntimeType.Int16:
                     generator.LoadInt16((short)Value);
                     break;
-                case FluidScript.RuntimeType.UInt16:
+                case RuntimeType.UInt16:
                     generator.LoadInt16((ushort)Value);
                     break;
-                case FluidScript.RuntimeType.Int32:
+                case RuntimeType.Int32:
                     generator.LoadInt32((int)Value);
                     break;
-                case FluidScript.RuntimeType.UInt32:
+                case RuntimeType.UInt32:
                     generator.LoadInt32((uint)Value);
                     break;
-                case FluidScript.RuntimeType.Int64:
+                case RuntimeType.Int64:
                     generator.LoadInt64((long)Value);
                     break;
-                case FluidScript.RuntimeType.UInt64:
+                case RuntimeType.UInt64:
                     generator.LoadInt64((ulong)Value);
                     break;
-                case FluidScript.RuntimeType.Float:
+                case RuntimeType.Float:
                     generator.LoadSingle((float)Value);
                     break;
-                case FluidScript.RuntimeType.Double:
+                case RuntimeType.Double:
                     generator.LoadDouble((double)Value);
                     break;
-                case FluidScript.RuntimeType.Bool:
+                case RuntimeType.Bool:
                     generator.LoadBool((bool)Value);
                     break;
-                case FluidScript.RuntimeType.String:
+                case RuntimeType.String:
                     generator.LoadString(Value.ToString());
                     break;
-                case FluidScript.RuntimeType.Undefined:
+                case RuntimeType.Undefined:
                     generator.LoadNull();
                     break;
             }

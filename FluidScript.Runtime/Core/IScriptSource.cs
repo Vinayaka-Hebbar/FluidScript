@@ -1,4 +1,5 @@
 ﻿using System;
+using FluidScript.Compiler;
 
 namespace FluidScript.Core
 {
@@ -8,13 +9,11 @@ namespace FluidScript.Core
 
         long Position { get; }
 
-        int Column { get; }
-
-        int Line { get; }
-
         long Length { get; }
 
         bool CanAdvance { get; }
+
+        TextPosition CurrentPosition { get; }
 
         char ReadChar();
 

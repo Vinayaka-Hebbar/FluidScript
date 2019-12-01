@@ -1,17 +1,16 @@
-﻿using FluidScript.Compiler.Emit;
-using System;
+﻿using System;
 
 namespace FluidScript.Core
 {
 #if Runtime
     internal sealed class DynamicFunction : RuntimeObject, IFunctionReference
     {
-        public readonly Compiler.Reflection.DeclaredMethod DeclaredMethod;
+        public readonly Reflection.DeclaredMethod DeclaredMethod;
         public readonly object Target;
 
         public System.Reflection.MethodInfo MethodInfo { get; }
 
-        public DynamicFunction(Compiler.Reflection.DeclaredMethod declaredMethod, object target, Func<RuntimeObject, RuntimeObject[], RuntimeObject> method)
+        public DynamicFunction(Reflection.DeclaredMethod declaredMethod, object target, Func<RuntimeObject, RuntimeObject[], RuntimeObject> method)
         {
             DeclaredMethod = declaredMethod;
             Target = target;
@@ -20,9 +19,9 @@ namespace FluidScript.Core
 
         public override RuntimeType ReflectedType => RuntimeType.Function;
 
-        public ArgumentType[] Arguments => DeclaredMethod.Arguments;
+        public Reflection.ParameterInfo[] Arguments => DeclaredMethod.Arguments;
 
-        public RuntimeType ReturnType => DeclaredMethod.ReflectedReturnType;
+        public Reflection.ITypeInfo ReturnType => DeclaredMethod.ReturnType;
 
         public override string ToString()
         {

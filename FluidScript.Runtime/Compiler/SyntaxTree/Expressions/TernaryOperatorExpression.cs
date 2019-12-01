@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -24,29 +24,26 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        protected override void ResolveType(OptimizationInfo info)
+        protected override void ResolveType(MethodBodyGenerator generator)
         {
-            var condition = First.PrimitiveType(info);
-            if (condition == FluidScript.RuntimeType.Bool)
+            var condition = First.GetRuntimeType(generator);
+            if (condition == RuntimeType.Bool)
             {
-                var a = Second.PrimitiveType(info);
-                var b = Third.PrimitiveType(info);
+                var a = Second.GetRuntimeType(generator);
+                var b = Third.GetRuntimeType(generator);
                 if (a == b)
                 {
-                    ResolvedPrimitiveType = a;
-                    ResolvedType = Second.ReflectedType();
+                    ResolvedType = Second.ResultType(generator);
                 }
                 else
                 {
-                    if (a != FluidScript.RuntimeType.Any && b != FluidScript.RuntimeType.Any)
+                    if (a != RuntimeType.Any && b != RuntimeType.Any)
                     {
-                        ResolvedPrimitiveType = a & b;
-                        ResolvedType = TypeUtils.ToType(ResolvedPrimitiveType);
+                        ResolvedRuntimeType = a & b;
                     }
                     else
                     {
-                        ResolvedPrimitiveType = FluidScript.RuntimeType.Any;
-                        ResolvedType = typeof(object);
+                        ResolvedRuntimeType = RuntimeType.Any;
                     }
                 }
             }
@@ -56,16 +53,28 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(MethodBodyGenerator generator)
         {
-            var resultType = PrimitiveType(info);
-            First.GenerateCode(generator, info);
+            // Calculate the result type.
+            var resultType = GetRuntimeType(generator);
+            First.GenerateCode(generator);
             // Branch if the condition is false.
             var startOfElse = generator.CreateLabel();
             generator.BranchIfFalse(startOfElse);
-            Second.GenerateCode(generator, info);
-            var secondType = Second.PrimitiveType(info);
-            EmitConvertion.Convert(generator, resultType, secondType, info);
+            Second.GenerateCode(generator);
+            var secondType = Second.GetRuntimeType(generator);
+            EmitConvertion.Convert(generator, resultType, secondType);
+            // Branch to the end.
+            var end = generator.CreateLabel();
+            generator.Branch(end);
+            generator.DefineLabelPosition(startOfElse);
+
+            Third.GenerateCode(generator);
+            var thirdType = Second.GetRuntimeType(generator);
+            EmitConvertion.Convert(generator, resultType, thirdType);
+
+            generator.DefineLabelPosition(end);
+
         }
     }
 }

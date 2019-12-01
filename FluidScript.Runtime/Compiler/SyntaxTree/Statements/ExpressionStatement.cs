@@ -21,9 +21,9 @@
         }
 #endif
 
-        public override void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
+        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {
-            Expression.GenerateCode(generator, info);
+            Expression.GenerateCode(generator);
         }
 
         public override string ToString()

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -23,5 +24,10 @@ namespace FluidScript.Compiler.SyntaxTree
             return Value;
         }
 #endif
+
+        public override void GenerateCode(MethodBodyGenerator generator)
+        {
+            generator.LoadNull();
+        }
     }
 }

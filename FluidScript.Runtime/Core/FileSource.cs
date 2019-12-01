@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using FluidScript.Compiler;
+using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace FluidScript.Core
 {
     public class FileSource : IScriptSource
     {
-        private int column;
+        private int column = 1;
         private int line = 1;
         private bool _detectEncoding;
 
@@ -41,6 +40,7 @@ namespace FluidScript.Core
         private readonly int bufferSize;
         public FileSource(FileInfo info)
         {
+            Path = info.FullName;
             _stream = info.Open(FileMode.Open);
             bufferSize = 1024;
             encoding = Encoding.UTF8;
@@ -56,13 +56,9 @@ namespace FluidScript.Core
             _isBlocked = false;
         }
 
-        public string Path => null;
+        public string Path { get; }
 
         public long Position => _stream.Position;
-
-        public int Column => column;
-
-        public int Line => line;
 
         public long Length => _stream.Length;
 
@@ -78,6 +74,8 @@ namespace FluidScript.Core
                 return numRead > 0;
             }
         }
+
+        public TextPosition CurrentPosition => new TextPosition(line, column);
 
         public void Dispose()
         {

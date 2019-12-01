@@ -1,11 +1,13 @@
-﻿namespace FluidScript.Core
+﻿using FluidScript.Compiler;
+
+namespace FluidScript.Core
 {
     public sealed class StringSource : IScriptSource
     {
         private readonly string _text;
         private readonly int length;
         private int pos;
-        private int column = 0;
+        private int column = 1;
         //default 1
         private int line = 1;
 
@@ -17,15 +19,13 @@
 
         public long Position => pos;
 
-        public int Line => line;
-
-        public int Column => column;
-
         public long Length => length;
 
         public bool CanAdvance => pos < length;
 
         public string Path => null;
+
+        public TextPosition CurrentPosition => new TextPosition(line, column);
 
         void System.IDisposable.Dispose()
         {

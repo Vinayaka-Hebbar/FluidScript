@@ -13,7 +13,7 @@ namespace FluidScript.Compiler.SyntaxTree
             Name = name;
         }
 
-        public override IEnumerable<Node> ChildNodes => Childs(Target);
+        public override IEnumerable<Node> ChildNodes() => Childs(Target);
 
         public override string ToString()
         {

@@ -2,16 +2,15 @@
 {
     public class VariableDeclarationExpression : DeclarationExpression
     {
-        public readonly Emit.TypeName Type;
+        public readonly TypeSyntax Type;
         public readonly Expression Value;
 
-        public VariableDeclarationExpression(string name, Emit.TypeName type, Expression value) : base(name)
+        public VariableDeclarationExpression(string name, TypeSyntax type, Expression value) : base(name)
         {
             Type = type;
             Value = value;
 
         }
-
 
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
@@ -20,28 +19,18 @@
         }
 #endif
 
-#if Emit
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {
             //initialize
-            if (Variable.ValueAtTop != null)
+            if (Value != null)
             {
-                Variable.ValueAtTop.GenerateCode(generator, info);
+                Value.GenerateCode(generator);
+                System.Type type = Type == null ? Value.ResultType(generator) : Type.GetTypeInfo().ResolvedType(generator.TypeGenerator);
+                var variable = generator.DeclareVariable(type, Name);
+                generator.StoreVariable(variable);
             }
-            if (Variable.Store == null)
-            {
-                Type type = Variable.ResolveType(info);
-                if (type == null)
-                {
-                    type = ResultType(info);
-                    Variable.ResolveType(type);
-                }
-                Variable.Store = generator.DeclareVariable(type, Name);
-            }
-            generator.StoreVariable(Variable.Store);
         }
 
-#endif
 
         public override string ToString()
         {
@@ -52,7 +41,7 @@
                 value = Value.ToString();
             }
 
-            return string.Concat(Name, "=", value);
+            return string.Concat(Name, Type == null ? null : string.Concat(":", Type), "=", value);
         }
     }
 }

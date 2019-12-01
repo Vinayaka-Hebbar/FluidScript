@@ -1,12 +1,10 @@
-﻿using FluidScript.Compiler.Emit;
-
-namespace FluidScript.Core
+﻿namespace FluidScript.Core
 {
     public interface IFunctionReference
     {
-        ArgumentType[] Arguments { get; }
+        Reflection.ParameterInfo[] Arguments { get; }
         RuntimeType ReflectedType { get; }
-        RuntimeType ReturnType { get; }
+        Reflection.ITypeInfo ReturnType { get; }
 
         System.Reflection.MethodInfo MethodInfo { get; }
 

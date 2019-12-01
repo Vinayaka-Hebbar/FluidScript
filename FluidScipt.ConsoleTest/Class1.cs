@@ -1,8 +1,6 @@
 ﻿using FluidScript;
-using FluidScript.Compiler.Metadata;
 using System;
-using System.Diagnostics;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace FluidScipt.ConsoleTest
 {
@@ -10,9 +8,9 @@ namespace FluidScipt.ConsoleTest
     {
         static void Main(string[] args)
         {
-            //Microsoft.CodeAnalysis.CSharp.Syntax.AnonymousFunctionExpressionSyntax
+            //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
+
             Class1 class1 = new Class1();
-            var x = 59.453261567682823 - 0.0431;
             class1.Run();
             Console.ReadKey();
         }
@@ -20,28 +18,60 @@ namespace FluidScipt.ConsoleTest
         public void Run()
         {
             var engine = new ScriptEngine();
-            Prototype proto = new FunctionPrototype(typeof(FluidScript.Library.MathObject));
-            RuntimeObject instance = proto.CreateInstance();
-            instance.Append("name", "vinayaka", true);
-            instance["density"] = 0.00786;
-            instance.Append("totalCoils", 2.70, true);
-            instance["print"] = RuntimeObject.CreateReference(Print);
-            var exp2 = engine.GetStatement("totalCoils = 360");
-            var contactStress = exp2.Evaluate(instance);
-            Console.WriteLine(contactStress);
+            var node = engine.ParseFile(System.AppDomain.CurrentDomain.BaseDirectory + "source.fls");
+            if (node is FluidScript.Compiler.SyntaxTree.FunctionDeclaration func)
+            {
+                var method = func.Create();
+                var r = method.Invoke(null, new object[0]);
+                Console.WriteLine(r);
+            }
+            if (node is FluidScript.Compiler.SyntaxTree.TypeDeclaration type)
+            {
+                var dynamicAssembly =
+                AppDomain.CurrentDomain.DefineDynamicAssembly(
+                    new System.Reflection.AssemblyName("DynamicClass.Utility.DynamicClasses, Version=1.0.0.0"),
+                    System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave
+                );
+                var dynamicModule =
+                    dynamicAssembly.DefineDynamicModule("DynamicClass.Utility.DynamicClasses.dll", true);
+                var classType = type.Generate(new FluidScript.Reflection.Emit.ReflectionModule(dynamicAssembly, dynamicModule));
+                dynamic instance = Activator.CreateInstance(classType);
+                var c = instance.read(1);
+                Console.WriteLine(c);
+                dynamicAssembly.Save("DynamicClass.Utility.DynamicClasses.dll");
+
+            }
         }
 
-        static void Print(RuntimeObject value)
+        void Print()
         {
-            Console.WriteLine(value);
+            Queue<int> que = new Queue<int>();
+            que.Enqueue(1);
+            que.Enqueue(2);
+            que.Enqueue(3);
+            que.Enqueue(4);
+            que.Enqueue(5);
+            int count = que.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var item = que.Dequeue();
+                Console.WriteLine(item);
+            }
+            Console.WriteLine();
         }
+
+        public object Test()
+        {
+            var x = 10;
+            return x == 10 ? 1 : 0;
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
+
+        public object Get(object value) => value;
     }
 
-    public class Class2
-    {
-        public void Add()
-        {
-
-        }
-    }
 }

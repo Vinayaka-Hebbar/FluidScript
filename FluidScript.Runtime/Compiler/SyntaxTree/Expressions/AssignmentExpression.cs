@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -44,6 +45,17 @@ namespace FluidScript.Compiler.SyntaxTree
             return value;
         }
 #endif
+
+        public override void GenerateCode(MethodBodyGenerator generator)
+        {
+            var resultType = Right.ResultType(generator);
+            if(Right.NodeType == ExpressionType.Identifier)
+            {
+                var exp = (NameExpression)Left;
+
+            }
+            base.GenerateCode(generator);
+        }
 
         public override string ToString()
         {

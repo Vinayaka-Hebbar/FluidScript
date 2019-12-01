@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Reflection;
+﻿using FluidScript.Reflection;
 using FluidScript.Compiler.SyntaxTree;
 using System;
 using System.Collections.Generic;
@@ -52,7 +52,7 @@ namespace FluidScript.Compiler.Metadata
         }
 #endif
 
-        internal override DeclaredMethod DeclareMethod(string name, ArgumentInfo[] arguments, Emit.TypeName returnType, BlockStatement body)
+        internal override DeclaredMethod DeclareMethod(string name, ParameterInfo[] arguments, ITypeInfo returnType, BlockStatement body)
         {
             if (inner == null)
                 inner = new List<DeclaredMember>();
@@ -65,7 +65,7 @@ namespace FluidScript.Compiler.Metadata
             return declaredMethod;
         }
 
-        internal override DeclaredLocalVariable DeclareLocalVariable(string name, Emit.TypeName type, Expression expression, VariableAttributes attribute = VariableAttributes.Default)
+        internal override DeclaredLocalVariable DeclareLocalVariable(string name, ITypeInfo type, Expression expression, VariableFlags attribute = VariableFlags.Default)
         {
             if (variables == null)
                 variables = new List<DeclaredLocalVariable>();
@@ -75,18 +75,18 @@ namespace FluidScript.Compiler.Metadata
                 variable = new DeclaredLocalVariable(name, type, variables.Count, attribute)
                 {
                     ValueAtTop = expression,
-                    DefaultValue = (attribute & VariableAttributes.Constant) == VariableAttributes.Constant ? expression.Evaluate(this) : null
+                    DefaultValue = (attribute & VariableFlags.Constant) == VariableFlags.Constant ? expression.Evaluate(this) : null
                 };
                 variables.Add(variable);
                 return variable;
             }
-            if (variable.Attributes == VariableAttributes.Constant)
+            if (variable.Attributes == VariableFlags.Constant)
                 throw new System.Exception(string.Concat("cannot change readonly value ", name));
             variable.ValueAtTop = expression;
             return variable;
         }
 
-        internal override DeclaredField DeclareField(string name, Emit.TypeName type, Expression expression)
+        internal override DeclaredField DeclareField(string name, ITypeInfo type, Expression expression)
         {
             return Parent.DeclareField(name, type, expression);
         }
@@ -131,7 +131,7 @@ namespace FluidScript.Compiler.Metadata
                 throw new Exception(string.Concat("can't declared a variable ", name, " inside " + Name));
             if (Context == ScopeContext.Block)
                 Parent.DeclareVariable(name, expression);
-            DeclareLocalVariable(name, Emit.TypeName.Any, expression);
+            DeclareLocalVariable(name, TypeInfo.Any, expression);
         }
 
         public override RuntimeObject CreateInstance()
@@ -152,7 +152,7 @@ namespace FluidScript.Compiler.Metadata
                 throw new Exception(string.Concat("can't declared a variable ", name, " inside " + Name));
             if (variables == null)
                 variables = new List<DeclaredLocalVariable>();
-            variables.Add(new DeclaredLocalVariable(name, value.ReflectedType, variables.Count, VariableAttributes.Default) { DefaultValue = value });
+            variables.Add(new DeclaredLocalVariable(name, value.ReflectedType, variables.Count, VariableFlags.Default) { DefaultValue = value });
         }
 
         public IEnumerable<DeclaredLocalVariable> GetVariables()
@@ -170,7 +170,7 @@ namespace FluidScript.Compiler.Metadata
                     var value = item.DefaultValue;
                     if (value is object)
                     {
-                        instance.Add(item.Name, value, (item.Attributes & VariableAttributes.Constant) == VariableAttributes.Constant);
+                        instance.Add(item.Name, value, (item.Attributes & VariableFlags.Constant) == VariableFlags.Constant);
                     }
                     else
                     {

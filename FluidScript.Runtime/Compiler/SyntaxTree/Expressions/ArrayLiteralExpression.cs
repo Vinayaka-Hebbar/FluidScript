@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using FluidScript.Reflection.Emit;
 using System;
 using System.Linq;
 
@@ -8,13 +8,12 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly Expression[] Expressions;
 
-        public override Emit.TypeName TypeName { get; }
+        public TypeSyntax Type { get; }
 
-        public ArrayLiteralExpression(Expression[] expressions, Emit.TypeName typeName) : base(ExpressionType.Array)
+        public ArrayLiteralExpression(Expression[] expressions, TypeSyntax type) : base(ExpressionType.Array)
         {
             Expressions = expressions;
-            TypeName = typeName;
-            ResolvedPrimitiveType = FluidScript.RuntimeType.Array;
+            Type = type;
         }
 
 #if Runtime
@@ -31,10 +30,10 @@ namespace FluidScript.Compiler.SyntaxTree
 #endif
 
 
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(MethodBodyGenerator generator)
         {
             generator.LoadInt32(Expressions.Length);
-            Type type = ResultType(info).GetElementType();
+            Type type = ResultType(generator).GetElementType();
             generator.NewArray(type);
             for (int i = 0; i < Expressions.Length; i++)
             {
@@ -45,7 +44,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     generator.LoadNull();
                 else
                 {
-                    expression.GenerateCode(generator, info);
+                    expression.GenerateCode(generator);
                     //todo box
                     //EmitConvertion.ToAny(generator, type);
                 }
@@ -53,10 +52,10 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        protected override void ResolveType(OptimizationInfo info)
+        protected override void ResolveType(MethodBodyGenerator member)
         {
-            ResolvedPrimitiveType |= TypeUtils.From(TypeName.FullName).Enum;
-            Type type = info.GetType(TypeName);
+            var typeName = Type.ToString();
+            Type type = member.GetType(typeName);
             ResolvedType = type.MakeArrayType();
         }
 

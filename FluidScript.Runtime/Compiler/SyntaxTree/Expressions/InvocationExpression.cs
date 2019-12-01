@@ -1,7 +1,4 @@
-﻿#if Emit
-using FluidScript.Compiler.Emit;
-using FluidScript.Compiler.Reflection;
-#endif
+﻿using FluidScript.Reflection.Emit;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -17,7 +14,7 @@ namespace FluidScript.Compiler.SyntaxTree
             Arguments = arguments;
         }
 
-        public System.Type[] ArgumentTypes(Emit.OptimizationInfo info)
+        public System.Type[] ArgumentTypes(MethodBodyGenerator info)
         {
             return Arguments.Select(arg => arg.ResultType(info)).ToArray();
         }
@@ -123,127 +120,31 @@ namespace FluidScript.Compiler.SyntaxTree
 
 #endif
 
-#if Emit
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(MethodBodyGenerator generator)
         {
             if (NodeType == ExpressionType.Invocation)
             {
-                GenerateCall(generator, info);
+                GenerateCall(generator);
             }
             if (NodeType == ExpressionType.Indexer)
             {
-                Target.GenerateCode(generator, info);
+                Target.GenerateCode(generator);
                 foreach (var expr in Arguments)
                 {
-                    expr.GenerateCode(generator, info);
+                    expr.GenerateCode(generator);
                 }
-                System.Type type = ResultType(info);
+                System.Type type = Target.ResultType(generator);
                 generator.LoadArrayElement(type);
             }
         }
 
-        private void GenerateCall(ILGenerator generator, MethodOptimizationInfo info)
+        private void GenerateCall(MethodBodyGenerator generator)
         {
             if (Target.NodeType == ExpressionType.Identifier)
             {
-                var value = (NameExpression)Target;
-                var name = value.Name;
-                var scope = value.Scope;
-                do
-                {
-                    switch (scope.Context)
-                    {
-                        case Scopes.ScopeContext.Local:
-                            //todo inner method
-                            break;
-                        case Scopes.ScopeContext.Type:
-                            var type = (Scopes.ObjectScope)scope;
-                            DeclaredMethod method = type.GetMethod(name, ArgumentTypes(info));
-                            if (method != null)
-                            {
-                                Call(method.Store, generator, info);
-                                return;
-                            }
-                            else
-                            {
-                                var targetMethod = info.DeclaringType.BaseType.GetMethod(name, ArgumentTypes(info));
-                                Call(targetMethod, generator, info);
-                            }
-                            break;
-                        case Scopes.ScopeContext.Global:
-                            break;
-                        default:
-                            break;
-                    }
-                    scope = scope.ParentScope;
-                } while (scope != null);
-
+                ((NameExpression)Target).Invoke(generator, Arguments);
             }
         }
-
-        private void Call(System.Reflection.MethodBase method, ILGenerator generator, MethodOptimizationInfo info)
-        {
-            if (method.IsStatic == false)
-            {
-                generator.LoadArgument(0);
-
-            }
-            foreach (var expression in Arguments)
-            {
-                expression.GenerateCode(generator, info);
-            }
-            generator.Call(method);
-        }
-
-        protected override void ResolveType(OptimizationInfo info)
-        {
-            if (NodeType == ExpressionType.Invocation)
-            {
-                if (Target.NodeType == ExpressionType.Identifier)
-                {
-                    var value = (NameExpression)Target;
-                    var name = value.Name;
-                    var scope = value.Scope;
-                    do
-                    {
-                        switch (scope.Context)
-                        {
-                            case Scopes.ScopeContext.Local:
-                                //todo inner method
-                                break;
-                            case Scopes.ScopeContext.Type:
-                                var type = (Scopes.ObjectScope)scope;
-                                DeclaredMethod method = type.GetMethod(name, ArgumentTypes(info));
-                                if (method != null)
-                                {
-                                    ResolvedType = method.Store.ReturnType;
-                                    ResolvedPrimitiveType = method.Declaration.PrimitiveType;
-                                    return;
-                                }
-                                var targetMethod = info.DeclaringType.BaseType.GetMethod(name, ArgumentTypes(info));
-                                if(targetMethod != null)
-                                {
-                                    ResolvedType = targetMethod.ReturnType;
-                                    ResolvedPrimitiveType = Emit.TypeUtils.ToPrimitive(ResolvedType);
-                                    return;
-                                }
-                                break;
-                            case Scopes.ScopeContext.Global:
-                                break;
-                            default:
-                                break;
-                        }
-                        scope = scope.ParentScope;
-                    } while (scope != null);
-                }
-            }
-            if (NodeType == ExpressionType.Indexer)
-            {
-                ResolvedType = Target.ResultType(info).GetElementType();
-                ResolvedPrimitiveType = Target.PrimitiveType(info) & (~FluidScript.PrimitiveType.Array);
-            }
-        }
-#endif
 
         public override string ToString()
         {

@@ -33,7 +33,7 @@ namespace FluidScript.Library
 
         public int Length => store.Length;
 
-        [Compiler.Reflection.Property("length", RuntimeType.Int32)]
+        [Reflection.Property("length", RuntimeType.Int32)]
         internal RuntimeObject Size
         {
             get
@@ -47,13 +47,13 @@ namespace FluidScript.Library
             System.Array.Resize(ref store, newSize);
         }
 
-        [Compiler.Reflection.Callable("indexOf", RuntimeType.Int32, Compiler.Emit.ArgumentTypes.Double)]
+        [Reflection.Callable("indexOf", RuntimeType.Int32, Reflection.ArgumentTypes.Double)]
         public RuntimeObject IndexOf(RuntimeObject arg1)
         {
             return System.Array.IndexOf(store, arg1);
         }
 
-        [Compiler.Reflection.Callable("setItem", RuntimeType.Void, Compiler.Emit.ArgumentTypes.Int32, Compiler.Emit.ArgumentTypes.Any)]
+        [Reflection.Callable("setItem", RuntimeType.Void, Reflection.ArgumentTypes.Int32, Reflection.ArgumentTypes.Any)]
         public void SetItem(RuntimeObject index, RuntimeObject value)
         {
             var i = index.ToInt32();

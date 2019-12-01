@@ -15,7 +15,7 @@ namespace FluidScript.Library
 
         public override RuntimeType ReflectedType => RuntimeType.String;
 
-        [Compiler.Reflection.Callable("elementAt", RuntimeType.Char, Compiler.Emit.ArgumentTypes.Int32)]
+        [Reflection.Callable("elementAt", RuntimeType.Char, Reflection.ArgumentTypes.Int32)]
         internal RuntimeObject ElementAt(RuntimeObject index) => new PrimitiveObject(store[index.ToInt32()]);
 
         public override string ToString()
@@ -33,25 +33,25 @@ namespace FluidScript.Library
             return prototype;
         }
 
-        [Compiler.Reflection.Property("length", RuntimeType.Int32)]
+        [Reflection.Property("length", RuntimeType.Int32)]
         internal RuntimeObject Length
         {
             get => store.Length;
         }
 
-        [Compiler.Reflection.Callable("reverse", RuntimeType.String)]
+        [Reflection.Callable("reverse", RuntimeType.String)]
         internal RuntimeObject Reverse()
         {
             return new StringObject(new string(System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Reverse(store))));
         }
 
-        [Compiler.Reflection.Callable("toUpper", RuntimeType.String)]
+        [Reflection.Callable("toUpper", RuntimeType.String)]
         internal RuntimeObject ToUpper()
         {
             return new StringObject(store.ToUpper());
         }
 
-        [Compiler.Reflection.Callable("toLower", RuntimeType.String)]
+        [Reflection.Callable("toLower", RuntimeType.String)]
         internal RuntimeObject ToLower()
         {
             return new StringObject(store.ToLower());

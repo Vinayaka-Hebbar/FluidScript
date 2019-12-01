@@ -23,7 +23,7 @@
         internal PrimitiveObject(object value, System.Type type)
         {
             Store = value;
-            Type = Compiler.Emit.TypeUtils.ToPrimitive(type);
+            Type = Reflection.Emit.TypeUtils.ToPrimitive(type);
         }
 
         public PrimitiveObject(PrimitiveObject[] value)

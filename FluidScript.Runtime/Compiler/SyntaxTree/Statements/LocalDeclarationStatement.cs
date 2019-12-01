@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using FluidScript.Reflection.Emit;
 using FluidScript.Compiler.Metadata;
 using System.Linq;
 
@@ -15,11 +15,11 @@ namespace FluidScript.Compiler.SyntaxTree
             IsReadOnly = isReadOnly;
         }
 
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(MethodBodyGenerator generator)
         {
             foreach (var declaration in DeclarationExpressions)
             {
-                declaration.GenerateCode(generator, info);
+                declaration.GenerateCode(generator);
             }
         }
 
@@ -31,7 +31,8 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 var declaration = DeclarationExpressions[i];
                 //todo remove value at top
-                prototype.DeclareLocalVariable(declaration.Name, declaration.Type, declaration.Value);
+                Reflection.ITypeInfo type = declaration.Type == null ? Reflection.TypeInfo.Any : declaration.Type.GetTypeInfo();
+                prototype.DeclareLocalVariable(declaration.Name, type, declaration.Value);
                 instance.Append(declaration.Name, objects[i] = declaration.Evaluate(instance), IsReadOnly);
             }
             return new Library.ArrayObject(objects, RuntimeType.Any);

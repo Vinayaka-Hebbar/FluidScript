@@ -2,10 +2,12 @@
 {
     public abstract class MemberDeclaration : Node
     {
-        //todo modifiers
-        internal MemberDeclaration()
+        public Reflection.Modifiers Modifiers { get; internal set; }
+
+        protected MemberDeclaration()
         {
         }
 
+        public abstract void Create(Reflection.Emit.TypeGenerator generator);
     }
 }

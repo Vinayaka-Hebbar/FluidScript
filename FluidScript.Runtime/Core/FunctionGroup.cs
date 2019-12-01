@@ -26,7 +26,7 @@ namespace FluidScript.Core
         public override RuntimeObject DynamicInvoke(RuntimeObject[] args)
         {
             var types = FilterTypes(args).ToArray();
-            var method = References.FirstOrDefault(m => Compiler.Emit.TypeUtils.TypesEqual(m.Arguments, types));
+            var method = References.FirstOrDefault(m => Reflection.Emit.TypeUtils.TypesEqual(m.Arguments, types));
             if (method is object)
             {
                 return method.DynamicInvoke(args);
@@ -51,8 +51,8 @@ namespace FluidScript.Core
         {
             if (prototype is null)
             {
-                var baseProto = new Compiler.Metadata.DefaultObjectPrototype(new Compiler.Reflection.DeclaredMethod[0]);
-                var methods = Compiler.Reflection.TypeHelper.GetMethods(GetType());
+                var baseProto = new Compiler.Metadata.DefaultObjectPrototype(new Reflection.DeclaredMethod[0]);
+                var methods = Reflection.TypeHelper.GetMethods(GetType());
                 prototype = new Compiler.Metadata.ObjectPrototype(methods, null, baseProto, "FunctionGroup")
                 {
                     IsSealed = true

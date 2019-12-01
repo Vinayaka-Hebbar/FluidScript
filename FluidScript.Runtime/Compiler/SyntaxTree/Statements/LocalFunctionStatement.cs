@@ -1,5 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
-using System.Linq;
+﻿using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -7,29 +6,29 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly string Name;
 
-        public readonly ArgumentInfo[] Arguments;
+        public readonly TypeParameter[] Parameters;
 
-        public readonly Emit.TypeName ReturnType;
+        public readonly TypeSyntax ReturnType;
 
         public readonly BlockStatement Body;
 
-        public LocalFunctionStatement(string name, ArgumentInfo[] arguments, TypeName returnType, BlockStatement body) : base(StatementType.Function)
+        public LocalFunctionStatement(string name, TypeParameter[] arguments, TypeSyntax returnType, BlockStatement body) : base(StatementType.Function)
         {
             Name = name;
-            Arguments = arguments;
+            Parameters = arguments;
             ReturnType = returnType;
             Body = body;
         }
 
         public override string ToString()
         {
-            return string.Concat("(", string.Join(",", Arguments.Select(arg => arg.ToString())), "):", ReturnType.ToString());
+            return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnType.ToString());
         }
 
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            var member = instance.GetPrototype().DeclareMethod(Name, Arguments, ReturnType, Body);
+            var member = instance.GetPrototype().DeclareMethod(Name, Parameters.Select(arg => arg.GetParameterInfo()).ToArray(), ReturnType.GetTypeInfo(), Body);
             var reference = new Core.DynamicFunction(member, instance, member.DynamicInvoke);
             instance[Name] = reference;
             return reference;
@@ -37,20 +36,20 @@ namespace FluidScript.Compiler.SyntaxTree
 
         internal override RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
         {
-            var member = prototype.DeclareMethod(Name, Arguments, ReturnType, Body);
+            var member = prototype.DeclareMethod(Name, Parameters.Select(arg=>arg.GetParameterInfo()).ToArray(), ReturnType.GetTypeInfo(), Body);
             var reference = new Core.DynamicFunction(member, instance, member.DynamicInvoke);
             instance[Name] = reference;
             return reference;
         }
 #endif
 
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {
-            Body.GenerateCode(generator, info);
-            if (info.ReturnTarget != null)
-                generator.DefineLabelPosition(info.ReturnTarget);
-            if (info.ReturnVariable != null)
-                generator.LoadVariable(info.ReturnVariable);
+            Body.GenerateCode(generator);
+            if (generator.ReturnTarget != null)
+                generator.DefineLabelPosition(generator.ReturnTarget);
+            if (generator.ReturnVariable != null)
+                generator.LoadVariable(generator.ReturnVariable);
         }
     }
 }

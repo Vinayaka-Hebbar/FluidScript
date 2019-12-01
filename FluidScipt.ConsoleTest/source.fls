@@ -1,0 +1,19 @@
+﻿class Test {
+	var _x = 1, _y = 5 + 1;
+
+	get x():int {
+		return _x+2;
+	}
+
+	set x(value:int) {
+		_x = value;
+	} 
+
+	func read(a:int):int {
+		return x;
+	}
+
+    impl func toString() : string {
+		return `hello`;
+	}
+}

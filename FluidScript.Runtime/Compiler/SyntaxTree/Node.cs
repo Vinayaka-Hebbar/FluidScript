@@ -9,19 +9,13 @@ namespace FluidScript.Compiler.SyntaxTree
 
         protected Node() { }
 
-        public virtual IEnumerable<Node> ChildNodes
-        {
-            get
-            {
-                return emptyNodes;
-            }
-        }
+        public virtual IEnumerable<Node> ChildNodes() => emptyNodes;
 
         public bool ContainsNodeOfType<T>() where T : Node
         {
             if (this is T)
                 return true;
-            foreach (var child in ChildNodes)
+            foreach (var child in ChildNodes())
             {
                 if (child.ContainsNodeOfType<T>())
                     return true;
@@ -29,7 +23,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return false;
         }
 
-        public static IEnumerable<Node> Childs(params Node[] values)
+        protected static IEnumerable<Node> Childs(params Node[] values)
         {
             return values;
         }

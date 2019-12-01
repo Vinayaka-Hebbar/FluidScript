@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Reflection;
+﻿using FluidScript.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;

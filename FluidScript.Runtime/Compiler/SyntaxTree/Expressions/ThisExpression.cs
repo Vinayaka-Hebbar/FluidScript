@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Reflection.Emit;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class ThisExpression : Expression
     {
@@ -12,5 +14,11 @@
             return instance["this"];
         }
 #endif
+
+        public override void GenerateCode(MethodBodyGenerator generator)
+        {
+            ResolvedType = generator.TypeGenerator.Type;
+            generator.LoadArgument(0);
+        }
     }
 }

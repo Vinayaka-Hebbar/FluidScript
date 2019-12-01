@@ -1,4 +1,7 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Reflection.Emit;
+using System.Linq;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class NameExpression : Expression
     {
@@ -34,6 +37,82 @@
         }
 #endif
 
+        public static System.Type[] GetTypes(MethodBodyGenerator generator, System.Collections.Generic.IEnumerable<Expression> expressions)
+        {
+            return expressions.Select(arg => arg.ResultType(generator)).ToArray();
+        }
+
+        protected override void ResolveType(MethodBodyGenerator generator)
+        {
+            var variable = generator.GetLocalVariable(Name);
+            if (variable != null)
+            {
+                if (variable.Type == null)
+                    throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
+                ResolvedType = variable.Type;
+            }
+            //find in the class level
+            var member = generator.TypeGenerator.FindMember(Name).FirstOrDefault();
+            if (member != null)
+            {
+                if (member.MemberType == System.Reflection.MemberTypes.Field)
+                {
+                    var field = (System.Reflection.FieldInfo)member;
+                    if (field.FieldType == null)
+                        throw new System.Exception(string.Concat("Use of undeclared field ", field));
+                    ResolvedType = field.FieldType;
+                }
+                if (member.MemberType == System.Reflection.MemberTypes.Property)
+                {
+                    var property = (System.Reflection.PropertyInfo)member;
+                    ResolvedType = property.PropertyType;
+                }
+            }
+        }
+
+        public override void GenerateCode(MethodBodyGenerator generator)
+        {
+            var variable = generator.GetLocalVariable(Name);
+            if (variable != null)
+            {
+                if (variable.Type == null)
+                    throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
+                ResolvedType = variable.Type;
+                generator.LoadVariable(variable);
+            }
+            //find in the class level
+           var member = generator.TypeGenerator.FindMember(Name).FirstOrDefault();
+            if(member != null)
+            {
+                if(member.MemberType == System.Reflection.MemberTypes.Field)
+                {
+                    var field = (System.Reflection.FieldInfo)member;
+                    if(field.FieldType == null)
+                        throw new System.Exception(string.Concat("Use of undeclared field ", field));
+                    ResolvedType = field.FieldType;
+                    generator.LoadField(field);
+                }
+                if(member.MemberType == System.Reflection.MemberTypes.Property)
+                {
+                    var property = (System.Reflection.PropertyInfo)member;
+                    ResolvedType = property.PropertyType;
+                    generator.Call(property.GetGetMethod(true));
+                }
+            }
+        }
+
+        public void Invoke(MethodBodyGenerator generator, System.Collections.Generic.IEnumerable<Expression> arguments)
+        {
+            var types = GetTypes(generator, arguments);
+            if (generator.TryGetMethod(Name, types, out System.Reflection.MethodBase method))
+            {
+                foreach (var item in arguments)
+                {
+                    item.GenerateCode(generator);
+                }
+                generator.Call(method);
+            }
+        }
 #if Emit
         protected override void ResolveType(OptimizationInfo info)
         {

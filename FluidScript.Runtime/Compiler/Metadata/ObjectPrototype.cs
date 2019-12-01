@@ -1,5 +1,5 @@
-﻿using FluidScript.Compiler.Emit;
-using FluidScript.Compiler.Reflection;
+﻿using FluidScript.Reflection.Emit;
+using FluidScript.Reflection;
 using FluidScript.Compiler.SyntaxTree;
 using System;
 using System.Collections.Generic;
@@ -70,7 +70,7 @@ namespace FluidScript.Compiler.Metadata
         }
 #endif
 
-        internal override DeclaredMethod DeclareMethod(string name, ArgumentInfo[] arguments, TypeName returnType, BlockStatement body)
+        internal override DeclaredMethod DeclareMethod(string name, ParameterInfo[] arguments, ITypeInfo returnType, BlockStatement body)
         {
             //todo access
             if (members == null)
@@ -80,7 +80,7 @@ namespace FluidScript.Compiler.Metadata
             return declaredMethod;
         }
 
-        internal override DeclaredField DeclareField(string name, TypeName type, Expression expression)
+        internal override DeclaredField DeclareField(string name, ITypeInfo type, Expression expression)
         {
             if (members == null)
                 members = new List<DeclaredMember>();

@@ -1,5 +1,5 @@
-﻿using FluidScript.Compiler.Emit;
-using FluidScript.Compiler.Reflection;
+﻿using FluidScript.Reflection.Emit;
+using FluidScript.Reflection;
 
 namespace FluidScript.Library
 {

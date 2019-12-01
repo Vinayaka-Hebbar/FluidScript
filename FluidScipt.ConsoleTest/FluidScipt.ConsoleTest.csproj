@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="source.rs" />
+    <None Remove="source.fls" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="source.rs">
+    <Content Include="source.fls">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -26,6 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="DynamicClass.Utility.DynamicClasses">
+      <HintPath>bin\Debug\net461\DynamicClass.Utility.DynamicClasses.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 

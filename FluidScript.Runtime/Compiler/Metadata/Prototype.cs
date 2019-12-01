@@ -32,17 +32,17 @@ namespace FluidScript.Compiler.Metadata
             Context = context;
         }
 
-        internal virtual Reflection.DeclaredMethod DeclareMethod(string name, SyntaxTree.ArgumentInfo[] arguments, Emit.TypeName returnType, SyntaxTree.BlockStatement body)
+        internal virtual Reflection.DeclaredMethod DeclareMethod(string name, Reflection.ParameterInfo[] arguments, Reflection.ITypeInfo returnType, SyntaxTree.BlockStatement body)
         {
             throw new System.Exception("Can't declare method inside " + GetType());
         }
 
-        internal virtual Reflection.DeclaredLocalVariable DeclareLocalVariable(string name, Emit.TypeName type, SyntaxTree.Expression expression, Reflection.VariableAttributes attribute = Reflection.VariableAttributes.Default)
+        internal virtual Reflection.DeclaredLocalVariable DeclareLocalVariable(string name, Reflection.ITypeInfo type, SyntaxTree.Expression expression, Reflection.VariableFlags attribute = Reflection.VariableFlags.Default)
         {
             throw new System.Exception("Can't declare local field inside " + GetType());
         }
 
-        internal virtual Reflection.DeclaredField DeclareField(string name, Emit.TypeName type, SyntaxTree.Expression expression)
+        internal virtual Reflection.DeclaredField DeclareField(string name, Reflection.ITypeInfo type, SyntaxTree.Expression expression)
         {
             throw new System.Exception("Can't declare field inside " + GetType());
         }
@@ -61,7 +61,7 @@ namespace FluidScript.Compiler.Metadata
         {
             if (IsSealed)
                 throw new System.Exception(string.Concat("can't declared a variable ", name, " inside " + Name));
-            DeclareField(name, Emit.TypeName.Any, expression);
+            DeclareField(name, Reflection.TypeInfo.Any, expression);
         }
 
         public bool IsSealed { get; internal set; }

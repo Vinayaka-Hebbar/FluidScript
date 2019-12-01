@@ -13,7 +13,7 @@ namespace FluidScript
         public static readonly RuntimeObject Void = new RuntimeObject(ObjectPrototype.Default, RuntimeType.Void);
 
 
-        internal readonly Compiler.Reflection.Instances instances;
+        internal readonly Reflection.Instances instances;
 
         private readonly Prototype prototype;
 
@@ -52,7 +52,7 @@ namespace FluidScript
             {
                 return instances[name].DynamicInvoke(args);
             }
-            return Compiler.Reflection.TypeHelper.Invoke(this, name, args);
+            return Reflection.TypeHelper.Invoke(this, name, args);
         }
 
         public virtual RuntimeObject this[object name]
@@ -204,7 +204,7 @@ namespace FluidScript
             return prototype.CreateInstance();
         }
 
-        [Compiler.Reflection.Callable("toString", RuntimeType.String)]
+        [Reflection.Callable("toString", RuntimeType.String)]
         internal RuntimeObject ToStringValue()
         {
             return new Library.StringObject(ToString());
@@ -290,12 +290,13 @@ namespace FluidScript
         {
             var method = action.Method;
             var paramters = method.GetParameters();
-            var types = new Compiler.Emit.ArgumentType[paramters.Length];
-            var returnType = Compiler.Emit.TypeUtils.ToPrimitive(method.ReturnType);
+            var types = new Reflection.ParameterInfo[paramters.Length];
+            var returnType = Reflection.Emit.TypeUtils.GetTypeInfo(method.ReturnType);
             for (int index = 0; index < paramters.Length; index++)
             {
                 System.Reflection.ParameterInfo arg = paramters[index];
-                types[index] = new Compiler.Emit.ArgumentType(arg.Name, Compiler.Emit.TypeUtils.ToPrimitive(arg.ParameterType));
+                //todo var args
+                types[index] = new Reflection.ParameterInfo(arg.Name, Reflection.Emit.TypeUtils.GetTypeInfo(arg.ParameterType), index);
             }
             return new Core.FunctionReference(action.Target, types, returnType, method);
         }
@@ -406,7 +407,7 @@ namespace FluidScript
         {
             if (result1.IsNumber())
                 return new Library.PrimitiveObject(result1.ToNumber() + value);
-            return new Library.PrimitiveObject(value);
+            return new Library.StringObject(string.Concat(result1, value));
         }
 
         public static RuntimeObject operator +(RuntimeObject result1)

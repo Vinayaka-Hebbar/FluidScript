@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public class Expression : Node
     {
@@ -12,11 +10,11 @@ namespace FluidScript.Compiler.SyntaxTree
 #else
         public static readonly LiteralExpression Null = new LiteralExpression(null, RuntimeType.Undefined);
 #endif
-        protected System.Type ResolvedType = null;
+        private System.Type resolvedType = null;
         /// <summary>
         /// todo for resolve result type assign resolve type if not any
         /// </summary>
-        protected RuntimeType ResolvedPrimitiveType = FluidScript.RuntimeType.Undefined;
+        private RuntimeType resolvedRuntimeType = RuntimeType.Undefined;
 
         public Expression(ExpressionType nodeType)
         {
@@ -24,38 +22,54 @@ namespace FluidScript.Compiler.SyntaxTree
         }
         public ExpressionType NodeType { get; }
 
-        public virtual Emit.TypeName TypeName
+        public System.Type ResultType(Reflection.Emit.MethodBodyGenerator method)
         {
-            get
+            if (resolvedType == null)
+                ResolveType(method);
+            return resolvedType;
+        }
+
+        /// <summary>
+        /// Resolve Runtime type
+        /// </summary>
+        /// <param name="method"></param>
+        protected virtual void ResolveType(Reflection.Emit.MethodBodyGenerator method)
+        {
+
+        }
+
+        protected System.Type ResolvedType
+        {
+            get => resolvedType;
+            set
             {
-                if (ResolvedType == null)
-                    return Emit.TypeName.Any;
-                return new Emit.TypeName(ResolvedType);
+                resolvedType = value;
+                if (value.IsPrimitive)
+                    resolvedRuntimeType = Reflection.Emit.TypeUtils.GetRuntimeType(value);
+                else if (value.FullName == "System.String")
+                    resolvedRuntimeType = RuntimeType.String;
+                else
+                    resolvedRuntimeType = RuntimeType.Any;
+                if (value.IsArray)
+                    resolvedRuntimeType |= RuntimeType.Array;
             }
         }
 
-        internal System.Type ReflectedType()
+        protected RuntimeType ResolvedRuntimeType
         {
-            return ResolvedType;
+            get => resolvedRuntimeType;
+            set
+            {
+                resolvedType = Reflection.Emit.TypeUtils.ToType(value);
+                resolvedRuntimeType = value;
+            }
         }
 
-        public System.Type ResultType(Emit.OptimizationInfo info)
+        public RuntimeType GetRuntimeType(Reflection.Emit.MethodBodyGenerator method)
         {
-            if (ResolvedType == null)
-                ResolveType(info);
-            return ResolvedType;
-        }
-
-        protected virtual void ResolveType(Emit.OptimizationInfo info)
-        {
-
-        }
-
-        public RuntimeType PrimitiveType(Emit.OptimizationInfo info)
-        {
-            if (ResolvedPrimitiveType == FluidScript.RuntimeType.Undefined)
-                ResolveType(info);
-            return ResolvedPrimitiveType;
+            if (resolvedRuntimeType == RuntimeType.Undefined)
+                ResolveType(method);
+            return resolvedRuntimeType;
         }
 
 #if Runtime
@@ -86,7 +100,7 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        public virtual void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
+        public virtual void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {
             generator.NoOperation();
         }

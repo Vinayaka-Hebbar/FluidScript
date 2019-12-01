@@ -18,6 +18,12 @@
             NodeType = nodeType;
         }
 
+        public TextSpan Span
+        {
+            get;
+            set;
+        }
+
         public StatementType NodeType { get; }
 
         public bool HasLabels => Labels.Length > 0;
@@ -46,7 +52,7 @@
         }
 #endif
 
-        public virtual void GenerateCode(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info)
+        public virtual void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {
             generator.NoOperation();
         }
@@ -71,7 +77,7 @@
             /// <summary>
             /// Gets or sets a label marking the end of the statement.
             /// </summary>
-            public Emit.ILLabel EndOfStatement;
+            public Reflection.Emit.ILLabel EndOfStatement;
 
 #if DEBUG
             /// <summary>
@@ -87,7 +93,7 @@
         /// <param name="generator"> The generator to output the CIL to. </param>
         /// <param name="info"> Information about any optimizations that should be performed. </param>
         /// <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
-        protected void GenerateStartOfStatement(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info, StatementLocals locals)
+        protected void GenerateStartOfStatement(Reflection.Emit.MethodBodyGenerator generator, StatementLocals locals)
         {
 #if DEBUG && USE_DYNAMIC_IL_INFO
             // Statements must not produce or consume any values on the stack.
@@ -99,7 +105,7 @@
             {
                 // Set up the information needed by the break statement.
                 locals.EndOfStatement = generator.CreateLabel();
-                info.PushBreakOrContinueInfo(this.Labels, locals.EndOfStatement, null, labelledOnly: true);
+                generator.PushBreakOrContinueInfo(this.Labels, locals.EndOfStatement, null, labelledOnly: true);
             }
 
             // Emit debugging information.
@@ -114,15 +120,15 @@
         /// Generates CIL for the end of every statement.
         /// </summary>
         /// <param name="generator"> The generator to output the CIL to. </param>
-        /// <param name="info"> Information about any optimizations that should be performed. </param>
+        /// <param name="method"> Information about any optimizations that should be performed. </param>
         /// <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
-        protected void GenerateEndOfStatement(Emit.ILGenerator generator, Emit.MethodOptimizationInfo info, StatementLocals locals)
+        protected void GenerateEndOfStatement(Reflection.Emit.MethodBodyGenerator generator, StatementLocals locals)
         {
             if (locals.NonDefaultBreakStatementBehavior == false && this.HasLabels == true)
             {
                 // Revert the information needed by the break statement.
                 generator.DefineLabelPosition(locals.EndOfStatement);
-                info.PopBreakOrContinueInfo();
+                generator.PopBreakOrContinueInfo();
             }
 
 #if DEBUG && USE_DYNAMIC_IL_INFO

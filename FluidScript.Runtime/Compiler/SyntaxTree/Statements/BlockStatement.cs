@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using FluidScript.Reflection.Emit;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,17 +14,17 @@ namespace FluidScript.Compiler.SyntaxTree
             Statements = statements;
         }
 
-        public override IEnumerable<Node> ChildNodes => Statements;
+        public override IEnumerable<Node> ChildNodes() => Statements;
 
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(MethodBodyGenerator generator)
         {
             var statementLocals = new StatementLocals() { NonDefaultSourceSpanBehavior = true };
-            GenerateStartOfStatement(generator, info, statementLocals);
+            GenerateStartOfStatement(generator, statementLocals);
             foreach (var statement in Statements)
             {
-                statement.GenerateCode(generator, info);
+                statement.GenerateCode(generator);
             }
-            GenerateEndOfStatement(generator, info, statementLocals);
+            GenerateEndOfStatement(generator, statementLocals);
         }
 
 #if Runtime

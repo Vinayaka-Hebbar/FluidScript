@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using FluidScript.Reflection;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using FluidScript.Compiler.Reflection;
 
 namespace FluidScript.Compiler.Metadata
 {

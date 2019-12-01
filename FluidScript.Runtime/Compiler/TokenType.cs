@@ -23,8 +23,10 @@
         //15 skip
         //Reserved
         // Other
+
+        NewLine = 17,
         /// <summary>
-        /// {
+        /// [
         /// </summary>
         LeftBracket = 18,
         RightBracket = 19,
@@ -36,6 +38,9 @@
         /// )
         /// </summary>
         RightParenthesis = 21,
+        /// <summary>
+        /// {
+        /// </summary>
         LeftBrace = 22,
         RightBrace = 23,
         Comma = 24,
@@ -47,6 +52,7 @@
         Dot = 29,
         //::
         Qualified = 30,
+
         //Math
         #region Math
         Plus = 66,

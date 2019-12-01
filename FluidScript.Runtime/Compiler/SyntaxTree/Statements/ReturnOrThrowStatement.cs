@@ -1,4 +1,4 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -27,49 +27,53 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
+        public override void GenerateCode(MethodBodyGenerator generator)
         {
             // Generate code for the start of the statement.
             var statementLocals = new StatementLocals();
-            GenerateStartOfStatement(generator, info, statementLocals);
+            GenerateStartOfStatement(generator, statementLocals);
             if (NodeType == StatementType.Return)
             {
-                bool lastStatement = false;
+                bool lastStatement = true;
                 if (Expression != null)
                 {
-                    Expression.GenerateCode(generator, info);
-                    if (info.SyntaxTree is BlockStatement block)
+                    Expression.GenerateCode(generator);
+                    if (generator.SyntaxTree is BlockStatement block)
                     {
                         if (block.Statements.Length > 0)
                         {
                             lastStatement = block.Statements[block.Statements.Length - 1] == this;
                         }
                     }
+                    var returnType = generator.MethodGenerator.ReturnType;
                     //todo variable name not used
-                    if (info.ReturnVariable == null)
-                        info.ReturnVariable = generator.DeclareVariable(info.ReturnType);
-                    if (info.ReturnType != null && info.ReturnType != Expression.ResultType(info))
+                    if (generator.ReturnVariable == null)
+                        generator.ReturnVariable = generator.DeclareVariable(returnType);
+                    if (returnType != null && returnType != Expression.ResultType(generator))
                     {
-                        if (info.ReturnType.IsPrimitive)
-                            TypeUtils.ConvertToPrimitive(generator, info.ReturnType);
-                        if (info.ReturnType == typeof(object) && Expression.ResultType(info).IsPrimitive)
+                        if (returnType.IsPrimitive)
+                            TypeUtils.ConvertToPrimitive(generator, returnType);
+                        if (returnType == typeof(object) && Expression.ResultType(generator).IsPrimitive)
                         {
                             //box
-                            generator.Box(Expression.ResultType(info));
+                            generator.Box(Expression.ResultType(generator));
                         }
                     }
-                    generator.StoreVariable(info.ReturnVariable);
+                    generator.StoreVariable(generator.ReturnVariable);
+
+                    if (generator.ReturnTarget == null)
+                    {
+                        generator.ReturnTarget = generator.CreateLabel();
+                    }
                 }
-                if (info.ReturnTarget == null)
-                    info.ReturnTarget = generator.CreateLabel();
                 //last statement is not a return
                 if (lastStatement == false)
                 {
                     //if iniside try finally block 
-                    info.EmitLongJump(generator, info.ReturnTarget);
+                    generator.EmitLongJump(generator, generator.ReturnTarget);
                 }
             }
-            GenerateEndOfStatement(generator, info, statementLocals);
+            GenerateEndOfStatement(generator, statementLocals);
         }
 
         public override string ToString()
