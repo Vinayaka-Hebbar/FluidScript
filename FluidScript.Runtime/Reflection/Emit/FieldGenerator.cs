@@ -11,7 +11,8 @@
             Name = expression.Name;
             DeclarationExpression = expression;
             DefaultValue = expression.Value;
-            IsStatic = (attributes & System.Reflection.FieldAttributes.Static) == System.Reflection.FieldAttributes.Static; 
+            IsStatic = (attributes & System.Reflection.FieldAttributes.Static) == System.Reflection.FieldAttributes.Static;
+            IsPublic = (attributes & System.Reflection.FieldAttributes.Public) == System.Reflection.FieldAttributes.Public;
             MemberType = System.Reflection.MemberTypes.Field;
         }
 
@@ -31,7 +32,15 @@
 
         public bool IsStatic { get; }
 
+        public bool IsPublic { get; }
+
         internal MethodBodyGenerator MethodBody { get; set; }
+
+        public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
+        {
+            return TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
+                && TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
+        }
 
         public void Build()
         {

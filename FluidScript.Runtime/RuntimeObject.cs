@@ -81,20 +81,20 @@ namespace FluidScript
 
         private void AttachFunction(object name, RuntimeObject value)
         {
-            Core.FunctionGroup list = null;
+            Library.FunctionGroup list = null;
             if (instances.TryGetValue(name, out RuntimeObject runtime))
             {
-                if (runtime is Core.FunctionGroup)
+                if (runtime is Library.FunctionGroup)
                 {
-                    list = (Core.FunctionGroup)value;
+                    list = (Library.FunctionGroup)value;
                 }
             }
             if (list is null)
             {
-                list = new Core.FunctionGroup(name.ToString());
+                list = new Library.FunctionGroup(name.ToString());
                 instances[name] = list;
             }
-            list.Add((Core.IFunctionReference)value);
+            list.Add((Library.IFunctionReference)value);
         }
 
         public virtual bool ContainsKey(object key)
@@ -298,7 +298,7 @@ namespace FluidScript
                 //todo var args
                 types[index] = new Reflection.ParameterInfo(arg.Name, Reflection.Emit.TypeUtils.GetTypeInfo(arg.ParameterType), index);
             }
-            return new Core.FunctionReference(action.Target, types, returnType, method);
+            return new Library.FunctionReference(action.Target, types, returnType, method);
         }
         #endregion
 

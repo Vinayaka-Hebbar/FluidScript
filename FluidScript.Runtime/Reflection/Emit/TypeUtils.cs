@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using FluidScript.Library;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace FluidScript.Reflection.Emit
 {
@@ -8,6 +10,7 @@ namespace FluidScript.Reflection.Emit
         private static readonly IList<InbuiltType> Inbuilts;
         private static readonly IDictionary<string, InbuiltType> InbuiltNames;
         private static readonly IDictionary<string, RuntimeType> RuntimeTypes;
+        internal const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
 
         /// <summary>
         /// Must be primitive
@@ -25,20 +28,16 @@ namespace FluidScript.Reflection.Emit
         {
             Inbuilts = new List<InbuiltType>
             {
-                new InbuiltType("byte", typeof(byte), RuntimeType.UByte),
-                new InbuiltType("sbyte", typeof(sbyte), RuntimeType.Byte),
-                new InbuiltType("short", typeof(short), RuntimeType.Int16),
-                new InbuiltType("ushort", typeof(ushort), RuntimeType.UInt16) ,
-                new InbuiltType ("int", typeof(int), RuntimeType.Int32),
-                new InbuiltType("uint", typeof(uint), RuntimeType.UInt32),
-                new InbuiltType("long", typeof(long), RuntimeType.Int64),
-                new InbuiltType("ulong", typeof(ulong), RuntimeType.UInt64) ,
-                new InbuiltType("float", typeof(float), RuntimeType.Float) ,
-                new InbuiltType("double", typeof(double), RuntimeType.Double) ,
-                new InbuiltType("bool", typeof(bool), RuntimeType.Bool),
-                new InbuiltType("string", typeof(string), RuntimeType.String) ,
-                new InbuiltType("char", typeof(char), RuntimeType.Char) ,
-                new InbuiltType("any", typeof(object), RuntimeType.Any) ,
+                new InbuiltType("byte", typeof(Byte), RuntimeType.Byte),
+                new InbuiltType("short", typeof(Short), RuntimeType.Int16),
+                new InbuiltType("int", typeof(Integer), RuntimeType.Int32),
+                new InbuiltType("long", typeof(Long), RuntimeType.Int64),
+                new InbuiltType("float", typeof(Float), RuntimeType.Float) ,
+                new InbuiltType("double", typeof(Double), RuntimeType.Double) ,
+                new InbuiltType("bool", typeof(Boolean), RuntimeType.Bool),
+                new InbuiltType("string", typeof(String), RuntimeType.String) ,
+                new InbuiltType("char", typeof(Char), RuntimeType.Char) ,
+                new InbuiltType("any", typeof(FSObject), RuntimeType.Any) ,
                 new InbuiltType("void", typeof(void), RuntimeType.Void)
             };
             InbuiltNames = Inbuilts.ToDictionary(item => item.Name);
@@ -232,6 +231,75 @@ namespace FluidScript.Reflection.Emit
                 }
             }
             return isEquals;
+        }
+
+        internal static System.Reflection.MethodInfo GetOperatorOverload(string name, System.Type left, System.Type right)
+        {
+            var members = left.GetMember(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            foreach (System.Reflection.MethodInfo m in members)
+            {
+                if (MatchTypes(m, left, right))
+                    return m;
+            }
+            members = right.GetMember(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            foreach (System.Reflection.MethodInfo m in members)
+            {
+                if (MatchTypes(m, left, right))
+                    return m;
+            }
+            throw new System.Exception("No operator overload");
+        }
+
+        private static bool MatchTypes(System.Reflection.MethodInfo method, System.Type left, System.Type right)
+        {
+            var paramters = method.GetParameters();
+            if (paramters.Length == 2)
+            {
+                var first = paramters[0].ParameterType;
+                var second = paramters[1].ParameterType;
+                if (first != left)
+                {
+                    if (HasImplicitConvert(left, first) == false)
+                    {
+                        return false;
+                    }
+                }
+                if (second != right)
+                {
+                    if (HasImplicitConvert(right, second) == false)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        internal static bool TryImplicitConvert(System.Type from, System.Type to, out System.Reflection.MethodInfo method)
+        {
+            method = to.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            if (method != null && method.ReturnType == to)
+                return true;
+            method = from.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            return method != null && method.ReturnType == to;
+        }
+
+        internal static bool HasImplicitConvert(System.Type from, System.Type to)
+        {
+            var method = to.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            if (method != null && method.ReturnType == to)
+                return true;
+            method = from.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            return method != null && method.ReturnType == to;
+        }
+
+        internal static bool BindingFlagsMatch(bool state, System.Reflection.BindingFlags flags, System.Reflection.BindingFlags trueFlag, System.Reflection.BindingFlags falseFlag)
+        {
+
+            return (state && (flags & trueFlag) == trueFlag)
+
+                || (!state && (flags & falseFlag) == falseFlag);
+
         }
     }
 }

@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace FluidScript.Core
+namespace FluidScript.Library
 {
     public class AnonymousFunction : RuntimeObject, IFunctionReference
     {

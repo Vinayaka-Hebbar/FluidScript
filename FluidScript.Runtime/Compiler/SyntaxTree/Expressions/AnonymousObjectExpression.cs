@@ -14,7 +14,7 @@ namespace FluidScript.Compiler.SyntaxTree
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             var prototype = new Metadata.ObjectPrototype(instance.GetPrototype(), "AnnonymousObject");
-            var local = new Core.LocalInstance(prototype, instance["this"]);
+            var local = new Library.LocalInstance(prototype, instance["this"]);
             foreach (var member in Members)
             {
                 local.Append(member.Name, member.Evaluate(instance));

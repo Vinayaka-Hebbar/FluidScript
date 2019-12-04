@@ -31,7 +31,7 @@ namespace FluidScript.Compiler.SyntaxTree
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             var proto = new Metadata.FunctionPrototype(instance.GetPrototype(), "Block", Metadata.ScopeContext.Block);
-            instance = new Core.LocalInstance(proto, instance);
+            instance = new Library.LocalInstance(proto, instance);
             return Evaluate(instance, proto);
         }
 

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace FluidScript.Core
+namespace FluidScript.Library
 {
 #if Runtime
     public sealed class FunctionReference : RuntimeObject, IFunctionReference

@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Reflection.Emit
+﻿using System.Reflection;
+
+namespace FluidScript.Reflection.Emit
 {
     public interface ITypeProvider
     {
@@ -12,5 +14,6 @@
         System.Reflection.MemberTypes MemberType { get; }
         bool IsStatic { get; }
         void Build();
+        bool BindingFlagsMatch(BindingFlags flags);
     }
 }

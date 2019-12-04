@@ -49,14 +49,12 @@ namespace FluidScript.Compiler.SyntaxTree
                     //todo variable name not used
                     if (generator.ReturnVariable == null)
                         generator.ReturnVariable = generator.DeclareVariable(returnType);
-                    if (returnType != null && returnType != Expression.ResultType(generator))
+                    System.Type resolvedType = Expression.ResultType(generator);
+                    if (returnType != null && returnType != resolvedType)
                     {
-                        if (returnType.IsPrimitive)
-                            TypeUtils.ConvertToPrimitive(generator, returnType);
-                        if (returnType == typeof(object) && Expression.ResultType(generator).IsPrimitive)
+                        if(TypeUtils.TryImplicitConvert(resolvedType, returnType, out System.Reflection.MethodInfo method))
                         {
-                            //box
-                            generator.Box(Expression.ResultType(generator));
+                            generator.Call(method);
                         }
                     }
                     generator.StoreVariable(generator.ReturnVariable);

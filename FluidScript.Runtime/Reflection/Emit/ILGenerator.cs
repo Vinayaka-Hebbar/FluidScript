@@ -407,6 +407,9 @@ namespace FluidScript.Reflection.Emit
         /// </summary>
         public abstract void CompareLessThanUnsigned();
 
+        #region Implic Calls
+        #endregion
+
         /// <summary>
         /// Pops two values from the stack, adds them together, then pushes the result to the
         /// stack.
@@ -624,9 +627,7 @@ namespace FluidScript.Reflection.Emit
             if (method.IsStatic == true || method.DeclaringType.IsValueType == true)
                 CallStatic(method);
             else
-            {
                 CallVirtual(method);
-            }
         }
 
         /// <summary>

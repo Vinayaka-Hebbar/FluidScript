@@ -1,5 +1,5 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
-using FluidScript.Core;
+using FluidScript.Library;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -194,7 +194,7 @@ namespace FluidScript.Compiler
                 case '_':
                     if (char.IsLetter(n))
                     {
-#if !Runtime
+#if !Emit
                         c = Source.ReadChar();
                         return TokenType.Constant;
 #else
@@ -835,7 +835,7 @@ namespace FluidScript.Compiler
                 case TokenType.Identifier:
                     exp = VisitIdentifier();
                     break;
-#if !Runtime
+#if !Emit
                 case TokenType.Variable:
                     var name = GetName();
                     exp = new NameExpression(name, ExpressionType.Identifier);

@@ -129,22 +129,14 @@
                     return System.Convert.ToSingle(Store);
                 case RuntimeType.Int64:
                     return System.Convert.ToInt64(Store);
-                case RuntimeType.UInt64:
-                    return System.Convert.ToUInt64(Store);
                 case RuntimeType.Int32:
                     return System.Convert.ToInt32(Store);
-                case RuntimeType.UInt32:
-                    return System.Convert.ToUInt32(Store);
                 case RuntimeType.Int16:
                     return System.Convert.ToInt16(Store);
-                case RuntimeType.UInt16:
-                    return System.Convert.ToUInt16(Store);
                 case RuntimeType.Char:
                     return System.Convert.ToChar(Store);
                 case RuntimeType.Byte:
                     return System.Convert.ToSByte(Store);
-                case RuntimeType.UByte:
-                    return System.Convert.ToByte(Store);
                 case RuntimeType.Bool:
                     return (bool)Store ? 1 : 0;
                 case RuntimeType.String:
@@ -221,22 +213,14 @@
                     return System.TypeCode.Single;
                 case RuntimeType.Int64:
                     return System.TypeCode.Int64;
-                case RuntimeType.UInt64:
-                    return System.TypeCode.UInt64;
                 case RuntimeType.Int32:
                     return System.TypeCode.Int32;
-                case RuntimeType.UInt32:
-                    return System.TypeCode.UInt32;
                 case RuntimeType.Int16:
                     return System.TypeCode.Int16;
-                case RuntimeType.UInt16:
-                    return System.TypeCode.UInt16;
                 case RuntimeType.Char:
                     return System.TypeCode.Char;
                 case RuntimeType.Byte:
                     return System.TypeCode.SByte;
-                case RuntimeType.UByte:
-                    return System.TypeCode.Byte;
                 case RuntimeType.Bool:
                     return System.TypeCode.Boolean;
                 default:

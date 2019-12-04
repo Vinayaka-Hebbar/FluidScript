@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace FluidScript.Core
+namespace FluidScript.Library
 {
     public class FileSource : IScriptSource
     {

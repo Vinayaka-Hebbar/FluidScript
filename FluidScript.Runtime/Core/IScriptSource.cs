@@ -1,7 +1,7 @@
 ﻿using System;
 using FluidScript.Compiler;
 
-namespace FluidScript.Core
+namespace FluidScript.Library
 {
     public interface IScriptSource : IDisposable
     {

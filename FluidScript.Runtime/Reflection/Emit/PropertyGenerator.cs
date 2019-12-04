@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace FluidScript.Reflection.Emit
 {
@@ -34,7 +33,24 @@ namespace FluidScript.Reflection.Emit
             }
         }
 
+        public bool IsPublic
+        {
+            get
+            {
+                var first = Accessors.FirstOrDefault();
+                if (first == null)
+                    throw new Exception("Can't decide wether property is static or not");
+                return first.IsPublic;
+            }
+        }
+
         public IList<MethodGenerator> Accessors { get; } = new List<MethodGenerator>(2);
+
+        public bool BindingFlagsMatch(BindingFlags flags)
+        {
+            return TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
+                           && TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
+        }
 
         public void Build()
         {

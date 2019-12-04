@@ -22,18 +22,18 @@
         }
         public ExpressionType NodeType { get; }
 
-        public System.Type ResultType(Reflection.Emit.MethodBodyGenerator method)
+        public System.Type ResultType(Reflection.Emit.MethodBodyGenerator generator)
         {
             if (resolvedType == null)
-                ResolveType(method);
+                ResolveType(generator);
             return resolvedType;
         }
 
         /// <summary>
         /// Resolve Runtime type
         /// </summary>
-        /// <param name="method"></param>
-        protected virtual void ResolveType(Reflection.Emit.MethodBodyGenerator method)
+        /// <param name="generator"></param>
+        protected virtual void ResolveType(Reflection.Emit.MethodBodyGenerator generator)
         {
 
         }
@@ -46,7 +46,7 @@
                 resolvedType = value;
                 if (value.IsPrimitive)
                     resolvedRuntimeType = Reflection.Emit.TypeUtils.GetRuntimeType(value);
-                else if (value.FullName == "System.String")
+                else if (value.FullName == "FluidScript.String")
                     resolvedRuntimeType = RuntimeType.String;
                 else
                     resolvedRuntimeType = RuntimeType.Any;

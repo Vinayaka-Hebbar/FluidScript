@@ -29,7 +29,7 @@ namespace FluidScript.Compiler.SyntaxTree
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             var member = instance.GetPrototype().DeclareMethod(Name, Parameters.Select(arg => arg.GetParameterInfo()).ToArray(), ReturnType.GetTypeInfo(), Body);
-            var reference = new Core.DynamicFunction(member, instance, member.DynamicInvoke);
+            var reference = new Library.DynamicFunction(member, instance, member.DynamicInvoke);
             instance[Name] = reference;
             return reference;
         }
@@ -37,7 +37,7 @@ namespace FluidScript.Compiler.SyntaxTree
         internal override RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
         {
             var member = prototype.DeclareMethod(Name, Parameters.Select(arg=>arg.GetParameterInfo()).ToArray(), ReturnType.GetTypeInfo(), Body);
-            var reference = new Core.DynamicFunction(member, instance, member.DynamicInvoke);
+            var reference = new Library.DynamicFunction(member, instance, member.DynamicInvoke);
             instance[Name] = reference;
             return reference;
         }

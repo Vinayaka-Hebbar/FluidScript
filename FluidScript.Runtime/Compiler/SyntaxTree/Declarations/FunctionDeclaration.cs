@@ -1,5 +1,4 @@
-﻿using FluidScript.Reflection;
-using FluidScript.Reflection.Emit;
+﻿using FluidScript.Reflection.Emit;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -40,15 +39,13 @@ namespace FluidScript.Compiler.SyntaxTree
                 CreateFunction(generator, returnType, parameters, parameterTypes);
         }
 
-        private void CreateProperty(TypeGenerator generator, System.Type returnType, System.Collections.Generic.IEnumerable<ParameterInfo> parameters, System.Type[] parameterTypes)
+        private void CreateProperty(TypeGenerator generator, System.Type returnType, System.Collections.Generic.IEnumerable<Reflection.ParameterInfo> parameters, System.Type[] parameterTypes)
         {
             MethodGenerator accessor = null;
             System.Type type = null;
-            var name = Name;
+            var name = string.Concat(char.ToUpper(Name.First()), Name.Substring(1));
             var builder = generator.GetBuilder();
             System.Reflection.MethodAttributes attributes = GetAttributes();
-            if ((attributes & System.Reflection.MethodAttributes.Virtual) == System.Reflection.MethodAttributes.Virtual)
-                generator.CanImplementProperty(name, returnType, parameterTypes, out name);
             if (IsGetter)
             {
                 type = returnType;
@@ -63,6 +60,8 @@ namespace FluidScript.Compiler.SyntaxTree
             if (generator.TryGetProperty(Name, out PropertyGenerator property) == false)
             {
                 var pb = generator.GetBuilder().DefineProperty(name, System.Reflection.PropertyAttributes.None, type, null);
+                var attrBuilder = new System.Reflection.Emit.CustomAttributeBuilder(ReflectionHelpers.Register_Attr_Ctor, new object[] { Name });
+                pb.SetCustomAttribute(attrBuilder);
                 property = new PropertyGenerator(pb);
                 generator.Add(property);
             }
@@ -80,15 +79,18 @@ namespace FluidScript.Compiler.SyntaxTree
 
         private void CreateFunction(TypeGenerator generator, System.Type returnType, System.Collections.Generic.IEnumerable<Reflection.ParameterInfo> parameters, System.Type[] parameterTypes)
         {
-            var name = Name;
+            var name = string.Concat(char.ToUpper(Name.First()), Name.Substring(1));
             System.Reflection.MethodAttributes attributes = GetAttributes();
             if ((attributes & System.Reflection.MethodAttributes.Virtual) == System.Reflection.MethodAttributes.Virtual)
-                generator.CanImplementMethod(name, parameterTypes, out name);
+                generator.CanImplementMethod(Name, parameterTypes, out name);
             var method = generator.GetBuilder().DefineMethod(name, attributes, returnType, parameterTypes);
-            generator.Add(new MethodGenerator(method, parameterTypes, generator, Body)
+            //set runtime method name
+            MethodGenerator methodGen = new MethodGenerator(method, parameterTypes, generator, Body)
             {
-                Parameters = parameters,
-            });
+                Parameters = parameters
+            };
+            methodGen.SetCustomAttribute(typeof(Runtime.RegisterAttribute), ReflectionHelpers.Register_Attr_Ctor, new object[] { Name });
+            generator.Add(methodGen);
         }
 
         public System.Reflection.MethodInfo Create()

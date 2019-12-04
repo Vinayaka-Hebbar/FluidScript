@@ -51,13 +51,13 @@ namespace FluidScript.Reflection
         /// <summary>
         /// Static Data
         /// </summary>
-        internal Core.IFunctionReference Default;
+        internal Library.IFunctionReference Default;
 
         internal RuntimeObject DynamicInvoke(RuntimeObject obj, RuntimeObject[] args)
         {
             var prototype = new Compiler.Metadata.FunctionPrototype(obj.GetPrototype());
             //todo default value arg
-            var instance = new Core.LocalInstance(prototype, obj);
+            var instance = new Library.LocalInstance(prototype, obj);
             for (int index = 0; index < Arguments.Length; index++)
             {
                 var arg = Arguments[index];

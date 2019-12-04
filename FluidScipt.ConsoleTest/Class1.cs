@@ -1,6 +1,11 @@
 ﻿using FluidScript;
+using FluidScript.Library;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace FluidScipt.ConsoleTest
 {
@@ -11,59 +16,29 @@ namespace FluidScipt.ConsoleTest
             //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
 
             Class1 class1 = new Class1();
-            class1.Run();
+             class1.Run();
+            class1.Print();
             Console.ReadKey();
         }
 
         public void Run()
         {
-            var engine = new ScriptEngine();
-            var node = engine.ParseFile(System.AppDomain.CurrentDomain.BaseDirectory + "source.fls");
-            if (node is FluidScript.Compiler.SyntaxTree.FunctionDeclaration func)
-            {
-                var method = func.Create();
-                var r = method.Invoke(null, new object[0]);
-                Console.WriteLine(r);
-            }
-            if (node is FluidScript.Compiler.SyntaxTree.TypeDeclaration type)
-            {
-                var dynamicAssembly =
-                AppDomain.CurrentDomain.DefineDynamicAssembly(
-                    new System.Reflection.AssemblyName("DynamicClass.Utility.DynamicClasses, Version=1.0.0.0"),
-                    System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave
-                );
-                var dynamicModule =
-                    dynamicAssembly.DefineDynamicModule("DynamicClass.Utility.DynamicClasses.dll", true);
-                var classType = type.Generate(new FluidScript.Reflection.Emit.ReflectionModule(dynamicAssembly, dynamicModule));
-                dynamic instance = Activator.CreateInstance(classType);
-                var c = instance.read(1);
-                Console.WriteLine(c);
-                dynamicAssembly.Save("DynamicClass.Utility.DynamicClasses.dll");
+            ScriptEngine engine = new ScriptEngine();
+            var tree = engine.GetStatement("2+6");
+            var instance = new MathObject();
+           var value =  tree.Evaluate(instance);
+            Console.WriteLine();
 
-            }
         }
 
         void Print()
         {
-            Queue<int> que = new Queue<int>();
-            que.Enqueue(1);
-            que.Enqueue(2);
-            que.Enqueue(3);
-            que.Enqueue(4);
-            que.Enqueue(5);
-            int count = que.Count;
-            for (int i = 0; i < count; i++)
-            {
-                var item = que.Dequeue();
-                Console.WriteLine(item);
-            }
             Console.WriteLine();
         }
 
-        public object Test()
+        public FluidScript.Double Add(int a, int b)
         {
-            var x = 10;
-            return x == 10 ? 1 : 0;
+            return a + b;
         }
 
         public override string ToString()
@@ -71,7 +46,35 @@ namespace FluidScipt.ConsoleTest
             return base.ToString();
         }
 
+
         public object Get(object value) => value;
+    }
+
+    [DataContract]
+    public struct Age
+    {
+        [DataMember]
+        public int Number { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Age && ((Age)obj).Number == Number;
+        }
+
+        public override int GetHashCode()
+        {
+            return Number.GetHashCode();
+        }
+
+        public static bool operator ==(Age left, Age right)
+        {
+            return left.Number == right.Number;
+        }
+
+        public static bool operator !=(Age left, Age right)
+        {
+            return left.Number != right.Number;
+        }
     }
 
 }

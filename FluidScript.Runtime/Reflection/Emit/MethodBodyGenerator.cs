@@ -26,7 +26,7 @@ namespace FluidScript.Reflection.Emit
 
         public Statement SyntaxTree { get; internal set; }
 
-        internal readonly BaseMethodGenerator MethodGenerator;
+        internal readonly IMethodBaseGenerator MethodGenerator;
 
         internal readonly TypeGenerator TypeGenerator;
 
@@ -34,7 +34,7 @@ namespace FluidScript.Reflection.Emit
 
         private readonly Stack<BreakOrContinueInfo> breakOrContinueStack = new Stack<BreakOrContinueInfo>();
 
-        public MethodBodyGenerator(BaseMethodGenerator method, System.Reflection.Emit.ILGenerator generator) : base(generator, false)
+        public MethodBodyGenerator(IMethodBaseGenerator method, System.Reflection.Emit.ILGenerator generator) : base(generator, false)
         {
             MethodGenerator = method;
             TypeGenerator = method.TypeGenerator;
@@ -301,11 +301,6 @@ namespace FluidScript.Reflection.Emit
             if (ReturnVariable != null)
                 LoadVariable(ReturnVariable);
             Complete();
-        }
-
-        public bool TryGetMethod(string name, Type[] types, out System.Reflection.MethodBase method)
-        {
-            return TypeGenerator.TryGetMethod(name, types, out method);
         }
 
         public Type GetType(string typeName)

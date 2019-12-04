@@ -1,6 +1,6 @@
 ﻿using FluidScript.Compiler;
 
-namespace FluidScript.Core
+namespace FluidScript.Library
 {
     public sealed class StringSource : IScriptSource
     {
@@ -31,6 +31,7 @@ namespace FluidScript.Core
         {
             System.GC.SuppressFinalize(this);
         }
+
         public char ReadChar()
         {
             if (pos >= length)

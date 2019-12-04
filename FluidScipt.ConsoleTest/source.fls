@@ -1,16 +1,9 @@
 ﻿class Test {
-	var _x = 1, _y = 5 + 1;
+	const var _x = 12, _y = 5 + 1;
 
-	get x():int {
-		return _x+2;
-	}
-
-	set x(value:int) {
-		_x = value;
-	} 
-
-	func read(a:int):int {
-		return x;
+	func read(a:int):string {
+		var res = _x==6?10.0:20;
+		return this._x.toString();
 	}
 
     impl func toString() : string {

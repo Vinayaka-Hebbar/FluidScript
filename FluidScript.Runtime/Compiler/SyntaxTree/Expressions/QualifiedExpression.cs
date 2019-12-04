@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using FluidScript.Reflection.Emit;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -17,7 +19,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            if (NodeType == ExpressionType.QualifiedNamespace)
+            if (NodeType == ExpressionType.QualifiedNamespace || NodeType == ExpressionType.MemberAccess)
             {
                 return Target.ToString() + '.' + Name;
             }
@@ -36,6 +38,58 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
+        public override void GenerateCode(MethodBodyGenerator generator)
+        {
+            if (Target.NodeType == ExpressionType.Identifier || Target.NodeType == ExpressionType.Invocation || Target.NodeType == ExpressionType.MemberAccess)
+            {
+                Target.GenerateCode(generator);
+                ResolvedType = Target.ResultType(generator);
+                return;
+            }
+            else if (Target.NodeType == ExpressionType.This)
+            {
+                generator.LoadArgument(0);
+                ResolvedType = generator.TypeGenerator;
+                return;
+            }
+            base.GenerateCode(generator);
+        }
+
+        protected override void ResolveType(MethodBodyGenerator generator)
+        {
+            if (Target.NodeType == ExpressionType.Identifier || Target.NodeType == ExpressionType.Invocation)
+            {
+                ResolvedType = Target.ResultType(generator);
+                return;
+            }
+            else if (Target.NodeType == ExpressionType.This)
+            {
+                var variable = generator.GetLocalVariable(Name);
+                if (variable != null)
+                {
+                    if (variable.Type == null)
+                        throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
+                    ResolvedType = variable.Type;
+                }
+                //find in the class level
+                var member = generator.TypeGenerator.FindMember(Name).FirstOrDefault();
+                if (member != null)
+                {
+                    if (member.MemberType == System.Reflection.MemberTypes.Field)
+                    {
+                        var field = (System.Reflection.FieldInfo)member;
+                        if (field.FieldType == null)
+                            throw new System.Exception(string.Concat("Use of undeclared field ", field));
+                        ResolvedType = field.FieldType;
+                    }
+                    else if (member.MemberType == System.Reflection.MemberTypes.Property)
+                    {
+                        var property = (System.Reflection.PropertyInfo)member;
+                        ResolvedType = property.PropertyType;
+                    }
+
+                }
+            }
 
 #if Emit
         protected override void ResolveType(OptimizationInfo info)
@@ -97,5 +151,6 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
 #endif
+        }
     }
 }

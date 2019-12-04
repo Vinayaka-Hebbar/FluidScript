@@ -8,26 +8,18 @@
         String = 2,
         Double = 4,
         Float = Double | 8,
-        Unsigned = 32,
         Int64 = 16 | Float,
-        UInt64 = Unsigned | Float,
-        Int32 = 64 | Int64,
-        UInt32 = 128 | Int64 | UInt64,
-        Int16 = Int32 | 256,
-        UInt16 = Int32 | UInt32,
-        Char = 256 | Int32 | UInt16,
+        Int32 = 32 | Int64,
+        Int16 = Int32 | 64,
+        Char = 128 | Int32,
         /// <summary>
         /// sbyte
         /// </summary>
-        Byte = 512 | Int16,
-        /// <summary>
-        /// byte
-        /// </summary>
-        UByte = 512 | UInt16 | Int16,
-        Bool = 1024,
-        Array = 2048,
-        Function = 4096,
-        Void = 8192
+        Byte = 256 | Int16,
+        Bool = 512,
+        Array = 1024,
+        Function = 2048,
+        Void = 4092
     }
 
 }

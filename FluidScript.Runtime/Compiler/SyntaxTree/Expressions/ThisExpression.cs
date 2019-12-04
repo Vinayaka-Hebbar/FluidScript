@@ -15,10 +15,20 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
+        protected override void ResolveType(MethodBodyGenerator generator)
+        {
+            ResolvedType = generator.TypeGenerator.GetBuilder();
+        }
+
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            ResolvedType = generator.TypeGenerator.Type;
+            ResolvedType = generator.TypeGenerator.GetBuilder();
             generator.LoadArgument(0);
+        }
+
+        public override string ToString()
+        {
+            return "this";
         }
     }
 }

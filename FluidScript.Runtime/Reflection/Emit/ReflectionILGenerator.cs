@@ -158,7 +158,6 @@ namespace FluidScript.Reflection.Emit
                 throw new ArgumentNullException(nameof(method));
             if (method.IsStatic)
                 throw new ArgumentNullException(nameof(method));
-            Generator.Emit(OpCodes.Ldarg_0);
             if (method is ConstructorInfo)
                 Generator.Emit(OpCodes.Callvirt, (ConstructorInfo)method);
             else if (method is MethodInfo)
@@ -443,11 +442,7 @@ namespace FluidScript.Reflection.Emit
             if (field.IsStatic)
                 Generator.Emit(OpCodes.Ldsfld, field);
             else
-            {
-                //current instance ldarg_0
-                Generator.Emit(OpCodes.Ldarg_0);
                 Generator.Emit(OpCodes.Ldfld, field);
-            }
         }
 
         public override void LoadInt16(short value)

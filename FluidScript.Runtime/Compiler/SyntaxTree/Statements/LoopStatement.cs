@@ -14,7 +14,7 @@
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
             var prototype = new Metadata.FunctionPrototype(instance.GetPrototype(), "Loop", Metadata.ScopeContext.Local);
-            instance = new Core.LocalInstance(prototype, instance);
+            instance = new Library.LocalInstance(prototype, instance);
             var statement = Statement;
             StatementType nodeType = statement.NodeType;
             var expressions = Expressions;

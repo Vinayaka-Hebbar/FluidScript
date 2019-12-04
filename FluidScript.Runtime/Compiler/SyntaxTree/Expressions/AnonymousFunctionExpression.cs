@@ -21,14 +21,14 @@ namespace FluidScript.Compiler.SyntaxTree
 #if Runtime
         public override RuntimeObject Evaluate(RuntimeObject instance)
         {
-            return new Core.AnonymousFunction(instance, this, Parameters.Select(para => para.GetParameterInfo()).ToArray(), ReturnType.GetTypeInfo(), this.DynamicInvoke);
+            return new Library.AnonymousFunction(instance, this, Parameters.Select(para => para.GetParameterInfo()).ToArray(), ReturnType.GetTypeInfo(), this.DynamicInvoke);
         }
 #endif
 
         internal RuntimeObject DynamicInvoke(RuntimeObject obj, RuntimeObject[] args)
         {
             var prototype = new Metadata.FunctionPrototype(obj.GetPrototype());
-            var instance = new Core.LocalInstance(prototype, obj);
+            var instance = new Library.LocalInstance(prototype, obj);
             var arguments = Parameters.Select(para => para.GetParameterInfo()).ToArray();
             for (int index = 0; index < arguments.Length; index++)
             {

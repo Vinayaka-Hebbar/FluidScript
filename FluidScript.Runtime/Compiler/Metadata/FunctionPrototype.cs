@@ -137,13 +137,13 @@ namespace FluidScript.Compiler.Metadata
         public override RuntimeObject CreateInstance()
         {
             if (Parent is object)
-                return new Core.FunctionInstance(this, Parent.CreateInstance());
-            return new Core.FunctionInstance(this, RuntimeObject.Undefined);
+                return new Library.FunctionInstance(this, Parent.CreateInstance());
+            return new Library.FunctionInstance(this, RuntimeObject.Undefined);
         }
 
-        internal Core.FunctionInstance CreateInstance(RuntimeObject obj)
+        internal Library.FunctionInstance CreateInstance(RuntimeObject obj)
         {
-            return new Core.FunctionInstance(this, obj);
+            return new Library.FunctionInstance(this, obj);
         }
 
         public override void DefineVariable(string name, RuntimeObject value)

@@ -37,10 +37,6 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        public static System.Type[] GetTypes(MethodBodyGenerator generator, System.Collections.Generic.IEnumerable<Expression> expressions)
-        {
-            return expressions.Select(arg => arg.ResultType(generator)).ToArray();
-        }
 
         protected override void ResolveType(MethodBodyGenerator generator)
         {
@@ -50,6 +46,13 @@ namespace FluidScript.Compiler.SyntaxTree
                 if (variable.Type == null)
                     throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
                 ResolvedType = variable.Type;
+                return;
+            }
+            Reflection.ParameterInfo arg = generator.MethodGenerator.Parameters.FirstOrDefault(para => para.Name == Name);
+            if (arg.Name != null)
+            {
+                ResolvedType = generator.MethodGenerator.ParameterTypes[arg.Index];
+                return;
             }
             //find in the class level
             var member = generator.TypeGenerator.FindMember(Name).FirstOrDefault();
@@ -79,38 +82,38 @@ namespace FluidScript.Compiler.SyntaxTree
                     throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
                 ResolvedType = variable.Type;
                 generator.LoadVariable(variable);
+                return;
+            }
+            Reflection.ParameterInfo arg = generator.MethodGenerator.Parameters.FirstOrDefault(para => para.Name == Name);
+            if (arg.Name != null)
+            {
+                generator.LoadArgument(generator.MethodGenerator.IsStatic ? arg.Index : arg.Index + 1);
+                ResolvedType = generator.MethodGenerator.ParameterTypes[arg.Index];
             }
             //find in the class level
-           var member = generator.TypeGenerator.FindMember(Name).FirstOrDefault();
-            if(member != null)
+            var member = generator.TypeGenerator.FindMember(Name).FirstOrDefault();
+            if (member != null)
             {
-                if(member.MemberType == System.Reflection.MemberTypes.Field)
+                if (member.MemberType == System.Reflection.MemberTypes.Field)
                 {
                     var field = (System.Reflection.FieldInfo)member;
-                    if(field.FieldType == null)
+                    if (field.FieldType == null)
                         throw new System.Exception(string.Concat("Use of undeclared field ", field));
                     ResolvedType = field.FieldType;
+                    if (field.IsStatic == false)
+                        generator.LoadArgument(0);
                     generator.LoadField(field);
                 }
-                if(member.MemberType == System.Reflection.MemberTypes.Property)
+                if (member.MemberType == System.Reflection.MemberTypes.Property)
                 {
                     var property = (System.Reflection.PropertyInfo)member;
                     ResolvedType = property.PropertyType;
-                    generator.Call(property.GetGetMethod(true));
+                    System.Reflection.MethodInfo method = property.GetGetMethod(true);
+                    if (method.IsStatic == false)
+                        generator.LoadArgument(0);
+                    generator.Call(method);
                 }
-            }
-        }
-
-        public void Invoke(MethodBodyGenerator generator, System.Collections.Generic.IEnumerable<Expression> arguments)
-        {
-            var types = GetTypes(generator, arguments);
-            if (generator.TryGetMethod(Name, types, out System.Reflection.MethodBase method))
-            {
-                foreach (var item in arguments)
-                {
-                    item.GenerateCode(generator);
-                }
-                generator.Call(method);
+                return;
             }
         }
 #if Emit

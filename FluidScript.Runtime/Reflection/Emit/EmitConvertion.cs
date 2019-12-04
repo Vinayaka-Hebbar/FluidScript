@@ -1,10 +1,9 @@
-﻿using System;
-
+﻿
 namespace FluidScript.Reflection.Emit
 {
     public static class EmitConvertion
     {
-        public static void ToAny(ILGenerator generator, Type type)
+        public static void ToAny(ILGenerator generator, System.Type type)
         {
             if (type.IsValueType)
                 generator.Box(type);
@@ -38,13 +37,9 @@ namespace FluidScript.Reflection.Emit
                     generator.DefineLabelPosition(endOfIf);
                     break;
                 case RuntimeType.Byte:
-                case RuntimeType.UByte:
                 case RuntimeType.Int16:
-                case RuntimeType.UInt16:
                 case RuntimeType.Int32:
-                case RuntimeType.UInt32:
                 case RuntimeType.Int64:
-                case RuntimeType.UInt64:
                 case RuntimeType.Float:
                 case RuntimeType.Double:
                     if (TypeUtils.IsValueType(fromType))
@@ -91,14 +86,8 @@ namespace FluidScript.Reflection.Emit
                 case RuntimeType.Float:
                     generator.ConvertToSingle();
                     break;
-                case RuntimeType.UInt64:
-                    generator.ConvertToUnsignedInt64();
-                    break;
                 case RuntimeType.Int32:
                     generator.ConvertToInt32();
-                    break;
-                case RuntimeType.UInt32:
-                    generator.ConvertToUnsignedInt32();
                     break;
                 case RuntimeType.Char:
                     generator.ConvertToChar();
@@ -106,21 +95,25 @@ namespace FluidScript.Reflection.Emit
                 case RuntimeType.Int16:
                     generator.ConvertToInt16();
                     break;
-                case RuntimeType.UInt16:
-                    generator.ConvertToUnsignedInt16();
-                    break;
                 case RuntimeType.Byte:
                     generator.ConvertToByte();
                     break;
-                case RuntimeType.UByte:
-                    generator.ConvertToUnsignedByte();
-                    break;
                 case RuntimeType.String:
                 case RuntimeType.Any:
-                    throw new InvalidCastException("cannot convert to number");
+                    throw new System.InvalidCastException("cannot convert to number");
                 default:
                     throw new System.InvalidOperationException("type not found");
             }
+        }
+
+        internal static void Convert(MethodBodyGenerator generator, System.Type from, System.Type to)
+        {
+            var method = to.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            if (method != null && method.ReturnType == to)
+                generator.Call(method);
+            method = from.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            if (method != null && method.ReturnType == to)
+                generator.Call(method);
         }
     }
 }

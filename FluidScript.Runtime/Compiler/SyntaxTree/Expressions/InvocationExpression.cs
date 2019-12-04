@@ -1,4 +1,5 @@
 ﻿using FluidScript.Reflection.Emit;
+using System;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -100,7 +101,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     array.Resize(index + 1);
                 }
                 var current = array[index];
-                if ((current.ReflectedType & FluidScript.RuntimeType.Array) == FluidScript.RuntimeType.Array)
+                if ((current.ReflectedType & RuntimeType.Array) == FluidScript.RuntimeType.Array)
                 {
                     var innerArray = (Library.ArrayObject)current;
                     array = GetArray(indexes.Skip(i + 1).Take(indexes.Length - 1).ToArray(), ref innerArray);
@@ -117,16 +118,104 @@ namespace FluidScript.Compiler.SyntaxTree
                 yield return expressions[i];
             }
         }
-
 #endif
+
+        protected override void ResolveType(MethodBodyGenerator generator)
+        {
+            if (NodeType == ExpressionType.Invocation)
+            {
+                var types = GetTypes(generator, Arguments);
+                System.Type resultType = null;
+                string name = null;
+                if (Target.NodeType == ExpressionType.Identifier)
+                {
+                    resultType = generator.TypeGenerator;
+                    name = Target.ToString();
+                }
+                else if (Target.NodeType == ExpressionType.MemberAccess)
+                {
+                    var exp = (QualifiedExpression)Target;
+                    resultType = exp.ResultType(generator);
+                    name = exp.Name;
+                }
+                bool HasAttribute(System.Reflection.MethodInfo m)
+                {
+                    if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
+                    {
+                        var data = (Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                        if (data != null)
+                            return data.Match(name);
+                    }
+                    return false;
+                }
+                var methods = resultType
+                    .GetMethods(TypeUtils.Any)
+                    .Where(HasAttribute).ToArray();
+                System.Reflection.MethodBase method = (System.Reflection.MethodInfo)Type.DefaultBinder.SelectMethod(TypeUtils.Any, methods, types, null);
+                if (method is IMethodBaseGenerator baseGenerator)
+                    method = baseGenerator.MethodBase;
+                //todo method.DeclaringType == resultType
+                if (method is System.Reflection.MethodInfo)
+                    ResolvedType = ((System.Reflection.MethodInfo)method).ReturnType;
+            }
+            else if (NodeType == ExpressionType.Indexer)
+            {
+                System.Type type = Target.ResultType(generator);
+                ResolvedType = type.GetElementType();
+            }
+        }
+
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             if (NodeType == ExpressionType.Invocation)
             {
-                GenerateCall(generator);
+                var types = GetTypes(generator, Arguments);
+                System.Type resultType = null;
+                string name = null;
+                if (Target.NodeType == ExpressionType.Identifier)
+                {
+                    resultType = generator.TypeGenerator;
+                    name = Target.ToString();
+                }
+                else if (Target.NodeType == ExpressionType.MemberAccess)
+                {
+                    var exp = (QualifiedExpression)Target;
+                    resultType = exp.ResultType(generator);
+                    name = exp.Name;
+                    exp.GenerateCode(generator);
+                }
+                bool HasAttribute(System.Reflection.MethodInfo m)
+                {
+                    if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
+                    {
+                        var data = (Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                        if (data != null)
+                            return data.Match(name);
+                    }
+                    return false;
+                }
+                var methods = resultType
+                    .GetMethods(TypeUtils.Any)
+                    .Where(HasAttribute).ToArray();
+                System.Reflection.MethodBase method = (System.Reflection.MethodInfo)Type.DefaultBinder.SelectMethod(TypeUtils.Any, methods, types, null);
+                if (method is IMethodBaseGenerator baseGenerator)
+                    method = baseGenerator.MethodBase;
+                //todo method.DeclaringType == resultType
+                if(Target.NodeType == ExpressionType.Identifier)
+                {
+                    if (method.IsStatic == false)
+                        generator.LoadArgument(0);
+                }
+                foreach (var item in Arguments)
+                {
+                    item.GenerateCode(generator);
+                }
+                generator.Call(method);
+                if (method is System.Reflection.MethodInfo)
+                    ResolvedType = ((System.Reflection.MethodInfo)method).ReturnType;
             }
-            if (NodeType == ExpressionType.Indexer)
+            else if (NodeType == ExpressionType.Indexer)
             {
                 Target.GenerateCode(generator);
                 foreach (var expr in Arguments)
@@ -134,16 +223,23 @@ namespace FluidScript.Compiler.SyntaxTree
                     expr.GenerateCode(generator);
                 }
                 System.Type type = Target.ResultType(generator);
+                ResolvedType = type.GetElementType();
                 generator.LoadArrayElement(type);
             }
         }
 
-        private void GenerateCall(MethodBodyGenerator generator)
+        internal static System.Type[] GetTypes(MethodBodyGenerator generator, System.Collections.Generic.IEnumerable<Expression> expressions)
         {
-            if (Target.NodeType == ExpressionType.Identifier)
+            return expressions.Select(arg => arg.ResultType(generator)).ToArray();
+        }
+
+        internal static void GenerateCall(MethodBodyGenerator generator, System.Reflection.MethodBase method, System.Collections.Generic.IEnumerable<Expression> arguments)
+        {
+            foreach (var item in arguments)
             {
-                ((NameExpression)Target).Invoke(generator, Arguments);
+                item.GenerateCode(generator);
             }
+            generator.Call(method);
         }
 
         public override string ToString()

@@ -34,56 +34,76 @@ namespace FluidScript.Compiler.SyntaxTree
 
         protected override void ResolveType(MethodBodyGenerator method)
         {
-            ResolvedType = Value.GetType();
+            switch (Value)
+            {
+                case int _:
+                    ResolvedType = typeof(Integer);
+                    break;
+                case double _:
+                    ResolvedType = typeof(Double);
+                    break;
+                case string _:
+                    ResolvedType = typeof(String);
+                    break;
+                case null:
+                    ResolvedType = typeof(IFSObject);
+                    break;
+            }
         }
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            var type = GetRuntimeType(generator);
-            //Unset ObjectType.Number
-            switch (type)
+            //todo unsigned to signed
+            switch (Value)
             {
-                case RuntimeType.Byte:
+                case sbyte _:
                     generator.LoadByte((sbyte)Value);
+                    generator.NewObject(ReflectionHelpers.Byte_New);
+                    ResolvedType = typeof(Byte);
                     break;
-                case RuntimeType.UByte:
-                    generator.LoadByte((byte)Value);
-                    break;
-                case RuntimeType.Char:
+                case char _:
                     generator.LoadChar((char)Value);
+                    generator.NewObject(ReflectionHelpers.Char_New);
+                    ResolvedType = typeof(Char);
                     break;
-                case RuntimeType.Int16:
+                case short _:
                     generator.LoadInt16((short)Value);
+                    generator.NewObject(ReflectionHelpers.Short_New);
+                    ResolvedType = typeof(Short);
                     break;
-                case RuntimeType.UInt16:
-                    generator.LoadInt16((ushort)Value);
-                    break;
-                case RuntimeType.Int32:
+                case int _:
                     generator.LoadInt32((int)Value);
+                    generator.NewObject(ReflectionHelpers.Integer_New);
+                    ResolvedType = typeof(Integer);
                     break;
-                case RuntimeType.UInt32:
-                    generator.LoadInt32((uint)Value);
-                    break;
-                case RuntimeType.Int64:
+                case long _:
                     generator.LoadInt64((long)Value);
+                    generator.NewObject(ReflectionHelpers.Long_New);
+                    ResolvedType = typeof(Long);
                     break;
-                case RuntimeType.UInt64:
-                    generator.LoadInt64((ulong)Value);
-                    break;
-                case RuntimeType.Float:
+                case float _:
                     generator.LoadSingle((float)Value);
+                    generator.NewObject(ReflectionHelpers.Float_New);
+                    ResolvedType = typeof(Float);
                     break;
-                case RuntimeType.Double:
+                case double _:
                     generator.LoadDouble((double)Value);
+                    generator.NewObject(ReflectionHelpers.Double_New);
+                    ResolvedType = typeof(Double);
                     break;
-                case RuntimeType.Bool:
+                case bool _:
                     generator.LoadBool((bool)Value);
+                    generator.NewObject(ReflectionHelpers.Bool_New);
+                    ResolvedType = typeof(Boolean);
                     break;
-                case RuntimeType.String:
+                case string _:
                     generator.LoadString(Value.ToString());
+                    generator.NewObject(ReflectionHelpers.String_New);
+                    ResolvedType = typeof(String);
                     break;
-                case RuntimeType.Undefined:
+                case null:
                     generator.LoadNull();
+                    ResolvedType = typeof(IFSObject);
                     break;
             }
         }

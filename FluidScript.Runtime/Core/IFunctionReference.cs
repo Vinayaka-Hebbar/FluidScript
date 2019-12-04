@@ -1,4 +1,4 @@
-﻿namespace FluidScript.Core
+﻿namespace FluidScript.Library
 {
     public interface IFunctionReference
     {

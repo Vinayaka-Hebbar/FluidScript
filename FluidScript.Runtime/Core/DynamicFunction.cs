@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FluidScript.Core
+namespace FluidScript.Library
 {
 #if Runtime
     internal sealed class DynamicFunction : RuntimeObject, IFunctionReference

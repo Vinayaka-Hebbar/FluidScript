@@ -44,18 +44,18 @@ namespace FluidScript.Reflection
         {
             if (method.Store != null)
             {
-                Core.FunctionGroup list = null;
+                Library.FunctionGroup list = null;
                 if (TryGetValue(method.Name, out RuntimeObject existing))
-                    if (existing is Core.FunctionGroup)
-                        list = (Core.FunctionGroup)existing;
+                    if (existing is Library.FunctionGroup)
+                        list = (Library.FunctionGroup)existing;
                 if (list is null)
                 {
-                    list = new Core.FunctionGroup(method.Name);
+                    list = new Library.FunctionGroup(method.Name);
                     Add(method.Name, list);
                 }
-                Core.IFunctionReference reference = method.Default;
+                Library.IFunctionReference reference = method.Default;
                 if (reference is null)
-                    reference = new Core.FunctionReference(obj, method.Arguments, method.ReturnType, method.Store);
+                    reference = new Library.FunctionReference(obj, method.Arguments, method.ReturnType, method.Store);
                 list.Add(reference);
             }
         }

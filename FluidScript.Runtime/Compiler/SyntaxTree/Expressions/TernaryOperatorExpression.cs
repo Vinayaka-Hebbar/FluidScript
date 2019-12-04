@@ -10,6 +10,8 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public readonly Expression Third;
 
+        private System.Reflection.MethodInfo implicitCall;
+
         public TernaryOperatorExpression(Expression first, Expression second, Expression third) : base(ExpressionType.Question)
         {
             First = first;
@@ -26,25 +28,27 @@ namespace FluidScript.Compiler.SyntaxTree
 
         protected override void ResolveType(MethodBodyGenerator generator)
         {
-            var condition = First.GetRuntimeType(generator);
-            if (condition == RuntimeType.Bool)
+            var condition = First.ResultType(generator);
+            if (condition == typeof(Boolean))
             {
-                var a = Second.GetRuntimeType(generator);
-                var b = Third.GetRuntimeType(generator);
-                if (a == b)
+                var firstType = Second.ResultType(generator);
+                var secondType = Third.ResultType(generator);
+                if (firstType == secondType)
                 {
-                    ResolvedType = Second.ResultType(generator);
+                    ResolvedType = secondType;
+                    return;
                 }
-                else
+                if (TypeUtils.TryImplicitConvert(firstType, secondType, out System.Reflection.MethodInfo method))
                 {
-                    if (a != RuntimeType.Any && b != RuntimeType.Any)
-                    {
-                        ResolvedRuntimeType = a & b;
-                    }
-                    else
-                    {
-                        ResolvedRuntimeType = RuntimeType.Any;
-                    }
+                    ResolvedType = secondType;
+                    implicitCall = method;
+                    return;
+                }
+                if (TypeUtils.TryImplicitConvert(secondType, firstType, out method))
+                {
+                    ResolvedType = firstType;
+                    implicitCall = method;
+                    return;
                 }
             }
             else
@@ -55,23 +59,31 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            // Calculate the result type.
-            var resultType = GetRuntimeType(generator);
+            // Find the result type.
+            var firstType = Second.ResultType(generator);
+            var secondType = Third.ResultType(generator);
             First.GenerateCode(generator);
             // Branch if the condition is false.
             var startOfElse = generator.CreateLabel();
             generator.BranchIfFalse(startOfElse);
             Second.GenerateCode(generator);
-            var secondType = Second.GetRuntimeType(generator);
-            EmitConvertion.Convert(generator, resultType, secondType);
+            if (firstType != secondType && implicitCall == null && TypeUtils.TryImplicitConvert(firstType, secondType, out System.Reflection.MethodInfo method))
+            {
+                ResolvedType = secondType;
+                implicitCall = method;
+                generator.Call(implicitCall);
+            }
             // Branch to the end.
             var end = generator.CreateLabel();
             generator.Branch(end);
             generator.DefineLabelPosition(startOfElse);
 
             Third.GenerateCode(generator);
-            var thirdType = Second.GetRuntimeType(generator);
-            EmitConvertion.Convert(generator, resultType, thirdType);
+            if (firstType != secondType && implicitCall == null && TypeUtils.TryImplicitConvert(secondType, firstType, out implicitCall))
+            {
+                ResolvedType = firstType;
+                generator.Call(implicitCall);
+            }
 
             generator.DefineLabelPosition(end);
 

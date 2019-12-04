@@ -19,7 +19,7 @@ namespace FluidScript.Compiler.SyntaxTree
             Members = members;
         }
 
-        public Core.IScriptSource Source
+        public Library.IScriptSource Source
         {
             get;
             set;
@@ -32,9 +32,11 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public System.Type Generate(ReflectionModule module)
         {
-            System.Type baseType = null;
+            System.Type baseType;
             if (BaseType != null)
                 baseType = module.GetType(BaseType.ToString());
+            else
+                baseType = typeof(FSObject);
             var type = module.DefineType(Name, System.Reflection.TypeAttributes.Public, baseType);
             var generator = new TypeGenerator(type, module)
             {
