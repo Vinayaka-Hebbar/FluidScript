@@ -23,6 +23,18 @@ namespace FluidScript.Library
             return store;
         }
 
+        public override object ToAny()
+        {
+            return store;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return store != null;
+            return store.Equals(obj);
+        }
+
         public override Prototype GetPrototype()
         {
             if (prototype is null)
@@ -75,6 +87,11 @@ namespace FluidScript.Library
         IEnumerator IEnumerable.GetEnumerator()
         {
             return store.GetEnumerator();
+        }
+
+        public override int GetHashCode()
+        {
+            return store.GetHashCode();
         }
     }
 }

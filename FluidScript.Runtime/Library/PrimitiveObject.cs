@@ -11,60 +11,60 @@
         public static readonly RuntimeObject NaN = new PrimitiveObject(double.NaN, RuntimeType.Double);
 
         private static Compiler.Metadata.Prototype prototype;
-        private readonly object Store;
+        private readonly object store;
         private readonly RuntimeType Type;
 
         public PrimitiveObject(object value, RuntimeType type)
         {
-            Store = value;
+            store = value;
             Type = type;
         }
 
         internal PrimitiveObject(object value, System.Type type)
         {
-            Store = value;
+            store = value;
             Type = Compiler.Emit.TypeUtils.ToPrimitive(type);
         }
 
         public PrimitiveObject(PrimitiveObject[] value)
         {
-            Store = value;
+            store = value;
             Type = RuntimeType.Array;
         }
 
         public PrimitiveObject(double value)
         {
-            Store = value;
+            store = value;
             Type = RuntimeType.Double;
         }
 
         public PrimitiveObject(float value)
         {
-            Store = value;
+            store = value;
             Type = RuntimeType.Float;
         }
 
         public PrimitiveObject(int value)
         {
-            Store = value;
+            store = value;
             Type = RuntimeType.Int32;
         }
 
         public PrimitiveObject(char value)
         {
-            Store = value;
+            store = value;
             Type = RuntimeType.Char;
         }
 
         public PrimitiveObject(bool value)
         {
-            Store = value;
+            store = value;
             Type = RuntimeType.Bool;
         }
 
         public override string ToString()
         {
-            return Store.ToString();
+            return store.ToString();
         }
 
         public override bool IsNumber() => (Type & RuntimeType.Double) == RuntimeType.Double;
@@ -89,28 +89,28 @@
 
         public override double ToDouble()
         {
-            return System.Convert.ToDouble(Store);
+            return System.Convert.ToDouble(store);
         }
 
         public override float ToFloat()
         {
-            return System.Convert.ToSingle(Store);
+            return System.Convert.ToSingle(store);
         }
 
         public override int ToInt32()
         {
-            return System.Convert.ToInt32(Store);
+            return System.Convert.ToInt32(store);
         }
 
         public override char ToChar()
         {
-            return System.Convert.ToChar(Store);
+            return System.Convert.ToChar(store);
         }
 
         public override bool ToBool()
         {
             if ((Type) == RuntimeType.Bool)
-                return System.Convert.ToBoolean(Store);
+                return System.Convert.ToBoolean(store);
             return Type != RuntimeType.Undefined;
         }
 
@@ -124,45 +124,50 @@
             switch (Type)
             {
                 case RuntimeType.Double:
-                    return System.Convert.ToDouble(Store);
+                    return System.Convert.ToDouble(store);
                 case RuntimeType.Float:
-                    return System.Convert.ToSingle(Store);
+                    return System.Convert.ToSingle(store);
                 case RuntimeType.Int64:
-                    return System.Convert.ToInt64(Store);
+                    return System.Convert.ToInt64(store);
                 case RuntimeType.UInt64:
-                    return System.Convert.ToUInt64(Store);
+                    return System.Convert.ToUInt64(store);
                 case RuntimeType.Int32:
-                    return System.Convert.ToInt32(Store);
+                    return System.Convert.ToInt32(store);
                 case RuntimeType.UInt32:
-                    return System.Convert.ToUInt32(Store);
+                    return System.Convert.ToUInt32(store);
                 case RuntimeType.Int16:
-                    return System.Convert.ToInt16(Store);
+                    return System.Convert.ToInt16(store);
                 case RuntimeType.UInt16:
-                    return System.Convert.ToUInt16(Store);
+                    return System.Convert.ToUInt16(store);
                 case RuntimeType.Char:
-                    return System.Convert.ToChar(Store);
+                    return System.Convert.ToChar(store);
                 case RuntimeType.Byte:
-                    return System.Convert.ToSByte(Store);
+                    return System.Convert.ToSByte(store);
                 case RuntimeType.UByte:
-                    return System.Convert.ToByte(Store);
+                    return System.Convert.ToByte(store);
                 case RuntimeType.Bool:
-                    return (bool)Store ? 1 : 0;
+                    return (bool)store ? 1 : 0;
                 case RuntimeType.String:
-                    double.TryParse(Store.ToString(), out double value);
+                    double.TryParse(store.ToString(), out double value);
                     return value;
                 case RuntimeType.Any:
-                    return System.Convert.ToDouble(Store);
+                    return System.Convert.ToDouble(store);
                 default:
                 case RuntimeType.Undefined:
                     return double.NaN;
             }
         }
 
+        public override object ToAny()
+        {
+            return store;
+        }
+
         public PrimitiveObject[] ToArray()
         {
             if ((Type & RuntimeType.Array) == RuntimeType.Array)
             {
-                return (PrimitiveObject[])Store;
+                return (PrimitiveObject[])store;
                 //force convert
             }
             return new PrimitiveObject[0];
@@ -170,33 +175,32 @@
 
         public bool IsTypeOf<TSource>()
         {
-            return Store != null && Store.GetType() == typeof(TSource);
+            return store != null && store.GetType() == typeof(TSource);
         }
 
-        public override System.Type DeclaredType => Store.GetType();
+        public override System.Type DeclaredType => store.GetType();
 
         public override bool Equals(object obj)
         {
-            double value = ToNumber();
             if (obj == null)
             {
-                return Store == null;
+                return store == null;
             }
-            if (obj is PrimitiveObject result)
+            if (obj is PrimitiveObject primitive)
             {
-                return value.Equals(result.ToNumber());
+                return ToNumber().Equals(primitive.ToNumber());
             }
-            return value.Equals(obj);
+            return store.Equals(obj);
         }
 
         public bool Equals(PrimitiveObject other)
         {
-            return Store != null && Store.Equals(other.Store);
+            return store != null && store.Equals(other.store);
         }
 
         public override int GetHashCode()
         {
-            return Store.GetHashCode();
+            return store.GetHashCode();
         }
 
         public override Compiler.Metadata.Prototype GetPrototype()
@@ -246,67 +250,67 @@
 
         bool System.IConvertible.ToBoolean(System.IFormatProvider provider)
         {
-            return System.Convert.ToBoolean(Store, provider);
+            return System.Convert.ToBoolean(store, provider);
         }
 
         char System.IConvertible.ToChar(System.IFormatProvider provider)
         {
-            return System.Convert.ToChar(Store, provider);
+            return System.Convert.ToChar(store, provider);
         }
 
         sbyte System.IConvertible.ToSByte(System.IFormatProvider provider)
         {
-            return System.Convert.ToSByte(Store, provider);
+            return System.Convert.ToSByte(store, provider);
         }
 
         byte System.IConvertible.ToByte(System.IFormatProvider provider)
         {
-            return System.Convert.ToByte(Store, provider);
+            return System.Convert.ToByte(store, provider);
         }
 
         short System.IConvertible.ToInt16(System.IFormatProvider provider)
         {
-            return System.Convert.ToInt16(Store, provider);
+            return System.Convert.ToInt16(store, provider);
         }
 
         ushort System.IConvertible.ToUInt16(System.IFormatProvider provider)
         {
-            return System.Convert.ToUInt16(Store, provider);
+            return System.Convert.ToUInt16(store, provider);
         }
 
         int System.IConvertible.ToInt32(System.IFormatProvider provider)
         {
-            return System.Convert.ToInt32(Store, provider);
+            return System.Convert.ToInt32(store, provider);
         }
 
         uint System.IConvertible.ToUInt32(System.IFormatProvider provider)
         {
-            return System.Convert.ToUInt32(Store, provider);
+            return System.Convert.ToUInt32(store, provider);
         }
 
         long System.IConvertible.ToInt64(System.IFormatProvider provider)
         {
-            return System.Convert.ToInt64(Store, provider);
+            return System.Convert.ToInt64(store, provider);
         }
 
         ulong System.IConvertible.ToUInt64(System.IFormatProvider provider)
         {
-            return System.Convert.ToUInt64(Store, provider);
+            return System.Convert.ToUInt64(store, provider);
         }
 
         float System.IConvertible.ToSingle(System.IFormatProvider provider)
         {
-            return System.Convert.ToSingle(Store, provider);
+            return System.Convert.ToSingle(store, provider);
         }
 
         double System.IConvertible.ToDouble(System.IFormatProvider provider)
         {
-            return System.Convert.ToDouble(Store, provider);
+            return System.Convert.ToDouble(store, provider);
         }
 
         decimal System.IConvertible.ToDecimal(System.IFormatProvider provider)
         {
-            return System.Convert.ToDecimal(Store, provider);
+            return System.Convert.ToDecimal(store, provider);
         }
 
         System.DateTime System.IConvertible.ToDateTime(System.IFormatProvider provider)
@@ -316,12 +320,12 @@
 
         string System.IConvertible.ToString(System.IFormatProvider provider)
         {
-            return Store.ToString();
+            return store.ToString();
         }
 
         object System.IConvertible.ToType(System.Type conversionType, System.IFormatProvider provider)
         {
-            return Store;
+            return store;
         }
         #endregion
 
@@ -330,32 +334,32 @@
 
         public static explicit operator int(PrimitiveObject result)
         {
-            return (int)result.Store;
+            return (int)result.store;
         }
 
         public static implicit operator float(PrimitiveObject result)
         {
-            return (float)result.Store;
+            return (float)result.store;
         }
 
         public static implicit operator double(PrimitiveObject result)
         {
-            return (double)result.Store;
+            return (double)result.store;
         }
 
         public static implicit operator string(PrimitiveObject result)
         {
-            return result.Store.ToString();
+            return result.store.ToString();
         }
 
         public static implicit operator char(PrimitiveObject result)
         {
-            return (char)result.Store;
+            return (char)result.store;
         }
 
         public static implicit operator bool(PrimitiveObject result)
         {
-            return (bool)result.Store;
+            return (bool)result.store;
         }
     }
 }

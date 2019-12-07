@@ -26,7 +26,7 @@
     <PackageId>FluidScript.Runtime</PackageId>
     <Product>FluidScript Runtime</Product>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.10</Version>
+    <Version>1.0.12-beta</Version>
     <AssemblyName>FluidScript.Runtime</AssemblyName>
     <PackageTags>runtime,script</PackageTags>
     <PackageReleaseNotes>Initial Release of FluidScript Runtime</PackageReleaseNotes>

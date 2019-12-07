@@ -12,7 +12,6 @@ namespace FluidScript
         public static readonly RuntimeObject Undefined = new RuntimeObject(ObjectPrototype.Default, RuntimeType.Undefined);
         public static readonly RuntimeObject Void = new RuntimeObject(ObjectPrototype.Default, RuntimeType.Void);
 
-
         internal readonly Compiler.Reflection.Instances instances;
 
         private readonly Prototype prototype;
@@ -36,13 +35,19 @@ namespace FluidScript
             instances = prototype.Init(this, new KeyValuePair<object, RuntimeObject>("this", obj));
         }
 
+        protected RuntimeObject(RuntimeObject obj)
+        {
+            prototype = GetPrototype();
+            if (prototype is null)
+                throw new System.NullReferenceException(nameof(prototype));
+            instances = prototype.Init(this, new KeyValuePair<object, RuntimeObject>("this", obj));
+        }
+
         protected RuntimeObject()
         {
             prototype = GetPrototype();
             if (prototype is null)
-            {
                 throw new System.NullReferenceException(nameof(prototype));
-            }
             instances = prototype.Init(this);
         }
 
@@ -183,6 +188,11 @@ namespace FluidScript
         public virtual double ToNumber()
         {
             return double.NaN;
+        }
+
+        public virtual object ToAny()
+        {
+            return null;
         }
 
         public virtual bool IsNull()
@@ -492,6 +502,16 @@ namespace FluidScript
                     result[i] = From(array[i]);
                 }
                 return new Library.ArrayObject(result, RuntimeType.Any);
+            }
+            if (value is System.Collections.IDictionary dict)
+            {
+                var list = new Dictionary<RuntimeObject, RuntimeObject>();
+                var enumerator = dict.GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    list.Add(From(enumerator.Key), From(enumerator.Value));
+                }
+                return new Library.DictionaryObject(list, RuntimeType.Any);
             }
             return value.ToString();
         }
