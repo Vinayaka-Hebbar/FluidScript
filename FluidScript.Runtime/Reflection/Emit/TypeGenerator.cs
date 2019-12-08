@@ -5,11 +5,11 @@ using System.Linq;
 
 namespace FluidScript.Reflection.Emit
 {
-    public sealed class TypeGenerator : System.Type, ITypeProvider, IEnumerable<IMemberGenerator>
+    public sealed class TypeGenerator : System.Type, ITypeProvider
     {
         private const System.Reflection.BindingFlags PublicInstanceOrStatic = PublicInstance | System.Reflection.BindingFlags.Static;
         private const System.Reflection.BindingFlags PublicInstance = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
-        private readonly IList<IMemberGenerator> Members = new List<IMemberGenerator>();
+        internal readonly IList<IMemberGenerator> Members = new List<IMemberGenerator>();
         private readonly System.Reflection.Emit.TypeBuilder _builder;
         public readonly ReflectionModule ReflectionModule;
         public override System.Reflection.Module Module { get; }
@@ -112,10 +112,20 @@ namespace FluidScript.Reflection.Emit
 
         public IEnumerable<System.Reflection.MemberInfo> FindMember(string name)
         {
-            var member = Members.Where(mem => mem.Name == name).Select(mem => mem.MemberInfo);
+            bool HasMember(System.Reflection.MemberInfo m)
+            {
+                if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
+                {
+                    var data = (System.Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                    if (data != null)
+                        return data.Match(name);
+                }
+                return m.Name == name;
+            }
+            var member = Members.Select(mem => mem.MemberInfo).Where(HasMember);
             if (member.Any())
                 return member;
-            return BaseType.GetMember(name, PublicInstanceOrStatic);
+            return BaseType.GetMembers(PublicInstanceOrStatic).Where(HasMember);
         }
 
         internal bool CanImplementMethod(string name, System.Type[] types, out string newName)
@@ -148,16 +158,6 @@ namespace FluidScript.Reflection.Emit
             if (TypeUtils.IsInbuiltType(typeName))
                 return TypeUtils.GetInbuiltType(typeName);
             return Module.GetType(typeName);
-        }
-
-        public IEnumerator<IMemberGenerator> GetEnumerator()
-        {
-            return Members.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return Members.GetEnumerator();
         }
 
         protected override System.Reflection.TypeAttributes GetAttributeFlagsImpl()

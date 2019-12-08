@@ -99,7 +99,7 @@ namespace FluidScript.Reflection.Emit
         public void Build()
         {
             var body = new MethodBodyGenerator(this, _builder.GetILGenerator());
-            foreach (FieldGenerator generator in TypeGenerator.Where(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic == IsStatic))
+            foreach (FieldGenerator generator in TypeGenerator.Members.Where(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic == IsStatic))
             {
                 if (IsStatic == false)
                     body.LoadArgument(0);

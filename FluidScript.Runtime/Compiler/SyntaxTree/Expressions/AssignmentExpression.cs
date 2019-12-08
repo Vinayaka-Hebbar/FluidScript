@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using FluidScript.Reflection.Emit;
+﻿using FluidScript.Reflection.Emit;
+using System.Runtime.InteropServices;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -29,11 +29,12 @@ namespace FluidScript.Compiler.SyntaxTree
             }
             else if (Left.NodeType == ExpressionType.Indexer)
             {
-                var array = (InvocationExpression)Left;
+                var array = (IndexExpression)Left;
                 array.SetArray(instance, value);
-            }else if(Left.NodeType == ExpressionType.MemberAccess)
+            }
+            else if (Left.NodeType == ExpressionType.MemberAccess)
             {
-                var exp= (QualifiedExpression)Left;
+                var exp = (MemberExpression)Left;
                 var result = exp.Target.Evaluate(instance);
                 Metadata.Prototype proto = result.GetPrototype();
                 if (!proto.HasMember(exp.Name))
@@ -46,10 +47,16 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
+        {
+            return visitor.VisitAssignment(this);
+        }
+
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            var resultType = Right.ResultType(generator);
-            if(Right.NodeType == ExpressionType.Identifier)
+            //todo implementation pending
+            var right = Right.Accept(generator);
+            if (right.NodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)Left;
 

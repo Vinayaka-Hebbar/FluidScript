@@ -37,7 +37,8 @@ namespace FluidScript.Compiler.SyntaxTree
                 bool lastStatement = true;
                 if (Expression != null)
                 {
-                    Expression.GenerateCode(generator);
+                    var epression = Expression.Accept(generator);
+                    epression.GenerateCode(generator);
                     if (generator.SyntaxTree is BlockStatement block)
                     {
                         if (block.Statements.Length > 0)
@@ -49,7 +50,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     //todo variable name not used
                     if (generator.ReturnVariable == null)
                         generator.ReturnVariable = generator.DeclareVariable(returnType);
-                    System.Type resolvedType = Expression.ResultType(generator);
+                    System.Type resolvedType = epression.Type;
                     if (returnType != null && returnType != resolvedType)
                     {
                         if(TypeUtils.TryImplicitConvert(resolvedType, returnType, out System.Reflection.MethodInfo method))

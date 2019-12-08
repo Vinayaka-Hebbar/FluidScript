@@ -3,7 +3,7 @@
     public interface IFSObject
     {
         String __ToString();
-        Boolean Equals(IFSObject obj);
+        Boolean __Equals(IFSObject obj);
         Integer HashCode();
     }
 }

@@ -37,40 +37,9 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-
-        protected override void ResolveType(MethodBodyGenerator generator)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            var variable = generator.GetLocalVariable(Name);
-            if (variable != null)
-            {
-                if (variable.Type == null)
-                    throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
-                ResolvedType = variable.Type;
-                return;
-            }
-            Reflection.ParameterInfo arg = generator.MethodGenerator.Parameters.FirstOrDefault(para => para.Name == Name);
-            if (arg.Name != null)
-            {
-                ResolvedType = generator.MethodGenerator.ParameterTypes[arg.Index];
-                return;
-            }
-            //find in the class level
-            var member = generator.TypeGenerator.FindMember(Name).FirstOrDefault();
-            if (member != null)
-            {
-                if (member.MemberType == System.Reflection.MemberTypes.Field)
-                {
-                    var field = (System.Reflection.FieldInfo)member;
-                    if (field.FieldType == null)
-                        throw new System.Exception(string.Concat("Use of undeclared field ", field));
-                    ResolvedType = field.FieldType;
-                }
-                if (member.MemberType == System.Reflection.MemberTypes.Property)
-                {
-                    var property = (System.Reflection.PropertyInfo)member;
-                    ResolvedType = property.PropertyType;
-                }
-            }
+            return visitor.VisitMember(this);
         }
 
         public override void GenerateCode(MethodBodyGenerator generator)
@@ -80,7 +49,6 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 if (variable.Type == null)
                     throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
-                ResolvedType = variable.Type;
                 generator.LoadVariable(variable);
                 return;
             }
@@ -99,18 +67,20 @@ namespace FluidScript.Compiler.SyntaxTree
                     var field = (System.Reflection.FieldInfo)member;
                     if (field.FieldType == null)
                         throw new System.Exception(string.Concat("Use of undeclared field ", field));
-                    ResolvedType = field.FieldType;
                     if (field.IsStatic == false)
                         generator.LoadArgument(0);
+                    if (field is FieldGenerator)
+                        field = ((FieldGenerator)field).FieldInfo;
                     generator.LoadField(field);
                 }
                 if (member.MemberType == System.Reflection.MemberTypes.Property)
                 {
                     var property = (System.Reflection.PropertyInfo)member;
-                    ResolvedType = property.PropertyType;
                     System.Reflection.MethodInfo method = property.GetGetMethod(true);
                     if (method.IsStatic == false)
                         generator.LoadArgument(0);
+                    if (method is MethodGenerator)
+                        method = ((MethodGenerator)method).GetBuilder();
                     generator.Call(method);
                 }
                 return;

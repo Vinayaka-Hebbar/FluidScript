@@ -32,23 +32,9 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        protected override void ResolveType(MethodBodyGenerator method)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            switch (Value)
-            {
-                case int _:
-                    ResolvedType = typeof(Integer);
-                    break;
-                case double _:
-                    ResolvedType = typeof(Double);
-                    break;
-                case string _:
-                    ResolvedType = typeof(String);
-                    break;
-                case null:
-                    ResolvedType = typeof(IFSObject);
-                    break;
-            }
+            return visitor.VisitLiteral(this);
         }
 
         public override void GenerateCode(MethodBodyGenerator generator)
@@ -60,11 +46,6 @@ namespace FluidScript.Compiler.SyntaxTree
                     generator.LoadByte((sbyte)Value);
                     generator.NewObject(ReflectionHelpers.Byte_New);
                     ResolvedType = typeof(Byte);
-                    break;
-                case char _:
-                    generator.LoadChar((char)Value);
-                    generator.NewObject(ReflectionHelpers.Char_New);
-                    ResolvedType = typeof(Char);
                     break;
                 case short _:
                     generator.LoadInt16((short)Value);

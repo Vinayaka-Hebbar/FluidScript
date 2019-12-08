@@ -31,7 +31,7 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 var declaration = DeclarationExpressions[i];
                 //todo remove value at top
-                Reflection.ITypeInfo type = declaration.Type == null ? Reflection.TypeInfo.Any : declaration.Type.GetTypeInfo();
+                Reflection.ITypeInfo type = declaration.VariableType == null ? Reflection.TypeInfo.Any : declaration.VariableType.GetTypeInfo();
                 prototype.DeclareLocalVariable(declaration.Name, type, declaration.Value);
                 instance.Append(declaration.Name, objects[i] = declaration.Evaluate(instance), IsReadOnly);
             }

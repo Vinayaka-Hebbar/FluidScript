@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace FluidScript.Reflection.Emit
 {
-    public sealed class MethodBodyGenerator : ReflectionILGenerator
+    public sealed class MethodBodyGenerator : ReflectionILGenerator, Compiler.IExpressionVisitor<Expression>
     {
         internal sealed class BreakOrContinueInfo
         {
@@ -307,5 +307,263 @@ namespace FluidScript.Reflection.Emit
         {
             return TypeGenerator.GetType(typeName);
         }
+
+        #region Visitors
+
+        public Expression VisitUnary(UnaryExpression node)
+        {
+            if (node.NodeType == ExpressionType.Parenthesized)
+                return node.Operand.Accept(this);
+            return node;
+        }
+
+        public Expression VisitBinary(BinaryExpression node)
+        {
+            string opName = null;
+            switch (node.NodeType)
+            {
+                case ExpressionType.Plus:
+                    opName = "op_Addition";
+                    break;
+                case ExpressionType.Minus:
+                    opName = "op_Subtraction";
+                    break;
+                case ExpressionType.Multiply:
+                    opName = "op_Multiply";
+                    break;
+                case ExpressionType.Divide:
+                    opName = "op_Division";
+                    break;
+                case ExpressionType.BangEqual:
+                    opName = "op_Inequality";
+                    break;
+                case ExpressionType.EqualEqual:
+                    opName = "op_Equality";
+                    break;
+            }
+            var left = node.Left.Accept(this);
+            var right = node.Right.Accept(this);
+            var method = TypeUtils.GetOperatorOverload(opName, left.Type, right.Type);
+            node.Method = method;
+            node.ResolvedType = method.ReturnType;
+            return node;
+        }
+
+        public Expression VisitArrayLiteral(ArrayLiteralExpression node)
+        {
+            node.ResolvedType = node.ArrayType.GetTypeInfo().ResolvedType(TypeGenerator).MakeArrayType();
+            return node;
+        }
+
+        public Expression VisitAssignment(AssignmentExpression node)
+        {
+            node.ResolvedType = node.Right.Accept(this).Type;
+            return node;
+        }
+
+        public Expression VisitMember(MemberExpression node)
+        {
+            var target = node.Target.Accept(this);
+            if (target.NodeType == ExpressionType.Identifier || target.NodeType == ExpressionType.Invocation)
+            {
+                node.ResolvedType = target.Type;
+            }
+            else if (target.NodeType == ExpressionType.This)
+            {
+                node.ResolvedType = TypeGenerator;
+            }
+            else if (target.NodeType == ExpressionType.MemberAccess)
+            {
+                var name = node.Name;
+                var variable = GetLocalVariable(name);
+                if (variable != null)
+                {
+                    if (variable.Type == null)
+                        throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
+                    node.ResolvedType = variable.Type;
+                }
+                else
+                {
+                    //find in the class level
+                    var member = TypeGenerator.FindMember(name).FirstOrDefault();
+                    if (member != null)
+                    {
+                        if (member.MemberType == System.Reflection.MemberTypes.Field)
+                        {
+                            var field = (System.Reflection.FieldInfo)member;
+                            if (field.FieldType == null)
+                                throw new System.Exception(string.Concat("Use of undeclared field ", field));
+                            node.ResolvedType = field.FieldType;
+                        }
+                        else if (member.MemberType == System.Reflection.MemberTypes.Property)
+                        {
+                            var property = (System.Reflection.PropertyInfo)member;
+                            node.ResolvedType = property.PropertyType;
+                        }
+                    }
+                    node.Member = member;
+                }
+            }
+            return node;
+        }
+
+        private Type[] GetTypes(Expression[] arguments)
+        {
+            return arguments.Select(arg => arg.Accept(this).Type).ToArray();
+        }
+
+        public Expression VisitCall(InvocationExpression node)
+        {
+            var target = node.Target.Accept(this);
+            var types = GetTypes(node.Arguments);
+            Type resultType = null;
+            string name = null;
+            if (target.NodeType == ExpressionType.Identifier)
+            {
+                resultType = TypeGenerator;
+                name = target.ToString();
+            }
+            else if (target.NodeType == ExpressionType.MemberAccess)
+            {
+                var exp = (MemberExpression)target;
+                resultType = exp.Type;
+                name = exp.Name;
+            }
+            bool HasMethod(System.Reflection.MethodInfo m)
+            {
+                if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
+                {
+                    var data = (Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                    if (data != null)
+                        return data.Match(name);
+                }
+                return m.Name == name;
+            }
+            var methods = resultType
+                .GetMethods(TypeUtils.Any)
+                .Where(HasMethod).ToArray();
+            //todo ignore case
+            var method = (System.Reflection.MethodInfo)Type.DefaultBinder.SelectMethod(TypeUtils.Any, methods, types, null);
+            if (method is IMethodBaseGenerator baseGenerator)
+                method = (System.Reflection.MethodInfo)baseGenerator.MethodBase;
+
+            node.Method = method;
+            node.ResolvedType = method.ReturnType;
+            return node;
+        }
+
+        public Expression VisitLiteral(LiteralExpression node)
+        {
+            Type type = null;
+            switch (node.Value)
+            {
+                case int _:
+                    type = typeof(Integer);
+                    break;
+                case double _:
+                    type = typeof(Double);
+                    break;
+                case string _:
+                    type = typeof(String);
+                    break;
+                case null:
+                    type = typeof(IFSObject);
+                    break;
+            }
+            node.ResolvedType = type;
+            return node;
+        }
+
+        public Expression VisitTernary(TernaryExpression node)
+        {
+            var conditionType = node.First.Accept(this).Type;
+            if (conditionType == typeof(Boolean) || conditionType == typeof(bool))
+            {
+                var first = node.Second.Accept(this);
+                var second = node.Third.Accept(this);
+                if (first.Type == second.Type)
+                {
+                    node.ResolvedType = second.Type;
+                }
+                else if (TypeUtils.TryImplicitConvert(first.Type, second.Type, out System.Reflection.MethodInfo method))
+                {
+                    node.ResolvedType = method.ReturnType;
+                    node.ImplicitCall = method;
+                }
+                else if (TypeUtils.TryImplicitConvert(second.Type, first.Type, out method))
+                {
+                    node.ResolvedType = method.ReturnType;
+                    node.ImplicitCall = method;
+                }
+            }
+            else
+            {
+                throw new Exception("expected bool type");
+            }
+            return node;
+        }
+
+        public Expression VisitMember(NameExpression node)
+        {
+            var name = node.Name;
+            var variable = GetLocalVariable(name);
+            if (variable != null)
+            {
+                if (variable.Type == null)
+                    throw new Exception(string.Concat("Use of undeclared variable ", variable));
+                node.ResolvedType = variable.Type;
+                return node;
+            }
+            ParameterInfo arg = MethodGenerator.Parameters.FirstOrDefault(para => para.Name == name);
+            if (arg.Name != null)
+            {
+                node.ResolvedType = MethodGenerator.ParameterTypes[arg.Index];
+                return node;
+            }
+            //find in the class level
+            var member = TypeGenerator.FindMember(name).FirstOrDefault();
+            if (member != null)
+            {
+                if (member.MemberType == System.Reflection.MemberTypes.Field)
+                {
+                    var field = (System.Reflection.FieldInfo)member;
+                    if (field.FieldType == null)
+                        throw new System.Exception(string.Concat("Use of undeclared field ", field));
+                    node.ResolvedType = field.FieldType;
+                }
+                if (member.MemberType == System.Reflection.MemberTypes.Property)
+                {
+                    var property = (System.Reflection.PropertyInfo)member;
+                    node.ResolvedType = property.PropertyType;
+                }
+            }
+            return node;
+        }
+
+        public Expression VisitThis(ThisExpression node)
+        {
+            node.ResolvedType = TypeGenerator;
+            return node;
+        }
+
+        public Expression VisitIndex(IndexExpression node)
+        {
+            var target = node.Target.Accept(this);
+            var type = target.Type;
+            if (type.IsArray == false)
+            {
+                var types = GetTypes(node.Arguments);
+                var indexer = type.GetProperty("Item", types);
+                node.Indexer = indexer ?? throw new Exception("Indexer not found");
+                type = indexer.PropertyType;
+            }
+            else
+            {
+                type = type.GetElementType();
+            }
+            node.ResolvedType = type;
+            return node;
+        }
+        #endregion
     }
 }

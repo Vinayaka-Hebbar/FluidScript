@@ -1,5 +1,4 @@
-﻿using FluidScript.Library;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -32,12 +31,11 @@ namespace FluidScript.Reflection.Emit
                 new InbuiltType("short", typeof(Short), RuntimeType.Int16),
                 new InbuiltType("int", typeof(Integer), RuntimeType.Int32),
                 new InbuiltType("long", typeof(Long), RuntimeType.Int64),
-                new InbuiltType("float", typeof(Float), RuntimeType.Float) ,
-                new InbuiltType("double", typeof(Double), RuntimeType.Double) ,
+                new InbuiltType("float", typeof(Float), RuntimeType.Float),
+                new InbuiltType("double", typeof(Double), RuntimeType.Double),
                 new InbuiltType("bool", typeof(Boolean), RuntimeType.Bool),
-                new InbuiltType("string", typeof(String), RuntimeType.String) ,
-                new InbuiltType("char", typeof(Char), RuntimeType.Char) ,
-                new InbuiltType("any", typeof(FSObject), RuntimeType.Any) ,
+                new InbuiltType("string", typeof(String), RuntimeType.String),
+                new InbuiltType("any", typeof(FSObject), RuntimeType.Any),
                 new InbuiltType("void", typeof(void), RuntimeType.Void)
             };
             InbuiltNames = Inbuilts.ToDictionary(item => item.Name);
@@ -233,21 +231,26 @@ namespace FluidScript.Reflection.Emit
             return isEquals;
         }
 
-        internal static System.Reflection.MethodInfo GetOperatorOverload(string name, System.Type left, System.Type right)
+        internal static MethodInfo GetOperatorOverload(string name, System.Type left, System.Type right)
         {
-            var members = left.GetMember(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-            foreach (System.Reflection.MethodInfo m in members)
+            var members = left.GetMember(name, BindingFlags.Public | GetStatic());
+            foreach (MethodInfo m in members)
             {
                 if (MatchTypes(m, left, right))
                     return m;
             }
-            members = right.GetMember(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-            foreach (System.Reflection.MethodInfo m in members)
+            members = right.GetMember(name, BindingFlags.Public | BindingFlags.Static);
+            foreach (MethodInfo m in members)
             {
                 if (MatchTypes(m, left, right))
                     return m;
             }
             throw new System.Exception("No operator overload");
+        }
+
+        private static BindingFlags GetStatic()
+        {
+            return System.Reflection.BindingFlags.Static;
         }
 
         private static bool MatchTypes(System.Reflection.MethodInfo method, System.Type left, System.Type right)
@@ -277,27 +280,25 @@ namespace FluidScript.Reflection.Emit
 
         internal static bool TryImplicitConvert(System.Type from, System.Type to, out System.Reflection.MethodInfo method)
         {
-            method = to.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = to.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             if (method != null && method.ReturnType == to)
                 return true;
-            method = from.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = from.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             return method != null && method.ReturnType == to;
         }
 
         internal static bool HasImplicitConvert(System.Type from, System.Type to)
         {
-            var method = to.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            var method = to.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             if (method != null && method.ReturnType == to)
                 return true;
-            method = from.GetMethod("op_Implicit", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = from.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             return method != null && method.ReturnType == to;
         }
 
-        internal static bool BindingFlagsMatch(bool state, System.Reflection.BindingFlags flags, System.Reflection.BindingFlags trueFlag, System.Reflection.BindingFlags falseFlag)
+        internal static bool BindingFlagsMatch(bool state, BindingFlags flags, BindingFlags trueFlag, BindingFlags falseFlag)
         {
-
             return (state && (flags & trueFlag) == trueFlag)
-
                 || (!state && (flags & falseFlag) == falseFlag);
 
         }

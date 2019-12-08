@@ -23,7 +23,7 @@
 
         public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {
-            Expression.GenerateCode(generator);
+            Expression.Accept(generator).GenerateCode(generator);
         }
 
         public override string ToString()

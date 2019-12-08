@@ -1,9 +1,12 @@
 ﻿class Test {
 	const var _x = 12, _y = 5 + 1;
 
+	get x():string {
+		return _x.toString();
+	}
+
 	func read(a:int):string {
-		var res = _x==6?10.0:20;
-		return this._x.toString();
+		return x;
 	}
 
     impl func toString() : string {

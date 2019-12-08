@@ -1,16 +1,13 @@
-﻿using System.Runtime.InteropServices;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public class FieldDeclarationExpression : DeclarationExpression
     {
-
-        public readonly TypeSyntax Type;
+        public readonly TypeSyntax FieldType;
         public readonly Expression Value;
 
         public FieldDeclarationExpression(string name, TypeSyntax type, Expression value) : base(name)
         {
-            Type = type;
+            FieldType = type;
             Value = value;
 
         }

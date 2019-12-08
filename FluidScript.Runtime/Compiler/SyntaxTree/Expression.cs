@@ -20,25 +20,12 @@
         {
             NodeType = nodeType;
         }
+
         public ExpressionType NodeType { get; }
 
-        public System.Type ResultType(Reflection.Emit.MethodBodyGenerator generator)
-        {
-            if (resolvedType == null)
-                ResolveType(generator);
-            return resolvedType;
-        }
+        public System.Type Type => resolvedType;
 
-        /// <summary>
-        /// Resolve Runtime type
-        /// </summary>
-        /// <param name="generator"></param>
-        protected virtual void ResolveType(Reflection.Emit.MethodBodyGenerator generator)
-        {
-
-        }
-
-        protected System.Type ResolvedType
+        protected internal System.Type ResolvedType
         {
             get => resolvedType;
             set
@@ -63,13 +50,6 @@
                 resolvedType = Reflection.Emit.TypeUtils.ToType(value);
                 resolvedRuntimeType = value;
             }
-        }
-
-        public RuntimeType GetRuntimeType(Reflection.Emit.MethodBodyGenerator method)
-        {
-            if (resolvedRuntimeType == RuntimeType.Undefined)
-                ResolveType(method);
-            return resolvedRuntimeType;
         }
 
 #if Runtime
@@ -99,6 +79,17 @@
             return null;
         }
 #endif
+
+        /// <summary>
+        /// Optimizes expression for emit or others
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="visitor"></param>
+        /// <returns></returns>
+        public virtual TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
+        {
+            return default;
+        }
 
         public virtual void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {

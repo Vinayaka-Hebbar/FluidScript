@@ -41,7 +41,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         private void CreateProperty(TypeGenerator generator, System.Type returnType, System.Collections.Generic.IEnumerable<Reflection.ParameterInfo> parameters, System.Type[] parameterTypes)
         {
-            MethodGenerator accessor = null;
+            PropertyGenerator.PropertyHolder accessor = null;
             System.Type type = null;
             var name = string.Concat(char.ToUpper(Name.First()), Name.Substring(1));
             var builder = generator.GetBuilder();
@@ -50,30 +50,33 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 type = returnType;
                 System.Reflection.Emit.MethodBuilder builder1 = builder.DefineMethod(string.Concat("get_", name), attributes, returnType, parameterTypes);
-                accessor = new MethodGenerator(builder1, parameterTypes, generator, Body);
+                accessor = new PropertyGenerator.PropertyHolder(PropertyType.Get,
+                    new MethodGenerator(builder1, parameterTypes, generator, Body));
             }
             if (IsSetter)
             {
                 type = parameterTypes.FirstOrDefault();
-                accessor = new MethodGenerator(builder.DefineMethod(string.Concat("set_", name), attributes, returnType, parameterTypes), parameterTypes, generator, Body);
+                accessor = new PropertyGenerator.PropertyHolder(PropertyType.Set,
+                    new MethodGenerator(builder.DefineMethod(string.Concat("set_", name), attributes, returnType, parameterTypes), parameterTypes, generator, Body));
             }
             if (generator.TryGetProperty(Name, out PropertyGenerator property) == false)
             {
                 var pb = generator.GetBuilder().DefineProperty(name, System.Reflection.PropertyAttributes.None, type, null);
                 var attrBuilder = new System.Reflection.Emit.CustomAttributeBuilder(ReflectionHelpers.Register_Attr_Ctor, new object[] { Name });
                 pb.SetCustomAttribute(attrBuilder);
-                property = new PropertyGenerator(pb);
+                property = new PropertyGenerator(generator, pb);
+                property.SetCustomAttribute(typeof(Runtime.RegisterAttribute), ReflectionHelpers.Register_Attr_Ctor, new[] { Name });
                 generator.Add(property);
             }
 
             System.Reflection.Emit.PropertyBuilder propertyBuilder = property.GetBuilder();
             if (IsGetter)
-                propertyBuilder.SetGetMethod(accessor.GetBuilder());
+                propertyBuilder.SetGetMethod(accessor.Method.GetBuilder());
             else if (IsSetter)
-                propertyBuilder.SetSetMethod(accessor.GetBuilder());
+                propertyBuilder.SetSetMethod(accessor.Method.GetBuilder());
             else
                 throw new System.Exception("Accessor not found");
-            accessor.Parameters = parameters;
+            accessor.Method.Parameters = parameters;
             property.Accessors.Add(accessor);
         }
 

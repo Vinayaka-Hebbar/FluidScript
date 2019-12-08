@@ -1,38 +1,47 @@
-﻿namespace FluidScript.Reflection.Emit
-{
-    public class FieldGenerator : IMemberGenerator, ITypeProvider
-    {
-        private readonly System.Reflection.Emit.TypeBuilder _builder;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
-        public FieldGenerator(System.Reflection.Emit.TypeBuilder builder, System.Reflection.FieldAttributes attributes, Compiler.SyntaxTree.VariableDeclarationExpression expression)
+namespace FluidScript.Reflection.Emit
+{
+    public class FieldGenerator : System.Reflection.FieldInfo, IMemberGenerator, ITypeProvider
+    {
+        private IList<AttributeGenerator> _CustomAttributes;
+
+        private readonly TypeGenerator TypeGenerator;
+
+        public FieldGenerator(TypeGenerator builder, System.Reflection.FieldAttributes attributes, Compiler.SyntaxTree.VariableDeclarationExpression expression)
         {
-            _builder = builder;
+            TypeGenerator = builder;
             Attributes = attributes;
             Name = expression.Name;
             DeclarationExpression = expression;
             DefaultValue = expression.Value;
-            IsStatic = (attributes & System.Reflection.FieldAttributes.Static) == System.Reflection.FieldAttributes.Static;
-            IsPublic = (attributes & System.Reflection.FieldAttributes.Public) == System.Reflection.FieldAttributes.Public;
             MemberType = System.Reflection.MemberTypes.Field;
         }
 
-        public System.Reflection.FieldAttributes Attributes { get; }
+        public override System.Reflection.FieldAttributes Attributes { get; }
 
         public Compiler.SyntaxTree.Expression DefaultValue { get; }
 
-        public string Name { get; }
+        public override string Name { get; }
 
         public Compiler.SyntaxTree.VariableDeclarationExpression DeclarationExpression { get; }
 
-        public System.Reflection.MemberInfo MemberInfo => FieldInfo;
+        public System.Reflection.MemberInfo MemberInfo => this;
 
         public System.Reflection.FieldInfo FieldInfo { get; private set; }
 
-        public System.Reflection.MemberTypes MemberType { get; }
+        public override System.Reflection.MemberTypes MemberType { get; }
 
-        public bool IsStatic { get; }
+        public override RuntimeFieldHandle FieldHandle => FieldInfo.FieldHandle;
 
-        public bool IsPublic { get; }
+        public override Type FieldType => FieldInfo.FieldType;
+
+        public override Type DeclaringType => TypeGenerator;
+
+        public override Type ReflectedType => TypeGenerator;
 
         internal MethodBodyGenerator MethodBody { get; set; }
 
@@ -42,32 +51,85 @@
                 && TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
         }
 
+        public virtual void SetCustomAttribute(Type type, System.Reflection.ConstructorInfo ctor, object[] parameters)
+        {
+            if (_CustomAttributes == null)
+                _CustomAttributes = new List<AttributeGenerator>();
+            _CustomAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
+        }
+
+        public override object[] GetCustomAttributes(bool inherit)
+        {
+            if (_CustomAttributes != null)
+                return _CustomAttributes.Select(att => att.Instance).ToArray();
+            return new object[0];
+        }
+
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit)
+        {
+            if (_CustomAttributes != null)
+            {
+                var enumerable = _CustomAttributes.Where(att => att.Type == attributeType);
+                return enumerable.Select(att => att.Instance).ToArray();
+            }
+            return new object[0];
+        }
+
+        public Type GetType(string typeName)
+        {
+            if (TypeUtils.IsInbuiltType(typeName))
+                return TypeUtils.GetInbuiltType(typeName);
+            return TypeGenerator.Module.GetType(typeName);
+        }
+
+        public override object GetValue(object obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool IsDefined(Type attributeType, bool inherit)
+        {
+            return _CustomAttributes != null && _CustomAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+        }
+
+        public override void SetValue(object obj, object value, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Build()
         {
             if (FieldInfo == null)
             {
                 System.Type type;
-                if (DeclarationExpression.Type == null)
+                if (DeclarationExpression.VariableType == null)
                 {
                     if (DefaultValue == null)
                         throw new System.ArgumentNullException(nameof(DefaultValue));
                     //literal ok
                     if (DefaultValue.NodeType != Compiler.SyntaxTree.ExpressionType.Literal && MethodBody == null)
                         return;
-                    type = DefaultValue.ResultType(MethodBody);
+                    type = DefaultValue.Accept(MethodBody).Type;
 
                 }
                 else
-                    type = DeclarationExpression.Type.GetTypeInfo().ResolvedType(this);
-                FieldInfo = _builder.DefineField(Name, type, Attributes);
+                    type = DeclarationExpression.VariableType.GetTypeInfo().ResolvedType(this);
+                var fieldBul = TypeGenerator.GetBuilder().DefineField(Name, type, Attributes);
+                if (_CustomAttributes != null)
+                {
+                    foreach (var attr in _CustomAttributes)
+                    {
+                        var cuAttr = new System.Reflection.Emit.CustomAttributeBuilder(attr.Ctor, attr.Parameters);
+                        fieldBul.SetCustomAttribute(cuAttr);
+                    }
+                }
+                FieldInfo = fieldBul;
             }
         }
 
-        public System.Type GetType(string typeName)
+        public override string ToString()
         {
-            if (TypeUtils.IsInbuiltType(typeName))
-                return TypeUtils.GetInbuiltType(typeName);
-            return _builder.Module.GetType(typeName);
+            return Name;
         }
     }
 }

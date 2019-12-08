@@ -6,12 +6,12 @@
         public override bool Equals(object obj)
         {
             if (obj is IFSObject)
-                return Equals((IFSObject)obj)._value;
+                return __Equals((IFSObject)obj)._value;
             return base.Equals(obj);
         }
 
         [Runtime.Register("equals")]
-        public virtual Boolean Equals(IFSObject obj)
+        public virtual Boolean __Equals(IFSObject obj)
         {
             return ReferenceEquals(this, obj);
         }

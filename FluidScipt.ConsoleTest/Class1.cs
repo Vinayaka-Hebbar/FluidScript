@@ -1,10 +1,6 @@
 ﻿using FluidScript;
-using FluidScript.Library;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
+using System.Linq.Expressions;
 using System.Runtime.Serialization;
 
 namespace FluidScipt.ConsoleTest
@@ -16,24 +12,52 @@ namespace FluidScipt.ConsoleTest
             //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
 
             Class1 class1 = new Class1();
-             class1.Run();
+            class1.Run();
             class1.Print();
             Console.ReadKey();
         }
 
-        public void Run()
+        private void Run()
         {
+            var path = AppDomain.CurrentDomain.BaseDirectory;
             ScriptEngine engine = new ScriptEngine();
-            var tree = engine.GetStatement("2+6");
-            var instance = new MathObject();
-           var value =  tree.Evaluate(instance);
-            Console.WriteLine();
-
+            var tree = engine.ParseFile(path + "source.fls");
+            if (tree is FluidScript.Compiler.SyntaxTree.TypeDeclaration declration)
+            {
+                var dynamicAssembly =
+               AppDomain.CurrentDomain.DefineDynamicAssembly(new System.Reflection.AssemblyName("DynamicClass.Utility.DynamicClasses, Version=1.0.0.0"), System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave);
+                var dynamicModule =
+                    dynamicAssembly.DefineDynamicModule("DynamicClass.Utility.DynamicClasses.dll", true);
+                var classType = declration.Generate(new FluidScript.Reflection.Emit.ReflectionModule(dynamicAssembly, dynamicModule));
+                dynamic instance = Activator.CreateInstance(classType);
+                var c = instance.Read(1);
+                Console.WriteLine(c);
+                dynamicAssembly.Save("DynamicClass.Utility.DynamicClasses.dll");
+            }
         }
 
         void Print()
         {
+            int[] array = new int[0];
+           var proper =  array.GetType().GetProperties();
+            var obj = new { a = 1 };
+            System.Linq.Expressions.Expression<Func<int>> func = () => obj.a.GetHashCode();
+            var body = func.Body;
+            if (body is MethodCallExpression method)
+            {
+                var type = method.Object.GetType();
+                Console.WriteLine();
+            }
             Console.WriteLine();
+        }
+
+        class ExV :
+            System.Linq.Expressions.ExpressionVisitor
+        {
+            protected override Expression VisitUnary(UnaryExpression node)
+            {
+                return base.VisitUnary(node);
+            }
         }
 
         public FluidScript.Double Add(int a, int b)

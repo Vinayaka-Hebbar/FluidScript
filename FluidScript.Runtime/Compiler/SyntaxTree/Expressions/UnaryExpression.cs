@@ -2,24 +2,19 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class UnaryOperatorExpression : Expression
+    public class UnaryExpression : Expression
     {
         public readonly Expression Operand;
 
-        public UnaryOperatorExpression(Expression operand, ExpressionType opcode)
+        public UnaryExpression(Expression operand, ExpressionType opcode)
             : base(opcode)
         {
             Operand = operand;
         }
 
-        protected override void ResolveType(MethodBodyGenerator generator)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            switch (NodeType)
-            {
-                case ExpressionType.Parenthesized:
-                    ResolvedType = Operand.ResultType(generator);
-                    break;
-            }
+            return visitor.VisitUnary(this);
         }
 
 #if Runtime

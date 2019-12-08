@@ -23,10 +23,16 @@ namespace FluidScript.Reflection.Emit
         public static readonly ConstructorInfo Short_New;
         public static readonly ConstructorInfo Byte_New;
         public static readonly ConstructorInfo Bool_New;
-        public static readonly ConstructorInfo Char_New;
         public static readonly ConstructorInfo String_New;
 
         public static ConstructorInfo Register_Attr_Ctor;
+
+        public static MethodInfo Integer_to_Int32;
+
+        #region Implicit Calls
+
+        #endregion
+
         #endregion
 
         static ReflectionHelpers()
@@ -43,9 +49,10 @@ namespace FluidScript.Reflection.Emit
             Short_New = GetInstanceCtor(typeof(Short), typeof(short));
             Byte_New = GetInstanceCtor(typeof(Byte), typeof(sbyte));
             Bool_New = GetInstanceCtor(typeof(Boolean), typeof(bool));
-            Char_New = GetInstanceCtor(typeof(Char), typeof(char));
             String_New = GetInstanceCtor(typeof(String), typeof(string));
             Register_Attr_Ctor = GetInstanceCtor(typeof(Runtime.RegisterAttribute), typeof(string));
+
+            Integer_to_Int32 = GetStaticMethod(typeof(Integer), "op_Implicit", typeof(Integer));
         }
 
         private static ConstructorInfo GetInstanceCtor(System.Type type, params System.Type[] parameterTypes)

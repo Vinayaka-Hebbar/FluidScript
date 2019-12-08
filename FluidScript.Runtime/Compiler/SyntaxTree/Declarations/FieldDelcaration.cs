@@ -1,5 +1,4 @@
-﻿using System;
-using FluidScript.Reflection.Emit;
+﻿using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -18,7 +17,7 @@ namespace FluidScript.Compiler.SyntaxTree
             System.Reflection.FieldAttributes attrs = GetAttribute();
             foreach (var field in Declarations)
             {
-                generator.Add(new FieldGenerator(builder, attrs, field));
+                generator.Add(new FieldGenerator(generator, attrs, field));
             }
         }
 

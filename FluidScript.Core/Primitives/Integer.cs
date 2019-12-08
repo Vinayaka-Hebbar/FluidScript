@@ -17,7 +17,7 @@
         }
 
         [Runtime.Register("equals")]
-        public override Boolean Equals(IFSObject other)
+        public override Boolean __Equals(IFSObject other)
         {
             return other is Integer integer &&
                   _value == integer._value;

@@ -2,12 +2,12 @@
 {
     public class VariableDeclarationExpression : DeclarationExpression
     {
-        public readonly TypeSyntax Type;
+        public readonly TypeSyntax VariableType;
         public readonly Expression Value;
 
         public VariableDeclarationExpression(string name, TypeSyntax type, Expression value) : base(name)
         {
-            Type = type;
+            VariableType = type;
             Value = value;
 
         }
@@ -24,8 +24,9 @@
             //initialize
             if (Value != null)
             {
-                Value.GenerateCode(generator);
-                System.Type type = Type == null ? Value.ResultType(generator) : Type.GetTypeInfo().ResolvedType(generator.TypeGenerator);
+                var defValue = Value.Accept(generator);
+                System.Type type = VariableType == null ? defValue.Type : VariableType.GetTypeInfo().ResolvedType(generator.TypeGenerator);
+                defValue.GenerateCode(generator);
                 var variable = generator.DeclareVariable(type, Name);
                 generator.StoreVariable(variable);
             }
@@ -41,7 +42,7 @@
                 value = Value.ToString();
             }
 
-            return string.Concat(Name, Type == null ? null : string.Concat(":", Type), "=", value);
+            return string.Concat(Name, VariableType == null ? null : string.Concat(":", VariableType), "=", value);
         }
     }
 }

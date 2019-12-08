@@ -8,12 +8,12 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly Expression[] Expressions;
 
-        public TypeSyntax Type { get; }
+        public TypeSyntax ArrayType { get; }
 
         public ArrayLiteralExpression(Expression[] expressions, TypeSyntax type) : base(ExpressionType.Array)
         {
             Expressions = expressions;
-            Type = type;
+            ArrayType = type;
         }
 
 #if Runtime
@@ -29,11 +29,10 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             generator.LoadInt32(Expressions.Length);
-            Type type = ResultType(generator).GetElementType();
+            Type type = Type.GetElementType();
             generator.NewArray(type);
             for (int i = 0; i < Expressions.Length; i++)
             {
@@ -52,11 +51,9 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        protected override void ResolveType(MethodBodyGenerator member)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            var typeName = Type.ToString();
-            Type type = member.GetType(typeName);
-            ResolvedType = type.MakeArrayType();
+            return visitor.VisitArrayLiteral(this);
         }
 
         public override string ToString()

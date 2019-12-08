@@ -93,7 +93,6 @@ namespace FluidScript.Reflection.Emit
                 IEnumerable<AttributeGenerator> enumerable = _CustomAttributes.Where(att => att.Type == attributeType);
                 return enumerable.Select(att => att.Instance).ToArray();
             }
-
             return new object[0];
         }
 
@@ -131,9 +130,12 @@ namespace FluidScript.Reflection.Emit
 
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            if (attributeType == typeof(Runtime.RegisterAttribute))
-                return true;
-            return false;
+            return _CustomAttributes != null && _CustomAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 

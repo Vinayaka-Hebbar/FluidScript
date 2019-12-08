@@ -194,7 +194,7 @@ namespace FluidScript.Compiler
                 case '_':
                     if (char.IsLetter(n))
                     {
-#if !Emit
+#if Emit
                         c = Source.ReadChar();
                         return TokenType.Constant;
 #else
@@ -245,7 +245,7 @@ namespace FluidScript.Compiler
                 return TokenType.End;
             return TokenType.Bad;
         }
-#endregion
+        #endregion
 
 
         public IEnumerable<MemberDeclaration> VisitMembers()
@@ -583,7 +583,7 @@ namespace FluidScript.Compiler
             }
         }
 
-#region Visitor
+        #region Visitor
         public Expression VisitExpression()
         {
             Expression exp = VisitAssignmentExpression();
@@ -591,7 +591,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitAssignmentExpression();
-                exp = new BinaryOperationExpression(exp, right, ExpressionType.Comma);
+                exp = new BinaryExpression(exp, right, ExpressionType.Comma);
             }
             return exp;
         }
@@ -625,7 +625,7 @@ namespace FluidScript.Compiler
                 Expression second = VisitConditionalExpression();
                 MoveNext();
                 Expression third = VisitConditionalExpression();
-                exp = new TernaryOperatorExpression(exp, second, third);
+                exp = new TernaryExpression(exp, second, third);
             }
             return exp;
         }
@@ -639,7 +639,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitLogicalAndExpression();
-                exp = new BinaryOperationExpression(exp, right, ExpressionType.OrOr);
+                exp = new BinaryExpression(exp, right, ExpressionType.OrOr);
             }
             return exp;
         }
@@ -653,7 +653,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitBitwiseORExpression();
-                exp = new BinaryOperationExpression(exp, right, ExpressionType.AndAnd);
+                exp = new BinaryExpression(exp, right, ExpressionType.AndAnd);
             }
             return exp;
         }
@@ -667,7 +667,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitBitwiseXORExpression();
-                exp = new BinaryOperationExpression(exp, right, ExpressionType.Or);
+                exp = new BinaryExpression(exp, right, ExpressionType.Or);
             }
             return exp;
         }
@@ -681,7 +681,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitBitwiseAndExpression();
-                exp = new BinaryOperationExpression(exp, right, ExpressionType.Circumflex);
+                exp = new BinaryExpression(exp, right, ExpressionType.Circumflex);
             }
             return exp;
         }
@@ -695,7 +695,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitEqualityExpression();
-                exp = new BinaryOperationExpression(exp, right, ExpressionType.And);
+                exp = new BinaryExpression(exp, right, ExpressionType.And);
             }
             return exp;
         }
@@ -709,7 +709,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitRelationalExpression();
-                exp = new BinaryOperationExpression(exp, right, (ExpressionType)type);
+                exp = new BinaryExpression(exp, right, (ExpressionType)type);
             }
             return exp;
         }
@@ -724,7 +724,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitShiftExpression();
-                exp = new BinaryOperationExpression(exp, right, (ExpressionType)type);
+                exp = new BinaryExpression(exp, right, (ExpressionType)type);
             }
             return exp;
         }
@@ -738,7 +738,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitAdditionExpression();
-                exp = new BinaryOperationExpression(exp, right, (ExpressionType)type);
+                exp = new BinaryExpression(exp, right, (ExpressionType)type);
             }
             return exp;
         }
@@ -752,7 +752,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitMultiplicationExpression();
-                exp = new BinaryOperationExpression(exp, right, (ExpressionType)type);
+                exp = new BinaryExpression(exp, right, (ExpressionType)type);
             }
             return exp;
         }
@@ -766,7 +766,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 Expression right = VisitUnaryExpression();
-                exp = new BinaryOperationExpression(exp, right, (ExpressionType)type);
+                exp = new BinaryExpression(exp, right, (ExpressionType)type);
             }
             return exp;
         }
@@ -778,23 +778,23 @@ namespace FluidScript.Compiler
             {
                 case TokenType.PlusPlus:
                     MoveNext();
-                    exp = new UnaryOperatorExpression(VisitLeftHandSideExpression(), ExpressionType.PrefixPlusPlus);
+                    exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.PrefixPlusPlus);
                     break;
                 case TokenType.MinusMinus:
                     MoveNext();
-                    exp = new UnaryOperatorExpression(VisitLeftHandSideExpression(), ExpressionType.PrefixMinusMinus);
+                    exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.PrefixMinusMinus);
                     break;
                 case TokenType.Bang:
                     MoveNext();
-                    exp = new UnaryOperatorExpression(VisitLeftHandSideExpression(), ExpressionType.Bang);
+                    exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.Bang);
                     break;
                 case TokenType.Plus:
                     MoveNext();
-                    exp = new UnaryOperatorExpression(VisitLeftHandSideExpression(), ExpressionType.Plus);
+                    exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.Plus);
                     break;
                 case TokenType.Minus:
                     MoveNext();
-                    exp = new UnaryOperatorExpression(VisitLeftHandSideExpression(), ExpressionType.Minus);
+                    exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.Minus);
                     break;
                 default:
                     exp = VisitPostfixExpression();
@@ -809,12 +809,12 @@ namespace FluidScript.Compiler
             switch (TokenType)
             {
                 case TokenType.PlusPlus:
-                    exp = new UnaryOperatorExpression(exp, ExpressionType.PostfixPlusPlus);
+                    exp = new UnaryExpression(exp, ExpressionType.PostfixPlusPlus);
                     MoveNext();
                     break;
 
                 case TokenType.MinusMinus:
-                    exp = new UnaryOperatorExpression(exp, ExpressionType.PostfixMinusMinus);
+                    exp = new UnaryExpression(exp, ExpressionType.PostfixMinusMinus);
                     MoveNext();
                     break;
             }
@@ -835,7 +835,7 @@ namespace FluidScript.Compiler
                 case TokenType.Identifier:
                     exp = VisitIdentifier();
                     break;
-#if !Emit
+#if Emit
                 case TokenType.Variable:
                     var name = GetName();
                     exp = new NameExpression(name, ExpressionType.Identifier);
@@ -852,7 +852,7 @@ namespace FluidScript.Compiler
                     break;
                 case TokenType.LeftParenthesis:
                     MoveNext();
-                    exp = new UnaryOperatorExpression(VisitAssignmentExpression(), ExpressionType.Parenthesized);
+                    exp = new UnaryExpression(VisitAssignmentExpression(), ExpressionType.Parenthesized);
                     CheckSyntaxExpected(TokenType.RightParenthesis);
                     break;
                 case TokenType.LeftBracket:
@@ -877,7 +877,7 @@ namespace FluidScript.Compiler
                     case TokenType.LeftParenthesis:
                         MoveNext();
                         var args = VisitArgumentList(TokenType.Comma, TokenType.RightParenthesis).ToArray();
-                        exp = new InvocationExpression(exp, args, ExpressionType.Invocation);
+                        exp = new InvocationExpression(exp, args);
                         break;
                     case TokenType.NullPropagator:
                         MoveNext();
@@ -886,12 +886,12 @@ namespace FluidScript.Compiler
                     case TokenType.Qualified:
                     case TokenType.Dot:
                         MoveNext();
-                        exp = new QualifiedExpression(exp, GetName(), (ExpressionType)type);
+                        exp = new MemberExpression(exp, GetName(), (ExpressionType)type);
                         break;
                     case TokenType.LeftBracket:
                         MoveNext();
                         args = VisitArgumentList(TokenType.Comma, TokenType.RightBracket).ToArray();
-                        exp = new InvocationExpression(exp, args, ExpressionType.Indexer);
+                        exp = new IndexExpression(exp, args);
                         break;
                     default:
                         return exp;
@@ -909,7 +909,6 @@ namespace FluidScript.Compiler
             {
                 case IdentifierType.New:
                     MoveNext();
-                    Expression target = VisitExpression();
                     Expression[] arguments;
                     if (CheckSyntaxExpected(TokenType.LeftParenthesis))
                     {
@@ -920,7 +919,7 @@ namespace FluidScript.Compiler
                     {
                         arguments = new Expression[0];
                     }
-                    return new InvocationExpression(target, arguments, ExpressionType.New);
+                    return new NewExpression(name, arguments);
                 case IdentifierType.True:
                     return new LiteralExpression(true);
                 case IdentifierType.False:
@@ -1176,9 +1175,9 @@ namespace FluidScript.Compiler
         {
             return TokenType == type ? true : false;
         }
-#endregion
+        #endregion
 
-#region Interger
+        #region Interger
         private object GetNumeric()
         {
             Source.FallBack();
@@ -1365,9 +1364,9 @@ namespace FluidScript.Compiler
             }
             return double.NaN;
         }
-#endregion
+        #endregion
 
-#region String
+        #region String
 
         public string GetString()
         {
@@ -1423,7 +1422,7 @@ namespace FluidScript.Compiler
 
         public string GetText() => Source.ToString();
 
-#endregion
+        #endregion
 
         private class CharEnumerable : IEnumerable<char>
         {

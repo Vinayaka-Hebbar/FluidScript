@@ -1,18 +1,17 @@
 ﻿using FluidScript.Compiler.Metadata;
 using FluidScript.Reflection.Emit;
-using System;
 using System.Collections.Generic;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class BinaryOperationExpression : Expression
+    public class BinaryExpression : Expression
     {
         public readonly Expression Left;
         public readonly Expression Right;
 
-        private System.Reflection.MethodInfo opCall;
+        public System.Reflection.MethodInfo Method { get; internal set; }
 
-        public BinaryOperationExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
+        public BinaryExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
         {
             Left = left;
             Right = right;
@@ -112,36 +111,9 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 #endif
 
-        protected override void ResolveType(MethodBodyGenerator generator)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            //todo resolve type for operator overload
-            switch (NodeType)
-            {
-                case ExpressionType.Plus:
-                    ResolveOperatorOverload("op_Addition", generator);
-                    break;
-                case ExpressionType.Minus:
-                    ResolveOperatorOverload("op_Subtraction", generator);
-                    break;
-                case ExpressionType.Multiply:
-                    ResolveOperatorOverload("op_Multiply", generator);
-                    break;
-                case ExpressionType.Divide:
-                    ResolveOperatorOverload("op_Division", generator);
-                    break;
-                case ExpressionType.BangEqual:
-                    ResolveOperatorOverload("op_Inequality", generator);
-                    break;
-                case ExpressionType.EqualEqual:
-                    ResolveOperatorOverload("op_Equality", generator);
-                    break;
-                case ExpressionType.Less:
-                case ExpressionType.LessEqual:
-                case ExpressionType.Greater:
-                case ExpressionType.GreaterEqual:
-                    ResolvedRuntimeType = RuntimeType.Bool;
-                    break;
-            }
+            return visitor.VisitBinary(this);
         }
 
         public override void GenerateCode(MethodBodyGenerator generator)
@@ -166,44 +138,43 @@ namespace FluidScript.Compiler.SyntaxTree
                 case ExpressionType.BangEqual:
                     CallOperator("op_Inequality", generator);
                     break;
-                case ExpressionType.Less:
-                    LoadValues(generator);
-                    generator.CompareLessThan();
-                    break;
-                case ExpressionType.LessEqual:
-                    LoadValues(generator);
-                    if (Left.GetRuntimeType(generator) == RuntimeType.Double || Right.GetRuntimeType(generator) == RuntimeType.Double)
-                        generator.CompareGreaterThanUnsigned();
-                    else
-                        generator.CompareGreaterThan();
-                    generator.LoadInt32(0);
-                    generator.CompareEqual();
-                    break;
-                case ExpressionType.Greater:
-                    LoadValues(generator);
-                    generator.CompareGreaterThan();
-                    break;
-                case ExpressionType.GreaterEqual:
-                    LoadValues(generator);
-                    if (Left.GetRuntimeType(generator) == RuntimeType.Double || Right.GetRuntimeType(generator) == RuntimeType.Double)
-                        generator.CompareLessThanUnsigned();
-                    else
-                        generator.CompareLessThan();
-                    generator.LoadInt32(0);
-                    generator.CompareEqual();
-                    break;
+                //case ExpressionType.Less:
+                //    LoadValues(generator);
+                //    generator.CompareLessThan();
+                //    break;
+                //case ExpressionType.LessEqual:
+                //    LoadValues(generator);
+                //    if (Left.GetRuntimeType(generator) == RuntimeType.Double || Right.GetRuntimeType(generator) == RuntimeType.Double)
+                //        generator.CompareGreaterThanUnsigned();
+                //    else
+                //        generator.CompareGreaterThan();
+                //    generator.LoadInt32(0);
+                //    generator.CompareEqual();
+                //    break;
+                //case ExpressionType.Greater:
+                //    LoadValues(generator);
+                //    generator.CompareGreaterThan();
+                //    break;
+                //case ExpressionType.GreaterEqual:
+                //    LoadValues(generator);
+                //    if (Left.GetRuntimeType(generator) == RuntimeType.Double || Right.GetRuntimeType(generator) == RuntimeType.Double)
+                //        generator.CompareLessThanUnsigned();
+                //    else
+                //        generator.CompareLessThan();
+                //    generator.LoadInt32(0);
+                //    generator.CompareEqual();
+                //    break;
 
             }
         }
 
         private void CallOperator(string name, MethodBodyGenerator generator)
         {
-            var leftType = Left.ResultType(generator);
-            var rightType = Right.ResultType(generator);
-            if (opCall == null)
-                opCall = TypeUtils.GetOperatorOverload(name, leftType, rightType);
-            ResolvedType = opCall.ReturnType;
-            var parameters = opCall.GetParameters();
+            var leftType = Left.Type;
+            var rightType = Right.Type;
+            if (Method == null)
+                Method = TypeUtils.GetOperatorOverload(name, leftType, rightType);
+            var parameters = Method.GetParameters();
             Left.GenerateCode(generator);
             var first = parameters[0].ParameterType;
             if (leftType != first)
@@ -212,34 +183,7 @@ namespace FluidScript.Compiler.SyntaxTree
             var second = parameters[1].ParameterType;
             if (rightType != second)
                 EmitConvertion.Convert(generator, rightType, second);
-            generator.Call(opCall);
-        }
-
-        private void ResolveOperatorOverload(string name, MethodBodyGenerator generator)
-        {
-            var leftType = Left.ResultType(generator);
-            var rightType = Right.ResultType(generator);
-            if(opCall == null)
-                opCall = TypeUtils.GetOperatorOverload(name, leftType, rightType);
-            ResolvedType = opCall.ReturnType;
-        }
-
-        private void LoadValues(MethodBodyGenerator generator)
-        {
-            var leftType = Left.GetRuntimeType(generator);
-            var rightType = Right.GetRuntimeType(generator);
-            var expectedType = leftType & rightType;
-            Left.GenerateCode(generator);
-            if (leftType == RuntimeType.Char && rightType == RuntimeType.Char)
-            {
-                generator.ConvertToInt32();
-                Right.GenerateCode(generator);
-                generator.ConvertToInt32();
-                return;
-            }
-            if (leftType != expectedType)
-                EmitConvertion.ToPrimitive(generator, expectedType);
-            Right.GenerateCode(generator);
+            generator.Call(Method);
         }
 
         public override string ToString()

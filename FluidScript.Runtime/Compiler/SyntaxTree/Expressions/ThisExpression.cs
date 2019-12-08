@@ -14,10 +14,9 @@ namespace FluidScript.Compiler.SyntaxTree
             return instance["this"];
         }
 #endif
-
-        protected override void ResolveType(MethodBodyGenerator generator)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            ResolvedType = generator.TypeGenerator.GetBuilder();
+            return visitor.VisitThis(this);
         }
 
         public override void GenerateCode(MethodBodyGenerator generator)
