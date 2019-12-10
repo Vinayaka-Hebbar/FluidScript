@@ -66,7 +66,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FluidScript.Core\FluidScript.Runtime.csproj" />
+    <ProjectReference Include="..\FluidScript.Core\FluidScript.CoreLib.csproj" />
   </ItemGroup>
 
 </Project>

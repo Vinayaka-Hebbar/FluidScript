@@ -1,9 +1,12 @@
 ﻿namespace FluidScript.Reflection
 {
+    /// <summary>
+    /// Runtime Parameter Info
+    /// </summary>
     public struct ParameterInfo
     {
         public readonly string Name;
-        public readonly ITypeInfo Type;
+        public ITypeInfo Type { get; }
         public readonly int Index;
 
         public RuntimeObject DefaultValue { get; set; }

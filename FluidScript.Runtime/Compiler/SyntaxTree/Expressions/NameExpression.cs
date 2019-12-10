@@ -3,9 +3,12 @@ using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class NameExpression : Expression
+    public sealed class NameExpression : Expression
     {
         public readonly string Name;
+
+        public Binding Binding { get; internal set; }
+
         public NameExpression(string name, ExpressionType opCode) : base(opCode)
         {
             Name = name;
@@ -30,7 +33,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 if (localVariable != null)
                     return localVariable.DefaultValue ?? RuntimeObject.Null;
             }
-            var field = System.Linq.Enumerable.FirstOrDefault(System.Linq.Enumerable.OfType<Reflection.DeclaredField>(prototype.GetMembers()), m => m.Name == Name);
+            var field = Enumerable.FirstOrDefault(Enumerable.OfType<Reflection.DeclaredField>(prototype.GetMembers()), m => m.Name == Name);
             if (field != null)
                 return field.DefaultValue ?? RuntimeObject.Null;
             return RuntimeObject.Null;
@@ -44,152 +47,10 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            var variable = generator.GetLocalVariable(Name);
-            if (variable != null)
-            {
-                if (variable.Type == null)
-                    throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
-                generator.LoadVariable(variable);
-                return;
-            }
-            Reflection.ParameterInfo arg = generator.MethodGenerator.Parameters.FirstOrDefault(para => para.Name == Name);
-            if (arg.Name != null)
-            {
-                generator.LoadArgument(generator.MethodGenerator.IsStatic ? arg.Index : arg.Index + 1);
-                ResolvedType = generator.MethodGenerator.ParameterTypes[arg.Index];
-            }
-            //find in the class level
-            var member = generator.TypeGenerator.FindMember(Name).FirstOrDefault();
-            if (member != null)
-            {
-                if (member.MemberType == System.Reflection.MemberTypes.Field)
-                {
-                    var field = (System.Reflection.FieldInfo)member;
-                    if (field.FieldType == null)
-                        throw new System.Exception(string.Concat("Use of undeclared field ", field));
-                    if (field.IsStatic == false)
-                        generator.LoadArgument(0);
-                    if (field is FieldGenerator)
-                        field = ((FieldGenerator)field).FieldInfo;
-                    generator.LoadField(field);
-                }
-                if (member.MemberType == System.Reflection.MemberTypes.Property)
-                {
-                    var property = (System.Reflection.PropertyInfo)member;
-                    System.Reflection.MethodInfo method = property.GetGetMethod(true);
-                    if (method.IsStatic == false)
-                        generator.LoadArgument(0);
-                    if (method is MethodGenerator)
-                        method = ((MethodGenerator)method).GetBuilder();
-                    generator.Call(method);
-                }
-                return;
-            }
+            if (Binding.IsMember && generator.Method.IsStatic == false)
+                generator.LoadArgument(0);
+            Binding.GenerateGet(generator);
         }
-#if Emit
-        protected override void ResolveType(OptimizationInfo info)
-        {
-            Scopes.Scope scope = Scope;
-            do
-            {
-                switch (scope.Context)
-                {
-                    case Scopes.ScopeContext.Local:
-                        if (scope.CanDeclareVariables && scope is Scopes.DeclarativeScope)
-                        {
-                            var declarative = (Scopes.DeclarativeScope)scope;
-                            var variable = declarative.GetVariable(Name);
-                            if (variable != null)
-                            {
-                                ResolvedPrimitiveType = variable.PrimitiveType;
-                                ResolvedType = variable.Store.Type;
-                                return;
-                            }
-                        }
-                        break;
-                    case Scopes.ScopeContext.Type:
-                        if (scope is Scopes.ObjectScope type)
-                        {
-                            var memeber = type.GetMember(Name).FirstOrDefault(item => item.IsMethod == false);
-                            if (memeber != null)
-                            {
-                                ResolvedPrimitiveType = memeber.Declaration.PrimitiveType;
-                                ResolvedType = memeber.Declaration.ResolvedType;
-                                return;
-                            }
-                        }
-                        break;
-                    case Scopes.ScopeContext.Global:
-                        break;
-                    default:
-                        break;
-                }
-                scope = scope.ParentScope;
-
-            } while (scope != null);
-        }
-
-        public override void GenerateCode(ILGenerator generator, MethodOptimizationInfo info)
-        {
-            Scopes.Scope scope = Scope;
-            do
-            {
-                switch (scope.Context)
-                {
-                    case Scopes.ScopeContext.Local:
-                        if (scope.CanDeclareVariables && scope is Scopes.DeclarativeScope)
-                        {
-                            var declarative = (Scopes.DeclarativeScope)scope;
-                            var variable = declarative.GetVariable(Name);
-                            if (variable != null)
-                            {
-                                ResolvedType = variable.ResolveType(info);
-                                if (variable.VariableType == Reflection.VariableType.Argument)
-                                {
-                                    generator.LoadArgument(variable.Index);
-                                    return;
-                                }
-                                if (variable.Store == null)
-                                    variable.Store = generator.DeclareVariable(ResolvedType, Name);
-                                generator.LoadVariable(variable.Store);
-                                //to do result type
-                                return;
-                            }
-                        }
-                        break;
-                    case Scopes.ScopeContext.Type:
-                        if (scope is Scopes.ObjectScope type)
-                        {
-                            var memeber = type.GetMember(Name).FirstOrDefault(item => item.IsMethod == false);
-                            if (memeber != null)
-                            {
-                                if (memeber.IsGenerated == false)
-                                {
-                                    memeber.Generate(info);
-                                }
-
-                                ResolvedType = memeber.ResolvedType;
-                                if (memeber.MemberType == System.Reflection.MemberTypes.Field)
-                                {
-                                    generator.LoadArgument(0);
-                                    generator.LoadField((System.Reflection.FieldInfo)memeber.Info);
-                                    return;
-                                }
-                                //to do result type
-                                return;
-                            }
-                        }
-                        break;
-                    case Scopes.ScopeContext.Global:
-                        break;
-                    default:
-                        break;
-                }
-                scope = scope.ParentScope;
-
-            } while (scope != null);
-        }
-#endif
 
     }
 }

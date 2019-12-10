@@ -6,7 +6,7 @@ namespace FluidScript.Reflection.Emit
 {
     public static class TypeUtils
     {
-        private static readonly IList<InbuiltType> Inbuilts;
+        internal static readonly IList<InbuiltType> Inbuilts;
         private static readonly IDictionary<string, InbuiltType> InbuiltNames;
         private static readonly IDictionary<string, RuntimeType> RuntimeTypes;
         internal const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
@@ -202,7 +202,7 @@ namespace FluidScript.Reflection.Emit
             }
         }
 
-        internal static bool TypesEqual(ParameterInfo[] args, RuntimeType[] calledTypes)
+        internal static bool TypesEqual(Reflection.ParameterInfo[] args, RuntimeType[] calledTypes)
         {
             int length = args.Length;
             if (calledTypes.Length < length) return false;
@@ -250,10 +250,10 @@ namespace FluidScript.Reflection.Emit
 
         private static BindingFlags GetStatic()
         {
-            return System.Reflection.BindingFlags.Static;
+            return BindingFlags.Static;
         }
 
-        private static bool MatchTypes(System.Reflection.MethodInfo method, System.Type left, System.Type right)
+        private static bool MatchTypes(MethodInfo method, System.Type left, System.Type right)
         {
             var paramters = method.GetParameters();
             if (paramters.Length == 2)
@@ -278,7 +278,7 @@ namespace FluidScript.Reflection.Emit
             return true;
         }
 
-        internal static bool TryImplicitConvert(System.Type from, System.Type to, out System.Reflection.MethodInfo method)
+        internal static bool TryImplicitConvert(System.Type from, System.Type to, out MethodInfo method)
         {
             method = to.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             if (method != null && method.ReturnType == to)

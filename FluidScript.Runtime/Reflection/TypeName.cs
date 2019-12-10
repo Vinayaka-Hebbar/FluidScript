@@ -1,6 +1,6 @@
 ﻿namespace FluidScript.Reflection
 {
-    public struct TypeName
+    public readonly struct TypeName
     {
         public string FullName => Namespace == null ? Name : Namespace + "." + Name;
 
@@ -18,16 +18,32 @@
             return FullName;
         }
 
-        internal static TypeName Split(string name)
+        public override bool Equals(object obj)
         {
-            int dot = name.LastIndexOf('.');
+            if(obj is TypeName typeName)
+            {
+                if (typeName.Namespace == null && Namespace == null)
+                    return Name.Equals(typeName.Name);
+                return FullName.Equals(typeName.FullName);
+            }
+            return Namespace == null && Name.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return FullName.GetHashCode();
+        }
+
+        public static implicit operator TypeName(string fullName)
+        {
+            int dot = fullName.LastIndexOf('.');
             if (dot == -1)
             {
-                return new TypeName(null, name);
+                return new TypeName(null, fullName);
             }
             else
             {
-                return new TypeName(name.Substring(0, dot), name.Substring(dot + 1));
+                return new TypeName(fullName.Substring(0, dot), fullName.Substring(dot + 1));
             }
         }
     }

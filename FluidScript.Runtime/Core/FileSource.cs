@@ -15,7 +15,7 @@ namespace FluidScript.Library
 
         private int charLen;
 
-        private int charPos;
+        private long charPos;
 
         private readonly byte[] _preamble;
 
@@ -58,7 +58,7 @@ namespace FluidScript.Library
 
         public string Path { get; }
 
-        public long Position => _stream.Position;
+        public long Position => charPos;
 
         public long Length => _stream.Length;
 
@@ -82,7 +82,6 @@ namespace FluidScript.Library
             _stream.Dispose();
         }
 
-
         public void NextLine()
         {
             column = 0;
@@ -94,6 +93,7 @@ namespace FluidScript.Library
             Buffer.BlockCopy(byteBuffer, n, byteBuffer, 0, byteLen - n);
             byteLen -= n;
         }
+
         private void DetectEncoding()
         {
             if (byteLen < 2)
@@ -162,7 +162,6 @@ namespace FluidScript.Library
                 }
             }
 
-
             if (_checkPreamble)
             {
                 if (bytePos == _preamble.Length)
@@ -183,7 +182,7 @@ namespace FluidScript.Library
             charLen = 0;
             charPos = 0;
             if (!_checkPreamble)
-                charLen = 0;
+                byteLen = 0;
             do
             {
                 if (_checkPreamble)
@@ -235,11 +234,15 @@ namespace FluidScript.Library
             //Console.WriteLine("ReadBuffer called.  chars: "+charLen);
             return charLen;
         }
+
         public char ReadChar()
         {
             if (charPos == charLen)
             {
-                if (ReadBuffer() == 0) return char.MinValue;
+                if (ReadBuffer() == 0)
+                {
+                    return char.MinValue;
+                }
             }
             char result = charBuffer[charPos];
             charPos++;
@@ -255,6 +258,7 @@ namespace FluidScript.Library
             }
             return charBuffer[charPos];
         }
+
         public void FallBack()
         {
             if (charPos == 0)
@@ -262,9 +266,9 @@ namespace FluidScript.Library
                 _stream.Position--;
                 Discard();
             }
-
             charPos--;
         }
+
         public void Reset()
         {
             _stream.Seek(0, SeekOrigin.Begin);
@@ -274,8 +278,8 @@ namespace FluidScript.Library
 
         public void SeekTo(long pos)
         {
-            _stream.Seek(pos, SeekOrigin.Current);
-            Discard();
+            //todo seek if pos exceeds below range
+            charPos = pos;
         }
 
         private void Discard()

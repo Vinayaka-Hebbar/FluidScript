@@ -1,5 +1,6 @@
 ﻿using System;
 using FluidScript.Reflection;
+using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -10,6 +11,11 @@ namespace FluidScript.Compiler.SyntaxTree
         public RefTypeSyntax(string name)
         {
             Name = name;
+        }
+
+        public override Type GetType(ITypeProvider provider)
+        {
+            return provider.GetType(Name);
         }
 
         public override ITypeInfo GetTypeInfo()

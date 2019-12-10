@@ -26,7 +26,7 @@ namespace FluidScript.Reflection.Emit
 
         public Statement SyntaxTree { get; internal set; }
 
-        internal readonly IMethodBaseGenerator MethodGenerator;
+        internal readonly IMethodBaseGenerator Method;
 
         internal readonly TypeGenerator TypeGenerator;
 
@@ -36,7 +36,7 @@ namespace FluidScript.Reflection.Emit
 
         public MethodBodyGenerator(IMethodBaseGenerator method, System.Reflection.Emit.ILGenerator generator) : base(generator, false)
         {
-            MethodGenerator = method;
+            Method = method;
             TypeGenerator = method.TypeGenerator;
             SyntaxTree = method.SyntaxTree;
         }
@@ -358,52 +358,32 @@ namespace FluidScript.Reflection.Emit
         public Expression VisitAssignment(AssignmentExpression node)
         {
             node.ResolvedType = node.Right.Accept(this).Type;
+            node.Left.Accept(this);
             return node;
         }
 
         public Expression VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            if (target.NodeType == ExpressionType.Identifier || target.NodeType == ExpressionType.Invocation)
+            var member = target.Type.GetMember(node.Name).FirstOrDefault();
+            Binding binding = null;
+            if (member != null)
             {
-                node.ResolvedType = target.Type;
-            }
-            else if (target.NodeType == ExpressionType.This)
-            {
-                node.ResolvedType = TypeGenerator;
-            }
-            else if (target.NodeType == ExpressionType.MemberAccess)
-            {
-                var name = node.Name;
-                var variable = GetLocalVariable(name);
-                if (variable != null)
+                if (member.MemberType == System.Reflection.MemberTypes.Field)
                 {
-                    if (variable.Type == null)
-                        throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
-                    node.ResolvedType = variable.Type;
+                    var field = (System.Reflection.FieldInfo)member;
+                    if (field.FieldType == null)
+                        throw new Exception(string.Concat("Use of undeclared field ", field));
+                    binding = new FieldBinding(field);
                 }
-                else
+                else if (member.MemberType == System.Reflection.MemberTypes.Property)
                 {
-                    //find in the class level
-                    var member = TypeGenerator.FindMember(name).FirstOrDefault();
-                    if (member != null)
-                    {
-                        if (member.MemberType == System.Reflection.MemberTypes.Field)
-                        {
-                            var field = (System.Reflection.FieldInfo)member;
-                            if (field.FieldType == null)
-                                throw new System.Exception(string.Concat("Use of undeclared field ", field));
-                            node.ResolvedType = field.FieldType;
-                        }
-                        else if (member.MemberType == System.Reflection.MemberTypes.Property)
-                        {
-                            var property = (System.Reflection.PropertyInfo)member;
-                            node.ResolvedType = property.PropertyType;
-                        }
-                    }
-                    node.Member = member;
+                    var property = (System.Reflection.PropertyInfo)member;
+                    binding = new PropertyBinding(property);
                 }
             }
+            node.Binding = binding;
+            node.ResolvedType = binding.Type;
             return node;
         }
 
@@ -443,6 +423,8 @@ namespace FluidScript.Reflection.Emit
                 .GetMethods(TypeUtils.Any)
                 .Where(HasMethod).ToArray();
             //todo ignore case
+            if (methods.Length == 0)
+                throw new Exception(string.Concat("method ", name, " not found"));
             var method = (System.Reflection.MethodInfo)Type.DefaultBinder.SelectMethod(TypeUtils.Any, methods, types, null);
             if (method is IMethodBaseGenerator baseGenerator)
                 method = (System.Reflection.MethodInfo)baseGenerator.MethodBase;
@@ -465,6 +447,9 @@ namespace FluidScript.Reflection.Emit
                     break;
                 case string _:
                     type = typeof(String);
+                    break;
+                case bool _:
+                    type = typeof(Boolean);
                     break;
                 case null:
                     type = typeof(IFSObject);
@@ -512,12 +497,14 @@ namespace FluidScript.Reflection.Emit
                 if (variable.Type == null)
                     throw new Exception(string.Concat("Use of undeclared variable ", variable));
                 node.ResolvedType = variable.Type;
+                node.Binding = new VariableBinding(variable);
                 return node;
             }
-            ParameterInfo arg = MethodGenerator.Parameters.FirstOrDefault(para => para.Name == name);
+            ParameterInfo arg = Method.Parameters.FirstOrDefault(para => para.Name == name);
             if (arg.Name != null)
             {
-                node.ResolvedType = MethodGenerator.ParameterTypes[arg.Index];
+                node.ResolvedType = arg.Type;
+                node.Binding = new ArgumentBinding(arg);
                 return node;
             }
             //find in the class level
@@ -530,11 +517,13 @@ namespace FluidScript.Reflection.Emit
                     if (field.FieldType == null)
                         throw new System.Exception(string.Concat("Use of undeclared field ", field));
                     node.ResolvedType = field.FieldType;
+                    node.Binding = new FieldBinding(field);
                 }
                 if (member.MemberType == System.Reflection.MemberTypes.Property)
                 {
                     var property = (System.Reflection.PropertyInfo)member;
                     node.ResolvedType = property.PropertyType;
+                    node.Binding = new PropertyBinding(property);
                 }
             }
             return node;

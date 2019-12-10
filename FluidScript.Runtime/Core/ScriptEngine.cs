@@ -1,6 +1,4 @@
-﻿using System;
-using FluidScript.Compiler;
-using FluidScript.Compiler.Metadata;
+﻿using FluidScript.Compiler;
 using FluidScript.Library;
 
 namespace FluidScript

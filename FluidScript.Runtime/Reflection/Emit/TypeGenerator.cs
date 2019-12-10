@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -9,6 +8,9 @@ namespace FluidScript.Reflection.Emit
     {
         private const System.Reflection.BindingFlags PublicInstanceOrStatic = PublicInstance | System.Reflection.BindingFlags.Static;
         private const System.Reflection.BindingFlags PublicInstance = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
+        private const System.Reflection.MethodAttributes DefaultStaticCtor = System.Reflection.MethodAttributes.Private | System.Reflection.MethodAttributes.Static | System.Reflection.MethodAttributes.HideBySig;
+        private const System.Reflection.MethodAttributes DefaultCtor = System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.HideBySig;
+
         internal readonly IList<IMemberGenerator> Members = new List<IMemberGenerator>();
         private readonly System.Reflection.Emit.TypeBuilder _builder;
         public readonly ReflectionModule ReflectionModule;
@@ -76,7 +78,7 @@ namespace FluidScript.Reflection.Emit
             if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Constructor) == false)
             {
                 //default ctor
-                var ctor = new ConstructorGenerator(_builder.DefineConstructor(System.Reflection.MethodAttributes.Public, System.Reflection.CallingConventions.Standard, new System.Type[0]), new System.Type[0], new System.Type[0], this, Compiler.SyntaxTree.Statement.Empty);
+                var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultCtor, System.Reflection.CallingConventions.Standard, new System.Type[0]), new System.Type[0], new System.Type[0], this, Compiler.SyntaxTree.Statement.Empty);
                 ctor.Build();
             }
             if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic))
@@ -84,7 +86,7 @@ namespace FluidScript.Reflection.Emit
                 //check for static ctor
                 if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Constructor && mem.IsStatic) == false)
                 {
-                    var ctor = new ConstructorGenerator(_builder.DefineConstructor(System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.Static, System.Reflection.CallingConventions.Standard, new System.Type[0]), new System.Type[0], new System.Type[0], this, Compiler.SyntaxTree.Statement.Empty);
+                    var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultStaticCtor, System.Reflection.CallingConventions.Standard, new System.Type[0]), new System.Type[0], new System.Type[0], this, Compiler.SyntaxTree.Statement.Empty);
                     ctor.Build();
                 }
             }
@@ -128,6 +130,24 @@ namespace FluidScript.Reflection.Emit
             return BaseType.GetMembers(PublicInstanceOrStatic).Where(HasMember);
         }
 
+        public IEnumerable<System.Reflection.MemberInfo> FindMember(string name, System.Reflection.BindingFlags flags)
+        {
+            bool HasMember(System.Reflection.MemberInfo m)
+            {
+                if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
+                {
+                    var data = (System.Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                    if (data != null)
+                        return data.Match(name);
+                }
+                return m.Name == name;
+            }
+            var member = Members.Where(m => m.BindingFlagsMatch(flags)).Select(mem => mem.MemberInfo).Where(HasMember);
+            if (member.Any())
+                return member;
+            return BaseType.GetMembers(flags).Where(HasMember);
+        }
+
         internal bool CanImplementMethod(string name, System.Type[] types, out string newName)
         {
             var methods = BaseType.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Where(m => m.IsDefined(typeof(Runtime.RegisterAttribute), false) && System.Attribute.GetCustomAttribute(m, typeof(Runtime.RegisterAttribute)).Match(name)).ToArray();
@@ -153,11 +173,9 @@ namespace FluidScript.Reflection.Emit
             }
         }
 
-        public new System.Type GetType(string typeName)
+        public System.Type GetType(TypeName typeName)
         {
-            if (TypeUtils.IsInbuiltType(typeName))
-                return TypeUtils.GetInbuiltType(typeName);
-            return Module.GetType(typeName);
+            return ReflectionModule.GetType(typeName);
         }
 
         protected override System.Reflection.TypeAttributes GetAttributeFlagsImpl()
@@ -223,6 +241,11 @@ namespace FluidScript.Reflection.Emit
         public override System.Reflection.MethodInfo[] GetMethods(System.Reflection.BindingFlags bindingAttr)
         {
             return GetMembers<System.Reflection.MethodInfo>(System.Reflection.MemberTypes.Method, bindingAttr).ToArray();
+        }
+
+        public override System.Reflection.MemberInfo[] GetMember(string name, System.Reflection.BindingFlags bindingAttr)
+        {
+            return FindMember(name, bindingAttr).ToArray();
         }
 
         public override System.Type GetNestedType(string name, System.Reflection.BindingFlags bindingAttr)

@@ -46,7 +46,7 @@ namespace FluidScript.Compiler.SyntaxTree
                             lastStatement = block.Statements[block.Statements.Length - 1] == this;
                         }
                     }
-                    var returnType = generator.MethodGenerator.ReturnType;
+                    var returnType = generator.Method.ReturnType;
                     //todo variable name not used
                     if (generator.ReturnVariable == null)
                         generator.ReturnVariable = generator.DeclareVariable(returnType);

@@ -16,7 +16,7 @@
         Undefined,
         Return,
         Var,
-        Const,
+        Val,
         Function,
         Implement,
         Lamda,

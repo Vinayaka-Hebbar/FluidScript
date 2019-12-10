@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 
 namespace FluidScript.Reflection.Emit
@@ -21,7 +20,7 @@ namespace FluidScript.Reflection.Emit
             MemberType = System.Reflection.MemberTypes.Method;
         }
 
-        public Type[] ParameterTypes { get; }
+        public System.Type[] ParameterTypes { get; }
 
         public TypeGenerator TypeGenerator { get; }
 
@@ -33,19 +32,19 @@ namespace FluidScript.Reflection.Emit
 
         public System.Reflection.MethodBase MethodBase => this;
 
-        public override RuntimeMethodHandle MethodHandle => _builder.MethodHandle;
+        public override System.RuntimeMethodHandle MethodHandle => _builder.MethodHandle;
 
         public override System.Reflection.MethodAttributes Attributes { get; }
 
         public override string Name { get; }
 
-        public override Type DeclaringType => TypeGenerator;
+        public override System.Type DeclaringType => TypeGenerator;
 
-        public override Type ReflectedType => TypeGenerator;
+        public override System.Type ReflectedType => TypeGenerator;
 
         public System.Collections.Generic.IEnumerable<ParameterInfo> Parameters { get; internal set; }
 
-        public Type ReturnType => null;
+        public System.Type ReturnType => null;
 
         public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
         {
@@ -58,7 +57,7 @@ namespace FluidScript.Reflection.Emit
             return _builder.GetCustomAttributes(inherit);
         }
 
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit)
+        public override object[] GetCustomAttributes(System.Type attributeType, bool inherit)
         {
             return _builder.GetCustomAttributes(attributeType, inherit);
         }
@@ -83,13 +82,13 @@ namespace FluidScript.Reflection.Emit
             return _builder.Invoke(obj, invokeAttr, binder, parameters, culture);
         }
 
-        public override bool IsDefined(Type attributeType, bool inherit)
+        public override bool IsDefined(System.Type attributeType, bool inherit)
         {
             //todo custome attirbutes
             return attributeType == typeof(Runtime.RegisterAttribute);
         }
 
-        public Type GetType(string typeName)
+        public System.Type GetType(string typeName)
         {
             if (TypeGenerator != null)
                 return TypeGenerator.GetType(typeName);
@@ -101,12 +100,12 @@ namespace FluidScript.Reflection.Emit
             var body = new MethodBodyGenerator(this, _builder.GetILGenerator());
             foreach (FieldGenerator generator in TypeGenerator.Members.Where(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic == IsStatic))
             {
-                if (IsStatic == false)
-                    body.LoadArgument(0);
-                generator.MethodBody = body;
-                generator.Build();
                 if (generator.DefaultValue != null)
                 {
+                    if (IsStatic == false)
+                        body.LoadArgument(0);
+                    generator.MethodBody = body;
+                    generator.Build();
                     generator.DefaultValue.GenerateCode(body);
                     body.StoreField(generator.FieldInfo);
                 }

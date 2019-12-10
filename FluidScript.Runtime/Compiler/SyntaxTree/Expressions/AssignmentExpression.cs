@@ -1,4 +1,5 @@
 ﻿using FluidScript.Reflection.Emit;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -55,13 +56,22 @@ namespace FluidScript.Compiler.SyntaxTree
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             //todo implementation pending
-            var right = Right.Accept(generator);
-            if (right.NodeType == ExpressionType.Identifier)
+            if (Left.NodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)Left;
-
+                Binding binding = exp.Binding;
+                if (binding.IsMember && generator.Method.IsStatic == false)
+                    generator.LoadArgument(0);
+                Right.GenerateCode(generator);
+                binding.GenerateSet(generator);
             }
-            base.GenerateCode(generator);
+            else if (Left.NodeType == ExpressionType.MemberAccess)
+            {
+                var exp = (MemberExpression)Left;
+                exp.Target.GenerateCode(generator);
+                Right.GenerateCode(generator);
+                exp.Binding.GenerateSet(generator);
+            }
         }
 
         public override string ToString()

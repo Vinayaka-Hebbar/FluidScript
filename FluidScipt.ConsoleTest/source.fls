@@ -1,15 +1,28 @@
 ﻿class Test {
-	const var _x = 12, _y = 5 + 1;
+	var _x = 12, _y = 5 + 1;
+    val _name = `my first class`;
 
-	get x():string {
-		return _x.toString();
+	get current() : Test {
+		return this;
 	}
 
-	func read(a:int):string {
+	get x():int {
+		return _x;
+	}
+
+	static get name():string {
+		return _name;
+	}
+
+	set x(value:int) {
+		current._x = value;
+	}
+
+	func read(a:int):int {
 		return x;
 	}
 
     impl func toString() : string {
-		return `hello`;
+		return _name;
 	}
 }

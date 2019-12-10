@@ -53,16 +53,13 @@
         {
             get
             {
-                return TypeName.Split(FullName);
+                return FullName;
             }
         }
 
         public System.Type ResolvedType(Emit.ITypeProvider generator)
         {
-            var typeName = FullName;
-            if (Emit.TypeUtils.IsInbuiltType(typeName))
-                return Emit.TypeUtils.GetInbuiltType(typeName);
-            return generator.GetType(typeName);
+            return generator.GetType(TypeName);
         }
 
         public bool IsArray()
@@ -124,7 +121,7 @@
         {
             get
             {
-                return TypeName.Split(FullName);
+                return FullName;
             }
         }
 

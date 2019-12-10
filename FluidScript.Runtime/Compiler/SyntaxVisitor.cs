@@ -252,7 +252,8 @@ namespace FluidScript.Compiler
         {
             while (TokenType != TokenType.RightBrace)
             {
-                yield return VisitMember();
+                MemberDeclaration member = VisitMember();
+                yield return member;
                 if (TokenType == TokenType.SemiColon)
                     MoveNext();
             }
@@ -269,7 +270,7 @@ namespace FluidScript.Compiler
                     declaration = VisitIdentifierMember();
                     break;
                 default:
-                    throw new System.Exception(string.Format("Invalid Token type {0}", TokenType));
+                    throw new System.Exception(string.Format("Invalid Token type {0} at {1}", TokenType, Source.CurrentPosition));
             }
             declaration.Modifiers = modifiers;
             return declaration;
@@ -291,10 +292,10 @@ namespace FluidScript.Compiler
                     case IdentifierType.Var:
                         MoveNext();
                         return VisitFieldDeclaration();
-                    case IdentifierType.Const:
+                    case IdentifierType.Val:
                         MoveNext();
-                        modifiers |= Reflection.Modifiers.ReadOnly | Reflection.Modifiers.Static;
-                        return VisitIdentifierMember();
+                        modifiers |= Reflection.Modifiers.ReadOnly;
+                        return VisitFieldDeclaration();
                     case IdentifierType.Implement:
                         //todo has set
                         modifiers |= Reflection.Modifiers.Implement;
@@ -426,7 +427,7 @@ namespace FluidScript.Compiler
                         //any type
                         var declarations = VisitVarDeclarations().ToArray();
                         return new LocalDeclarationStatement(declarations, false);
-                    case IdentifierType.Const:
+                    case IdentifierType.Val:
                         //todo const to variable declaration
                         declarations = VisitVarDeclarations().ToArray();
                         return new LocalDeclarationStatement(declarations, true);

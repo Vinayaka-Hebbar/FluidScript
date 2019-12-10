@@ -21,7 +21,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            ResolvedType = generator.TypeGenerator.GetBuilder();
+            ResolvedType = generator.TypeGenerator;
             generator.LoadArgument(0);
         }
 

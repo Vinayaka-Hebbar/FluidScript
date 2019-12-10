@@ -1,6 +1,5 @@
 ﻿using FluidScript;
 using System;
-using System.Linq.Expressions;
 using System.Runtime.Serialization;
 
 namespace FluidScipt.ConsoleTest
@@ -12,7 +11,7 @@ namespace FluidScipt.ConsoleTest
             //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
 
             Class1 class1 = new Class1();
-            class1.Run();
+            // class1.Run();
             class1.Print();
             Console.ReadKey();
         }
@@ -24,80 +23,27 @@ namespace FluidScipt.ConsoleTest
             var tree = engine.ParseFile(path + "source.fls");
             if (tree is FluidScript.Compiler.SyntaxTree.TypeDeclaration declration)
             {
+                System.Reflection.AssemblyName aName = new System.Reflection.AssemblyName("Runtime.DynamicClasses, Version=1.0.0.1");
                 var dynamicAssembly =
-               AppDomain.CurrentDomain.DefineDynamicAssembly(new System.Reflection.AssemblyName("DynamicClass.Utility.DynamicClasses, Version=1.0.0.0"), System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave);
+               System.Reflection.Emit.AssemblyBuilder.DefineDynamicAssembly(aName, System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave);
+
                 var dynamicModule =
-                    dynamicAssembly.DefineDynamicModule("DynamicClass.Utility.DynamicClasses.dll", true);
+                    dynamicAssembly.DefineDynamicModule(aName.Name, string.Concat(aName.Name, ".dll"), true);
                 var classType = declration.Generate(new FluidScript.Reflection.Emit.ReflectionModule(dynamicAssembly, dynamicModule));
                 dynamic instance = Activator.CreateInstance(classType);
                 var c = instance.Read(1);
                 Console.WriteLine(c);
-                dynamicAssembly.Save("DynamicClass.Utility.DynamicClasses.dll");
+                dynamicAssembly.Save("Runtime.DynamicClasses.dll");
             }
         }
 
         void Print()
         {
-            int[] array = new int[0];
-           var proper =  array.GetType().GetProperties();
-            var obj = new { a = 1 };
-            System.Linq.Expressions.Expression<Func<int>> func = () => obj.a.GetHashCode();
-            var body = func.Body;
-            if (body is MethodCallExpression method)
-            {
-                var type = method.Object.GetType();
-                Console.WriteLine();
-            }
+            dynamic value = new System.Dynamic.ExpandoObject();
+            value.a = new int[] { 1 };
+           var r = value.a[0];
+            Runtime.DynamicClasses.Test test = new Runtime.DynamicClasses.Test();
             Console.WriteLine();
-        }
-
-        class ExV :
-            System.Linq.Expressions.ExpressionVisitor
-        {
-            protected override Expression VisitUnary(UnaryExpression node)
-            {
-                return base.VisitUnary(node);
-            }
-        }
-
-        public FluidScript.Double Add(int a, int b)
-        {
-            return a + b;
-        }
-
-        public override string ToString()
-        {
-            return base.ToString();
-        }
-
-
-        public object Get(object value) => value;
-    }
-
-    [DataContract]
-    public struct Age
-    {
-        [DataMember]
-        public int Number { get; set; }
-
-        public override bool Equals(object obj)
-        {
-            return obj is Age && ((Age)obj).Number == Number;
-        }
-
-        public override int GetHashCode()
-        {
-            return Number.GetHashCode();
-        }
-
-        public static bool operator ==(Age left, Age right)
-        {
-            return left.Number == right.Number;
-        }
-
-        public static bool operator !=(Age left, Age right)
-        {
-            return left.Number != right.Number;
         }
     }
 

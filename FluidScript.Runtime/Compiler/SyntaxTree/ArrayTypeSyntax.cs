@@ -1,4 +1,6 @@
-﻿using FluidScript.Reflection;
+﻿using System;
+using FluidScript.Reflection;
+using FluidScript.Reflection.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -12,6 +14,11 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             ElementType = elementType;
             Ranks = sizes;
+        }
+
+        public override Type GetType(ITypeProvider provider)
+        {
+            return ElementType.GetType(provider).MakeArrayType();
         }
 
         public override ITypeInfo GetTypeInfo()

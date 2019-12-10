@@ -29,5 +29,11 @@
         {
             return new Reflection.ParameterInfo(Name, Type.GetTypeInfo(), Index, IsVar);
         }
+
+        public Reflection.Emit.ParameterInfo GetParameterInfo(Reflection.Emit.ITypeProvider provider)
+        {
+            return new Reflection.Emit.ParameterInfo(Name, Index, Type.GetType(provider), IsVar);
+
+        }
     }
 }

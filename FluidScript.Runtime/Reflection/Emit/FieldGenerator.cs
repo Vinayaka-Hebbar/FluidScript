@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace FluidScript.Reflection.Emit
 {
-    public class FieldGenerator : System.Reflection.FieldInfo, IMemberGenerator, ITypeProvider
+    public class FieldGenerator : System.Reflection.FieldInfo, IMemberGenerator
     {
         private IList<AttributeGenerator> _CustomAttributes;
 
@@ -113,7 +113,7 @@ namespace FluidScript.Reflection.Emit
 
                 }
                 else
-                    type = DeclarationExpression.VariableType.GetTypeInfo().ResolvedType(this);
+                    type = DeclarationExpression.VariableType.GetTypeInfo().ResolvedType(TypeGenerator);
                 var fieldBul = TypeGenerator.GetBuilder().DefineField(Name, type, Attributes);
                 if (_CustomAttributes != null)
                 {

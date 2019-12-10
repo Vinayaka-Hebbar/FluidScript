@@ -26,10 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="DynamicClass.Utility.DynamicClasses">
-      <HintPath>bin\Debug\net461\DynamicClass.Utility.DynamicClasses.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Runtime.DynamicClasses">
+      <HintPath>bin\Debug\net461\Runtime.DynamicClasses.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

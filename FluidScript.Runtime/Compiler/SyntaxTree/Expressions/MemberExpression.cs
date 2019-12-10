@@ -1,4 +1,5 @@
 ﻿using FluidScript.Reflection.Emit;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +10,7 @@ namespace FluidScript.Compiler.SyntaxTree
         public readonly Expression Target;
         public readonly string Name;
 
-        public System.Reflection.MemberInfo Member
+        public Binding Binding
         {
             get;
             protected internal set;
@@ -21,7 +22,7 @@ namespace FluidScript.Compiler.SyntaxTree
             Name = name;
         }
 
-        public override IEnumerable<Node> ChildNodes() => Childs(Target);
+        public override IEnumerable<Node> ChildNodes() => Target.ChildNodes().Concat(Childs(Target));
 
         public override string ToString()
         {
@@ -46,45 +47,22 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            if (Target.NodeType == ExpressionType.Identifier || Target.NodeType == ExpressionType.Invocation)
-            {
-                Target.GenerateCode(generator);
-            }
-            else if (Target.NodeType == ExpressionType.This)
+            if (Target.NodeType == ExpressionType.This)
             {
                 generator.LoadArgument(0);
             }
-            else if (Target.NodeType == ExpressionType.MemberAccess)
+            else
             {
-                var name = Name;
-                var variable = generator.GetLocalVariable(name);
-                if (variable != null)
-                {
-                    if (variable.Type == null)
-                        throw new System.Exception(string.Concat("Use of undeclared variable ", variable));
-                    generator.LoadVariable(variable);
-                }
-                else
-                {
-                    //find in the class level
-                    var member = generator.TypeGenerator.FindMember(name).FirstOrDefault();
-                    if (member != null)
-                    {
-                        if (member.MemberType == System.Reflection.MemberTypes.Field)
-                        {
-                            var field = (System.Reflection.FieldInfo)member;
-                            if (field.FieldType == null)
-                                throw new System.Exception(string.Concat("Use of undeclared field ", field));
-                            generator.LoadField(field);
-                        }
-                        else if (member.MemberType == System.Reflection.MemberTypes.Property)
-                        {
-                            var property = (System.Reflection.PropertyInfo)member;
-                            generator.Call(property.GetGetMethod(true));
-                        }
+                Target.GenerateCode(generator);
+                Binding.GenerateGet(generator);
+            }
+        }
 
-                    }
-                }
+        public void GenerateSet(MethodBodyGenerator generator, Expression right)
+        {
+            if (Target.NodeType == ExpressionType.Identifier)
+            {
+                var target = (NameExpression)Target;
             }
         }
 

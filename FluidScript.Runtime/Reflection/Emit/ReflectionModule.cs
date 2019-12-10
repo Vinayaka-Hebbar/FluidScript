@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.SymbolStore;
+using System.Linq;
 using System.Reflection.Emit;
 
 namespace FluidScript.Reflection.Emit
@@ -8,6 +9,9 @@ namespace FluidScript.Reflection.Emit
         public readonly AssemblyBuilder Assembly;
         public readonly ModuleBuilder Module;
         public int TypeCount;
+        private readonly System.Collections.Generic.IDictionary<TypeName, System.Type> _types;
+
+        public string Name { get; }
 
         /// <summary>
         /// Gets the language type GUID for the symbol store.
@@ -32,16 +36,24 @@ namespace FluidScript.Reflection.Emit
         {
             Assembly = assembly;
             Module = module;
+            Name = module.ScopeName;
+            _types = TypeUtils.Inbuilts.ToDictionary(item => (TypeName)item.Name, item => item.Type);
         }
 
-        public TypeBuilder DefineType(string name, System.Reflection.TypeAttributes attr, System.Type parent)
+        public TypeGenerator DefineType(string name, System.Reflection.TypeAttributes attr, System.Type parent)
         {
-            return Module.DefineType(name, attr, parent);
+            var generator = new TypeGenerator(Module.DefineType(string.Concat(Name, ".", name), attr, parent), this);
+            _types.Add(name, generator);
+            return generator;
         }
 
-        public System.Type GetType(string typeName)
+        public System.Type GetType(TypeName typeName)
         {
-            return Module.GetType(typeName);
+            if (_types.TryGetValue(typeName, out System.Type type))
+            {
+                return type;
+            }
+            return Module.GetType(typeName.ToString());
         }
 
 #if NET40

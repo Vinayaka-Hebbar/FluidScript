@@ -4,7 +4,7 @@ namespace FluidScript.Reflection.Emit
 {
     public interface ITypeProvider
     {
-        System.Type GetType(string typeName);
+        System.Type GetType(TypeName typeName);
     }
 
     public interface IMemberGenerator

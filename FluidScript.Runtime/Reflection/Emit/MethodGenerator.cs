@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace FluidScript.Reflection.Emit
 {
-    public abstract class BaseMethodGenerator : System.Reflection.MethodInfo, IMemberGenerator, ITypeProvider, IMethodBaseGenerator
+    public abstract class BaseMethodGenerator : System.Reflection.MethodInfo, IMemberGenerator, IMethodBaseGenerator
     {
         protected IList<AttributeGenerator> _CustomAttributes;
 

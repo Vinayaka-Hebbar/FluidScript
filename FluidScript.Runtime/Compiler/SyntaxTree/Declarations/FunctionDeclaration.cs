@@ -31,15 +31,15 @@ namespace FluidScript.Compiler.SyntaxTree
                 returnType = ReturnType.GetTypeInfo().ResolvedType(generator);
             else
                 returnType = typeof(void);
-            var parameters = Parameters.Select(para => para.GetParameterInfo());
-            var parameterTypes = parameters.Select(para => para.Type.ResolvedType(generator)).ToArray();
+            var parameters = Parameters.Select(para => para.GetParameterInfo(generator));
+            var parameterTypes = parameters.Select(para => para.Type).ToArray();
             if (IsGetter || IsSetter)
                 CreateProperty(generator, returnType, parameters, parameterTypes);
             else
                 CreateFunction(generator, returnType, parameters, parameterTypes);
         }
 
-        private void CreateProperty(TypeGenerator generator, System.Type returnType, System.Collections.Generic.IEnumerable<Reflection.ParameterInfo> parameters, System.Type[] parameterTypes)
+        private void CreateProperty(TypeGenerator generator, System.Type returnType, System.Collections.Generic.IEnumerable<ParameterInfo> parameters, System.Type[] parameterTypes)
         {
             PropertyGenerator.PropertyHolder accessor = null;
             System.Type type = null;
@@ -49,9 +49,9 @@ namespace FluidScript.Compiler.SyntaxTree
             if (IsGetter)
             {
                 type = returnType;
-                System.Reflection.Emit.MethodBuilder builder1 = builder.DefineMethod(string.Concat("get_", name), attributes, returnType, parameterTypes);
+                System.Reflection.Emit.MethodBuilder getBul = builder.DefineMethod(string.Concat("get_", name), attributes, returnType, parameterTypes);
                 accessor = new PropertyGenerator.PropertyHolder(PropertyType.Get,
-                    new MethodGenerator(builder1, parameterTypes, generator, Body));
+                    new MethodGenerator(getBul, parameterTypes, generator, Body));
             }
             if (IsSetter)
             {
@@ -62,8 +62,6 @@ namespace FluidScript.Compiler.SyntaxTree
             if (generator.TryGetProperty(Name, out PropertyGenerator property) == false)
             {
                 var pb = generator.GetBuilder().DefineProperty(name, System.Reflection.PropertyAttributes.None, type, null);
-                var attrBuilder = new System.Reflection.Emit.CustomAttributeBuilder(ReflectionHelpers.Register_Attr_Ctor, new object[] { Name });
-                pb.SetCustomAttribute(attrBuilder);
                 property = new PropertyGenerator(generator, pb);
                 property.SetCustomAttribute(typeof(Runtime.RegisterAttribute), ReflectionHelpers.Register_Attr_Ctor, new[] { Name });
                 generator.Add(property);
@@ -80,7 +78,7 @@ namespace FluidScript.Compiler.SyntaxTree
             property.Accessors.Add(accessor);
         }
 
-        private void CreateFunction(TypeGenerator generator, System.Type returnType, System.Collections.Generic.IEnumerable<Reflection.ParameterInfo> parameters, System.Type[] parameterTypes)
+        private void CreateFunction(TypeGenerator generator, System.Type returnType, System.Collections.Generic.IEnumerable<ParameterInfo> parameters, System.Type[] parameterTypes)
         {
             var name = string.Concat(char.ToUpper(Name.First()), Name.Substring(1));
             System.Reflection.MethodAttributes attributes = GetAttributes();
@@ -104,10 +102,13 @@ namespace FluidScript.Compiler.SyntaxTree
                 returnType = ReturnType.GetTypeInfo().ResolvedType(generator);
             else
                 returnType = typeof(object);
-            var parameters = Parameters.Select(para => para.GetParameterInfo());
-            var parameterTypes = parameters.Select(para => para.Type.ResolvedType(generator)).ToArray();
+            var parameters = Parameters.Select(para => para.GetParameterInfo(generator));
+            var parameterTypes = parameters.Select(para => para.Type).ToArray();
             var method = new System.Reflection.Emit.DynamicMethod(Name, returnType, parameterTypes);
-            var methodOpt = new DynamicMethodGenerator(method, parameterTypes, generator, Body);
+            var methodOpt = new DynamicMethodGenerator(method, parameterTypes, generator, Body)
+            {
+                Parameters = parameters
+            };
             methodOpt.Build();
             return method;
         }
