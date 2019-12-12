@@ -113,7 +113,7 @@ namespace FluidScript.Reflection.Emit
 
                 }
                 else
-                    type = DeclarationExpression.VariableType.GetTypeInfo().ResolvedType(TypeGenerator);
+                    type = DeclarationExpression.VariableType.GetType(TypeGenerator);
                 var fieldBul = TypeGenerator.GetBuilder().DefineField(Name, type, Attributes);
                 if (_CustomAttributes != null)
                 {

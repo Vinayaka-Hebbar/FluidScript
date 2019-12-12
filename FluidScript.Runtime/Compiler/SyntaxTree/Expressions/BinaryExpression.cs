@@ -79,8 +79,9 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var leftType = Left.Type;
             var rightType = Right.Type;
+            //todo conversion
             if (Method == null)
-                Method = TypeUtils.GetOperatorOverload(name, out Conversion[] conversions, leftType, rightType);
+                Method = Reflection.TypeUtils.GetOperatorOverload(name, out Conversion[] conversions, leftType, rightType);
             var parameters = Method.GetParameters();
             Left.GenerateCode(generator);
             var first = parameters[0].ParameterType;

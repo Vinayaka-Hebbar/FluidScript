@@ -22,7 +22,7 @@
             if (Value != null)
             {
                 var defValue = Value.Accept(generator);
-                System.Type type = VariableType == null ? defValue.Type : VariableType.GetTypeInfo().ResolvedType(generator.TypeGenerator);
+                System.Type type = VariableType == null ? defValue.Type : VariableType.GetType(generator.TypeGenerator);
                 defValue.GenerateCode(generator);
                 var variable = generator.DeclareVariable(type, Name);
                 generator.StoreVariable(variable);

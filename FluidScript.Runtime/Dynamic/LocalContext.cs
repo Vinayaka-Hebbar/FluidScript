@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FluidScript.Reflection.Emit
+namespace FluidScript.Dynamic
 {
     internal sealed class LocalContext
     {
@@ -40,6 +40,11 @@ namespace FluidScript.Reflection.Emit
             {
                 variable = _scope.Create(name, value.GetType());
             }
+            Instances[variable] = value;
+        }
+
+        internal void Modify(LocalVariable variable, object value)
+        {
             Instances[variable] = value;
         }
 

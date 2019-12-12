@@ -8,6 +8,11 @@ namespace FluidScript.Compiler.SyntaxTree
         {
         }
 
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
+        {
+            return visitor.VisitNull(this);
+        }
+
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             generator.LoadNull();

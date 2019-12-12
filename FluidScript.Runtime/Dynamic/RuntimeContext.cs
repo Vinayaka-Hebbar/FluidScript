@@ -2,9 +2,9 @@
 using System;
 using System.Linq;
 
-namespace FluidScript.Reflection.Emit
+namespace FluidScript.Dynamic
 {
-    public sealed class RuntimeContext : Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, ITypeProvider
+    public sealed class RuntimeContext : Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider
     {
         private readonly LocalScope scope;
 
@@ -77,7 +77,7 @@ namespace FluidScript.Reflection.Emit
                 var variable = current.Find(name, out object _);
                 if (variable.Equals(LocalVariable.Empty) == false)
                 {
-                    current.CreateOrModify(name, variable);
+                    current.Modify(variable.Value, value);
                     return value;
                 }
             }
@@ -164,12 +164,12 @@ namespace FluidScript.Reflection.Emit
             }
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
-            var method = TypeUtils.GetOperatorOverload(opName, out Conversion[] conversion, left.GetType(), right.GetType());
+            var method = Reflection.TypeUtils.GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversion, left.GetType(), right.GetType());
             node.Method = method;
             var args = new object[] { left, right };
             for (int i = 0; i < conversion.Length; i++)
             {
-                Conversion conv = conversion[i];
+                Reflection.Emit.Conversion conv = conversion[i];
                 if (conv.HasConversion)
                     args[i] = conv.Method.Invoke(null, new object[] { args[i] });
             }
@@ -206,15 +206,15 @@ namespace FluidScript.Reflection.Emit
                 return m.Name == name;
             }
             var methods = resultType
-                .GetMethods(TypeUtils.Any)
+                .GetMethods(Reflection.TypeUtils.Any)
                 .Where(HasMethod).ToArray();
 
             if (methods.Length == 0)
                 throw new Exception(string.Concat("method ", name, " not found"));
-            var method = TypeUtils.BindToMethod(methods, types, out Conversion[] conversion);
+            var method = Reflection.TypeUtils.BindToMethod(methods, types, out Reflection.Emit.Conversion[] conversion);
             for (int i = 0; i < conversion.Length; i++)
             {
-                Conversion conv = conversion[i];
+                Reflection.Emit.Conversion conv = conversion[i];
                 if (conv.HasConversion)
                     args[i] = conv.Method.Invoke(null, new object[] { args[i] });
             }
@@ -301,7 +301,7 @@ namespace FluidScript.Reflection.Emit
         {
             var name = node.Name;
             var variable = current.Find(name, out object value);
-            if (variable != null)
+            if (variable.Equals(LocalVariable.Empty) == false)
             {
                 if (variable.Value.Type == null)
                     throw new Exception(string.Concat("Use of undeclared variable ", variable));
@@ -333,13 +333,17 @@ namespace FluidScript.Reflection.Emit
         public object VisitTernary(TernaryExpression node)
         {
             var condition = node.First.Accept(this);
-            if (condition is Boolean)
+            switch (condition)
             {
-                if ((Boolean)condition)
+                case Boolean _:
+                    if ((Boolean)condition)
+                        return node.Second.Accept(this);
+                    return node.Third.Accept(this);
+                case null:
+                    return node.Third.Accept(this);
+                default:
                     return node.Second.Accept(this);
-                return node.Third.Accept(this);
             }
-            throw new Exception("expected bool type");
         }
 
         public object VisitThis(ThisExpression node)
@@ -350,14 +354,39 @@ namespace FluidScript.Reflection.Emit
         public object VisitUnary(UnaryExpression node)
         {
             var value = node.Operand.Accept(this);
-            System.Reflection.MethodInfo method = null;
+            Type type = value.GetType();
+            string name = null;
+            bool updated = false;
+            bool modified = false;
             switch (node.NodeType)
             {
                 case ExpressionType.Parenthesized:
                     return value;
-
-
+                case ExpressionType.PostfixPlusPlus:
+                    name = "op_Increment";
+                    updated = true;
+                    break;
+                case ExpressionType.PrefixPlusPlus:
+                    name = "op_Increment";
+                    updated = modified = true;
+                    break;
+                case ExpressionType.PostfixMinusMinus:
+                    name = "op_Decrement";
+                    updated = true;
+                    break;
+                case ExpressionType.PrefixMinusMinus:
+                    name = "op_Decrement";
+                    updated = modified = true;
+                    break;
             }
+            var method = Reflection.TypeUtils.GetOperatorOverload(name, out Reflection.Emit.Conversion[] conversion, type);
+            var obj = method.Invoke(null, new object[] { value });
+            if (updated)
+            {
+                var exp = new AssignmentExpression(node.Operand, new LiteralExpression(modified ? obj : value));
+                return exp.Accept(this);
+            }
+            node.Type = method.ReturnType;
             return value;
         }
 
@@ -384,9 +413,9 @@ namespace FluidScript.Reflection.Emit
             return value;
         }
 
-        public Type GetType(TypeName typeName)
+        public Type GetType(Reflection.TypeName typeName)
         {
-            if (TypeUtils.TryGetType(typeName, out Type type))
+            if (Reflection.TypeUtils.TryGetType(typeName, out Type type))
                 return type;
             return Type.GetType(typeName.FullName);
         }
@@ -410,6 +439,22 @@ namespace FluidScript.Reflection.Emit
                 if (hasReturn)
                     break;
             }
+        }
+
+        public object VisitNull(NullExpression node)
+        {
+            return null;
+        }
+
+        public object VisitNullPropegator(NullPropegatorExpression node)
+        {
+            object value = node.Left.Accept(this);
+            if(value is null)
+            {
+                value = node.Right.Accept(this);
+            }
+            node.Type = value.GetType();
+            return value;
         }
     }
 }

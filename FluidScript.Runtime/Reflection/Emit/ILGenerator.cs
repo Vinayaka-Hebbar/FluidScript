@@ -205,16 +205,6 @@ namespace FluidScript.Reflection.Emit
         /// <returns> A new local variable. </returns>
         public abstract ILLocalVariable DeclareVariable(Type type, string name = null);
 
-        /// Declares a new local variable.
-        /// </summary>
-        /// <param name="type"> The type of the local variable. </param>
-        /// <param name="name"> The name of the local variable. Can be <c>null</c>. </param>
-        /// <returns> A new local variable. </returns>
-        public ILLocalVariable DeclareVariable(RuntimeType type, string name = null)
-        {
-            return DeclareVariable(TypeUtils.ToType(type), name);
-        }
-
         /// <summary>
         /// Pushes the value of the given variable onto the stack.
         /// </summary>
@@ -263,17 +253,6 @@ namespace FluidScript.Reflection.Emit
             }
             // Create a new temporary variable
             return DeclareVariable(type);
-        }
-
-        /// <summary>
-        /// Retrieves a temporary variable with the given type, reusing a previous variable if
-        /// possible.
-        /// </summary>
-        /// <param name="type"> The type of variable to create. </param>
-        /// <returns> A temporary variable  </returns>
-        public ILLocalVariable CreateTemporaryVariable(RuntimeType type)
-        {
-            return CreateTemporaryVariable(TypeUtils.ToType(type));
         }
 
         /// <summary>
@@ -493,15 +472,6 @@ namespace FluidScript.Reflection.Emit
         /// <param name="type"> The type of value to box.  This should be a value type. </param>
         public abstract void Box(Type type);
 
-        /// <summary>
-        /// Pops a value from the stack, converts it to an object reference, then pushes it back onto
-        /// the stack.
-        /// </summary>
-        /// <param name="type"> The type of value to box.  This should be a value type. </param>
-        public void Box(RuntimeType type)
-        {
-            Box(TypeUtils.ToType(type));
-        }
 
         /// <summary>
         /// Pops an object reference (representing a boxed value) from the stack, extracts the
@@ -511,33 +481,12 @@ namespace FluidScript.Reflection.Emit
         public abstract void Unbox(Type type);
 
         /// <summary>
-        /// Pops an object reference (representing a boxed value) from the stack, extracts the
-        /// address, then pushes that address onto the stack.
-        /// </summary>
-        /// <param name="type"> The type of the boxed value.  This should be a value type. </param>
-        public void Unbox(RuntimeType type)
-        {
-            Box(TypeUtils.ToType(type));
-        }
-
-        /// <summary>
         /// Pops an object reference (representing a boxed value) from the stack, extracts the value,
         /// then pushes the value onto the stack.
         /// </summary>
         /// <param name="type"> The type of the boxed value.  This should be a value type. </param>
         public abstract void UnboxObject(Type type);
-
-        /// <summary>
-        /// Pops an object reference (representing a boxed value) from the stack, extracts the value,
-        /// then pushes the value onto the stack.
-        /// </summary>
-        /// <param name="type"> The type of the boxed value.  This should be a value type. </param>
-        public void UnboxObject(RuntimeType type)
-        {
-            UnboxObject(TypeUtils.ToType(type));
-        }
-
-
+        
         /// <summary>
         /// Pops a value from the stack, converts it to a bool, then pushes it back onto
         /// the stack.
@@ -747,26 +696,12 @@ namespace FluidScript.Reflection.Emit
         /// </summary>
         /// <param name="type"> The element type. </param>
         public abstract void LoadArrayElement(Type type);
-
-        /// <summary>
-        /// Pops the array and index off the stack and pushes the element value onto the stack.
-        /// </summary>
-        /// <param name="type"> The element type. </param>
-        public void LoadArrayElement(RuntimeType type)
-        {
-            LoadArrayElement(TypeUtils.ToType(type));
-        }
-
+        
         /// <summary>
         /// Pops the array, index and value off the stack and stores the value in the array.
         /// </summary>
         /// <param name="type"> The element type. </param>
         public abstract void StoreArrayElement(Type type);
-
-        public void StoreArrayElement(RuntimeType type)
-        {
-            StoreArrayElement(TypeUtils.ToType(type));
-        }
 
         /// <summary>
         /// Pops an array off the stack and pushes the length of the array onto the stack.

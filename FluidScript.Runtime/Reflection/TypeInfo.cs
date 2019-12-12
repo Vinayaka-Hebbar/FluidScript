@@ -5,7 +5,6 @@
         string Name { get; }
         TypeName TypeName { get; }
         string FullName { get; }
-        RuntimeType RuntimeType { get; }
         ITypeInfo ElementType { get; }
         bool IsArray();
         ITypeInfo MakeArrayType();
@@ -29,24 +28,9 @@
 
         public ITypeInfo ElementType => this;
 
-        private RuntimeType runtimeType;
-
-        public RuntimeType RuntimeType
-        {
-            get
-            {
-                if (runtimeType == RuntimeType.Undefined)
-                {
-                    runtimeType = Emit.TypeUtils.GetRuntimeType(this);
-                }
-                return runtimeType;
-            }
-        }
-
         public TypeInfo(string name, RuntimeType runtime = RuntimeType.Undefined)
         {
             FullName = name;
-            runtimeType = runtime;
         }
 
         public TypeName TypeName
@@ -75,7 +59,7 @@
 
         public ITypeInfo MakeArrayType()
         {
-            return new ArrayTypeInfo(FullName, this, 1, RuntimeType | RuntimeType.Array);
+            return new ArrayTypeInfo(FullName, this, 1);
         }
     }
 
@@ -95,26 +79,11 @@
 
         private readonly int arrayRank;
 
-        private RuntimeType runtimeType;
-
-        public RuntimeType RuntimeType
-        {
-            get
-            {
-                if (runtimeType == RuntimeType.Undefined)
-                {
-                    runtimeType = Emit.TypeUtils.GetRuntimeType(this);
-                }
-                return runtimeType;
-            }
-        }
-
-        public ArrayTypeInfo(string name, ITypeInfo elementType, int arrayRank, RuntimeType runtime = RuntimeType.Undefined)
+        public ArrayTypeInfo(string name, ITypeInfo elementType, int arrayRank)
         {
             FullName = string.Concat(name, "[]");
             ElementType = elementType;
             this.arrayRank = arrayRank;
-            runtimeType = runtime;
         }
 
         public TypeName TypeName
@@ -148,7 +117,7 @@
 
         public ITypeInfo MakeArrayType()
         {
-            return new ArrayTypeInfo(FullName, ElementType, arrayRank + 1, RuntimeType);
+            return new ArrayTypeInfo(FullName, ElementType, arrayRank + 1);
         }
     }
 }

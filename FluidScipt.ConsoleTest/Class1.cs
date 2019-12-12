@@ -18,14 +18,11 @@ namespace FluidScipt.ConsoleTest
 
         private void Run()
         {
-            var methods = typeof(Integer).GetMethods();
             ScriptEngine engine = new ScriptEngine();
-            var tree = engine.GetStatement("a<b");
-            var context = new FluidScript.Reflection.Emit.RuntimeContext(tree, new FluidScript.Math());
-            context["a"] = new Integer(10);
+            var tree = engine.GetStatement("sqrt(a)");
+            var context = new FluidScript.Dynamic.RuntimeContext(tree, new FluidScript.Math());
+            context["a"] = new FluidScript.Double(10);
             context["b"] = new Integer(20);
-            var value = new Integer(10);
-            Integer up = value;
             var re = context.Invoke();
             Console.WriteLine(re);
         }

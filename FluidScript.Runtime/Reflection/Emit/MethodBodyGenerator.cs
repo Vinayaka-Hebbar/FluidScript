@@ -569,6 +569,18 @@ namespace FluidScript.Reflection.Emit
             return node;
 
         }
+
+        public Expression VisitNull(NullExpression node)
+        {
+            return node;
+        }
+
+        public Expression VisitNullPropegator(NullPropegatorExpression node)
+        {
+            var left = node.Left.Accept(this);
+            node.Type = left.Type;
+            return node;
+        }
         #endregion
     }
 }

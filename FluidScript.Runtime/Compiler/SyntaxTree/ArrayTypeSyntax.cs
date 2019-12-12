@@ -1,6 +1,6 @@
-﻿using System;
-using FluidScript.Reflection;
+﻿using FluidScript.Reflection;
 using FluidScript.Reflection.Emit;
+using System;
 
 namespace FluidScript.Compiler.SyntaxTree
 {

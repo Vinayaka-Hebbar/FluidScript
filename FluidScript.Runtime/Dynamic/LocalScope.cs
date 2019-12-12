@@ -1,4 +1,4 @@
-﻿namespace FluidScript.Reflection.Emit
+﻿namespace FluidScript.Dynamic
 {
     internal sealed class LocalScope
     {

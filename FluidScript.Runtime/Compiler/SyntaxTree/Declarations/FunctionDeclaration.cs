@@ -28,7 +28,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             System.Type returnType;
             if (ReturnType != null)
-                returnType = ReturnType.GetTypeInfo().ResolvedType(generator);
+                returnType = ReturnType.GetType(generator);
             else
                 returnType = typeof(void);
             var parameters = Parameters.Select(para => para.GetParameterInfo(generator));

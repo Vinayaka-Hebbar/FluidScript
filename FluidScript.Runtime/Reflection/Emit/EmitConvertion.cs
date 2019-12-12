@@ -9,51 +9,6 @@ namespace FluidScript.Reflection.Emit
                 generator.Box(type);
         }
 
-        public static void ToAny(ILGenerator generator, RuntimeType type)
-        {
-            if (TypeUtils.IsValueType(type))
-                generator.Box(type);
-        }
-
-        internal static void ToString(ILGenerator generator, RuntimeType fromType, string typeName)
-        {
-            if (TypeUtils.CheckType(fromType, RuntimeType.String))
-                return;
-            switch (fromType)
-            {
-                case RuntimeType.Undefined:
-                    //Push empty string if null
-                    generator.Pop();
-                    generator.LoadString(string.Empty);
-                    break;
-                case RuntimeType.Bool:
-                    var elseClause = generator.CreateLabel();
-                    var endOfIf = generator.CreateLabel();
-                    generator.BranchIfFalse(elseClause);
-                    generator.LoadString(bool.TrueString);
-                    generator.Branch(endOfIf);
-                    generator.DefineLabelPosition(elseClause);
-                    generator.LoadString(bool.FalseString);
-                    generator.DefineLabelPosition(endOfIf);
-                    break;
-                case RuntimeType.Byte:
-                case RuntimeType.Int16:
-                case RuntimeType.Int32:
-                case RuntimeType.Int64:
-                case RuntimeType.Float:
-                case RuntimeType.Double:
-                    if (TypeUtils.IsValueType(fromType))
-                        generator.Box(fromType);
-                    else
-                    {
-                        throw new System.InvalidOperationException(string.Format("{0} not found", typeName));
-                    }
-                    break;
-                default:
-                    throw new System.InvalidOperationException(string.Format("unsupported type {0}", typeName));
-            }
-        }
-
         internal static void Convert(ILGenerator generator, RuntimeType fromType, RuntimeType toType)
         {
             switch (toType)

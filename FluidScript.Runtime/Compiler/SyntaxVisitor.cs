@@ -1319,6 +1319,7 @@ namespace FluidScript.Compiler
                             continue;
                         }
                     case '.':
+                        Source.ReadChar();
                         c = Source.ReadChar();
                         if (char.IsDigit(c))
                         {

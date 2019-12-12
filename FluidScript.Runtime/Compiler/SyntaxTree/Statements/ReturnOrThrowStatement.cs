@@ -41,7 +41,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     System.Type resolvedType = epression.Type;
                     if (returnType != null && returnType != resolvedType)
                     {
-                        if(TypeUtils.TryImplicitConvert(resolvedType, returnType, out System.Reflection.MethodInfo method))
+                        if(Reflection.TypeUtils.TryImplicitConvert(resolvedType, returnType, out System.Reflection.MethodInfo method))
                         {
                             generator.Call(method);
                         }

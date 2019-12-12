@@ -16,5 +16,7 @@ namespace FluidScript.Compiler
         TResult VisitLiteral(LiteralExpression node);
         TResult VisitTernary(TernaryExpression node);
         TResult VisitIndex(IndexExpression node);
+        TResult VisitNull(NullExpression node);
+        TResult VisitNullPropegator(NullPropegatorExpression node);
     }
 }

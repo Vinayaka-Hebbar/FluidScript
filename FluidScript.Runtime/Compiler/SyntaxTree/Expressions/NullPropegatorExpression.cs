@@ -1,8 +1,6 @@
-﻿using System.Runtime.InteropServices;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
-    public class NullPropegatorExpression : Expression
+    public sealed class NullPropegatorExpression : Expression
     {
         public readonly Expression Left;
         public readonly Expression Right;
@@ -11,6 +9,11 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             Left = left;
             Right = right;
+        }
+
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
+        {
+            return visitor.VisitNullPropegator(this);
         }
     }
 }

@@ -212,5 +212,15 @@
         {
             return new Boolean(left.m_value != right.m_value);
         }
+
+        public static Double operator ++(Double value)
+        {
+            return new Double(value.m_value + 1);
+        }
+
+        public static Double operator --(Double value)
+        {
+            return new Double(value.m_value + 1);
+        }
     }
 }
