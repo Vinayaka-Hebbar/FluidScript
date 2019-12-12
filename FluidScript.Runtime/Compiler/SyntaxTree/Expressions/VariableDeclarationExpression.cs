@@ -1,6 +1,6 @@
 ﻿namespace FluidScript.Compiler.SyntaxTree
 {
-    public class VariableDeclarationExpression : DeclarationExpression
+    public sealed class VariableDeclarationExpression : DeclarationExpression
     {
         public readonly TypeSyntax VariableType;
         public readonly Expression Value;
@@ -9,15 +9,12 @@
         {
             VariableType = type;
             Value = value;
-
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            return Value.Evaluate(instance);
+            return visitor.VisitDeclaration(this);
         }
-#endif
 
         public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {

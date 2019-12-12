@@ -33,17 +33,10 @@ namespace FluidScript.Compiler.SyntaxTree
             return Name.ToString();
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            if (NodeType == ExpressionType.MemberAccess)
-            {
-                var value = Target.Evaluate(instance);
-                return value[Name];
-            }
-            return instance[Name];
+            return visitor.VisitMember(this);
         }
-#endif
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
@@ -56,19 +49,6 @@ namespace FluidScript.Compiler.SyntaxTree
                 Target.GenerateCode(generator);
                 Binding.GenerateGet(generator);
             }
-        }
-
-        public void GenerateSet(MethodBodyGenerator generator, Expression right)
-        {
-            if (Target.NodeType == ExpressionType.Identifier)
-            {
-                var target = (NameExpression)Target;
-            }
-        }
-
-        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
-        {
-            return visitor.VisitMember(this);
         }
     }
 }

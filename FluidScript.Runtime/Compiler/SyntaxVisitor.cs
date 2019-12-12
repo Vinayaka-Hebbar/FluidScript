@@ -16,6 +16,7 @@ namespace FluidScript.Compiler
         /// current modifiers
         /// </summary>
         private Reflection.Modifiers modifiers;
+
         public readonly ParserSettings Settings;
 
         public SyntaxVisitor(IScriptSource source, ParserSettings settings)
@@ -1318,8 +1319,9 @@ namespace FluidScript.Compiler
                             continue;
                         }
                     case '.':
+                        c = Source.ReadChar();
+                        if (char.IsDigit(c))
                         {
-                            Source.ReadChar();
                             dot++;
                             builder.Append(next);
                             if (dot > 1)
@@ -1328,11 +1330,13 @@ namespace FluidScript.Compiler
                             }
                             continue;
                         }
+                        Source.FallBack();
+                        break;
                     case 'e':
                     case 'E':
                         {
                             builder.Append(next);
-                            Source.ReadChar();
+                            c = Source.ReadChar();
                             exp++;
                             if (exp > 1)
                             {

@@ -9,7 +9,7 @@
         public ITypeInfo Type { get; }
         public readonly int Index;
 
-        public RuntimeObject DefaultValue { get; set; }
+        public object DefaultValue { get; set; }
 
         /// <summary>
         /// var arguments

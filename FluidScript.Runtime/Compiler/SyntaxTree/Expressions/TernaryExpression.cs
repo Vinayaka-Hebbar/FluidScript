@@ -19,13 +19,6 @@ namespace FluidScript.Compiler.SyntaxTree
             Third = third;
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
-        {
-            return First.Evaluate(instance).ToBool() ? Second.Evaluate(instance) : Third.Evaluate(instance);
-        }
-#endif
-
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
             return visitor.VisitTernary(this);

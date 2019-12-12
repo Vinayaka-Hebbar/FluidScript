@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -161,6 +162,17 @@ namespace FluidScript.Reflection.Emit
             return InbuiltNames.ContainsKey(typeName);
         }
 
+        internal static bool TryGetType(TypeName typeName, out Type type)
+        {
+            if (InbuiltNames.TryGetValue(typeName.FullName, out InbuiltType inbuilt))
+            {
+                type = inbuilt.Type;
+                return true;
+            }
+            type = null;
+            return false;
+        }
+
         internal static RuntimeType ToPrimitive(System.Type type)
         {
             RuntimeType primitive = RuntimeType.Any;
@@ -231,48 +243,59 @@ namespace FluidScript.Reflection.Emit
             return isEquals;
         }
 
-        internal static MethodInfo GetOperatorOverload(string name, System.Type left, System.Type right)
+        internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out Conversion[] conversions)
         {
-            var members = left.GetMember(name, BindingFlags.Public | GetStatic());
-            foreach (MethodInfo m in members)
+            foreach (var m in methods)
             {
-                if (MatchTypes(m, left, right))
+                if (MatchTypes(m, types, out conversions))
                     return m;
             }
-            members = right.GetMember(name, BindingFlags.Public | BindingFlags.Static);
-            foreach (MethodInfo m in members)
+            conversions = new Conversion[0];
+            return null;
+        }
+
+        internal static MethodInfo GetOperatorOverload(string name, out Conversion[] conversions, params System.Type[] types)
+        {
+            if (types.Length == 2)
             {
-                if (MatchTypes(m, left, right))
-                    return m;
+                System.Type left = types[0];
+                System.Type right = types[1];
+                var members = left.GetMember(name, BindingFlags.Public | BindingFlags.Static);
+                foreach (MethodInfo m in members)
+                {
+                    if (MatchTypes(m, types, out conversions))
+                        return m;
+                }
+                members = types[1].GetMember(name, BindingFlags.Public | BindingFlags.Static);
+                foreach (MethodInfo m in members)
+                {
+                    if (MatchTypes(m, types, out conversions))
+                        return m;
+                }
             }
             throw new System.Exception("No operator overload");
         }
 
-        private static BindingFlags GetStatic()
-        {
-            return BindingFlags.Static;
-        }
-
-        private static bool MatchTypes(MethodInfo method, System.Type left, System.Type right)
+        private static bool MatchTypes(MethodInfo method, System.Type[] types, out Conversion[] conversions)
         {
             var paramters = method.GetParameters();
-            if (paramters.Length == 2)
+            if (paramters.Length != types.Length)
             {
-                var first = paramters[0].ParameterType;
-                var second = paramters[1].ParameterType;
-                if (first != left)
+                conversions = null;
+                return false;
+            }
+            conversions = new Conversion[paramters.Length];
+            for (int i = 0; i < paramters.Length; i++)
+            {
+                var expected = paramters[i].ParameterType;
+                var type = types[i];
+                if (expected == type)
+                    conversions[i] = Conversion.NoConversion;
+                else
                 {
-                    if (HasImplicitConvert(left, first) == false)
-                    {
+                    if (HasImplicitConvert(type, expected, out MethodInfo opImplict) == false)
                         return false;
-                    }
-                }
-                if (second != right)
-                {
-                    if (HasImplicitConvert(right, second) == false)
-                    {
-                        return false;
-                    }
+                    conversions[i] = new Conversion(opImplict);
                 }
             }
             return true;
@@ -280,19 +303,19 @@ namespace FluidScript.Reflection.Emit
 
         internal static bool TryImplicitConvert(System.Type from, System.Type to, out MethodInfo method)
         {
-            method = to.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = to.GetMethod(Conversion.ImplicitConversionName, BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             if (method != null && method.ReturnType == to)
                 return true;
-            method = from.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = from.GetMethod(Conversion.ImplicitConversionName, BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             return method != null && method.ReturnType == to;
         }
 
-        internal static bool HasImplicitConvert(System.Type from, System.Type to)
+        internal static bool HasImplicitConvert(System.Type from, System.Type to, out MethodInfo method)
         {
-            var method = to.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = to.GetMethod(Conversion.ImplicitConversionName, BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             if (method != null && method.ReturnType == to)
                 return true;
-            method = from.GetMethod("op_Implicit", BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = from.GetMethod(Conversion.ImplicitConversionName, BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
             return method != null && method.ReturnType == to;
         }
 

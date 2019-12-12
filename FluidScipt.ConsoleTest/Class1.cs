@@ -1,6 +1,6 @@
 ﻿using FluidScript;
 using System;
-using System.Runtime.Serialization;
+using System.Reflection;
 
 namespace FluidScipt.ConsoleTest
 {
@@ -11,39 +11,23 @@ namespace FluidScipt.ConsoleTest
             //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
 
             Class1 class1 = new Class1();
-            // class1.Run();
-            class1.Print();
+            class1.Run();
+            //class1.Print();
             Console.ReadKey();
         }
 
         private void Run()
         {
-            var path = AppDomain.CurrentDomain.BaseDirectory;
+            var methods = typeof(Integer).GetMethods();
             ScriptEngine engine = new ScriptEngine();
-            var tree = engine.ParseFile(path + "source.fls");
-            if (tree is FluidScript.Compiler.SyntaxTree.TypeDeclaration declration)
-            {
-                System.Reflection.AssemblyName aName = new System.Reflection.AssemblyName("Runtime.DynamicClasses, Version=1.0.0.1");
-                var dynamicAssembly =
-               System.Reflection.Emit.AssemblyBuilder.DefineDynamicAssembly(aName, System.Reflection.Emit.AssemblyBuilderAccess.RunAndSave);
-
-                var dynamicModule =
-                    dynamicAssembly.DefineDynamicModule(aName.Name, string.Concat(aName.Name, ".dll"), true);
-                var classType = declration.Generate(new FluidScript.Reflection.Emit.ReflectionModule(dynamicAssembly, dynamicModule));
-                dynamic instance = Activator.CreateInstance(classType);
-                var c = instance.Read(1);
-                Console.WriteLine(c);
-                dynamicAssembly.Save("Runtime.DynamicClasses.dll");
-            }
-        }
-
-        void Print()
-        {
-            dynamic value = new System.Dynamic.ExpandoObject();
-            value.a = new int[] { 1 };
-           var r = value.a[0];
-            Runtime.DynamicClasses.Test test = new Runtime.DynamicClasses.Test();
-            Console.WriteLine();
+            var tree = engine.GetStatement("a<b");
+            var context = new FluidScript.Reflection.Emit.RuntimeContext(tree, new FluidScript.Math());
+            context["a"] = new Integer(10);
+            context["b"] = new Integer(20);
+            var value = new Integer(10);
+            Integer up = value;
+            var re = context.Invoke();
+            Console.WriteLine(re);
         }
     }
 

@@ -2,7 +2,7 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class ReturnOrThrowStatement : Statement
+    public sealed class ReturnOrThrowStatement : Statement
     {
         public readonly Expression Expression;
         public ReturnOrThrowStatement(Expression expression, StatementType nodeType) : base(nodeType)
@@ -10,22 +10,10 @@ namespace FluidScript.Compiler.SyntaxTree
             Expression = expression;
         }
 
-#if Runtime
-        internal override RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
+        protected internal override void Accept(IStatementVisitor visitor)
         {
-            if (NodeType == StatementType.Return)
-            {
-                if (Expression == null)
-                    return RuntimeObject.Void;
-                return Expression.Evaluate(instance);
-            }
-            if (NodeType == StatementType.Throw)
-            {
-                throw new System.Exception(Expression.Evaluate(instance).ToString());
-            }
-            return base.Evaluate(instance);
+            visitor.VisitReturn(this);
         }
-#endif
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {

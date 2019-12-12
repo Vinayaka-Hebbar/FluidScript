@@ -1,6 +1,6 @@
 ﻿namespace FluidScript.Runtime
 {
-    [System.AttributeUsage(System.AttributeTargets.All)]
+    [System.AttributeUsage(System.AttributeTargets.Property | System.AttributeTargets.Method)]
     public sealed class RegisterAttribute : System.Attribute
     {
         public readonly string Name;

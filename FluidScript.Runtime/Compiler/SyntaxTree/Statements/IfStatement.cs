@@ -13,14 +13,5 @@
             Other = other;
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
-        {
-            if (Expression.Evaluate(instance).ToBool())
-                return Then.Evaluate(instance);
-            return Other?.Evaluate(instance);
-        }
-#endif
-
     }
 }

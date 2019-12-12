@@ -343,21 +343,21 @@ namespace FluidScript.Reflection.Emit
             }
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
-            var method = TypeUtils.GetOperatorOverload(opName, left.Type, right.Type);
+            var method = TypeUtils.GetOperatorOverload(opName, out Conversion[] conversion, left.Type, right.Type);
             node.Method = method;
-            node.ResolvedType = method.ReturnType;
+            node.Type = method.ReturnType;
             return node;
         }
 
         public Expression VisitArrayLiteral(ArrayLiteralExpression node)
         {
-            node.ResolvedType = node.ArrayType.GetTypeInfo().ResolvedType(TypeGenerator).MakeArrayType();
+            node.Type = node.ArrayType.GetType(TypeGenerator).MakeArrayType();
             return node;
         }
 
         public Expression VisitAssignment(AssignmentExpression node)
         {
-            node.ResolvedType = node.Right.Accept(this).Type;
+            node.Type = node.Right.Accept(this).Type;
             node.Left.Accept(this);
             return node;
         }
@@ -383,7 +383,7 @@ namespace FluidScript.Reflection.Emit
                 }
             }
             node.Binding = binding;
-            node.ResolvedType = binding.Type;
+            node.Type = binding.Type;
             return node;
         }
 
@@ -430,7 +430,7 @@ namespace FluidScript.Reflection.Emit
                 method = (System.Reflection.MethodInfo)baseGenerator.MethodBase;
 
             node.Method = method;
-            node.ResolvedType = method.ReturnType;
+            node.Type = method.ReturnType;
             return node;
         }
 
@@ -455,7 +455,7 @@ namespace FluidScript.Reflection.Emit
                     type = typeof(IFSObject);
                     break;
             }
-            node.ResolvedType = type;
+            node.Type = type;
             return node;
         }
 
@@ -468,16 +468,16 @@ namespace FluidScript.Reflection.Emit
                 var second = node.Third.Accept(this);
                 if (first.Type == second.Type)
                 {
-                    node.ResolvedType = second.Type;
+                    node.Type = second.Type;
                 }
                 else if (TypeUtils.TryImplicitConvert(first.Type, second.Type, out System.Reflection.MethodInfo method))
                 {
-                    node.ResolvedType = method.ReturnType;
+                    node.Type = method.ReturnType;
                     node.ImplicitCall = method;
                 }
                 else if (TypeUtils.TryImplicitConvert(second.Type, first.Type, out method))
                 {
-                    node.ResolvedType = method.ReturnType;
+                    node.Type = method.ReturnType;
                     node.ImplicitCall = method;
                 }
             }
@@ -496,14 +496,14 @@ namespace FluidScript.Reflection.Emit
             {
                 if (variable.Type == null)
                     throw new Exception(string.Concat("Use of undeclared variable ", variable));
-                node.ResolvedType = variable.Type;
+                node.Type = variable.Type;
                 node.Binding = new VariableBinding(variable);
                 return node;
             }
             ParameterInfo arg = Method.Parameters.FirstOrDefault(para => para.Name == name);
             if (arg.Name != null)
             {
-                node.ResolvedType = arg.Type;
+                node.Type = arg.Type;
                 node.Binding = new ArgumentBinding(arg);
                 return node;
             }
@@ -516,13 +516,13 @@ namespace FluidScript.Reflection.Emit
                     var field = (System.Reflection.FieldInfo)member;
                     if (field.FieldType == null)
                         throw new System.Exception(string.Concat("Use of undeclared field ", field));
-                    node.ResolvedType = field.FieldType;
+                    node.Type = field.FieldType;
                     node.Binding = new FieldBinding(field);
                 }
                 if (member.MemberType == System.Reflection.MemberTypes.Property)
                 {
                     var property = (System.Reflection.PropertyInfo)member;
-                    node.ResolvedType = property.PropertyType;
+                    node.Type = property.PropertyType;
                     node.Binding = new PropertyBinding(property);
                 }
             }
@@ -531,7 +531,7 @@ namespace FluidScript.Reflection.Emit
 
         public Expression VisitThis(ThisExpression node)
         {
-            node.ResolvedType = TypeGenerator;
+            node.Type = TypeGenerator;
             return node;
         }
 
@@ -550,8 +550,24 @@ namespace FluidScript.Reflection.Emit
             {
                 type = type.GetElementType();
             }
-            node.ResolvedType = type;
+            node.Type = type;
             return node;
+        }
+
+        public Expression VisitDeclaration(VariableDeclarationExpression node)
+        {
+            if (node.VariableType == null)
+            {
+                if (node.Value == null)
+                    throw new InvalidOperationException("Invalid declaration syntax");
+                node.Type = node.Value.Accept(this).Type;
+            }
+            else
+            {
+                node.Type = node.VariableType.GetType(TypeGenerator);
+            }
+            return node;
+
         }
         #endregion
     }

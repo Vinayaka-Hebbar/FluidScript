@@ -12,6 +12,7 @@ namespace FluidScript.Compiler
         TResult VisitMember(NameExpression node);
         TResult VisitCall(InvocationExpression node);
         TResult VisitThis(ThisExpression node);
+        TResult VisitDeclaration(VariableDeclarationExpression node);
         TResult VisitLiteral(LiteralExpression node);
         TResult VisitTernary(TernaryExpression node);
         TResult VisitIndex(IndexExpression node);

@@ -2,7 +2,7 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class UnaryExpression : Expression
+    public sealed class UnaryExpression : Expression
     {
         public readonly Expression Operand;
 
@@ -16,52 +16,6 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             return visitor.VisitUnary(this);
         }
-
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
-        {
-            var result = Operand.Evaluate(instance);
-            switch (NodeType)
-            {
-                case ExpressionType.Parenthesized:
-                    return result;
-                case ExpressionType.Bang:
-                    return !result;
-                case ExpressionType.Plus:
-                    return +result;
-                case ExpressionType.Minus:
-                    return -result;
-                case ExpressionType.Out:
-                default:
-                    var expression = (NameExpression)Operand;
-                    if (expression.NodeType == ExpressionType.Identifier)
-                    {
-                        var value = result;
-                        switch (NodeType)
-                        {
-                            //changes compound value = value + 1
-                            case ExpressionType.PostfixPlusPlus:
-                                value += 1;
-                                break;
-                            case ExpressionType.PostfixMinusMinus:
-                                value -= 1;
-                                break;
-                            case ExpressionType.PrefixPlusPlus:
-                                result = value += 1;
-                                break;
-                            case ExpressionType.PrefixMinusMinus:
-                                result = value -= 1;
-                                break;
-                            case ExpressionType.Bang:
-                                result = !value;
-                                break;
-                        }
-                        instance[expression.Name] = value;
-                    }
-                    return result;
-            }
-        }
-#endif
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {

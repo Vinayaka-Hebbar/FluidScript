@@ -2,7 +2,7 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class AnonymousFunctionExpression : Expression
+    public sealed class AnonymousFunctionExpression : Expression
     {
         public readonly TypeParameter[] Parameters;
 
@@ -15,27 +15,6 @@ namespace FluidScript.Compiler.SyntaxTree
             Parameters = parameters;
             ReturnType = returnType;
             Body = body;
-        }
-
-
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
-        {
-            return new Library.AnonymousFunction(instance, this, Parameters.Select(para => para.GetParameterInfo()).ToArray(), ReturnType.GetTypeInfo(), this.DynamicInvoke);
-        }
-#endif
-
-        internal RuntimeObject DynamicInvoke(RuntimeObject obj, RuntimeObject[] args)
-        {
-            var prototype = new Metadata.FunctionPrototype(obj.GetPrototype());
-            var instance = new Library.LocalInstance(prototype, obj);
-            var arguments = Parameters.Select(para => para.GetParameterInfo()).ToArray();
-            for (int index = 0; index < arguments.Length; index++)
-            {
-                var arg = arguments[index];
-                instance[arg.Name] = arg.IsVar ? new Library.ArrayObject(args.Skip(index).ToArray(), arg.Type.RuntimeType) : args[index];
-            }
-            return Body.Evaluate(instance);
         }
 
         public override string ToString()

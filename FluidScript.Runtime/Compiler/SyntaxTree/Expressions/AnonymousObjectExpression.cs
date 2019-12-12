@@ -2,7 +2,7 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class AnonymousObjectExpression : Expression
+    public sealed class AnonymousObjectExpression : Expression
     {
         public readonly AnonymousObjectMember[] Members;
         public AnonymousObjectExpression(AnonymousObjectMember[] expressions) : base(ExpressionType.Block)
@@ -10,18 +10,11 @@ namespace FluidScript.Compiler.SyntaxTree
             Members = expressions;
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            var prototype = new Metadata.ObjectPrototype(instance.GetPrototype(), "AnnonymousObject");
-            var local = new Library.LocalInstance(prototype, instance["this"]);
-            foreach (var member in Members)
-            {
-                local.Append(member.Name, member.Evaluate(instance));
-            }
-            return local;
+            //todo implementation
+            return base.Accept(visitor);
         }
-#endif
 
         public override string ToString()
         {

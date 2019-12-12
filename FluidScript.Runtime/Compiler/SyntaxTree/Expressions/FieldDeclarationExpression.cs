@@ -1,6 +1,6 @@
 ﻿namespace FluidScript.Compiler.SyntaxTree
 {
-    public class FieldDeclarationExpression : DeclarationExpression
+    public sealed class FieldDeclarationExpression : DeclarationExpression
     {
         public readonly TypeSyntax FieldType;
         public readonly Expression Value;
@@ -11,12 +11,5 @@
             Value = value;
 
         }
-
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
-        {
-            return Value.Evaluate(instance);
-        }
-#endif
     }
 }

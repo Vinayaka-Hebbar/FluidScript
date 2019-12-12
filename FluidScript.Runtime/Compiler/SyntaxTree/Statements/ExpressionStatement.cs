@@ -9,17 +9,10 @@
             Expression = expression;
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
+        protected internal override void Accept(IStatementVisitor visitor)
         {
-            return Expression.Evaluate(instance);
+            visitor.VisitExpression(this);
         }
-
-        internal override RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
-        {
-            return Expression.Evaluate(instance);
-        }
-#endif
 
         public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {

@@ -28,29 +28,10 @@
 
         public bool HasLabels => Labels.Length > 0;
 
-#if Runtime
-        /// <summary>
-        /// Get Value for the Instance
-        /// </summary>
-        /// <param name="scope"></param>
-        /// <param name="provider"></param>
-        /// <returns></returns>
-        public virtual RuntimeObject Evaluate(RuntimeObject instance)
+        protected internal virtual void Accept(IStatementVisitor visitor)
         {
-            return Evaluate(instance, instance.GetPrototype());
-        }
 
-        /// <summary>
-        /// Get Value for the scope
-        /// </summary>
-        /// <param name="scope"></param>
-        /// <param name="provider"></param>
-        /// <returns></returns>
-        internal virtual RuntimeObject Evaluate(RuntimeObject instance, Metadata.Prototype prototype)
-        {
-            return RuntimeObject.Null;
         }
-#endif
 
         public virtual void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {

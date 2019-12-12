@@ -2,18 +2,12 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class ThisExpression : Expression
+    public sealed class ThisExpression : Expression
     {
         public ThisExpression() : base(ExpressionType.This)
         {
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
-        {
-            return instance["this"];
-        }
-#endif
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
             return visitor.VisitThis(this);
@@ -21,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            ResolvedType = generator.TypeGenerator;
+            Type = generator.TypeGenerator;
             generator.LoadArgument(0);
         }
 

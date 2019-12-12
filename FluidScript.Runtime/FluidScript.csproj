@@ -48,7 +48,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="!$(DefineConstants.Contains('Runtime'))">
-    <Compile Remove="Library\**" />
     <Compile Remove="RuntimeObject.cs" />
   </ItemGroup>
 

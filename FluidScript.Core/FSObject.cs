@@ -1,24 +1,17 @@
 ﻿namespace FluidScript
 {
-    [Runtime.Register("any")]
     public class FSObject : IFSObject
     {
         public override bool Equals(object obj)
         {
             if (obj is IFSObject)
-                return __Equals((IFSObject)obj)._value;
+                return __Equals((IFSObject)obj).m_value;
             return base.Equals(obj);
-        }
-
-        [Runtime.Register("equals")]
-        public virtual Boolean __Equals(IFSObject obj)
-        {
-            return ReferenceEquals(this, obj);
         }
 
         public override int GetHashCode()
         {
-            return ((IFSObject)this).HashCode()._value;
+            return ((IFSObject)this).HashCode().m_value;
         }
 
         [Runtime.Register("hashCode")]
@@ -33,11 +26,16 @@
             return base.ToString();
         }
 
-        public override string ToString()
+        [Runtime.Register("equals")]
+        public virtual Boolean __Equals(IFSObject obj)
         {
-            return __ToString()._value;
+            return ReferenceEquals(this, obj);
         }
 
+        public override string ToString()
+        {
+            return __ToString().m_value;
+        }
 
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public class ArrayLiteralExpression : Expression
+    public sealed class ArrayLiteralExpression : Expression
     {
         public readonly Expression[] Expressions;
 
@@ -16,18 +16,10 @@ namespace FluidScript.Compiler.SyntaxTree
             ArrayType = type;
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            RuntimeObject[] array = new RuntimeObject[Expressions.Length];
-            for (int i = 0; i < Expressions.Length; i++)
-            {
-                array[i] = Expressions[i].Evaluate(instance);
-
-            }
-            return new Library.ArrayObject(array, FluidScript.RuntimeType.Any);
+            return visitor.VisitArrayLiteral(this);
         }
-#endif
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
@@ -49,11 +41,6 @@ namespace FluidScript.Compiler.SyntaxTree
                 }
                 generator.StoreArrayElement(type);
             }
-        }
-
-        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
-        {
-            return visitor.VisitArrayLiteral(this);
         }
 
         public override string ToString()

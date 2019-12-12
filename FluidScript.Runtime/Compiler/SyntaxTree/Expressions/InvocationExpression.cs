@@ -17,33 +17,6 @@ namespace FluidScript.Compiler.SyntaxTree
             Arguments = arguments;
         }
 
-#if Runtime
-        public override RuntimeObject Evaluate(RuntimeObject instance)
-        {
-            var args = new RuntimeObject[Arguments.Length];
-            for (int i = 0; i < Arguments.Length; i++)
-            {
-                args[i] = Arguments[i].Evaluate(instance);
-            }
-            if (Target.NodeType == ExpressionType.Identifier)
-            {
-                var value = (NameExpression)Target;
-                return instance.Call(value.Name, args);
-            }
-            else if (Target.NodeType == ExpressionType.MemberAccess)
-            {
-                var qualified = (MemberExpression)Target;
-                var value = qualified.Target.Evaluate(instance);
-                return value.Call(qualified.Name, args);
-            }
-            else
-            {
-                var value = Target.Evaluate(instance);
-                return value.DynamicInvoke(args);
-            }
-        }
-
-#endif
 
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
