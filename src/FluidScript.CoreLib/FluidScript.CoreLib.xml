@@ -4,6 +4,73 @@
         <name>FluidScript.CoreLib</name>
     </assembly>
     <members>
+        <member name="T:FluidScript.Math">
+            <summary>
+            Provides constants and static methods for trigonometric, logarithmic, and other
+            common mathematical functions.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Math.Pow(FluidScript.Double,FluidScript.Double)">
+            <summary>
+            Returns a specified number raised to the specified power.
+            </summary>
+            <param name="x"> A double-precision floating-point number to be raised to a power.</param>
+            <param name="y">A double-precision floating-point number that specifies a power.</param>
+            <returns>The number x raised to the power y.</returns>
+        </member>
+        <member name="M:FluidScript.Math.Sqrt(FluidScript.Double)">
+             <summary>
+             Returns the square root of a specified number.
+             </summary>
+             <param name="d"> A number.</param>
+             <returns>
+             One of the values in the following table. d parameter Return value Zero, or positive
+            The positive square root of d. Negative System.Double.NaNEquals System.Double.NaNSystem.Double.NaNEquals
+            System.Double.PositiveInfinitySystem.Double.PositiveInfinity
+            </returns>
+        </member>
+        <member name="M:FluidScript.Math.Sin(FluidScript.Double)">
+            <summary>
+            Returns the sine of the specified angle.
+            </summary>
+            <param name="a">An angle, measured in radians.</param>
+            <returns>
+            The sine of a. If a is equal to System.Double.NaN, System.Double.NegativeInfinity,
+            or System.Double.PositiveInfinity, this method returns System.Double.NaN.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Math.Cos(FluidScript.Double)">
+            <summary>
+            Returns the cosine of the specified angle.
+            </summary>
+            <param name="d">An angle, measured in radians.</param>
+            <returns>
+            The cosine of d. If d is equal to System.Double.NaN, System.Double.NegativeInfinity,
+             or System.Double.PositiveInfinity, this method returns System.Double.NaN.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Math.Tan(FluidScript.Double)">
+            <summary>
+            Returns the tangent of the specified angle.
+            </summary>
+            <param name="a">An angle, measured in radians.</param>
+            <returns>
+            The tangent of a. If a is equal to System.Double.NaN, System.Double.NegativeInfinity,
+            or System.Double.PositiveInfinity, this method returns System.Double.NaN.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Math.Tanh(FluidScript.Double)">
+            <summary>
+            Returns the hyperbolic tangent of the specified angle.
+            </summary>
+            <param name="value">An angle, measured in radians.</param>
+            <returns>
+            The hyperbolic tangent of value. If value is equal to System.Double.NegativeInfinity,
+            this method returns -1. If value is equal to System.Double.PositiveInfinity,
+            this method returns 1. If value is equal to System.Double.NaN, this method returns
+            System.Double.NaN.
+            </returns>
+        </member>
         <member name="T:FluidScript.Boolean">
             <summary>
             <see cref="T:System.Boolean"/> wrapper
@@ -116,7 +183,7 @@
         </member>
         <member name="T:FluidScript.Double">
             <summary>
-            <see cref="T:System.Double"/> wrapper
+            Represents a double-precision floating-point number.
             </summary>
         </member>
         <member name="M:FluidScript.Double.#ctor(System.Double)">
@@ -391,6 +458,36 @@
         </member>
         <member name="M:FluidScript.Short.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
+        </member>
+        <member name="T:FluidScript.Runtime.RegisterAttribute">
+            <summary>
+            Runtime name of a property or method
+            </summary>
+        </member>
+        <member name="F:FluidScript.Runtime.RegisterAttribute.Name">
+            <summary>
+            Name 
+            </summary>
+        </member>
+        <member name="M:FluidScript.Runtime.RegisterAttribute.#ctor(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="name"></param>
+        </member>
+        <member name="P:FluidScript.Runtime.RegisterAttribute.DoGenerate">
+            <summary>
+            Should Method name is same as <see cref="F:FluidScript.Runtime.RegisterAttribute.Name"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Runtime.RegisterAttribute.Match(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Runtime.RegisterAttribute.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Runtime.RegisterAttribute.Equals(System.Object)">
+            <inheritdoc/>
         </member>
     </members>
 </doc>

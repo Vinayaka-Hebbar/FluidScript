@@ -1,7 +1,7 @@
 ﻿namespace FluidScript
 {
     /// <summary>
-    /// <see cref="double"/> wrapper
+    /// Represents a double-precision floating-point number.
     /// </summary>
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]

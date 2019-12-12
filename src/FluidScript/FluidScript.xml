@@ -151,11 +151,6 @@
             Gets or sets a label marking the end of the statement.
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.SyntaxTree.Statement.StatementLocals.OriginalStackSize">
-            <summary>
-            Gets or sets the number of items on the IL stack at the start of the statement.
-            </summary>
-        </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.Statement.GenerateStartOfStatement(FluidScript.Reflection.Emit.MethodBodyGenerator,FluidScript.Compiler.SyntaxTree.Statement.StatementLocals)">
             <summary>
             Generates CIL for the start of every statement.
