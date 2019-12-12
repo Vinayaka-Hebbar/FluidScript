@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScipt.ConsoleTest", "FluidScipt.ConsoleTest\FluidScipt.ConsoleTest.csproj", "{4209C74E-27C6-4F29-BCC8-82243830BFC6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript", "FluidScript.Runtime\FluidScript.csproj", "{EC0D26E9-1327-480A-838D-6D009C2DBE51}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript.CoreLib", "src\FluidScript.CoreLib\FluidScript.CoreLib.csproj", "{5E63EB02-58B2-473E-AE00-2D5685195840}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript.CoreLib", "FluidScript.Core\FluidScript.CoreLib.csproj", "{A5A0515E-8C63-4C0C-8210-12F297386D69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript", "src\FluidScript\FluidScript.csproj", "{5C87C041-8CED-49DD-B944-2140AB787745}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,14 +19,14 @@ Global
 		{4209C74E-27C6-4F29-BCC8-82243830BFC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4209C74E-27C6-4F29-BCC8-82243830BFC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4209C74E-27C6-4F29-BCC8-82243830BFC6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EC0D26E9-1327-480A-838D-6D009C2DBE51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EC0D26E9-1327-480A-838D-6D009C2DBE51}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EC0D26E9-1327-480A-838D-6D009C2DBE51}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EC0D26E9-1327-480A-838D-6D009C2DBE51}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A5A0515E-8C63-4C0C-8210-12F297386D69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A5A0515E-8C63-4C0C-8210-12F297386D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A5A0515E-8C63-4C0C-8210-12F297386D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A5A0515E-8C63-4C0C-8210-12F297386D69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E63EB02-58B2-473E-AE00-2D5685195840}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E63EB02-58B2-473E-AE00-2D5685195840}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E63EB02-58B2-473E-AE00-2D5685195840}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E63EB02-58B2-473E-AE00-2D5685195840}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C87C041-8CED-49DD-B944-2140AB787745}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C87C041-8CED-49DD-B944-2140AB787745}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C87C041-8CED-49DD-B944-2140AB787745}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C87C041-8CED-49DD-B944-2140AB787745}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

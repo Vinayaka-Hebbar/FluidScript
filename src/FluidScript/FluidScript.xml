@@ -1,0 +1,1727 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>FluidScript</name>
+    </assembly>
+    <members>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Expression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
+            <summary>
+            Optimizes expression for emit or others
+            </summary>
+            <typeparam name="TResult"></typeparam>
+            <param name="visitor"></param>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Expression.GenerateCode(FluidScript.Reflection.Emit.MethodBodyGenerator)">
+            <summary>
+            Generates IL code for <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/>
+            </summary>
+            <param name="generator"></param>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.NameExpression">
+            <summary>
+            Identfier Expression
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.NameExpression.Name">
+            <summary>
+            Name of the Identifier
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.SyntaxTree.NameExpression.Binding">
+            <summary>
+            Binding for compiler generation
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.#ctor(System.String,FluidScript.Compiler.SyntaxTree.ExpressionType)">
+            <summary>
+            Creates Identifier Expression
+            </summary>
+            <param name="name">Name of the Identifier</param>
+            <param name="opCode">Expression type</param>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.ToString">
+            <summary>
+            String Value
+            </summary>
+            <returns>string</returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
+            <summary>
+            Optimizes or evaluate the expression
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.GenerateCode(FluidScript.Reflection.Emit.MethodBodyGenerator)">
+            <summary>
+            Generate Compiled code
+            </summary>
+            <param name="generator"></param>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression.GenerateCode(FluidScript.Reflection.Emit.MethodBodyGenerator)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.Invocation">
+            <summary>
+            method call
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.Block">
+            <summary>
+            array block initailization
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.MemberAccess">
+            <summary>
+            .
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.Circumflex">
+            ^
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.Statement">
+            <summary>
+            Statement like declarion, return etc
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.Statement.Labels">
+            <summary>
+            Labels associated with the statement
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Statement.#ctor(FluidScript.Compiler.SyntaxTree.StatementType)">
+            <summary>
+            New Statement instance
+            </summary>
+            <param name="nodeType"></param>
+        </member>
+        <member name="P:FluidScript.Compiler.SyntaxTree.Statement.Span">
+            <summary>
+            Statement Position
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.SyntaxTree.Statement.NodeType">
+            <summary>
+            Node Type
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.SyntaxTree.Statement.HasLabels">
+            <summary>
+            Indicates whether statement has any label
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Statement.Accept(FluidScript.Compiler.IStatementVisitor)">
+            <summary>
+            Optimizes or evaluetes <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Statement.GenerateCode(FluidScript.Reflection.Emit.MethodBodyGenerator)">
+            <summary>
+            Creates IL code 
+            </summary>
+            <param name="generator">The generator to output the CIL to.</param>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.Statement.StatementLocals">
+            <summary>
+            Statement Locals
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.Statement.StatementLocals.NonDefaultBreakStatementBehavior">
+            <summary>
+            Gets or sets a value that indicates whether the break statement will be handled
+            specially by the calling code - this means that GenerateStartOfStatement() and
+            GenerateEndOfStatement() do not have to generate code to handle the break
+            statement.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.Statement.StatementLocals.NonDefaultSourceSpanBehavior">
+            <summary>
+            Gets or sets a value that indicates whether the debugging information will be
+            handled specially by the calling code - this means that GenerateStartOfStatement()
+            and GenerateEndOfStatement() do not have to set this information.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.Statement.StatementLocals.EndOfStatement">
+            <summary>
+            Gets or sets a label marking the end of the statement.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.Statement.StatementLocals.OriginalStackSize">
+            <summary>
+            Gets or sets the number of items on the IL stack at the start of the statement.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Statement.GenerateStartOfStatement(FluidScript.Reflection.Emit.MethodBodyGenerator,FluidScript.Compiler.SyntaxTree.Statement.StatementLocals)">
+            <summary>
+            Generates CIL for the start of every statement.
+            </summary>
+            <param name="generator">The generator to output the CIL to. </param>
+            <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Statement.GenerateEndOfStatement(FluidScript.Reflection.Emit.MethodBodyGenerator,FluidScript.Compiler.SyntaxTree.Statement.StatementLocals)">
+            <summary>
+            Generates CIL for the end of every statement.
+            </summary>
+            <param name="generator"> The generator to output the CIL to. </param>
+            <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.StatementType.Loop">
+            <summary>
+            for and while
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxVisitor.modifiers">
+            <summary>
+            current modifiers
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.SyntaxVisitor.CurrentLabels">
+            <summary>
+            labels like start: and goto start
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitIdentifier">
+            <summary>
+            Identifier expression like name, this, new etc
+            </summary>
+            <returns><see cref="T:FluidScript.Compiler.SyntaxTree.NameExpression"/></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitArrayLiteral">
+            <summary>
+            format &lt;int&gt;[1,2]
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitArgumentList(FluidScript.Compiler.TokenType,FluidScript.Compiler.TokenType)">
+            <summary>
+            Dont Forget to Call ToArray
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitFunctionParameters">
+            <summary>
+            Dont Forget to Call ToArray x:int
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitAnonymousObjectMembers">
+            <summary>
+            {x:1, add()=> {}}
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.TextPosition.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Creates a new SourceCodePosition instance.
+            </summary>
+            <param name="line"> The line number. Must be greater than zero. </param>
+            <param name="column"> The column number. Must be greater than zero. </param>
+        </member>
+        <member name="P:FluidScript.Compiler.TextPosition.Line">
+            <summary>
+            Gets the line number.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.TextPosition.Column">
+            <summary>
+            Gets the column number.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.TextSpan.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Creates a new SourceCodeSpan instance.
+            </summary>
+            <param name="startLine"> The start line of this SourceCodeSpan. Must be greater than
+            zero. </param>
+            <param name="startColumn"> The start column of this SourceCodeSpan. Must be greater
+            than zero. </param>
+            <param name="endLine"> The end line of this SourceCodeSpan. Must be greater than
+            <paramref name="startLine"/>. </param>
+            <param name="endColumn"> The end column of this SourceCodeSpan. Must be greater than
+            <paramref name="startColumn"/>. </param>
+        </member>
+        <member name="M:FluidScript.Compiler.TextSpan.#ctor(FluidScript.Compiler.TextPosition,FluidScript.Compiler.TextPosition)">
+            <summary>
+            Creates a new SourceCodeSpan instance.
+            </summary>
+            <param name="start"> The start line and column of this SourceCodeSpan. </param>
+            <param name="end"> The end line and column of this SourceCodeSpan. </param>
+        </member>
+        <member name="P:FluidScript.Compiler.TextSpan.StartLine">
+            <summary>
+            Gets the starting line number of this range.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.TextSpan.StartColumn">
+            <summary>
+            Gets the starting column number of this range.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.TextSpan.EndLine">
+            <summary>
+            Gets the ending line number of this range.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.TextSpan.EndColumn">
+            <summary>
+            Gets the ending column number of this range.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.TokenType.AnonymousMethod">
+            <summary>
+            =>
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.TokenType.LeftBracket">
+            <summary>
+            [
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.TokenType.LeftParenthesis">
+            <summary>
+            (
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.TokenType.RightParenthesis">
+            <summary>
+            )
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.TokenType.LeftBrace">
+            <summary>
+            {
+            </summary>
+        </member>
+        <member name="T:FluidScript.ScriptEngine">
+            <summary>
+            Generates SyntaxTree for text or file
+            </summary>
+        </member>
+        <member name="F:FluidScript.ScriptEngine.Settings">
+            <summary>
+            Parse settings
+            </summary>
+        </member>
+        <member name="M:FluidScript.ScriptEngine.#ctor">
+            <summary>
+            New <see cref="T:FluidScript.ScriptEngine"/> instance
+            </summary>
+        </member>
+        <member name="M:FluidScript.ScriptEngine.GetStatement(System.String)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/> for <paramref name="text"/>
+            </summary>
+            <param name="text"></param>
+            <returns></returns>
+        </member>
+        <member name="T:FluidScript.Dynamic.RuntimeContext">
+            <summary>
+            Runtime evaluation of Syntax tree 
+            <list type="bullet">it will be not same as compiled </list>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.#ctor(System.Object)">
+            <summary>
+            New runtime evaluation 
+            </summary>
+        </member>
+        <member name="P:FluidScript.Dynamic.RuntimeContext.Item(System.String)">
+            <summary>
+            Getter and Setter of variables
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.Invoke(FluidScript.Compiler.SyntaxTree.Node)">
+            <summary>
+            Evaluate the <paramref name="syntaxTree"/>
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"/>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.MissingMethodException"/>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.ILGenerator">
+            <summary>
+            Represents a generator of CIL bytes.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Complete">
+            <summary>
+            Emits a return statement and finalizes the generated code.  Do not emit any more
+            instructions after calling this method.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Pop">
+            <summary>
+            Pops the value from the top of the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Duplicate">
+            <summary>
+            Duplicates the value on the top of the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CreateLabel">
+            <summary>
+            Creates a label without setting its position.
+            </summary>
+            <returns> A new label. </returns>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.DefineLabelPosition(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Defines the position of the given label.
+            </summary>
+            <param name="label"> The label to define. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.DefineLabelPosition">
+            <summary>
+            Creates a label and sets its position.
+            </summary>
+            <returns> A new label. </returns>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Branch(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Unconditionally branches to the given label.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfZero(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the value on the top of the stack is zero, false or
+            null.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfNotZero(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the value on the top of the stack is non-zero, true or
+            non-null.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfFalse(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the value on the top of the stack is zero, false or
+            null.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfTrue(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the value on the top of the stack is non-zero, true or
+            non-null.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfNull(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the value on the top of the stack is zero, false or
+            null.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfNotNull(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the value on the top of the stack is non-zero, true or
+            non-null.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfEqual(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the two values on the top of the stack are equal.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfNotEqual(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the two values on the top of the stack are not equal.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfGreaterThan(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is greater than the second
+            value on the stack.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfGreaterThanUnsigned(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is greater than the second
+            value on the stack.  If the operands are integers then they are treated as if they are
+            unsigned.  If the operands are floating point numbers then a NaN value will trigger a
+            branch.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfGreaterThanOrEqual(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is greater than or equal to
+            the second value on the stack.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfGreaterThanOrEqualUnsigned(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is greater than or equal to
+            the second value on the stack.  If the operands are integers then they are treated as
+            if they are unsigned.  If the operands are floating point numbers then a NaN value will
+            trigger a branch.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfLessThan(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is less than the second
+            value on the stack.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfLessThanUnsigned(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is less than the second
+            value on the stack.  If the operands are integers then they are treated as if they are
+            unsigned.  If the operands are floating point numbers then a NaN value will trigger a
+            branch.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfLessThanOrEqual(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is less than or equal to
+            the second value on the stack.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BranchIfLessThanOrEqualUnsigned(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is less than or equal to
+            the second value on the stack.  If the operands are integers then they are treated as
+            if they are unsigned.  If the operands are floating point numbers then a NaN value will
+            trigger a branch.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Return">
+            <summary>
+            Returns from the current method.  A value is popped from the stack and used as the
+            return value.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Switch(FluidScript.Reflection.Emit.ILLabel[])">
+            <summary>
+            Creates a jump table.  A value is popped from the stack - this value indicates the
+            index of the label in the <paramref name="labels"/> array to jump to.
+            </summary>
+            <param name="labels"> A array of labels. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.DeclareVariable(System.Type,System.String)">
+            <summary>
+            Declares a new local variable.
+            </summary>
+            <param name="type"> The type of the local variable. </param>
+            <param name="name"> The name of the local variable. Can be <c>null</c>. </param>
+            <returns> A new local variable. </returns>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadVariable(FluidScript.Reflection.Emit.ILLocalVariable)">
+            <summary>
+            Pushes the value of the given variable onto the stack.
+            </summary>
+            <param name="variable"> The variable whose value will be pushed. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadAddressOfVariable(FluidScript.Reflection.Emit.ILLocalVariable)">
+            <summary>
+            Pushes the address of the given variable onto the stack.
+            </summary>
+            <param name="variable"> The variable whose address will be pushed. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.StoreVariable(FluidScript.Reflection.Emit.ILLocalVariable)">
+            <summary>
+            Pops the value from the top of the stack and stores it in the given local variable.
+            </summary>
+            <param name="variable"> The variable to store the value. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadArgument(System.Int32)">
+            <summary>
+            Pushes the value of the method argument with the given index onto the stack.
+            </summary>
+            <param name="argumentIndex"> The index of the argument to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.StoreArgument(System.Int32)">
+            <summary>
+            Pops a value from the stack and stores it in the method argument with the given index.
+            </summary>
+            <param name="argumentIndex"> The index of the argument to store into. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CreateTemporaryVariable(System.Type)">
+            <summary>
+            Creates temp ILVariab le
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ReleaseTemporaryVariable(FluidScript.Reflection.Emit.ILLocalVariable)">
+            <summary>
+            Indicates that the given temporary variable is no longer needed.
+            </summary>
+            <param name="variable"> The temporary variable created using CreateTemporaryVariable(). </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadNull">
+            <summary>
+            Pushes <c>null</c> onto the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadBool(System.Boolean)">
+            <summary>
+            Pushes a bool constant value onto the stack.
+            </summary>
+            <param name="value"> The bool to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadByte(System.Byte)">
+            <summary>
+            Pushes a unsigned byte constant value onto the stack.
+            </summary>
+            <param name="value"> The unsigned byte to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadByte(System.SByte)">
+            <summary>
+            Pushes a byte constant value onto the stack.
+            </summary>
+            <param name="value"> The signed byte to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadInt16(System.Int16)">
+            <summary>
+            Pushes a short constant value onto the stack.
+            </summary>
+            <param name="value"> The 16 bit integer to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadInt16(System.UInt16)">
+            <summary>
+            Pushes a unsigned short constant value onto the stack.
+            </summary>
+            <param name="value"> The 16 bit unsigned integer to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadInt32(System.Int32)">
+            <summary>
+            Pushes a int constant value onto the stack.
+            </summary>
+            <param name="value"> The 32 bit integer to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadInt32(System.UInt32)">
+            <summary>
+            Pushes a unsigned int constant value onto the stack.
+            </summary>
+            <param name="value"> The 32 bit unsigned integer to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadInt64(System.Int64)">
+            <summary>
+            Pushes a long constant value onto the stack.
+            </summary>
+            <param name="value"> The 64 bit integer to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadInt64(System.UInt64)">
+            <summary>
+            Pushes a unsigned long constant value onto the stack.
+            </summary>
+            <param name="value"> The 64 bit unsigned integer to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadSingle(System.Single)">
+            <summary>
+            Pushes a float constant value onto the stack.
+            </summary>
+            <param name="value"> The float to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadDouble(System.Double)">
+            <summary>
+            Pushes a double constant value onto the stack.
+            </summary>
+            <param name="value"> The double to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadChar(System.Char)">
+            <summary>
+            Pushes a char constant value onto the stack.
+            </summary>
+            <param name="value"> The char to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadString(System.String)">
+            <summary>
+            Pushes a string constant value onto the stack.
+            </summary>
+            <param name="value"> The string to push onto the stack. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CompareEqual">
+            <summary>
+            Pops two values from the stack, compares, then pushes <c>1</c> if the first argument
+            is equal to the second, or <c>0</c> otherwise.  Produces <c>0</c> if one or both
+            of the arguments are <c>NaN</c>.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CompareGreaterThan">
+            <summary>
+            Pops two values from the stack, compares, then pushes <c>1</c> if the first argument
+            is greater than the second, or <c>0</c> otherwise.  Produces <c>0</c> if one or both
+            of the arguments are <c>NaN</c>.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CompareGreaterThanUnsigned">
+            <summary>
+            Pops two values from the stack, compares, then pushes <c>1</c> if the first argument
+            is greater than the second, or <c>0</c> otherwise.  Produces <c>1</c> if one or both
+            of the arguments are <c>NaN</c>.  Integers are considered to be unsigned.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CompareLessThan">
+            <summary>
+            Pops two values from the stack, compares, then pushes <c>1</c> if the first argument
+            is less than the second, or <c>0</c> otherwise.  Produces <c>0</c> if one or both
+            of the arguments are <c>NaN</c>.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CompareLessThanUnsigned">
+            <summary>
+            Pops two values from the stack, compares, then pushes <c>1</c> if the first argument
+            is less than the second, or <c>0</c> otherwise.  Produces <c>1</c> if one or both
+            of the arguments are <c>NaN</c>.  Integers are considered to be unsigned.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Add">
+            <summary>
+            Pops two values from the stack, adds them together, then pushes the result to the
+            stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Subtract">
+            <summary>
+            Pops two values from the stack, subtracts the second from the first, then pushes the
+            result to the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Multiply">
+            <summary>
+            Pops two values from the stack, multiplies them together, then pushes the
+            result to the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Divide">
+            <summary>
+            Pops two values from the stack, divides the first by the second, then pushes the
+            result to the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Remainder">
+            <summary>
+            Pops two values from the stack, divides the first by the second, then pushes the
+            remainder to the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Negate">
+            <summary>
+            Pops a value from the stack, negates it, then pushes it back onto the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BitwiseAnd">
+            <summary>
+            Pops two values from the stack, ANDs them together, then pushes the result to the
+            stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BitwiseOr">
+            <summary>
+            Pops two values from the stack, ORs them together, then pushes the result to the
+            stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BitwiseXor">
+            <summary>
+            Pops two values from the stack, XORs them together, then pushes the result to the
+            stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BitwiseNot">
+            <summary>
+            Pops a value from the stack, inverts it, then pushes the result to the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ShiftLeft">
+            <summary>
+            Pops two values from the stack, shifts the first to the left, then pushes the result
+            to the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ShiftRight">
+            <summary>
+            Pops two values from the stack, shifts the first to the right, then pushes the result
+            to the stack.  The sign bit is preserved.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ShiftRightUnsigned">
+            <summary>
+            Pops two values from the stack, shifts the first to the right, then pushes the result
+            to the stack.  The sign bit is not preserved.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Box(System.Type)">
+            <summary>
+            Pops a value from the stack, converts it to an object reference, then pushes it back onto
+            the stack.
+            </summary>
+            <param name="type"> The type of value to box.  This should be a value type. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Unbox(System.Type)">
+            <summary>
+            Pops an object reference (representing a boxed value) from the stack, extracts the
+            address, then pushes that address onto the stack.
+            </summary>
+            <param name="type"> The type of the boxed value.  This should be a value type. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.UnboxObject(System.Type)">
+            <summary>
+            Pops an object reference (representing a boxed value) from the stack, extracts the value,
+            then pushes the value onto the stack.
+            </summary>
+            <param name="type"> The type of the boxed value.  This should be a value type. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToBool">
+            <summary>
+            Pops a value from the stack, converts it to a bool, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToByte">
+            <summary>
+            Pops a value from the stack, converts it to a signed byte, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToUnsignedByte">
+            <summary>
+            Pops a value from the stack, converts it to a unsigned byte, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToInt16">
+            <summary>
+            Pops a value from the stack, converts it to a signed short, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToUnsignedInt16">
+            <summary>
+            Pops a value from the stack, converts it to a unsigned short, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToInt32">
+            <summary>
+            Pops a value from the stack, converts it to a signed integer, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToUnsignedInt32">
+            <summary>
+            Pops a value from the stack, converts it to a unsigned integer, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToInt64">
+            <summary>
+            Pops a value from the stack, converts it to a signed long, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToUnsignedInt64">
+            <summary>
+            Pops a value from the stack, converts it to a unsigned long, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToChar">
+            <summary>
+            Pops a value from the stack, converts it to a char, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToSingle">
+            <summary>
+            Pops a value from the stack, converts it to a float, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ConvertToDouble">
+            <summary>
+            Pops a value from the stack, converts it to a double, then pushes it back onto
+            the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.NewObject(System.Reflection.ConstructorInfo)">
+            <summary>
+            Pops the constructor arguments off the stack and creates a new instance of the object.
+            </summary>
+            <param name="constructor"> The constructor that is used to initialize the object. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Call(System.Reflection.MethodBase)">
+            <summary>
+            Pops the method arguments off the stack, calls the given method, then pushes the result
+            to the stack (if there was one).  Identical to CallStatic() if the method is a static
+            method (or is declared on a value type) or CallVirtual() otherwise.
+            </summary>
+            <param name="method"> The method to call. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CallStatic(System.Reflection.MethodBase)">
+            <summary>
+            Pops the method arguments off the stack, calls the given method, then pushes the result
+            to the stack (if there was one).  This operation can be used to call instance methods,
+            but virtual overrides will not be called and a null check will not be performed at the
+            callsite.
+            </summary>
+            <param name="method"> The method to call. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CallVirtual(System.Reflection.MethodBase)">
+            <summary>
+            Pops the method arguments off the stack, calls the given method, then pushes the result
+            to the stack (if there was one).  This operation cannot be used to call static methods.
+            Virtual overrides are obeyed and a null check is performed.
+            </summary>
+            <param name="method"> The method to call. </param>
+            <exception cref="T:System.ArgumentException"> The method is static. </exception>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadField(System.Reflection.FieldInfo)">
+            <summary>
+            Pushes the value of the given field onto the stack.
+            </summary>
+            <param name="field"> The field whose value will be pushed. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.StoreField(System.Reflection.FieldInfo)">
+            <summary>
+            Pops a value off the stack and stores it in the given field.
+            </summary>
+            <param name="field"> The field to modify. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.CastClass(System.Type)">
+            <summary>
+            Pops an object off the stack, checks that the object inherits from or implements the
+            given type, and pushes the object onto the stack if the check was successful or
+            throws an InvalidCastException if the check failed.
+            </summary>
+            <param name="type"> The type of the class the object inherits from or the interface the
+            object implements. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.IsInstance(System.Type)">
+            <summary>
+            Pops an object off the stack, checks that the object inherits from or implements the
+            given type, and pushes either the object (if the check was successful) or <c>null</c>
+            (if the check failed) onto the stack.
+            </summary>
+            <param name="type"> The type of the class the object inherits from or the interface the
+            object implements. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadToken(System.Type)">
+            <summary>
+            Pushes a RuntimeTypeHandle corresponding to the given type onto the evaluation stack.
+            </summary>
+            <param name="type"> The type to convert to a RuntimeTypeHandle. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadToken(System.Reflection.MethodBase)">
+            <summary>
+            Pushes a RuntimeMethodHandle corresponding to the given method onto the evaluation
+            stack.
+            </summary>
+            <param name="method"> The method to convert to a RuntimeMethodHandle. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadToken(System.Reflection.FieldInfo)">
+            <summary>
+            Pushes a RuntimeFieldHandle corresponding to the given field onto the evaluation stack.
+            </summary>
+            <param name="field"> The type to convert to a RuntimeFieldHandle. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadStaticMethodPointer(System.Reflection.MethodBase)">
+            <summary>
+            Pushes a pointer to the native code implementing the given method onto the evaluation
+            stack.  The virtual qualifier will be ignored, if present.
+            </summary>
+            <param name="method"> The method to retrieve a pointer for. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadVirtualMethodPointer(System.Reflection.MethodBase)">
+            <summary>
+            Pushes a pointer to the native code implementing the given method onto the
+            evaluation stack.  This method cannot be used to retrieve a pointer to a static method.
+            </summary>
+            <param name="method"> The method to retrieve a pointer for. </param>
+            <exception cref="T:System.ArgumentException"> The method is static. </exception>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadMethodPointer(System.Reflection.MethodBase)">
+            <summary>
+            Pushes a pointer to the native code implementing the given method onto the evaluation
+            stack.  This method is identical to LoadStaticMethodPointer() if the method is a static
+            method (or is declared on a value type) or LoadVirtualMethodPointer() otherwise.
+            </summary>
+            <param name="method"> The method to retrieve a pointer for. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.InitObject(System.Type)">
+            <summary>
+            Pops a managed or native pointer off the stack and initializes the referenced type with
+            zeros.
+            </summary>
+            <param name="type"> The type the pointer on the top of the stack is pointing to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.NewArray(System.Type)">
+            <summary>
+            Pops the size of the array off the stack and pushes a new array of the given type onto
+            the stack.
+            </summary>
+            <param name="type"> The element type. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadArrayElement(System.Type)">
+            <summary>
+            Pops the array and index off the stack and pushes the element value onto the stack.
+            </summary>
+            <param name="type"> The element type. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.StoreArrayElement(System.Type)">
+            <summary>
+            Pops the array, index and value off the stack and stores the value in the array.
+            </summary>
+            <param name="type"> The element type. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.LoadArrayLength">
+            <summary>
+            Pops an array off the stack and pushes the length of the array onto the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Throw">
+            <summary>
+            Pops an exception object off the stack and throws the exception.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.ReThrow">
+            <summary>
+            Re-throws the current exception.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BegineExceptionBlock">
+            <summary>
+            Begins a try-catch-finally block.  After issuing this instruction any following
+            instructions are conceptually within the try block.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.EndExceptionBlock">
+            <summary>
+            Ends a try-catch-finally block.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BegineCatchBlock(System.Type)">
+            <summary>
+            Begins a catch block.  BeginExceptionBlock() must have already been called.
+            </summary>
+            <param name="exceptionType"> The type of exception to handle. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BeginFinallyBlock">
+            <summary>
+            Begins a finally block.  BeginExceptionBlock() must have already been called.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BeginFilterBlock">
+            <summary>
+            Begins a filter block.  BeginExceptionBlock() must have already been called.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.BeginFaultBlock">
+            <summary>
+            Begins a fault block.  BeginExceptionBlock() must have already been called.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Leave(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Unconditionally branches to the given label.  Unlike the regular branch instruction,
+            this instruction can exit out of try, filter and catch blocks.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.EndFinally">
+            <summary>
+            This instruction can be used from within a finally block to resume the exception
+            handling process.  It is the only valid way of leaving a finally block.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.EndFault">
+            <summary>
+            This instruction can be used from within a fault block to resume the exception
+            handling process.  It is the only valid way of leaving a fault block.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.EndFilter">
+            <summary>
+            This instruction can be used from within a filter block to indicate whether the
+            exception will be handled.  It pops an integer from the stack which should be <c>0</c>
+            to continue searching for an exception handler or <c>1</c> to use the handler
+            associated with the filter.  EndFilter() must be called at the end of a filter block.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.Breakpoint">
+            <summary>
+            Triggers a breakpoint in an attached debugger.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.MarkSequencePoint(System.Diagnostics.SymbolStore.ISymbolDocumentWriter,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Marks a sequence point in the Microsoft intermediate language (MSIL) stream.
+            </summary>
+            <param name="document"> The document for which the sequence point is being defined. </param>
+            <param name="startLine"> The line where the sequence point begins. </param>
+            <param name="startColumn"> The column in the line where the sequence point begins. </param>
+            <param name="endLine"> The line where the sequence point ends. </param>
+            <param name="endColumn"> The column in the line where the sequence point ends. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ILGenerator.NoOperation">
+            <summary>
+            Does nothing.
+            </summary>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.ILLabel">
+            <summary>
+            Represents a label in IL code.
+            </summary>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.ILLocalVariable">
+            <summary>
+            Represents a local variable in CIL code.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.ILLocalVariable.Index">
+            <summary>
+            Gets the zero-based index of the local variable within the method body.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.ILLocalVariable.Type">
+            <summary>
+            Gets the type of the local variable.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.ILLocalVariable.Name">
+            <summary>
+            Gets the local variable name, or <c>null</c> if a name was not provided.
+            </summary>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.MethodBodyGenerator">
+            <summary>
+            Method body IL Generator
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.SyntaxTree">
+            <summary>
+            Syntax Tree of method
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.DebugDoument">
+            <summary>
+            Debug Document writter
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.Source">
+            <summary>
+            Source code
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.FunctionName">
+            <summary>
+            Gets or sets the name of the function that is being generated.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.InsideTryCatchOrFinally">
+            <summary>
+            Indicates current IL is inside try catch or nor
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.PushBreakOrContinueInfo(System.String[],FluidScript.Reflection.Emit.ILLabel,FluidScript.Reflection.Emit.ILLabel,System.Boolean)">
+            <summary>
+            Pushes information about break or continue targets to a stack.
+            </summary>
+            <param name="labels"> The label names associated with the break or continue target.
+            Can be <c>null</c>. </param>
+            <param name="breakTarget"> The IL label to jump to if a break statement is encountered. </param>
+            <param name="continueTarget"> The IL label to jump to if a continue statement is
+            encountered.  Can be <c>null</c>. </param>
+            <param name="labelledOnly"> <c>true</c> if break or continue statements without a label
+            should ignore this entry; <c>false</c> otherwise. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.PopBreakOrContinueInfo">
+            <summary>
+            Removes the top-most break or continue information from the stack.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.GetBreakTarget(System.String)">
+            <summary>
+            Returns the break target for the statement with the given label, if one is provided, or
+            the top-most break target otherwise.
+            </summary>
+            <param name="labelName"> The label associated with the break target.  Can be
+            <c>null</c>. </param>
+            <returns> The break target for the statement with the given label. </returns>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.GetContinueTarget(System.String)">
+            <summary>
+            Returns the continue target for the statement with the given label, if one is provided, or
+            the top-most continue target otherwise.
+            </summary>
+            <param name="labelName"> The label associated with the continue target.  Can be
+            <c>null</c>. </param>
+            <returns> The continue target for the statement with the given label. </returns>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.BreakOrContinueStackSize">
+            <summary>
+            Gets the number of available break or continue targets.  Used to support break or
+            continue statements within finally blocks.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.LongJumpCallback">
+            <summary>
+            Gets or sets a delegate that is called when EmitLongJump() is called and the target
+            label is outside the LongJumpStackSizeThreshold.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.LongJumpStackSizeThreshold">
+            <summary>
+            Gets or sets the depth of the break/continue stack at the start of the finally
+            statement.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.GetBreakOrContinueLabelDepth(FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Searches for the given label in the break/continue stack.
+            </summary>
+            <param name="label"></param>
+            <returns> The depth of the label in the stack.  Zero indicates the bottom of the stack.
+            <c>-1</c> is returned if the label was not found. </returns>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.EmitLongJump(FluidScript.Reflection.Emit.ILGenerator,FluidScript.Reflection.Emit.ILLabel)">
+            <summary>
+            Long jump like retur,break,goto
+            </summary>
+            <param name="generator"></param>
+            <param name="label"></param>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.ReturnTarget">
+            <summary>
+            Gets or sets the label the return statement should jump to (with the return value on
+            top of the stack).  Will be <c>null</c> if code is being generated outside a function
+            context.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.ReturnVariable">
+            <summary>
+            Gets or sets the variable that holds the return value for the function.  Will be
+            <c>null</c> if code is being generated outside a function context or if no return
+            statements have been encountered.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.DeclareVariable(System.Type,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.GetLocalVariable(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.Build">
+            <summary>Creates IL Code</summary>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.ParameterInfo">
+            <summary>
+            Emit Parameter
+            </summary>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.ReflectionILGenerator">
+            <summary>
+            Reflection IL Generator
+            </summary>
+        </member>
+        <member name="F:FluidScript.Reflection.Emit.ReflectionILGenerator.Generator">
+            <summary>
+            Underlying ILGenerator
+            </summary>
+        </member>
+        <member name="F:FluidScript.Reflection.Emit.ReflectionILGenerator.EmitDebugInfo">
+            <summary>
+            Indicated whether to emit debug info
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.#ctor(System.Reflection.Emit.ILGenerator,System.Boolean)">
+            <summary>
+            New Reflection ILGenerator
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Add">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BegineCatchBlock(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BegineExceptionBlock">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BeginFaultBlock">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BeginFilterBlock">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BeginFinallyBlock">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BitwiseAnd">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BitwiseNot">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BitwiseOr">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BitwiseXor">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Box(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Branch(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfEqual(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfGreaterThan(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfGreaterThanOrEqual(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfGreaterThanOrEqualUnsigned(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfGreaterThanUnsigned(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfLessThan(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfLessThanOrEqual(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfLessThanOrEqualUnsigned(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfLessThanUnsigned(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfNotEqual(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfNotZero(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.BranchIfZero(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Breakpoint">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CallStatic(System.Reflection.MethodBase)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CallVirtual(System.Reflection.MethodBase)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CastClass(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CompareEqual">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CompareGreaterThan">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CompareGreaterThanUnsigned">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CompareLessThan">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CompareLessThanUnsigned">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Complete">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToBool">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToByte">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToChar">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToDouble">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToInt16">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToInt32">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToInt64">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToSingle">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToUnsignedByte">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToUnsignedInt16">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToUnsignedInt32">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ConvertToUnsignedInt64">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.CreateLabel">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.DeclareVariable(System.Type,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.DefineLabelPosition(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Divide">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Duplicate">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.EndExceptionBlock">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.EndFilter">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.EndFinally">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.InitObject(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.IsInstance(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Leave(FluidScript.Reflection.Emit.ILLabel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadAddressOfVariable(FluidScript.Reflection.Emit.ILLocalVariable)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadArgument(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadArrayElement(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadArrayLength">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadBool(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadByte(System.Byte)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadByte(System.SByte)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadChar(System.Char)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadDouble(System.Double)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadField(System.Reflection.FieldInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadInt16(System.Int16)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadInt16(System.UInt16)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadInt32(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadInt32(System.UInt32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadInt64(System.Int64)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadInt64(System.UInt64)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadNull">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadSingle(System.Single)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadStaticMethodPointer(System.Reflection.MethodBase)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadString(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadToken(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadToken(System.Reflection.MethodBase)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadToken(System.Reflection.FieldInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadVariable(FluidScript.Reflection.Emit.ILLocalVariable)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.LoadVirtualMethodPointer(System.Reflection.MethodBase)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.MarkSequencePoint(System.Diagnostics.SymbolStore.ISymbolDocumentWriter,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.MarkSequencePoint(System.Diagnostics.SymbolStore.ISymbolDocumentWriter,FluidScript.Compiler.TextSpan)">
+            <summary>
+            Marks a sequence point in the Microsoft intermediate language (MSIL) stream.
+            </summary>
+            <param name="document"> The document for which the sequence point is being defined. </param>
+            <param name="span"> The start and end positions which define the sequence point. </param>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Multiply">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Negate">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.NewArray(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.NewObject(System.Reflection.ConstructorInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.NoOperation">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Pop">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Remainder">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ReThrow">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Return">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ShiftLeft">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ShiftRight">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.ShiftRightUnsigned">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.StoreArgument(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.StoreArrayElement(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.StoreField(System.Reflection.FieldInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.StoreVariable(FluidScript.Reflection.Emit.ILLocalVariable)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Subtract">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Switch(FluidScript.Reflection.Emit.ILLabel[])">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Throw">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.Unbox(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ReflectionILGenerator.UnboxObject(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="F:FluidScript.Reflection.Emit.ReflectionModule.LanguageType">
+            <summary>
+            Gets the language type GUID for the symbol store.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Reflection.Emit.ReflectionModule.LanguageVendor">
+            <summary>
+            Gets the language vendor GUID for the symbol store.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Reflection.Emit.ReflectionModule.DocumentType">
+            <summary>
+            Gets the document type GUID for the symbol store.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.TypeGenerator.MemberInfo">
+            <summary>
+            MemberType of Generator
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.TypeGenerator.Assembly">
+            <inheritdoc/>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.TypeGenerator.AssemblyQualifiedName">
+            <inheritdoc/>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.TypeGenerator.FullName">
+            <inheritdoc/>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.TypeGenerator.GUID">
+            <inheritdoc/>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.TypeGenerator.Namespace">
+            <inheritdoc/>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.TypeGenerator.UnderlyingSystemType">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetAttributeFlagsImpl">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetConstructorImpl(System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[])">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetConstructors(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetElementType">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetEvent(System.String,System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetEvents(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetField(System.String,System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetFields(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetInterface(System.String,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetInterfaces">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetMembers(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetMethodImpl(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[])">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetMethods(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetMember(System.String,System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetNestedType(System.String,System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetNestedTypes(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetProperties(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetPropertyImpl(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type,System.Type[],System.Reflection.ParameterModifier[])">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.HasElementTypeImpl">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.InvokeMember(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object,System.Object[],System.Reflection.ParameterModifier[],System.Globalization.CultureInfo,System.String[])">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.IsArrayImpl">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.IsByRefImpl">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.IsCOMObjectImpl">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.IsPointerImpl">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.IsPrimitiveImpl">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetCustomAttributes(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetCustomAttributes(System.Type,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.IsDefined(System.Type,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="T:FluidScript.Reflection.ParameterInfo">
+            <summary>
+            Runtime Parameter Info
+            </summary>
+        </member>
+        <member name="F:FluidScript.Reflection.ParameterInfo.IsVar">
+            <summary>
+            var arguments
+            </summary>
+        </member>
+        <member name="F:FluidScript.Reflection.ArgumentTypes.Byte">
+            <summary>
+            sbyte
+            </summary>
+        </member>
+        <member name="F:FluidScript.Reflection.ArgumentTypes.UByte">
+            <summary>
+            byte
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.TypeUtils.From(System.String)">
+            <summary>
+            Must be primitive
+            </summary>
+            <param name="typeName"></param>
+            <returns></returns>
+        </member>
+        <member name="F:FluidScript.RuntimeType.Byte">
+            <summary>
+            sbyte
+            </summary>
+        </member>
+    </members>
+</doc>

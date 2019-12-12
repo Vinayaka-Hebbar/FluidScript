@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0</TargetFrameworks>
+    <RootNamespace>FluidScript</RootNamespace>
+    <AssemblyName>FluidScript.CoreLib</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net40|AnyCPU'">
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript.CoreLib\FluidScript.CoreLib.xml</DocumentationFile>
+  </PropertyGroup>
+
+</Project>

@@ -19,11 +19,11 @@ namespace FluidScipt.ConsoleTest
         private void Run()
         {
             ScriptEngine engine = new ScriptEngine();
-            var tree = engine.GetStatement("sqrt(a)");
-            var context = new FluidScript.Dynamic.RuntimeContext(tree, new FluidScript.Math());
+            var context = new FluidScript.Dynamic.RuntimeContext(new FluidScript.Math());
             context["a"] = new FluidScript.Double(10);
             context["b"] = new Integer(20);
-            var re = context.Invoke();
+            FluidScript.Compiler.SyntaxTree.Statement tree = engine.GetStatement("{a=[10,20];a[2]=`a value`;return a[2];}");
+            var re = context.Invoke(tree);
             Console.WriteLine(re);
         }
     }
