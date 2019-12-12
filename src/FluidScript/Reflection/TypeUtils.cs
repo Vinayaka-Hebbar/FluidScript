@@ -33,6 +33,7 @@ namespace FluidScript.Reflection
                 new Primitive("float", typeof(Float)),
                 new Primitive("double", typeof(Double)),
                 new Primitive("bool", typeof(Boolean)),
+                new Primitive("char", typeof(Char)),
                 new Primitive("string", typeof(String)),
                 new Primitive("any", typeof(FSObject)),
                 new Primitive("void", typeof(void))

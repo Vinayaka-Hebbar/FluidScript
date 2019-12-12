@@ -1,17 +1,26 @@
 ﻿namespace FluidScript
 {
+    /// <summary>
+    /// Represents text as a series of Unicode characters.
+    /// </summary>
     [System.Serializable]
     [System.Runtime.InteropServices.ComVisible(true)]
     public sealed class String : FSObject
     {
         internal readonly string m_value;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="String"/>
+        /// </summary>
         public String(string value)
         {
             m_value = value;
         }
 
-        public Integer this[Integer index]
+        /// <summary>
+        /// Char Unicode at <paramref name="index"/>
+        /// </summary>
+        public Char this[Integer index]
         {
             get => m_value[index];
         }

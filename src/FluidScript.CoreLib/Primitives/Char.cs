@@ -1,54 +1,60 @@
 ﻿namespace FluidScript
 {
     /// <summary>
-    /// Represents a double-precision floating-point number.
+    /// Represents a character as a UTF-16 code unit.
     /// </summary>
-    [System.Serializable]
-    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public readonly struct Double : IFSObject, System.IConvertible
+    public readonly struct Char : IFSObject, System.IConvertible
     {
-        [System.Diagnostics.DebuggerBrowsable(0)]
-        internal readonly double m_value;
+        internal readonly char m_value;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Double"/>
+        /// Initializes a new instance of the <see cref="Char"/>
         /// </summary>
-        public Double(double value)
+        public Char(char value)
         {
             m_value = value;
         }
 
-        [Runtime.Register("toString")]
-        public String __ToString()
-        {
-            return m_value.ToString();
-        }
-
+        /// <summary>
+        /// returns the hashCode() for the instance
+        /// </summary>
         [Runtime.Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <summary>
+        /// converts to string
+        /// </summary>
+        [Runtime.Register("toString")]
+        public String __ToString()
+        {
+            return m_value.ToString();
+        }
+
+        /// <summary>
+        /// checks <paramref name="other"/> and <see cref="Integer"/> are equals
+        /// </summary>
         [Runtime.Register("equals")]
         public Boolean __Equals(IFSObject other)
         {
-            return other is Double d &&
-                  m_value == d.m_value;
+            return other is Char c &&
+                  m_value == c.m_value;
         }
 
         /// <inheritdoc/>
         public override bool Equals(object other)
         {
-            return other is Double d &&
-                  m_value == d.m_value;
+            return other is Char c &&
+                  m_value == c.m_value;
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return m_value.GetHashCode();
+            return m_value | (m_value << 16);
         }
 
         /// <inheritdoc/>
@@ -60,7 +66,7 @@
         #region Convertible
         System.TypeCode System.IConvertible.GetTypeCode()
         {
-            return System.TypeCode.Double;
+            return System.TypeCode.Char;
         }
 
         string System.IConvertible.ToString(System.IFormatProvider provider)
@@ -77,7 +83,7 @@
         /// <internalonly/>
         char System.IConvertible.ToChar(System.IFormatProvider provider)
         {
-            return System.Convert.ToChar(m_value);
+            return m_value;
         }
 
         /// <internalonly/>
@@ -137,7 +143,7 @@
         /// <internalonly/>
         double System.IConvertible.ToDouble(System.IFormatProvider provider)
         {
-            return m_value;
+            return System.Convert.ToDouble(m_value);
         }
 
         /// <internalonly/>
@@ -159,77 +165,19 @@
         }
         #endregion
 
-        public static implicit operator Double(int value) => new Double(value);
+        /// <summary>
+        /// Implicit Convert from <see cref="char"/> to <see cref="Char"/>
+        /// </summary>
+        public static implicit operator Char(char value) => new Char(value);
 
-        public static implicit operator Double(Integer integer) => new Double(integer.m_value);
+        /// <summary>
+        /// Implicit Convert from <see cref="Char"/> to <see cref="char"/>
+        /// </summary>
+        public static implicit operator char(Char value) => value.m_value;
 
-        public static implicit operator Double(Float single) => new Double(single.m_value);
-
-        public static implicit operator double(Double integer) => integer.m_value;
-
-        public static Double operator +(Double left, Double right)
-        {
-            return new Double(left.m_value + right.m_value);
-        }
-
-        public static Double operator -(Double left, Double right)
-        {
-            return new Double(left.m_value - right.m_value);
-        }
-
-        public static Double operator *(Double left, Double right)
-        {
-            return new Double(left.m_value * right.m_value);
-        }
-
-        public static Double operator /(Double left, Double right)
-        {
-            return new Double(left.m_value / right.m_value);
-        }
-
-        public static Double operator %(Double left, Double right)
-        {
-            return new Double(left.m_value % right.m_value);
-        }
-
-        public static Boolean operator >(Double left, Double right)
-        {
-            return new Boolean(left.m_value > right.m_value);
-        }
-
-        public static Boolean operator <(Double left, Double right)
-        {
-            return new Boolean(left.m_value < right.m_value);
-        }
-
-        public static Boolean operator >=(Double left, Double right)
-        {
-            return new Boolean(left.m_value >= right.m_value);
-        }
-
-        public static Boolean operator <=(Double left, Double right)
-        {
-            return new Boolean(left.m_value <= right.m_value);
-        }
-
-        public static Boolean operator ==(Double left, Double right)
-        {
-            return new Boolean(left.m_value == right.m_value);
-        }
-
-        public static Boolean operator !=(Double left, Double right)
-        {
-            return new Boolean(left.m_value != right.m_value);
-        }
-
-        public static Double operator ++(Double value)
-        {
-            return new Double(value.m_value + 1);
-        }
-
-        public static Double operator --(Double value)
-        {
-            return new Double(value.m_value + 1);
-        }
+        /// <summary>
+        /// Implicit Convert from <see cref="Char"/> to <see cref="int"/>
+        /// </summary>
+        public static implicit operator int(Char value) => value.m_value;
     }
 }

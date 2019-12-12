@@ -1,7 +1,7 @@
 ﻿namespace FluidScript
 {
     /// <summary>
-    /// <see cref="int"/> Wrapper
+    /// Represents a 32-bit signed integer.
     /// </summary>
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
@@ -12,7 +12,7 @@
         internal readonly int m_value;
 
         /// <summary>
-        /// New <see cref="Integer"/> instance
+        /// Initializes a new instance of the <see cref="Integer"/>
         /// </summary>
         public Integer(int value)
         {
