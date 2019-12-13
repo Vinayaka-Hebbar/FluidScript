@@ -1,5 +1,6 @@
 ﻿using FluidScript;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace FluidScipt.ConsoleTest
@@ -22,7 +23,7 @@ namespace FluidScipt.ConsoleTest
             var context = new FluidScript.Dynamic.RuntimeContext(new FluidScript.Math());
             context["a"] = new FluidScript.Double(10);
             context["b"] = new Integer(20);
-            FluidScript.Compiler.SyntaxTree.Statement tree = engine.GetStatement("{a=[10,20];a[2]=`a value`;return a[2];}");
+            FluidScript.Compiler.SyntaxTree.Statement tree = engine.GetStatement("{a=pow(2,10);return a;}");
             var re = context.Invoke(tree);
             Console.WriteLine(re);
         }

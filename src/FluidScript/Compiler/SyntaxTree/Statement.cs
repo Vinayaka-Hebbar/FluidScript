@@ -13,15 +13,17 @@
         public readonly string[] Labels;
 
         /// <summary>
-        /// New Statement instance
+        /// Initializes new <see cref="Statement"/>
         /// </summary>
-        /// <param name="nodeType"></param>
         protected Statement(StatementType nodeType)
         {
             Labels = NoLabels;
             NodeType = nodeType;
         }
 
+        /// <summary>
+        /// Initializes new <see cref="Statement"/>
+        /// </summary>
         protected Statement(string[] labels, StatementType nodeType)
         {
             Labels = labels;
@@ -154,5 +156,9 @@
         {
         }
 
+        public override string ToString()
+        {
+            return string.Empty;
+        }
     }
 }

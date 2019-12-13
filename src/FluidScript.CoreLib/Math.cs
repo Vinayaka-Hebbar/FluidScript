@@ -251,5 +251,31 @@
         {
             return new Double(System.Math.Truncate(d.m_value));
         }
+
+        /// <summary>
+        /// Computes the sum of a sequence of System.Int32 values.
+        /// </summary>
+        /// <param name="list">
+        ///  A sequence of <see cref="IFSObject"/> values to calculate the sum of.
+        /// </param>
+        /// <returns>The sum of the values in the sequence.</returns>
+        [Runtime.Register("sum")]
+        public static Double Sum(System.Collections.Generic.IEnumerable<IFSObject> list)
+        {
+            return new Double(System.Linq.Enumerable.Sum(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
+        }
+
+        /// <summary>
+        /// Computes the average of a sequence of System.Int32 values.
+        /// </summary>
+        /// <param name="list">
+        ///  A sequence of <see cref="IFSObject"/> values to calculate the average of.
+        /// </param>
+        /// <returns>The average of the values in the sequence.</returns>
+        [Runtime.Register("avg")]
+        public static Double Average(System.Collections.Generic.IEnumerable<IFSObject> list)
+        {
+            return new Double(System.Linq.Enumerable.Average(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
+        }
     }
 }

@@ -4,6 +4,117 @@
         <name>FluidScript</name>
     </assembly>
     <members>
+        <member name="T:FluidScript.Compiler.IExpressionVisitor`1">
+            <summary>
+            Expression Visitor
+            </summary>
+            <typeparam name="TResult">Return Type</typeparam>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitUnary(FluidScript.Compiler.SyntaxTree.UnaryExpression)">
+            <summary>
+            Unary Expressions
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitBinary(FluidScript.Compiler.SyntaxTree.BinaryExpression)">
+            <summary>
+            Binary Expression
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
+            <summary>
+            Array Literal
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitAssignment(FluidScript.Compiler.SyntaxTree.AssignmentExpression)">
+            <summary>
+            Assignment Expression
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitMember(FluidScript.Compiler.SyntaxTree.MemberExpression)">
+            <summary>
+            Visit Member access
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitMember(FluidScript.Compiler.SyntaxTree.NameExpression)">
+            <summary>
+            Visit Name (Identifier) expression
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitCall(FluidScript.Compiler.SyntaxTree.InvocationExpression)">
+            <summary>
+            Visit Method Call
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitThis(FluidScript.Compiler.SyntaxTree.ThisExpression)">
+            <summary>
+            Visit this
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitDeclaration(FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression)">
+            <summary>
+            Visit Declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitLiteral(FluidScript.Compiler.SyntaxTree.LiteralExpression)">
+            <summary>
+            Visit Literal
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitTernary(FluidScript.Compiler.SyntaxTree.TernaryExpression)">
+            <summary>
+            Visit ternary expression
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitIndex(FluidScript.Compiler.SyntaxTree.IndexExpression)">
+            <summary>
+            Visit Indexed Argument expression
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitNull(FluidScript.Compiler.SyntaxTree.NullExpression)">
+            <summary>
+            Visit Null
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitNullPropegator(FluidScript.Compiler.SyntaxTree.NullPropegatorExpression)">
+            <summary>
+            Visit Null Propagator
+            </summary>
+        </member>
+        <member name="T:FluidScript.Compiler.IStatementVisitor">
+            <summary>
+            Statement visitor
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IStatementVisitor.VisitExpression(FluidScript.Compiler.SyntaxTree.ExpressionStatement)">
+            <summary>
+            Expression statemenr
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IStatementVisitor.VisitReturn(FluidScript.Compiler.SyntaxTree.ReturnOrThrowStatement)">
+            <summary>
+            Visit return statement
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IStatementVisitor.VisitBlock(FluidScript.Compiler.SyntaxTree.BlockStatement)">
+            <summary>
+            Visit block
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IStatementVisitor.VisitDeclaration(FluidScript.Compiler.SyntaxTree.LocalDeclarationStatement)">
+            <summary>
+            Visit variable declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IStatementVisitor.VisitLoop(FluidScript.Compiler.SyntaxTree.LoopStatement)">
+            <summary>
+            Visit loop
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IStatementVisitor.VisitIf(FluidScript.Compiler.SyntaxTree.IfStatement)">
+            <summary>
+            If Condition
+            </summary>
+        </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.Expression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
             <summary>
             Optimizes expression for emit or others
@@ -17,6 +128,35 @@
             Generates IL code for <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/>
             </summary>
             <param name="generator"></param>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression">
+            <summary>
+            Array literal &lt;<see cref="P:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ArrayType"/>&gt;[1,2]
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.Expressions">
+            <summary>
+            List of array items
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ArrayType">
+            <summary>
+            Array type
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.#ctor(FluidScript.Compiler.SyntaxTree.Expression[],FluidScript.Compiler.SyntaxTree.TypeSyntax)">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.GenerateCode(FluidScript.Reflection.Emit.MethodBodyGenerator)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ToString">
+            <inheritdoc/>
         </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.NameExpression">
             <summary>
@@ -84,6 +224,41 @@
         <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.Circumflex">
             ^
         </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.Node">
+            <summary>
+            Abstract node for all syntax tree
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Node.#ctor">
+            <summary>
+            Creates new <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Node.ChildNodes">
+            <summary>
+            Child node iterator
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Node.ContainsNodeOfType``1">
+            <summary>
+            Contains a specified node <typeparamref name="T"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Node.Childs(FluidScript.Compiler.SyntaxTree.Node[])">
+            <summary>
+            Makes child nodes
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Node.Iterate``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0})">
+            <summary>
+            Iterate items
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Node.Iterate``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0,System.Int32})">
+            <summary>
+            Iterate items
+            </summary>
+        </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.Statement">
             <summary>
             Statement like declarion, return etc
@@ -96,9 +271,13 @@
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.Statement.#ctor(FluidScript.Compiler.SyntaxTree.StatementType)">
             <summary>
-            New Statement instance
+            Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/>
             </summary>
-            <param name="nodeType"></param>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Statement.#ctor(System.String[],FluidScript.Compiler.SyntaxTree.StatementType)">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/>
+            </summary>
         </member>
         <member name="P:FluidScript.Compiler.SyntaxTree.Statement.Span">
             <summary>
@@ -165,9 +344,121 @@
             <param name="generator"> The generator to output the CIL to. </param>
             <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
         </member>
-        <member name="F:FluidScript.Compiler.SyntaxTree.StatementType.Loop">
+        <member name="T:FluidScript.Compiler.SyntaxTree.BlockStatement">
+            <summary>
+            Block statement {}
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.BlockStatement.Statements">
+            <summary>
+            List of statements
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.BlockStatement.#ctor(FluidScript.Compiler.SyntaxTree.Statement[],System.String[])">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.BlockStatement"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.BlockStatement.ChildNodes">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.BlockStatement.Accept(FluidScript.Compiler.IStatementVisitor)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.BlockStatement.GenerateCode(FluidScript.Reflection.Emit.MethodBodyGenerator)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.BlockStatement.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.IfStatement">
+            <summary>
+            If condition syntax 
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.IfStatement.Condition">
+            <summary>
+            Condition
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.IfStatement.Then">
+            <summary>
+            True
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.IfStatement.Other">
+            <summary>
+            False
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.IfStatement.#ctor(FluidScript.Compiler.SyntaxTree.Expression,FluidScript.Compiler.SyntaxTree.Statement,FluidScript.Compiler.SyntaxTree.Statement)">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.IfStatement"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.IfStatement.Accept(FluidScript.Compiler.IStatementVisitor)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.IfStatement.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.LabeledStatement">
+            <summary>
+            Labeled statement 
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.LabeledStatement.Name">
+            <summary>
+            Label name
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.LabeledStatement.Target">
+            <summary>
+            Target
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.LabeledStatement.#ctor(System.String,FluidScript.Compiler.SyntaxTree.Expression)">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.LabeledStatement"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.LabeledStatement.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.LoopStatement">
+            <summary>
+            Loop Statement
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.LoopStatement.#ctor(FluidScript.Compiler.SyntaxTree.Expression[],FluidScript.Compiler.SyntaxTree.Statement,FluidScript.Compiler.SyntaxTree.StatementType)">
+            <summary>
+            Initializes a <see cref="T:FluidScript.Compiler.SyntaxTree.LoopStatement"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.LoopStatement.Accept(FluidScript.Compiler.IStatementVisitor)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.LoopStatement.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.StatementType.For">
             <summary>
             for and while
+            </summary>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxVisitor">
+            <summary>
+            Syntax Visiitor which will tokenizes the text
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxVisitor.Source">
+            <summary>
+            Source text
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxVisitor.TokenType">
+            <summary>
+            Token type
             </summary>
         </member>
         <member name="F:FluidScript.Compiler.SyntaxVisitor.modifiers">
@@ -175,9 +466,113 @@
             current modifiers
             </summary>
         </member>
+        <member name="F:FluidScript.Compiler.SyntaxVisitor.Settings">
+            <summary>
+            Parse settings
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.#ctor(FluidScript.Library.IScriptSource,FluidScript.Compiler.ParserSettings)">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Compiler.SyntaxVisitor"/>
+            </summary>
+            <param name="source"></param>
+            <param name="settings"></param>
+        </member>
         <member name="P:FluidScript.Compiler.SyntaxVisitor.CurrentLabels">
             <summary>
             labels like start: and goto start
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.SyntaxVisitor.Current">
+            <summary>
+            Current Token
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.MoveNext(System.Boolean)">
+            <summary>
+            Move to next <see cref="F:FluidScript.Compiler.SyntaxVisitor.TokenType"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.Reset">
+            <summary>
+            Reset source position
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.GetTokenType(System.Boolean)">
+            <summary>
+            Token type
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitMembers">
+            <summary>
+            Visit members declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitMember">
+            <summary>
+            Visit member declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitTypeDeclaration">
+            <summary>
+            Type declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitFieldDeclaration">
+            <summary>
+            Field declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitFunctionDeclaration">
+            <summary>
+            Function Declartion
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitStatement">
+            <summary>
+            Statement 
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitLoopStatement(FluidScript.Compiler.SyntaxTree.StatementType)">
+            <summary>
+            Loop Statement while or for 
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitLoopStatement">
+            <summary>
+            Loop Statement do while
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitIfStatement">
+            <summary>
+            Visit if statement
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitLocalFunction">
+            <summary>
+            Visit local function
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitBlock">
+            <summary>
+            Visit block {}
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitPostfixExpression">
+            <summary>
+            Postfix Expression
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitLeftHandSideExpression">
+            <summary>
+            Left side of expression
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitRightExpression(FluidScript.Compiler.SyntaxTree.Expression)">
+            <summary>
+            Visit right side of expression
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitIdentifier">
@@ -192,11 +587,26 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.CheckExpectedIdentifier(FluidScript.Compiler.IdentifierType)">
+            <summary>
+            Indicates <see cref="F:FluidScript.Compiler.SyntaxVisitor.TokenType"/> matches the <paramref name="expected"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitLamdaExpression">
+            <summary>
+            Visit lamda expression ex:lamda()=>1;
+            </summary>
+        </member>
         <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitArgumentList(FluidScript.Compiler.TokenType,FluidScript.Compiler.TokenType)">
             <summary>
-            Dont Forget to Call ToArray
+            Don't Forget to Call ToArray
             </summary>
             <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitExpressionList(FluidScript.Compiler.TokenType,FluidScript.Compiler.TokenType)">
+            <summary>
+            List of expression sperated by <paramref name="splitToken"/>
+            </summary>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitFunctionParameters">
             <summary>
@@ -204,9 +614,47 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitType">
+            <summary>
+            Visit type name
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitArrayRanks">
+            <summary>
+            Visit Array indexes
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.Skip(System.Int32)">
+            <summary>
+            Skip tokens
+            </summary>
+        </member>
         <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitAnonymousObjectMembers">
             <summary>
             {x:1, add()=> {}}
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitVarDeclarations">
+            <summary>
+            Visit local variable declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.GetString">
+            <summary>
+            Get current string 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.GetTypeName">
+            <summary>
+            get type name Like System.Datetime
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxVisitor.GetName">
+            <summary>
+            Read variable name
             </summary>
             <returns></returns>
         </member>
@@ -307,12 +755,36 @@
             New <see cref="T:FluidScript.ScriptEngine"/> instance
             </summary>
         </member>
+        <member name="M:FluidScript.ScriptEngine.#ctor(FluidScript.Compiler.ParserSettings)">
+            <summary>
+            Initializes a new <see cref="T:FluidScript.ScriptEngine"/>
+            </summary>
+        </member>
         <member name="M:FluidScript.ScriptEngine.GetStatement(System.String)">
             <summary>
             Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/> for <paramref name="text"/>
             </summary>
-            <param name="text"></param>
-            <returns></returns>
+            <param name="text">Text to parse</param>
+            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/></returns>
+        </member>
+        <member name="M:FluidScript.ScriptEngine.ParseText(System.String)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/> for <paramref name="text"/>
+            </summary>
+            <param name="text">Text to parse</param>
+            <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
+        </member>
+        <member name="M:FluidScript.ScriptEngine.ParseFile(System.String)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/> for file <paramref name="path"/>
+            </summary>
+            <param name="path">Text to parse</param>
+            <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
+        </member>
+        <member name="P:FluidScript.Dynamic.LocalScope.Item(System.String)">
+            <summary>
+            Getter and Setter of variables
+            </summary>
         </member>
         <member name="T:FluidScript.Dynamic.RuntimeContext">
             <summary>
@@ -327,8 +799,10 @@
         </member>
         <member name="P:FluidScript.Dynamic.RuntimeContext.Item(System.String)">
             <summary>
-            Getter and Setter of variables
+            Gets or Sets value
             </summary>
+            <param name="name">Name to store</param>
+            <returns>value stored in it</returns>
         </member>
         <member name="M:FluidScript.Dynamic.RuntimeContext.Invoke(FluidScript.Compiler.SyntaxTree.Node)">
             <summary>
@@ -337,6 +811,69 @@
             <exception cref="T:System.IndexOutOfRangeException"/>
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.MissingMethodException"/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitAssignment(FluidScript.Compiler.SyntaxTree.AssignmentExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitBinary(FluidScript.Compiler.SyntaxTree.BinaryExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitCall(FluidScript.Compiler.SyntaxTree.InvocationExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitIndex(FluidScript.Compiler.SyntaxTree.IndexExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitLiteral(FluidScript.Compiler.SyntaxTree.LiteralExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitMember(FluidScript.Compiler.SyntaxTree.MemberExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitMember(FluidScript.Compiler.SyntaxTree.NameExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitTernary(FluidScript.Compiler.SyntaxTree.TernaryExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitThis(FluidScript.Compiler.SyntaxTree.ThisExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitUnary(FluidScript.Compiler.SyntaxTree.UnaryExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitExpression(FluidScript.Compiler.SyntaxTree.ExpressionStatement)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitDeclaration(FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.GetType(FluidScript.Reflection.TypeName)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitReturn(FluidScript.Compiler.SyntaxTree.ReturnOrThrowStatement)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitBlock(FluidScript.Compiler.SyntaxTree.BlockStatement)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitNull(FluidScript.Compiler.SyntaxTree.NullExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitNullPropegator(FluidScript.Compiler.SyntaxTree.NullPropegatorExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitDeclaration(FluidScript.Compiler.SyntaxTree.LocalDeclarationStatement)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitLoop(FluidScript.Compiler.SyntaxTree.LoopStatement)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Dynamic.RuntimeContext.VisitIf(FluidScript.Compiler.SyntaxTree.IfStatement)">
+            <inheritdoc/>
         </member>
         <member name="T:FluidScript.Reflection.Emit.ILGenerator">
             <summary>
@@ -1099,6 +1636,21 @@
             Gets the local variable name, or <c>null</c> if a name was not provided.
             </summary>
         </member>
+        <member name="T:FluidScript.Reflection.Emit.ITypeProvider">
+            <summary>
+            Resolve type
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ITypeProvider.GetType(FluidScript.Reflection.TypeName)">
+            <summary>
+            Get resolved <see cref="T:System.Type"/>
+            </summary>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.IMemberGenerator">
+            <summary>
+            Member Generate
+            </summary>
+        </member>
         <member name="T:FluidScript.Reflection.Emit.MethodBodyGenerator">
             <summary>
             Method body IL Generator
@@ -1107,6 +1659,11 @@
         <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.SyntaxTree">
             <summary>
             Syntax Tree of method
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.#ctor(FluidScript.Reflection.Emit.IMethodBaseGenerator,System.Reflection.Emit.ILGenerator,System.Boolean)">
+            <summary>
+            Initializes new instance of <see cref="T:FluidScript.Reflection.Emit.MethodBodyGenerator"/>
             </summary>
         </member>
         <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.DebugDoument">
@@ -1215,10 +1772,59 @@
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.GetLocalVariable(System.String)">
-            <inheritdoc/>
+            <summary>
+            Get Declared local variable
+            </summary>
         </member>
         <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.Build">
             <summary>Creates IL Code</summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitUnary(FluidScript.Compiler.SyntaxTree.UnaryExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitBinary(FluidScript.Compiler.SyntaxTree.BinaryExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitAssignment(FluidScript.Compiler.SyntaxTree.AssignmentExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitMember(FluidScript.Compiler.SyntaxTree.MemberExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.GetTypes(FluidScript.Compiler.SyntaxTree.Expression[])">
+            <summary>
+            Get Arguments types
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitCall(FluidScript.Compiler.SyntaxTree.InvocationExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitLiteral(FluidScript.Compiler.SyntaxTree.LiteralExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitTernary(FluidScript.Compiler.SyntaxTree.TernaryExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitMember(FluidScript.Compiler.SyntaxTree.NameExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitThis(FluidScript.Compiler.SyntaxTree.ThisExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitIndex(FluidScript.Compiler.SyntaxTree.IndexExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitDeclaration(FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitNull(FluidScript.Compiler.SyntaxTree.NullExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.VisitNullPropegator(FluidScript.Compiler.SyntaxTree.NullPropegatorExpression)">
+            <inheritdoc/>
         </member>
         <member name="T:FluidScript.Reflection.Emit.ParameterInfo">
             <summary>
@@ -1704,6 +2310,11 @@
         <member name="F:FluidScript.Reflection.ArgumentTypes.UByte">
             <summary>
             byte
+            </summary>
+        </member>
+        <member name="T:FluidScript.Reflection.TypeName">
+            <summary>
+            Full Type Name
             </summary>
         </member>
         <member name="M:FluidScript.Reflection.TypeUtils.From(System.String)">

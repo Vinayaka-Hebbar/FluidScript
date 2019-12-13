@@ -159,7 +159,7 @@
         }
         #endregion
 
-        public static implicit operator Double(int value) => new Double(value);
+        public static implicit operator Double(double value) => new Double(value);
 
         public static implicit operator Double(Integer integer) => new Double(integer.m_value);
 

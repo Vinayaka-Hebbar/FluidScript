@@ -25,18 +25,21 @@
             get => m_value[index];
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("toString")]
         public override String __ToString()
         {
             return m_value.ToString();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("hashCode")]
         public override Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("equals")]
         public override Boolean __Equals(IFSObject other)
         {
@@ -44,22 +47,28 @@
                   m_value == s.m_value;
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object other)
         {
             return other is String s &&
                   m_value == s.m_value;
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             return m_value;
         }
 
+        /// <summary>
+        /// Implict conversion from <see cref="string"/> to <see cref="String"/>
+        /// </summary>
         public static implicit operator String(string value) => new String(value);
 
 

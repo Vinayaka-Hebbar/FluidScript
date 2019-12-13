@@ -12,8 +12,6 @@ namespace FluidScript.Dynamic
     {
         private readonly LocalScope scope;
 
-        private LocalContext current;
-
         internal bool hasReturn;
 
         internal readonly object Instance;
@@ -27,16 +25,17 @@ namespace FluidScript.Dynamic
         {
             Instance = instance;
             scope = new LocalScope();
-            current = new LocalContext(scope);
         }
 
         /// <summary>
-        /// Getter and Setter of variables
+        /// Gets or Sets value
         /// </summary>
+        /// <param name="name">Name to store</param>
+        /// <returns>value stored in it</returns>
         public object this[string name]
         {
-            get => current.Retrieve(name);
-            set => current.CreateOrModify(name, value);
+            get => scope[name];
+            set => scope[name] = value;
         }
 
         /// <summary>
@@ -60,14 +59,15 @@ namespace FluidScript.Dynamic
             return null;
         }
 
+        /// <inheritdoc/>
         public object VisitArrayLiteral(ArrayLiteralExpression node)
         {
             Type type;
             if (node.ArrayType != null)
                 type = node.ArrayType.GetType(this);
             else
-                type = typeof(object);
-            node.Type = typeof(System.Collections.Generic.List<>).MakeGenericType(type);
+                type = typeof(IFSObject);
+            node.Type = typeof(Collections.List<>).MakeGenericType(type);
             var items = node.Expressions;
             var array = (System.Collections.IList)Activator.CreateInstance(node.Type, new object[] { });
             for (int index = 0; index < items.Length; index++)
@@ -77,6 +77,7 @@ namespace FluidScript.Dynamic
             return array;
         }
 
+        /// <inheritdoc/>
         public object VisitAssignment(AssignmentExpression node)
         {
             var value = node.Right.Accept(this);
@@ -87,10 +88,10 @@ namespace FluidScript.Dynamic
             if (nodeType == ExpressionType.Identifier)
             {
                 name = left.ToString();
-                var variable = current.Find(name, out object _);
+                var variable = scope.Find(name);
                 if (variable.Equals(LocalVariable.Empty) == false)
                 {
-                    current.Modify(variable.Value, value);
+                    scope.Current.Modify(variable, value);
                     return value;
                 }
             }
@@ -131,11 +132,12 @@ namespace FluidScript.Dynamic
             else
             {
                 //create new variable
-                current.Create(name, value.GetType(), value);
+                scope.Create(name, value.GetType(), value);
             }
             return value;
         }
 
+        /// <inheritdoc/>
         public object VisitBinary(BinaryExpression node)
         {
             string opName = null;
@@ -189,6 +191,7 @@ namespace FluidScript.Dynamic
             return method.Invoke(null, args);
         }
 
+        /// <inheritdoc/>
         public object VisitCall(InvocationExpression node)
         {
             var target = node.Target;
@@ -236,6 +239,7 @@ namespace FluidScript.Dynamic
             return method.Invoke(instance, args);
         }
 
+        /// <inheritdoc/>
         public object VisitIndex(IndexExpression node)
         {
             var target = node.Target.Accept(this);
@@ -261,6 +265,7 @@ namespace FluidScript.Dynamic
             return value;
         }
 
+        /// <inheritdoc/>
         public object VisitLiteral(LiteralExpression node)
         {
             object value = node.Value;
@@ -286,17 +291,30 @@ namespace FluidScript.Dynamic
             return value;
         }
 
+
+        bool HasMember(System.Reflection.MemberInfo m, object filter)
+        {
+            if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
+            {
+                var data = (System.Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                if (data != null)
+                    return data.Match(filter);
+            }
+            return filter.Equals(m.Name);
+        }
+
+        /// <inheritdoc/>
         public object VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            var member = target.GetType().GetMember(node.Name).FirstOrDefault();
+            var member = target.GetType().FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, Reflection.TypeUtils.Any, this.HasMember, node.Name).FirstOrDefault();
             if (member != null)
             {
                 if (member.MemberType == System.Reflection.MemberTypes.Field)
                 {
                     var field = (System.Reflection.FieldInfo)member;
                     node.Type = field.FieldType;
-                    return field.GetValue(Instance);
+                    return field.GetValue(target);
 
                 }
                 else if (member.MemberType == System.Reflection.MemberTypes.Property)
@@ -304,16 +322,17 @@ namespace FluidScript.Dynamic
                     var property = (System.Reflection.PropertyInfo)member;
 
                     node.Type = property.PropertyType;
-                    return property.GetValue(Instance, new object[0]);
+                    return property.GetValue(target, new object[0]);
                 }
             }
             return default;
         }
 
+        /// <inheritdoc/>
         public object VisitMember(NameExpression node)
         {
             var name = node.Name;
-            var variable = current.Find(name, out object value);
+            var variable = scope.Current.Find(name, out object value);
             if (variable.Equals(LocalVariable.Empty) == false)
             {
                 if (variable.Value.Type == null)
@@ -343,6 +362,7 @@ namespace FluidScript.Dynamic
             return default;
         }
 
+        /// <inheritdoc/>
         public object VisitTernary(TernaryExpression node)
         {
             var condition = node.First.Accept(this);
@@ -359,11 +379,13 @@ namespace FluidScript.Dynamic
             }
         }
 
+        /// <inheritdoc/>
         public object VisitThis(ThisExpression node)
         {
             return Instance;
         }
 
+        /// <inheritdoc/>
         public object VisitUnary(UnaryExpression node)
         {
             var value = node.Operand.Accept(this);
@@ -392,23 +414,26 @@ namespace FluidScript.Dynamic
                     updated = modified = true;
                     break;
             }
-            var method = Reflection.TypeUtils.GetOperatorOverload(name, out Reflection.Emit.Conversion[] conversion, type);
+            var method = Reflection.TypeUtils.GetOperatorOverload(name, out Reflection.Emit.Conversion[] _, type);
             var obj = method.Invoke(null, new object[] { value });
             if (updated)
             {
-                var exp = new AssignmentExpression(node.Operand, new LiteralExpression(modified ? obj : value));
-                return exp.Accept(this);
+                var exp = new AssignmentExpression(node.Operand, new LiteralExpression(obj));
+                exp.Accept(this);
+                return modified ? obj : value;
             }
             node.Type = method.ReturnType;
             return value;
         }
 
+        /// <inheritdoc/>
         public void VisitExpression(ExpressionStatement node)
         {
             var value = node.Expression.Accept(this);
             LongJump = () => value;
         }
 
+        /// <inheritdoc/>
         public object VisitDeclaration(VariableDeclarationExpression node)
         {
             object value = null;
@@ -422,10 +447,11 @@ namespace FluidScript.Dynamic
             {
                 type = node.VariableType.GetType(this);
             }
-            current.Create(node.Name, type, value);
+            scope.Create(node.Name, type, value);
             return value;
         }
 
+        ///<inheritdoc/>
         public Type GetType(Reflection.TypeName typeName)
         {
             if (Reflection.TypeUtils.TryGetType(typeName, out Type type))
@@ -433,41 +459,103 @@ namespace FluidScript.Dynamic
             return Type.GetType(typeName.FullName);
         }
 
+        /// <inheritdoc/>
         public void VisitReturn(ReturnOrThrowStatement node)
         {
             hasReturn = true;
-            var context = current;
-            LongJump = () =>
-            {
-                current = context;
-                return node.Expression?.Accept(this);
-            };
+            var value = node.Expression?.Accept(this);
+            LongJump = () => value;
         }
 
+        /// <inheritdoc/>
         public void VisitBlock(BlockStatement node)
         {
-            foreach (var statement in node.Statements)
+            using (var context = scope.CreateContext())
             {
-                statement.Accept(this);
-                if (hasReturn)
-                    break;
+                foreach (var statement in node.Statements)
+                {
+                    statement.Accept(this);
+                    if (hasReturn)
+                        break;
+                }
             }
         }
 
+        /// <inheritdoc/>
         public object VisitNull(NullExpression node)
         {
             return null;
         }
 
+        /// <inheritdoc/>
         public object VisitNullPropegator(NullPropegatorExpression node)
         {
             object value = node.Left.Accept(this);
-            if(value is null)
+            if (value is null)
             {
                 value = node.Right.Accept(this);
             }
             node.Type = value.GetType();
             return value;
+        }
+
+        /// <inheritdoc/>
+        public void VisitDeclaration(LocalDeclarationStatement node)
+        {
+            foreach (var item in node.DeclarationExpressions)
+            {
+                item.Accept(this);
+            }
+        }
+
+        /// <inheritdoc/>
+        public void VisitLoop(LoopStatement node)
+        {
+            //todo if value has implic converter
+            var statement = node.Statement;
+            if (node.NodeType == StatementType.For)
+            {
+                using (var context = scope.CreateContext())
+                {
+                    for (node.Expressions[0].Accept(this); Convert.ToBoolean(node.Expressions[1].Accept(this)); node.Expressions[2].Accept(this))
+                    {
+                        statement.Accept(this);
+                    }
+                }
+            }
+            else if (node.NodeType == StatementType.While)
+            {
+                using (var context = scope.CreateContext())
+                {
+                    while (Convert.ToBoolean(node.Expressions[1].Accept(this)))
+                    {
+                        statement.Accept(this);
+                    }
+                }
+            }
+            else if (node.NodeType == StatementType.DoWhile)
+            {
+                using (var context = scope.CreateContext())
+                {
+                    do
+                    {
+                        statement.Accept(this);
+                    } while (Convert.ToBoolean(node.Expressions[1].Accept(this)));
+                }
+            }
+        }
+
+        ///<inheritdoc/>
+        public void VisitIf(IfStatement node)
+        {
+            if (Convert.ToBoolean(node.Condition.Accept(this)))
+            {
+                node.Then.Accept(this);
+            }
+            else
+            {
+                node.Other.Accept(this);
+            }
         }
     }
 }

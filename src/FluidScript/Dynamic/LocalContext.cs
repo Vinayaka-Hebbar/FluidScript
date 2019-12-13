@@ -2,7 +2,7 @@
 
 namespace FluidScript.Dynamic
 {
-    internal sealed class LocalContext
+    internal sealed class LocalContext : System.IDisposable
     {
         private readonly IDictionary<LocalVariable, object> Instances = new Dictionary<LocalVariable, object>();
 
@@ -18,6 +18,7 @@ namespace FluidScript.Dynamic
         public LocalContext(LocalScope scope, LocalContext parent)
         {
             _scope = scope;
+            _scope.Current = this;
             _parent = parent;
         }
 
@@ -31,16 +32,6 @@ namespace FluidScript.Dynamic
                 return null;
             }
             return _parent.Retrieve(name);
-        }
-
-        internal void CreateOrModify(string name, object value)
-        {
-            var variable = _scope.Find(name);
-            if (variable.Equals(LocalVariable.Empty))
-            {
-                variable = _scope.Create(name, value.GetType());
-            }
-            Instances[variable] = value;
         }
 
         internal void Modify(LocalVariable variable, object value)
@@ -61,14 +52,14 @@ namespace FluidScript.Dynamic
             return _parent.Find(name, out store);
         }
 
-        internal void Create(string name, System.Type type, object value)
+        internal void Create(LocalVariable variable, object value)
         {
-            var variable = _scope.Find(name);
-            if (variable.Equals(LocalVariable.Empty))
-            {
-                variable = _scope.Create(name, type);
-            }
             Instances[variable] = value;
+        }
+
+        public void Dispose()
+        {
+            _scope.Current = _parent;
         }
     }
 

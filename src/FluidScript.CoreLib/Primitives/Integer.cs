@@ -19,27 +19,21 @@
             m_value = value;
         }
 
-        /// <summary>
-        /// returns the hashCode() for the instance
-        /// </summary>
+        /// <inheritdoc/>
         [Runtime.Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
-        /// <summary>
-        /// converts to string
-        /// </summary>
+        /// <inheritdoc/>
         [Runtime.Register("toString")]
         public String __ToString()
         {
             return m_value.ToString();
         }
 
-        /// <summary>
-        /// checks <paramref name="other"/> and <see cref="Integer"/> are equals
-        /// </summary>
+        /// <inheritdoc/>
         [Runtime.Register("equals")]
         public Boolean __Equals(IFSObject other)
         {

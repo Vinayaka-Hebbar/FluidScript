@@ -1,5 +1,8 @@
 ﻿namespace FluidScript.Reflection
 {
+    /// <summary>
+    /// Full Type Name
+    /// </summary>
     public readonly struct TypeName
     {
         public string FullName => Namespace == null ? Name : Namespace + "." + Name;

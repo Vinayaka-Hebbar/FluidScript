@@ -112,7 +112,7 @@ namespace FluidScript.Reflection
             {
                 var expected = paramters[i].ParameterType;
                 var type = types[i];
-                if (expected == type)
+                if (expected == type || expected.IsAssignableFrom(type))
                     conversions[i] = Emit.Conversion.NoConversion;
                 else
                 {

@@ -40,15 +40,14 @@ namespace FluidScript.Reflection.Emit
 
         private readonly Stack<BreakOrContinueInfo> breakOrContinueStack = new Stack<BreakOrContinueInfo>();
 
-        public MethodBodyGenerator(IMethodBaseGenerator method, System.Reflection.Emit.ILGenerator generator) : base(generator, false)
+        /// <summary>
+        /// Initializes new instance of <see cref="MethodBodyGenerator"/>
+        /// </summary>
+        public MethodBodyGenerator(IMethodBaseGenerator method, System.Reflection.Emit.ILGenerator generator, bool emitInfo = false) : base(generator, emitInfo)
         {
             Method = method;
             TypeGenerator = method.TypeGenerator;
             SyntaxTree = method.SyntaxTree;
-        }
-
-        public MethodBodyGenerator(System.Reflection.Emit.ILGenerator generator, bool emitDebugInfo) : base(generator, emitDebugInfo)
-        {
         }
 
 #if NET40
@@ -300,7 +299,9 @@ namespace FluidScript.Reflection.Emit
             return variable;
         }
 
-        ///<inheritdoc/>
+        /// <summary>
+        /// Get Declared local variable
+        /// </summary>
         public ILLocalVariable GetLocalVariable(string name)
         {
             if (LocalVariables != null)
@@ -327,6 +328,7 @@ namespace FluidScript.Reflection.Emit
 
         #region Visitors
 
+        /// <inheritdoc/>
         public Expression VisitUnary(UnaryExpression node)
         {
             if (node.NodeType == ExpressionType.Parenthesized)
@@ -334,6 +336,7 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitBinary(BinaryExpression node)
         {
             string opName = null;
@@ -366,12 +369,14 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitArrayLiteral(ArrayLiteralExpression node)
         {
             node.Type = node.ArrayType.GetType(TypeGenerator).MakeArrayType();
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitAssignment(AssignmentExpression node)
         {
             node.Type = node.Right.Accept(this).Type;
@@ -379,6 +384,7 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
@@ -404,11 +410,15 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        /// <summary>
+        /// Get Arguments types
+        /// </summary>
         private Type[] GetTypes(Expression[] arguments)
         {
             return arguments.Select(arg => arg.Accept(this).Type).ToArray();
         }
 
+        /// <inheritdoc/>
         public Expression VisitCall(InvocationExpression node)
         {
             var target = node.Target.Accept(this);
@@ -451,6 +461,7 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitLiteral(LiteralExpression node)
         {
             Type type = null;
@@ -476,6 +487,7 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        ///<inheritdoc/>
         public Expression VisitTernary(TernaryExpression node)
         {
             var conditionType = node.First.Accept(this).Type;
@@ -505,6 +517,7 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitMember(NameExpression node)
         {
             var name = node.Name;
@@ -546,12 +559,14 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitThis(ThisExpression node)
         {
             node.Type = TypeGenerator;
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitIndex(IndexExpression node)
         {
             var target = node.Target.Accept(this);
@@ -571,6 +586,7 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitDeclaration(VariableDeclarationExpression node)
         {
             if (node.VariableType == null)
@@ -587,11 +603,13 @@ namespace FluidScript.Reflection.Emit
 
         }
 
+        /// <inheritdoc/>
         public Expression VisitNull(NullExpression node)
         {
             return node;
         }
 
+        /// <inheritdoc/>
         public Expression VisitNullPropegator(NullPropegatorExpression node)
         {
             var left = node.Left.Accept(this);

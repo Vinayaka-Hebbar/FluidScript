@@ -10,12 +10,13 @@
         Return = 37,
         Throw = 38,
         If = 39,
-        Do = 42,
+        DoWhile = 42,
         /// <summary>
         /// for and while
         /// </summary>
-        Loop = 43,
-        Class = 44,
+        For = 43,
+        While = 44,
+        Class = 45,
         Labeled = 50,
     }
 }

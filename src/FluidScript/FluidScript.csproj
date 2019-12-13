@@ -21,10 +21,6 @@
     <PackageReleaseNotes>Initial Release of FluidScript</PackageReleaseNotes>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net40|AnyCPU'">
-    <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript\FluidScript.xml</DocumentationFile>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
     <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript\FluidScript.xml</DocumentationFile>
   </PropertyGroup>

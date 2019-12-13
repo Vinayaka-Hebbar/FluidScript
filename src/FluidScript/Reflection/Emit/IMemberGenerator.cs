@@ -1,12 +1,19 @@
-﻿using System.Reflection;
-
-namespace FluidScript.Reflection.Emit
+﻿namespace FluidScript.Reflection.Emit
 {
+    /// <summary>
+    /// Resolve type
+    /// </summary>
     public interface ITypeProvider
     {
+        /// <summary>
+        /// Get resolved <see cref="System.Type"/>
+        /// </summary>
         System.Type GetType(TypeName typeName);
     }
 
+    /// <summary>
+    /// Member Generate
+    /// </summary>
     public interface IMemberGenerator
     {
         string Name { get; }
@@ -14,6 +21,6 @@ namespace FluidScript.Reflection.Emit
         System.Reflection.MemberTypes MemberType { get; }
         bool IsStatic { get; }
         void Build();
-        bool BindingFlagsMatch(BindingFlags flags);
+        bool BindingFlagsMatch(System.Reflection.BindingFlags flags);
     }
 }

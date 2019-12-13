@@ -7,11 +7,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net40|AnyCPU'">
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript.CoreLib\FluidScript.CoreLib.xml</DocumentationFile>
+    <Version>1.0.0-alpha</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">

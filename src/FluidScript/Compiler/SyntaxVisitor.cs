@@ -6,19 +6,36 @@ using System.Linq;
 
 namespace FluidScript.Compiler
 {
+    /// <summary>
+    /// Syntax Visiitor which will tokenizes the text
+    /// </summary>
     public class SyntaxVisitor : System.IDisposable
     {
+        /// <summary>
+        /// Source text
+        /// </summary>
         public readonly IScriptSource Source;
         private readonly IList<string> _currentLabels = new List<string>();
-        public TokenType TokenType;
+        /// <summary>
+        /// Token type
+        /// </summary>
+        protected internal TokenType TokenType;
         private char c;
         /// <summary>
         /// current modifiers
         /// </summary>
         private Reflection.Modifiers modifiers;
 
+        /// <summary>
+        /// Parse settings
+        /// </summary>
         public readonly ParserSettings Settings;
 
+        /// <summary>
+        /// Initializes new <see cref="SyntaxVisitor"/>
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="settings"></param>
         public SyntaxVisitor(IScriptSource source, ParserSettings settings)
         {
             Source = source;
@@ -35,6 +52,9 @@ namespace FluidScript.Compiler
         }
 
         #region Iterator
+        /// <summary>
+        /// Current Token
+        /// </summary>
         public TokenType Current => TokenType;
 
         void System.IDisposable.Dispose()
@@ -43,6 +63,9 @@ namespace FluidScript.Compiler
             System.GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Move to next <see cref="TokenType"/>
+        /// </summary>
         public bool MoveNext(bool skipLine = true)
         {
             c = Source.ReadChar();
@@ -50,11 +73,17 @@ namespace FluidScript.Compiler
             return c != char.MinValue;
         }
 
+        /// <summary>
+        /// Reset source position
+        /// </summary>
         public void Reset()
         {
             Source.Reset();
         }
 
+        /// <summary>
+        /// Token type
+        /// </summary>
         public TokenType GetTokenType(bool skipLine)
         {
             char n = Source.PeekChar();
@@ -248,7 +277,9 @@ namespace FluidScript.Compiler
         }
         #endregion
 
-
+        /// <summary>
+        /// Visit members declaration
+        /// </summary>
         public IEnumerable<MemberDeclaration> VisitMembers()
         {
             while (TokenType != TokenType.RightBrace)
@@ -260,6 +291,9 @@ namespace FluidScript.Compiler
             }
         }
 
+        /// <summary>
+        /// Visit member declaration
+        /// </summary>
         public MemberDeclaration VisitMember()
         {
             //reset modifier
@@ -324,6 +358,9 @@ namespace FluidScript.Compiler
             throw new System.Exception(string.Concat("Unexpected Keyword ", name));
         }
 
+        /// <summary>
+        /// Type declaration
+        /// </summary>
         public TypeDeclaration VisitTypeDeclaration()
         {
             if (TokenType == TokenType.Identifier)
@@ -346,12 +383,18 @@ namespace FluidScript.Compiler
             throw new System.Exception("Unexpected Keyword");
         }
 
+        /// <summary>
+        /// Field declaration
+        /// </summary>
         public FieldDelcaration VisitFieldDeclaration()
         {
             var declarations = VisitVarDeclarations().ToArray();
             return new FieldDelcaration(declarations);
         }
 
+        /// <summary>
+        /// Function Declartion
+        /// </summary>
         public FunctionDeclaration VisitFunctionDeclaration()
         {
             if (TokenType == TokenType.Identifier)
@@ -381,6 +424,9 @@ namespace FluidScript.Compiler
             throw new System.Exception("syntax error");
         }
 
+        /// <summary>
+        /// Statement 
+        /// </summary>
         public Statement VisitStatement()
         {
             var start = Source.CurrentPosition;
@@ -434,10 +480,12 @@ namespace FluidScript.Compiler
                         return new LocalDeclarationStatement(declarations, true);
                     case IdentifierType.Function:
                         return VisitLocalFunction();
-                    case IdentifierType.Loop:
+                    case IdentifierType.While:
+                        return VisitLoopStatement(StatementType.While);
                     case IdentifierType.For:
+                        return VisitLoopStatement(StatementType.For);
                     case IdentifierType.Do:
-                        return VisitLoopStatement(StatementType.Loop);
+                        return VisitLoopStatement(StatementType.DoWhile);
                     case IdentifierType.If:
                         return VisitIfStatement();
                     case IdentifierType.Else:
@@ -451,12 +499,16 @@ namespace FluidScript.Compiler
             return VisitExpressionStatement();
         }
 
-        private Statement VisitLoopStatement(StatementType type)
+        /// <summary>
+        /// Loop Statement while or for 
+        /// </summary>
+        public Statement VisitLoopStatement(StatementType type)
         {
             if (TokenType == TokenType.LeftParenthesis)
             {
                 MoveNext();
                 var list = VisitExpressionList(TokenType.SemiColon, TokenType.RightParenthesis).ToArray();
+                MoveNext();
                 Statement statement;
                 if (TokenType == TokenType.LeftBrace)
                 {
@@ -471,6 +523,35 @@ namespace FluidScript.Compiler
             return Statement.Empty;
         }
 
+        /// <summary>
+        /// Loop Statement do while
+        /// </summary>
+        public Statement VisitLoopStatement()
+        {
+            Statement statement;
+            if (TokenType == TokenType.LeftBrace)
+            {
+                statement = VisitBlock();
+            }
+            else
+            {
+                statement = VisitStatement();
+            }
+            MoveNext();
+            var name = GetName();
+            MoveNext();
+            if (Keywords.Match(name, IdentifierType.While))
+            {
+                if (TokenType == TokenType.LeftParenthesis)
+                {
+                    MoveNext();
+                    var list = VisitExpressionList(TokenType.SemiColon, TokenType.RightParenthesis).ToArray();
+                    return new LoopStatement(list, statement, StatementType.DoWhile);
+                }
+            }
+            return Statement.Empty;
+        }
+
         private Node VisitLabeledNode(string name)
         {
             MoveNext();
@@ -478,7 +559,10 @@ namespace FluidScript.Compiler
             return Expression.Empty;
         }
 
-
+        /// <summary>
+        /// Visit if statement
+        /// </summary>
+        /// <returns></returns>
         protected Statement VisitIfStatement()
         {
             if (TokenType == TokenType.LeftParenthesis)
@@ -503,6 +587,10 @@ namespace FluidScript.Compiler
             throw new System.Exception($"Syntax Error at line {Source.CurrentPosition}");
         }
 
+        /// <summary>
+        /// Visit local function
+        /// </summary>
+        /// <returns></returns>
         public Statement VisitLocalFunction()
         {
             if (TokenType == TokenType.Identifier)
@@ -536,6 +624,9 @@ namespace FluidScript.Compiler
             return new ExpressionStatement(expression);
         }
 
+        /// <summary>
+        /// Visit block {}
+        /// </summary>
         public BlockStatement VisitBlock()
         {
             //clear labels
@@ -805,6 +896,9 @@ namespace FluidScript.Compiler
             return exp;
         }
 
+        /// <summary>
+        /// Postfix Expression
+        /// </summary>
         public Expression VisitPostfixExpression()
         {
             Expression exp = VisitLeftHandSideExpression();
@@ -823,6 +917,9 @@ namespace FluidScript.Compiler
             return exp;
         }
 
+        /// <summary>
+        /// Left side of expression
+        /// </summary>
         public Expression VisitLeftHandSideExpression()
         {
             Expression exp = null;
@@ -870,6 +967,9 @@ namespace FluidScript.Compiler
             return VisitRightExpression(exp);
         }
 
+        /// <summary>
+        /// Visit right side of expression
+        /// </summary>
         public Expression VisitRightExpression(Expression exp)
         {
             for (TokenType type = TokenType; ; type = TokenType)
@@ -973,14 +1073,17 @@ namespace FluidScript.Compiler
             throw new System.InvalidOperationException(string.Format("Invalid array declaration at {0}", Source.CurrentPosition));
         }
 
+        /// <summary>
+        /// Indicates <see cref="TokenType"/> matches the <paramref name="expected"/>
+        /// </summary>
         protected bool CheckExpectedIdentifier(IdentifierType expected)
         {
             long start = Source.Position;
             var name = GetName();
-            if (Keywords.TryGetIdentifier(name, out IdentifierType type))
+            MoveNext();
+            if (Keywords.Match(name, expected))
             {
-                if (expected == type)
-                    return true;
+                return true;
             }
             //Restore
             Source.SeekTo(start - 1);
@@ -988,6 +1091,9 @@ namespace FluidScript.Compiler
             return false;
         }
 
+        /// <summary>
+        /// Visit lamda expression ex:lamda()=>1;
+        /// </summary>
         protected Expression VisitLamdaExpression()
         {
             if (TokenType == TokenType.LeftParenthesis)
@@ -1010,7 +1116,7 @@ namespace FluidScript.Compiler
         }
 
         /// <summary>
-        /// Dont Forget to Call ToArray
+        /// Don't Forget to Call ToArray
         /// </summary>
         /// <returns></returns>
         public IEnumerable<Expression> VisitArgumentList(TokenType splitToken, TokenType endToken)
@@ -1024,19 +1130,16 @@ namespace FluidScript.Compiler
             }
         }
 
+        /// <summary>
+        /// List of expression sperated by <paramref name="splitToken"/>
+        /// </summary>
         public IEnumerable<Expression> VisitExpressionList(TokenType splitToken, TokenType endToken)
         {
             for (TokenType type = TokenType; type != endToken; type = TokenType)
             {
-                if (type == splitToken)
-                {
-                    yield return Expression.Empty;
-                    MoveNext();
-                    continue;
-                }
-                Expression exp = VisitExpression();
+                Expression exp = type == splitToken ? Expression.Empty : VisitExpression();
                 yield return exp;
-                if (CheckSyntaxExpected(splitToken))
+                if (TokenType == splitToken)
                     MoveNext();
             }
         }
@@ -1088,6 +1191,9 @@ namespace FluidScript.Compiler
             }
         }
 
+        /// <summary>
+        /// Visit type name
+        /// </summary>
         public TypeSyntax VisitType()
         {
             TypeSyntax type = null;
@@ -1107,6 +1213,9 @@ namespace FluidScript.Compiler
             return type;
         }
 
+        /// <summary>
+        /// Visit Array indexes
+        /// </summary>
         public IEnumerable<Expression> VisitArrayRanks()
         {
             while (TokenType == TokenType.LeftBracket)
@@ -1118,6 +1227,9 @@ namespace FluidScript.Compiler
             }
         }
 
+        /// <summary>
+        /// Skip tokens
+        /// </summary>
         public void Skip(int count)
         {
             for (int i = 0; i < count; i++)
@@ -1150,6 +1262,9 @@ namespace FluidScript.Compiler
             }
         }
 
+        /// <summary>
+        /// Visit local variable declaration
+        /// </summary>
         public IEnumerable<VariableDeclarationExpression> VisitVarDeclarations()
         {
             while (TokenType != TokenType.SemiColon && TokenType != TokenType.NewLine)
@@ -1378,16 +1493,28 @@ namespace FluidScript.Compiler
 
         #region String
 
+        /// <summary>
+        /// Get current string 
+        /// </summary>
+        /// <returns></returns>
         public string GetString()
         {
             return new string(ReadString().ToArray());
         }
 
+        /// <summary>
+        /// get type name Like System.Datetime
+        /// </summary>
+        /// <returns></returns>
         public string GetTypeName()
         {
             return new string(ReadTypeName().ToArray());
         }
 
+        /// <summary>
+        /// Read variable name
+        /// </summary>
+        /// <returns></returns>
         public string GetName()
         {
             return new string(ReadVariableName().ToArray());
@@ -1429,8 +1556,6 @@ namespace FluidScript.Compiler
                 yield return c;
             }
         }
-
-        public string GetText() => Source.ToString();
 
         #endregion
 

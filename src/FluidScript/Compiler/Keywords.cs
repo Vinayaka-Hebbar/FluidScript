@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FluidScript.Compiler
 {
@@ -45,6 +46,11 @@ namespace FluidScript.Compiler
         public static bool TryGetIdentifier(string name, out IdentifierType type)
         {
             return keywords.TryGetValue(name, out type);
+        }
+
+        internal static bool Match(string name, IdentifierType expected)
+        {
+            return keywords.TryGetValue(name, out IdentifierType type) ? type == expected : false;
         }
     }
 }

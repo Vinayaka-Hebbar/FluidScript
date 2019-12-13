@@ -14,6 +14,12 @@ namespace FluidScript.Compiler.SyntaxTree
             IsReadOnly = isReadOnly;
         }
 
+
+        protected internal override void Accept(IStatementVisitor visitor)
+        {
+            visitor.VisitDeclaration(this);
+        }
+
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             foreach (var declaration in DeclarationExpressions)

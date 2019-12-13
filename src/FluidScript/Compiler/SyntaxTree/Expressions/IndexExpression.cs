@@ -44,5 +44,10 @@ namespace FluidScript.Compiler.SyntaxTree
                 generator.Call(indexer);
             }
         }
+
+        public override string ToString()
+        {
+            return string.Concat(Target, "[", string.Join(",", System.Linq.Enumerable.Select(Arguments, arg => arg.ToString())), "]");
+        }
     }
 }
