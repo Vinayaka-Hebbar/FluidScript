@@ -1,8 +1,11 @@
-﻿namespace FluidScript.Dynamic
+﻿using System;
+
+namespace FluidScript.Dynamic
 {
-    internal sealed class LocalScope
+    internal sealed class LocalScope :  System.Collections.Generic.IEnumerable<LocalVariable>
     {
         private readonly System.Collections.Generic.List<LocalVariable> LocalVariables;
+
         internal LocalContext Current;
 
         public LocalScope()
@@ -16,13 +19,55 @@
         /// </summary>
         public object this[string name]
         {
-            get => Current.Retrieve(name);
+            get => Current.Find(name);
             set => CreateOrModify(name, value);
         }
 
-        internal LocalVariable Find(string name)
+        internal int Count() => LocalVariables.Count;
+
+        internal void Clear()
         {
-            return LocalVariables.Find(v => v.Equals(name));
+            LocalVariables.Clear();
+        }
+
+        internal System.Collections.Generic.ICollection<string> Keys()
+        {
+            string[] keys = new string[LocalVariables.Count];
+            for (int i = 0; i < LocalVariables.Count; i++)
+            {
+                keys[i] = LocalVariables[i].Name;
+            }
+            return keys;
+        }
+
+        internal System.Collections.Generic.ICollection<object> Values()
+        {
+            object[] items = new object[LocalVariables.Count];
+            var current = Current;
+            for (int i = 0; i < LocalVariables.Count; i++)
+            {
+                items[i] = current.GetValue(LocalVariables[i]);
+            }
+            return items;
+        }
+
+        internal bool Contains(string name)
+        {
+            return LocalVariables.Exists(v => v.Equals(name));
+        }
+
+        internal bool TryGetValue(string name, out LocalVariable variable)
+        {
+            foreach (var item in LocalVariables)
+            {
+                if (item.Equals(name))
+                {
+                    variable = item;
+                    return true;
+                }
+            }
+            variable = LocalVariable.Empty;
+            return false;
         }
 
         public LocalVariable Create(string name, System.Type type)
@@ -42,17 +87,58 @@
 
         internal void CreateOrModify(string name, object value)
         {
-            var variable = Find(name);
-            if (variable.Equals(LocalVariable.Empty))
+            LocalVariable variable = LocalVariable.Empty;
+            foreach (var item in LocalVariables)
             {
-                variable = Create(name, value.GetType());
+                if (item.Equals(name))
+                {
+                    variable = item;
+                    break;
+                }
             }
+            if (ReferenceEquals(variable, LocalVariable.Empty) == false)
+                variable = Create(name, value.GetType());
             Current.Modify(variable, value);
+        }
+
+        internal void RemoveAt(int index)
+        {
+            LocalVariables.RemoveAt(index);
         }
 
         internal LocalContext CreateContext()
         {
             return new LocalContext(this, Current);
+        }
+
+        public System.Collections.Generic.IEnumerator<LocalVariable> GetEnumerator()
+        {
+            return LocalVariables.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return LocalVariables.GetEnumerator();
+        }
+
+        internal bool Remove(string name)
+        {
+            int index = -1;
+            for (int i = 0; i < LocalVariables.Count; i++)
+            {
+                if (LocalVariables[i].Equals(name))
+                {
+                    index = i;
+                    break;
+                }
+            }
+            if (index > -1)
+            {
+                LocalVariables.RemoveAt(index);
+                return true;
+            }
+
+            return false;
         }
     }
 }

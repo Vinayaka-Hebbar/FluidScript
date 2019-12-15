@@ -9,6 +9,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript.CoreLib", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript", "src\FluidScript\FluidScript.csproj", "{5C87C041-8CED-49DD-B944-2140AB787745}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4BDA6A2B-56EF-428E-9B80-A60F789177F7}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluidScript.Tests", "FluidScript.Tests\FluidScript.Tests.csproj", "{8111AEA3-F9F2-4F74-9701-C65F3C131BBA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +34,10 @@ Global
 		{5C87C041-8CED-49DD-B944-2140AB787745}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C87C041-8CED-49DD-B944-2140AB787745}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C87C041-8CED-49DD-B944-2140AB787745}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8111AEA3-F9F2-4F74-9701-C65F3C131BBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8111AEA3-F9F2-4F74-9701-C65F3C131BBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8111AEA3-F9F2-4F74-9701-C65F3C131BBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8111AEA3-F9F2-4F74-9701-C65F3C131BBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

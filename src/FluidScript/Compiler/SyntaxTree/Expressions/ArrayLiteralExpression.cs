@@ -15,17 +15,24 @@ namespace FluidScript.Compiler.SyntaxTree
         public readonly Expression[] Expressions;
 
         /// <summary>
+        /// Array Size
+        /// </summary>
+        public readonly Expression Size;
+
+
+        /// <summary>
         /// Array type
         /// </summary>
-        public TypeSyntax ArrayType { get; }
+        public readonly TypeSyntax ArrayType;
 
         /// <summary>
         /// Initializes new <see cref="ArrayLiteralExpression"/>
         /// </summary>
-        public ArrayLiteralExpression(Expression[] expressions, TypeSyntax type) : base(ExpressionType.Array)
+        public ArrayLiteralExpression(Expression[] expressions, TypeSyntax type, Expression size) : base(ExpressionType.Array)
         {
             Expressions = expressions;
             ArrayType = type;
+            Size = size;
         }
 
         /// <inheritdoc/>
@@ -37,7 +44,13 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <inheritdoc/>
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            generator.LoadInt32(Expressions.Length);
+            if (Size != null)
+            {
+                Size.GenerateCode(generator);
+                generator.CallStatic(Helpers.Integer_to_Int32);
+            }
+            else
+                generator.LoadInt32(Expressions.Length);
             Type type = Type.GetElementType();
             generator.NewArray(type);
             for (int i = 0; i < Expressions.Length; i++)

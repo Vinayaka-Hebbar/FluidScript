@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\FluidScript.CoreLib\FluidScript.CoreLib.csproj" />
     <ProjectReference Include="..\src\FluidScript\FluidScript.csproj" />
   </ItemGroup>
 

@@ -16,7 +16,11 @@
 
         public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
         {
-            Expression.Accept(generator).GenerateCode(generator);
+            Expression expression = Expression.Accept(generator);
+            expression.GenerateCode(generator);
+            //for void call
+            if (expression.NodeType == ExpressionType.Invocation && expression.Type == null)
+                generator.Pop();
         }
 
         public override string ToString()

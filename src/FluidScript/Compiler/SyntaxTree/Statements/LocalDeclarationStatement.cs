@@ -6,12 +6,10 @@ namespace FluidScript.Compiler.SyntaxTree
     public sealed class LocalDeclarationStatement : Statement
     {
         public readonly VariableDeclarationExpression[] DeclarationExpressions;
-        public readonly bool IsReadOnly;
 
-        public LocalDeclarationStatement(VariableDeclarationExpression[] declarationExpressions, bool isReadOnly) : base(StatementType.Declaration)
+        public LocalDeclarationStatement(VariableDeclarationExpression[] declarationExpressions) : base(StatementType.Declaration)
         {
             DeclarationExpressions = declarationExpressions;
-            IsReadOnly = isReadOnly;
         }
 
 

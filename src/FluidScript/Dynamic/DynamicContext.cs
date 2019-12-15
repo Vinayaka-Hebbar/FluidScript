@@ -1,5 +1,6 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FluidScript.Dynamic
@@ -8,20 +9,38 @@ namespace FluidScript.Dynamic
     /// Runtime evaluation of Syntax tree 
     /// <list type="bullet">it will be not same as compiled </list>
     /// </summary>
-    public sealed class RuntimeContext : Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider
+    public sealed class DynamicContext : IDictionary<string, object>, Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider, System.Dynamic.IDynamicMetaObjectProvider
     {
-        private readonly LocalScope scope;
+        internal readonly LocalScope scope;
 
         internal bool hasReturn;
+
+        internal bool hasBreak;
+
+        internal bool hasContinue;
 
         internal readonly object Instance;
 
         private Func<object> LongJump;
 
+        ICollection<string> IDictionary<string, object>.Keys => scope.Keys();
+
+        ICollection<object> IDictionary<string, object>.Values => scope.Values();
+
+        int ICollection<KeyValuePair<string, object>>.Count => scope.Count();
+
+        bool ICollection<KeyValuePair<string, object>>.IsReadOnly => true;
+
+        object IDictionary<string, object>.this[string key]
+        {
+            get => scope[key];
+            set => scope[key] = value;
+        }
+
         /// <summary>
         /// New runtime evaluation 
         /// </summary>
-        public RuntimeContext(object instance)
+        public DynamicContext(object instance)
         {
             Instance = instance;
             scope = new LocalScope();
@@ -88,8 +107,7 @@ namespace FluidScript.Dynamic
             if (nodeType == ExpressionType.Identifier)
             {
                 name = left.ToString();
-                var variable = scope.Find(name);
-                if (variable.Equals(LocalVariable.Empty) == false)
+                if (scope.TryGetValue(name, out LocalVariable variable))
                 {
                     scope.Current.Modify(variable, value);
                     return value;
@@ -281,7 +299,7 @@ namespace FluidScript.Dynamic
                     value = new String(value.ToString());
                     break;
                 case bool _:
-                    value = new Boolean((bool)value);
+                    value = (bool)value ? Boolean.True : Boolean.False;
                     break;
                 case null:
                     value = null;
@@ -332,13 +350,12 @@ namespace FluidScript.Dynamic
         public object VisitMember(NameExpression node)
         {
             var name = node.Name;
-            var variable = scope.Current.Find(name, out object value);
-            if (variable.Equals(LocalVariable.Empty) == false)
+            if (scope.TryGetValue(name, out LocalVariable variable))
             {
-                if (variable.Value.Type == null)
+                if (variable.Type == null)
                     throw new Exception(string.Concat("Use of undeclared variable ", variable));
-                node.Type = variable.Value.Type;
-                return value;
+                node.Type = variable.Type;
+                return scope.Current.GetValue(variable);
             }
             //find in the class level
             var member = Instance.GetType().GetMember(name).FirstOrDefault();
@@ -511,15 +528,23 @@ namespace FluidScript.Dynamic
         /// <inheritdoc/>
         public void VisitLoop(LoopStatement node)
         {
+            hasBreak = hasContinue = false;
             //todo if value has implic converter
-            var statement = node.Statement;
+            var statement = node.Body;
             if (node.NodeType == StatementType.For)
             {
                 using (var context = scope.CreateContext())
                 {
-                    for (node.Expressions[0].Accept(this); Convert.ToBoolean(node.Expressions[1].Accept(this)); node.Expressions[2].Accept(this))
+                    for (node.InitStatement.Accept(this); Convert.ToBoolean(node.Condition.Accept(this)); node.IncrementStatement.Accept(this))
                     {
                         statement.Accept(this);
+                        if (hasBreak)
+                            break;
+                        if (hasContinue)
+                        {
+                            hasContinue = false;
+                            continue;
+                        }
                     }
                 }
             }
@@ -527,9 +552,16 @@ namespace FluidScript.Dynamic
             {
                 using (var context = scope.CreateContext())
                 {
-                    while (Convert.ToBoolean(node.Expressions[1].Accept(this)))
+                    while (Convert.ToBoolean(node.Condition.Accept(this)))
                     {
                         statement.Accept(this);
+                        if (hasBreak)
+                            break;
+                        if (hasContinue)
+                        {
+                            hasContinue = false;
+                            continue;
+                        }
                     }
                 }
             }
@@ -540,7 +572,14 @@ namespace FluidScript.Dynamic
                     do
                     {
                         statement.Accept(this);
-                    } while (Convert.ToBoolean(node.Expressions[1].Accept(this)));
+                        if (hasBreak)
+                            break;
+                        if (hasContinue)
+                        {
+                            hasContinue = false;
+                            continue;
+                        }
+                    } while (Convert.ToBoolean(node.Condition.Accept(this)));
                 }
             }
         }
@@ -554,8 +593,100 @@ namespace FluidScript.Dynamic
             }
             else
             {
-                node.Other.Accept(this);
+                node.Else.Accept(this);
             }
+        }
+
+        System.Dynamic.DynamicMetaObject System.Dynamic.IDynamicMetaObjectProvider.GetMetaObject(System.Linq.Expressions.Expression parameter)
+        {
+            return new MetaObject(parameter, System.Dynamic.BindingRestrictions.Empty, this);
+        }
+
+        bool IDictionary<string, object>.ContainsKey(string key)
+        {
+            return scope.Contains(key);
+        }
+
+        void IDictionary<string, object>.Add(string key, object value)
+        {
+            scope.CreateOrModify(key, value);
+        }
+
+        bool IDictionary<string, object>.Remove(string key)
+        {
+            return scope.Remove(key);
+        }
+
+        bool IDictionary<string, object>.TryGetValue(string key, out object value)
+        {
+            if (scope.TryGetValue(key, out LocalVariable variable))
+            {
+                value = scope.Current.GetValue(variable);
+                return true;
+            }
+            value = null;
+            return false;
+        }
+
+        void ICollection<KeyValuePair<string, object>>.Add(KeyValuePair<string, object> item)
+        {
+            scope.CreateOrModify(item.Key, item.Value);
+        }
+
+        void ICollection<KeyValuePair<string, object>>.Clear()
+        {
+            scope.Clear();
+        }
+
+        bool ICollection<KeyValuePair<string, object>>.Contains(KeyValuePair<string, object> item)
+        {
+            return scope.Contains(item.Key);
+        }
+
+        void ICollection<KeyValuePair<string, object>>.CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
+        {
+            foreach (KeyValuePair<string, object> item in this)
+            {
+                array[arrayIndex++] = item;
+            }
+        }
+
+        bool ICollection<KeyValuePair<string, object>>.Remove(KeyValuePair<string, object> item)
+        {
+            return scope.Remove(item.Key);
+        }
+
+        IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()
+        {
+            return GetEnumerator(scope);
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator(scope);
+        }
+
+        private static IEnumerator<KeyValuePair<string, object>> GetEnumerator(LocalScope scope)
+        {
+            foreach (LocalVariable item in scope)
+            {
+                if (scope.Current.TryGetValue(item, out object value))
+                {
+                    yield return new KeyValuePair<string, object>(item.Name, value);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void VisitBreak(BreakStatement node)
+        {
+            hasBreak = true;
+        }
+
+        /// <inheritdoc/>
+        public void VisitContinue(ContinueStatement node)
+        {
+            hasContinue = true;
         }
     }
 }

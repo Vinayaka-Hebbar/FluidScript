@@ -13,11 +13,20 @@ namespace FluidScipt.ConsoleTest
             {
                 return Current._x;
             }
+            set
+            {
+                Current._x = value;
+            }
         }
 
-        public Integer Read(Integer arg1)
+        public Integer Add()
         {
-            return X;
+            Integer x = 0;
+            for (var i=0; i < 10; i++)
+            {
+                x++;
+            }
+            return x;
         }
     }
 }

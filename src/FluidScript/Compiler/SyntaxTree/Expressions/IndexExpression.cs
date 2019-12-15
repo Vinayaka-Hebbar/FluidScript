@@ -30,7 +30,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 Iterate(Arguments, (arg) =>
                 {
                     arg.GenerateCode(generator);
-                    generator.CallStatic(ReflectionHelpers.Integer_to_Int32);
+                    generator.CallStatic(Helpers.Integer_to_Int32);
                 });
                 System.Type elementType = type.GetElementType();
                 generator.LoadArrayElement(elementType);

@@ -253,7 +253,7 @@
         }
 
         /// <summary>
-        /// Computes the sum of a sequence of System.Int32 values.
+        /// Computes the sum of a sequence of <see cref="Integer"/> values.
         /// </summary>
         /// <param name="list">
         ///  A sequence of <see cref="IFSObject"/> values to calculate the sum of.
@@ -266,7 +266,7 @@
         }
 
         /// <summary>
-        /// Computes the average of a sequence of System.Int32 values.
+        /// Computes the average of a sequence of <see cref="Integer"/> values.
         /// </summary>
         /// <param name="list">
         ///  A sequence of <see cref="IFSObject"/> values to calculate the average of.
@@ -276,6 +276,36 @@
         public static Double Average(System.Collections.Generic.IEnumerable<IFSObject> list)
         {
             return new Double(System.Linq.Enumerable.Average(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
+        }
+
+        /// <summary>
+        /// Returns the maximum value in a sequence of <see cref="Integer"/> values.
+        /// </summary>
+        /// <param name="list">
+        /// A sequence of <see cref="Integer"/> values to determine the minimum value of.
+        /// </param>
+        /// <returns>
+        /// The minimum value in the sequence.
+        /// </returns>
+        [Runtime.Register("max")]
+        public static Integer Max(System.Collections.Generic.IEnumerable<IFSObject> list)
+        {
+            return new Integer(System.Linq.Enumerable.Max(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
+        }
+
+        /// <summary>
+        /// Returns the minimum value in a sequence of <see cref="Integer"/> values.
+        /// </summary>
+        /// <param name="list">
+        /// A sequence of <see cref="Integer"/> values to determine the minimum value of.
+        /// </param>
+        /// <returns>
+        /// The minimum value in the sequence.
+        /// </returns>
+        [Runtime.Register("min")]
+        public static Integer Min(System.Collections.Generic.IEnumerable<IFSObject> list)
+        {
+            return new Integer(System.Linq.Enumerable.Min(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
         }
     }
 }

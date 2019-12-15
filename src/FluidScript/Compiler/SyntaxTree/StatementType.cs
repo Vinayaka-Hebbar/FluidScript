@@ -18,5 +18,7 @@
         While = 44,
         Class = 45,
         Labeled = 50,
+        Break = 51,
+        Continue = 52
     }
 }

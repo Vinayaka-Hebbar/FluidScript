@@ -9,7 +9,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.8</Version>
+    <Version>1.0.0-alpha</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -27,16 +27,16 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
     <PackageReference Include="System.Reflection.Emit.Lightweight">
-      <Version>4.6.0</Version>
+      <Version>4.7.0</Version>
     </PackageReference>
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection.Emit.Lightweight">
-      <Version>4.6.0</Version>
+      <Version>4.7.0</Version>
     </PackageReference>
     <PackageReference Include="System.Reflection.Emit">
-      <Version>4.6.0</Version>
+      <Version>4.7.0</Version>
     </PackageReference>
   </ItemGroup>
   
@@ -46,15 +46,9 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
-    <PackageReference Include="System.Reflection.Emit.ILGeneration">
-      <Version>4.6.0</Version>
-    </PackageReference>
-  </ItemGroup>
-
+  
   <ItemGroup>
-    <ProjectReference Include="..\FluidScript.CoreLib\FluidScript.CoreLib.csproj" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

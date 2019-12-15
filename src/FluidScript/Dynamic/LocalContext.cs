@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FluidScript.Dynamic
 {
@@ -22,34 +23,23 @@ namespace FluidScript.Dynamic
             _parent = parent;
         }
 
-        internal object Retrieve(string name)
-        {
-            var variable = _scope.Find(name);
-            if (variable.Equals(LocalVariable.Empty) == false && Instances.TryGetValue(variable, out object store))
-                return store;
-            if (_parent == null)
-            {
-                return null;
-            }
-            return _parent.Retrieve(name);
-        }
-
         internal void Modify(LocalVariable variable, object value)
         {
             Instances[variable] = value;
         }
 
-        internal LocalVariable? Find(string name, out object store)
+        internal object Find(string name)
         {
-            var variable = _scope.Find(name);
-            if (variable.Equals(LocalVariable.Empty) == false && Instances.TryGetValue(variable, out store))
-                return variable;
-            if (_parent == null)
+            if (_scope.TryGetValue(name, out LocalVariable variable))
             {
-                store = null;
-                return variable;
+                if (Instances.TryGetValue(variable, out object store))
+                    return store;
+                if (_parent != null)
+                {
+                    return _parent.Find(name);
+                }
             }
-            return _parent.Find(name, out store);
+            return null;
         }
 
         internal void Create(LocalVariable variable, object value)
@@ -59,7 +49,33 @@ namespace FluidScript.Dynamic
 
         public void Dispose()
         {
+            //Removes Local Variables
+            foreach (LocalVariable item in Instances.Keys)
+            {
+                _scope.RemoveAt(item.Index);
+            }
             _scope.Current = _parent;
+        }
+
+        internal bool TryGetValue(LocalVariable item, out object value)
+        {
+            if (Instances.TryGetValue(item, out value))
+                return true;
+            if (_parent != null)
+            {
+                return _parent.TryGetValue(item, out value);
+            }
+            value = null;
+            return false;
+        }
+
+        internal object GetValue(LocalVariable item)
+        {
+            if (Instances.TryGetValue(item, out object value) == false && _parent != null)
+            {
+                return _parent.GetValue(item);
+            }
+            return value;
         }
     }
 

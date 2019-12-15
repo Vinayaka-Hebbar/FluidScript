@@ -38,7 +38,7 @@
         public Boolean __Equals(IFSObject other)
         {
             return other is Integer i &&
-                  m_value == i.m_value;
+                  m_value == i.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>
@@ -164,7 +164,11 @@
 
         public static implicit operator Integer(int value) => new Integer(value);
 
+        public static implicit operator Integer(Byte value) => new Integer(value.m_value);
+
         public static implicit operator Integer(Short value) => new Integer(value.m_value);
+
+        public static implicit operator Integer(Char value) => new Integer(value.m_value);
 
         public static implicit operator int(Integer integer) => integer.m_value;
 
@@ -195,12 +199,12 @@
 
         public static Boolean operator >(Integer left, Integer right)
         {
-            return new Boolean(left.m_value > right.m_value);
+            return left.m_value > right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Boolean operator >=(Integer left, Integer right)
         {
-            return new Boolean(left.m_value >= right.m_value);
+            return left.m_value >= right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Integer operator >>(Integer left, int right)
@@ -210,12 +214,12 @@
 
         public static Boolean operator <(Integer left, Integer right)
         {
-            return new Boolean(left.m_value < right.m_value);
+            return left.m_value < right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Boolean operator <=(Integer left, Integer right)
         {
-            return new Boolean(left.m_value <= right.m_value);
+            return left.m_value <= right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Integer operator <<(Integer left, int right)
@@ -225,12 +229,12 @@
 
         public static Boolean operator ==(Integer left, Integer right)
         {
-            return new Boolean(left.m_value == right.m_value);
+            return left.m_value == right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Boolean operator !=(Integer left, Integer right)
         {
-            return new Boolean(left.m_value != right.m_value);
+            return left.m_value != right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Integer operator ++(Integer value)

@@ -19,9 +19,11 @@
 	}
 
 	func add():int {
-		var x:int[] = <int>(10);
-		x[0] = 30;
-		return x[0];
+		var x = _x;
+		if(x==12)
+			return x+_y;
+		else
+			return x;
 	}
 
     impl func toString() : string {

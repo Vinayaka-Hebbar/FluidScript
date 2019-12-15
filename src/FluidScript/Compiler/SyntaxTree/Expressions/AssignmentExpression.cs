@@ -21,7 +21,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            //todo implementation pending
+            //todo index implementation pending
             if (Left.NodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)Left;
@@ -37,6 +37,30 @@ namespace FluidScript.Compiler.SyntaxTree
                 exp.Target.GenerateCode(generator);
                 Right.GenerateCode(generator);
                 exp.Binding.GenerateSet(generator);
+            }else if(Left.NodeType == ExpressionType.Indexer)
+            {
+                var exp = (IndexExpression)Left;
+                exp.Target.GenerateCode(generator);
+                System.Type type = exp.Target.Type;
+                if (type.IsArray)
+                {
+                    Iterate(exp.Arguments, (arg) =>
+                    {
+                        arg.GenerateCode(generator);
+                        generator.CallStatic(Helpers.Integer_to_Int32);
+                    });
+                    Right.GenerateCode(generator);
+                    System.Type elementType = type.GetElementType();
+                    generator.StoreArrayElement(elementType);
+                }
+                else
+                {
+
+                    Iterate(exp.Arguments, (arg) => arg.GenerateCode(generator));
+                    System.Reflection.MethodInfo indexer = exp.Indexer.GetSetMethod(true);
+                    //todo indexer argument convert
+                    generator.Call(indexer);
+                }
             }
         }
 

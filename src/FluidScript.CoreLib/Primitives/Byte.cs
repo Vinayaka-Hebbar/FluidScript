@@ -1,29 +1,39 @@
 ﻿namespace FluidScript
 {
+    /// <summary>
+    ///  Represents an 8-bit signed integer.
+    /// </summary>
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public readonly struct Byte : IFSObject, System.IConvertible
     {
+        [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly sbyte m_value;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Byte"/>
+        /// </summary>
         public Byte(sbyte value)
         {
             m_value = value;
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("toString")]
         public String __ToString()
         {
             return m_value.ToString();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("equals")]
         public Boolean __Equals(IFSObject other)
         {
@@ -31,17 +41,20 @@
                   m_value == b.m_value;
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object other)
         {
             return other is Byte b &&
                   m_value == b.m_value;
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return m_value;
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             return m_value.ToString();

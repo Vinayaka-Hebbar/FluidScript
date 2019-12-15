@@ -19,23 +19,26 @@
             m_value = value;
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("toString")]
         public String __ToString()
         {
             return m_value.ToString();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("equals")]
         public Boolean __Equals(IFSObject other)
         {
             return other is Double d &&
-                  m_value == d.m_value;
+                  m_value == d.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>
@@ -161,11 +164,19 @@
 
         public static implicit operator Double(double value) => new Double(value);
 
-        public static implicit operator Double(Integer integer) => new Double(integer.m_value);
-
-        public static implicit operator Double(Float single) => new Double(single.m_value);
-
         public static implicit operator double(Double integer) => integer.m_value;
+
+        public static implicit operator Double(Byte value) => new Double(value.m_value);
+
+        public static implicit operator Double(Short value) => new Double(value.m_value);
+
+        public static implicit operator Double(Char value) => new Double(value.m_value);
+
+        public static implicit operator Double(Integer value) => new Double(value.m_value);
+
+        public static implicit operator Double(Long value) => new Double(value.m_value);
+
+        public static implicit operator Double(Float value) => new Double(value.m_value);
 
         public static Double operator +(Double left, Double right)
         {
@@ -194,32 +205,32 @@
 
         public static Boolean operator >(Double left, Double right)
         {
-            return new Boolean(left.m_value > right.m_value);
-        }
-
-        public static Boolean operator <(Double left, Double right)
-        {
-            return new Boolean(left.m_value < right.m_value);
+            return left.m_value > right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Boolean operator >=(Double left, Double right)
         {
-            return new Boolean(left.m_value >= right.m_value);
+            return left.m_value >= right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator <(Double left, Double right)
+        {
+            return left.m_value < right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Boolean operator <=(Double left, Double right)
         {
-            return new Boolean(left.m_value <= right.m_value);
+            return left.m_value <= right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Boolean operator ==(Double left, Double right)
         {
-            return new Boolean(left.m_value == right.m_value);
+            return left.m_value == right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Boolean operator !=(Double left, Double right)
         {
-            return new Boolean(left.m_value != right.m_value);
+            return left.m_value != right.m_value ? Boolean.True : Boolean.False;
         }
 
         public static Double operator ++(Double value)

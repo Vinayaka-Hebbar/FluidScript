@@ -36,9 +36,11 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var statementLocals = new StatementLocals() { NonDefaultSourceSpanBehavior = true };
             GenerateStartOfStatement(generator, statementLocals);
-            foreach (var statement in Statements)
+            if (Statements.Length == 0)
+                generator.NoOperation();
+            for (int index = 0; index < Statements.Length; index++)
             {
-                statement.GenerateCode(generator);
+                Statements[index].GenerateCode(generator);
             }
             GenerateEndOfStatement(generator, statementLocals);
         }

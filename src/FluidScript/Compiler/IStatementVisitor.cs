@@ -23,6 +23,16 @@ namespace FluidScript.Compiler
         /// Visit variable declaration
         /// </summary>
         void VisitDeclaration(LocalDeclarationStatement node);
+        /// <summary>
+        /// Visit Continue statement
+        /// </summary>
+        void VisitContinue(ContinueStatement node);
+
+        /// <summary>
+        /// Visit break statement
+        /// </summary>
+        /// <param name="node"></param>
+        void VisitBreak(BreakStatement node);
 
         /// <summary>
         /// Visit loop

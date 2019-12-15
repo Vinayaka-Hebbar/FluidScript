@@ -1,47 +1,60 @@
 ﻿namespace FluidScript
 {
+    /// <summary>
+    /// Represents a 64-bit signed integer.
+    /// </summary>
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public readonly struct Long : IFSObject, System.IConvertible
     {
+        [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly long m_value;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Long"/>
+        /// </summary>
         public Long(long value)
         {
             m_value = value;
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("toString")]
         public String __ToString()
         {
             return m_value.ToString();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("equals")]
         public Boolean __Equals(IFSObject other)
         {
             return other is Long l &&
-                  m_value == l.m_value;
+                  m_value == l.m_value ? Boolean.True : Boolean.False;
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object other)
         {
             return other is Long l &&
                   m_value == l.m_value;
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             return m_value.ToString();
@@ -149,8 +162,92 @@
         }
         #endregion
 
+
         public static implicit operator Long(long value) => new Long(value);
 
+        public static implicit operator Long(Byte value) => new Long(value.m_value);
+
+        public static implicit operator Long(Short value) => new Long(value.m_value);
+
+        public static implicit operator Long(Char value) => new Long(value.m_value);
+
+        public static implicit operator Long(Integer value) => new Long(value.m_value);
+
         public static implicit operator long(Long value) => value.m_value;
+
+        public static Long operator +(Long left, Long right)
+        {
+            return new Long(left.m_value + right.m_value);
+        }
+
+        public static Long operator -(Long left, Long right)
+        {
+            return new Long(left.m_value - right.m_value);
+        }
+
+        public static Long operator *(Long left, Long right)
+        {
+            return new Long(left.m_value * right.m_value);
+        }
+
+        public static Long operator /(Long left, Integer right)
+        {
+            return new Long(left.m_value / right.m_value);
+        }
+
+        public static Long operator %(Long left, Long right)
+        {
+            return new Long(left.m_value % right.m_value);
+        }
+
+        public static Boolean operator >(Long left, Long right)
+        {
+            return left.m_value > right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator >=(Long left, Long right)
+        {
+            return left.m_value >= right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Long operator >>(Long left, int right)
+        {
+            return new Long(left.m_value >> right);
+        }
+
+        public static Boolean operator <(Long left, Long right)
+        {
+            return left.m_value < right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator <=(Long left, Long right)
+        {
+            return left.m_value <= right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Long operator <<(Long left, int right)
+        {
+            return new Long(left.m_value << right);
+        }
+
+        public static Boolean operator ==(Long left, Long right)
+        {
+            return left.m_value == right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator !=(Long left, Long right)
+        {
+            return left.m_value != right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Long operator ++(Long value)
+        {
+            return new Long(value.m_value + 1);
+        }
+
+        public static Long operator --(Long value)
+        {
+            return new Long(value.m_value + 1);
+        }
     }
 }

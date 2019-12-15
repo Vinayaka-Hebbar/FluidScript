@@ -2,19 +2,31 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
+    /// <summary>
+    /// Return statement
+    /// </summary>
     public sealed class ReturnOrThrowStatement : Statement
     {
+        /// <summary>
+        /// return expression
+        /// </summary>
         public readonly Expression Expression;
+
+        /// <summary>
+        /// Initializes new <see cref="ReturnOrThrowStatement"/>
+        /// </summary>
         public ReturnOrThrowStatement(Expression expression, StatementType nodeType) : base(nodeType)
         {
             Expression = expression;
         }
 
+        /// <inheritdoc/>
         protected internal override void Accept(IStatementVisitor visitor)
         {
             visitor.VisitReturn(this);
         }
 
+        /// <inheritdoc/>
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             // Generate code for the start of the statement.
@@ -41,6 +53,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     System.Type resolvedType = epression.Type;
                     if (returnType != null && returnType != resolvedType)
                     {
+                        //todo box value type
                         if(Reflection.TypeUtils.TryImplicitConvert(resolvedType, returnType, out System.Reflection.MethodInfo method))
                         {
                             generator.Call(method);
@@ -63,6 +76,7 @@ namespace FluidScript.Compiler.SyntaxTree
             GenerateEndOfStatement(generator, statementLocals);
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             if (NodeType == StatementType.Return)

@@ -1,29 +1,39 @@
 ﻿namespace FluidScript
 {
+    /// <summary>
+    /// Represents a single-precision floating-point number.
+    /// </summary>
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public readonly struct Float : IFSObject, System.IConvertible
     {
+        [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly float m_value;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Float"/>
+        /// </summary>
         public Float(float value)
         {
             m_value = value;
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("toString")]
         public String __ToString()
         {
             return m_value.ToString();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("equals")]
         public Boolean __Equals(IFSObject other)
         {
@@ -31,17 +41,20 @@
                   m_value == f.m_value;
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object other)
         {
             return other is Float f &&
                   m_value == f.m_value;
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             return m_value.ToString();
@@ -149,10 +162,83 @@
         }
         #endregion
 
-        public static implicit operator Float(Integer value) => new Float(value.m_value);
-
         public static implicit operator Float(float value) => new Float(value);
 
         public static implicit operator float(Float value) => value.m_value;
+
+        public static implicit operator Float(Byte value) => new Float(value.m_value);
+
+        public static implicit operator Float(Short value) => new Float(value.m_value);
+
+        public static implicit operator Float(Char value) => new Float(value.m_value);
+
+        public static implicit operator Float(Integer value) => new Float(value.m_value);
+
+        public static implicit operator Float(Long value) => new Float(value.m_value);
+
+        public static Float operator +(Float left, Float right)
+        {
+            return new Float(left.m_value + right.m_value);
+        }
+
+        public static Float operator -(Float left, Float right)
+        {
+            return new Float(left.m_value - right.m_value);
+        }
+
+        public static Float operator *(Float left, Float right)
+        {
+            return new Float(left.m_value * right.m_value);
+        }
+
+        public static Float operator /(Float left, Float right)
+        {
+            return new Float(left.m_value / right.m_value);
+        }
+
+        public static Float operator %(Float left, Float right)
+        {
+            return new Float(left.m_value % right.m_value);
+        }
+
+        public static Boolean operator >(Float left, Float right)
+        {
+            return left.m_value > right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator >=(Float left, Float right)
+        {
+            return left.m_value >= right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator <(Float left, Float right)
+        {
+            return left.m_value < right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator <=(Float left, Float right)
+        {
+            return left.m_value <= right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator ==(Float left, Float right)
+        {
+            return left.m_value == right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Boolean operator !=(Float left, Float right)
+        {
+            return left.m_value != right.m_value ? Boolean.True : Boolean.False;
+        }
+
+        public static Float operator ++(Float value)
+        {
+            return new Float(value.m_value + 1);
+        }
+
+        public static Float operator --(Float value)
+        {
+            return new Float(value.m_value + 1);
+        }
     }
 }

@@ -1,17 +1,28 @@
 ﻿namespace FluidScript
 {
     /// <summary>
-    /// <see cref="bool"/> wrapper
+    /// Represents a Boolean value.
     /// </summary>
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public readonly struct Boolean : IFSObject, System.IConvertible
     {
+        /// <summary>
+        /// True
+        /// </summary>
+        public static readonly Boolean True = new Boolean(true);
+
+        /// <summary>
+        /// False
+        /// </summary>
+        public static readonly Boolean False = new Boolean(false);
+
+        [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly bool m_value;
 
         /// <summary>
-        /// New <see cref="Boolean"/> instance
+        /// Init New <see cref="Boolean"/> instance
         /// </summary>
         /// <param name="value"></param>
         public Boolean(bool value)
@@ -19,23 +30,26 @@
             m_value = value;
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("toString")]
         public String __ToString()
         {
             return m_value.ToString();
         }
 
+        /// <inheritdoc/>
         [Runtime.Register("equals")]
         public Boolean __Equals(IFSObject other)
         {
             return other is Boolean b &&
-                  m_value == b.m_value;
+                  m_value == b.m_value ? True : False;
         }
 
         /// <inheritdoc/>
@@ -159,9 +173,31 @@
         }
         #endregion
 
-        public static implicit operator Boolean(bool value) => new Boolean(value);
+        /// <summary>
+        /// Implicit convert from <see cref="bool"/> to <see cref="Boolean"/>
+        /// </summary>
+        public static implicit operator Boolean(bool value) => value ? True : False;
 
+        /// <summary>
+        /// Implicit convert from <see cref="Boolean"/> to <see cref="bool"/>
+        /// </summary>
         public static implicit operator bool(Boolean value) => value.m_value;
+
+        /// <summary>
+        /// op_Equality overload
+        /// </summary>
+        public static Boolean operator ==(Boolean left, Boolean right)
+        {
+            return left.m_value == right.m_value ? True : False;
+        }
+
+        /// <summary>
+        /// op_Inequality overload
+        /// </summary>
+        public static Boolean operator !=(Boolean left, Boolean right)
+        {
+            return left.m_value == right.m_value ? True : False;
+        }
 
     }
 }

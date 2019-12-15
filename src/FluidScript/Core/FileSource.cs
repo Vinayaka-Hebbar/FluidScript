@@ -267,6 +267,7 @@ namespace FluidScript.Library
                 Discard();
             }
             charPos--;
+            column--;
         }
 
         public void Reset()
@@ -280,6 +281,7 @@ namespace FluidScript.Library
         {
             //todo seek if pos exceeds below range
             charPos = pos;
+            column = (int)pos;
         }
 
         private void Discard()

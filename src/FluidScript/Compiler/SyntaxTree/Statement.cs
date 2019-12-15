@@ -7,6 +7,8 @@
     {
         private static readonly string[] NoLabels = new string[0];
         internal static readonly Statement Empty = new EmptyStatement();
+
+        internal static readonly Statement Break = new BreakStatement();
         /// <summary>
         /// Labels associated with the statement
         /// </summary>
@@ -69,7 +71,7 @@
         /// <summary>
         /// Statement Locals
         /// </summary>
-        public class StatementLocals
+        public sealed class StatementLocals
         {
             /// <summary>
             /// Gets or sets a value that indicates whether the break statement will be handled

@@ -397,6 +397,7 @@ namespace FluidScript.Compiler
         /// </summary>
         public FunctionDeclaration VisitFunctionDeclaration()
         {
+            _currentLabels.Clear();
             if (TokenType == TokenType.Identifier)
             {
                 var name = GetName();
@@ -444,8 +445,9 @@ namespace FluidScript.Compiler
                     statement = VisitIdentifierStatement();
                     break;
                 case TokenType.SemiColon:
-                    //Rare case
-                    throw new System.Exception($"unexpected semicolon at {Source.CurrentPosition}");
+                    MoveNext();
+                    statement = Statement.Empty;
+                    break;
                 default:
                     statement = VisitExpressionStatement();
                     break;
@@ -473,26 +475,33 @@ namespace FluidScript.Compiler
                     case IdentifierType.Var:
                         //any type
                         var declarations = VisitVarDeclarations().ToArray();
-                        return new LocalDeclarationStatement(declarations, false);
-                    case IdentifierType.Val:
-                        //todo const to variable declaration
-                        declarations = VisitVarDeclarations().ToArray();
-                        return new LocalDeclarationStatement(declarations, true);
+                        return new LocalDeclarationStatement(declarations);
                     case IdentifierType.Function:
                         return VisitLocalFunction();
                     case IdentifierType.While:
-                        return VisitLoopStatement(StatementType.While);
+                        return VisitWhileStatement();
                     case IdentifierType.For:
-                        return VisitLoopStatement(StatementType.For);
+                        return VisitForStatement();
                     case IdentifierType.Do:
-                        return VisitLoopStatement(StatementType.DoWhile);
+                        return VisitDoWhileStatement();
                     case IdentifierType.If:
                         return VisitIfStatement();
                     case IdentifierType.Else:
                         return VisitStatement();
-                        //default label statment
+                    case IdentifierType.Break:
+                        return Statement.Break;
+                    case IdentifierType.Continue:
+                        string target = null;
+                        if (TokenType == TokenType.Identifier)
+                        {
+                            target = GetName();
+                            MoveNext();
+                        }
+
+                        return new ContinueStatement(target);
                 }
             }
+            //default label statment
             //restore to prev
             Source.SeekTo(start - 1);
             MoveNext();
@@ -500,15 +509,26 @@ namespace FluidScript.Compiler
         }
 
         /// <summary>
-        /// Loop Statement while or for 
+        /// Loop Statement for 
         /// </summary>
-        public Statement VisitLoopStatement(StatementType type)
+        public Statement VisitForStatement()
         {
             if (TokenType == TokenType.LeftParenthesis)
             {
                 MoveNext();
-                var list = VisitExpressionList(TokenType.SemiColon, TokenType.RightParenthesis).ToArray();
-                MoveNext();
+                var initialization = VisitStatement();
+                if (TokenType == TokenType.SemiColon)
+                    MoveNext();
+                var start = Source.CurrentPosition;
+                var condition = new ExpressionStatement(VisitExpression())
+                {
+                    Span = new TextSpan(start, Source.CurrentPosition)
+                };
+                if (TokenType == TokenType.SemiColon)
+                    MoveNext();
+                var increment = VisitStatement();
+                if (TokenType == TokenType.RightParenthesis)
+                    MoveNext();
                 Statement statement;
                 if (TokenType == TokenType.LeftBrace)
                 {
@@ -518,7 +538,44 @@ namespace FluidScript.Compiler
                 {
                     statement = VisitStatement();
                 }
-                return new LoopStatement(list, statement, type);
+                return new LoopStatement(statement, StatementType.For)
+                {
+                    InitStatement = initialization,
+                    ConditionStatement = condition,
+                    IncrementStatement = increment
+                };
+            }
+            return Statement.Empty;
+        }
+
+        /// <summary>
+        /// Loop Statement while
+        /// </summary>
+        public Statement VisitWhileStatement()
+        {
+            if (TokenType == TokenType.LeftParenthesis)
+            {
+                MoveNext();
+                var start = Source.CurrentPosition;
+                var condition = new ExpressionStatement(VisitExpression())
+                {
+                    Span = new TextSpan(start, Source.CurrentPosition)
+                };
+                if (TokenType == TokenType.RightParenthesis)
+                    MoveNext();
+                Statement statement;
+                if (TokenType == TokenType.LeftBrace)
+                {
+                    statement = VisitBlock();
+                }
+                else
+                {
+                    statement = VisitStatement();
+                }
+                return new LoopStatement(statement, StatementType.While)
+                {
+                    ConditionStatement = condition
+                };
             }
             return Statement.Empty;
         }
@@ -526,7 +583,7 @@ namespace FluidScript.Compiler
         /// <summary>
         /// Loop Statement do while
         /// </summary>
-        public Statement VisitLoopStatement()
+        public Statement VisitDoWhileStatement()
         {
             Statement statement;
             if (TokenType == TokenType.LeftBrace)
@@ -537,7 +594,8 @@ namespace FluidScript.Compiler
             {
                 statement = VisitStatement();
             }
-            MoveNext();
+            if (TokenType == TokenType.RightBrace)
+                MoveNext();
             var name = GetName();
             MoveNext();
             if (Keywords.Match(name, IdentifierType.While))
@@ -545,8 +603,19 @@ namespace FluidScript.Compiler
                 if (TokenType == TokenType.LeftParenthesis)
                 {
                     MoveNext();
-                    var list = VisitExpressionList(TokenType.SemiColon, TokenType.RightParenthesis).ToArray();
-                    return new LoopStatement(list, statement, StatementType.DoWhile);
+                    var start = Source.CurrentPosition;
+                    var condition = new ExpressionStatement(VisitExpression())
+                    {
+                        Span = new TextSpan(start, Source.CurrentPosition)
+                    };
+                    if (TokenType == TokenType.RightParenthesis)
+                        MoveNext();
+                    if (TokenType == TokenType.SemiColon)
+                        MoveNext();
+                    return new LoopStatement(statement, StatementType.DoWhile)
+                    {
+                        ConditionStatement = condition
+                    };
                 }
             }
             return Statement.Empty;
@@ -567,21 +636,18 @@ namespace FluidScript.Compiler
         {
             if (TokenType == TokenType.LeftParenthesis)
             {
+                // (
+                MoveNext();
                 var expression = VisitExpression();
+                //)
                 if (TokenType == TokenType.RightParenthesis)
                     MoveNext();
                 Statement body = VisitStatement();
-                long start = Source.Position;
                 if (TokenType == TokenType.SemiColon)
                     MoveNext();
                 Statement other = null;
                 if (CheckExpectedIdentifier(IdentifierType.Else))
                     other = VisitStatement();
-                else
-                {
-                    Source.SeekTo(start - 1);
-                    MoveNext();
-                }
                 return new IfStatement(expression, body, other);
             }
             throw new System.Exception($"Syntax Error at line {Source.CurrentPosition}");
@@ -631,7 +697,6 @@ namespace FluidScript.Compiler
         {
             //clear labels
             var start = Source.CurrentPosition;
-            _currentLabels.Clear();
             BlockStatement statement;
             if (TokenType == TokenType.LeftBrace)
             {
@@ -959,6 +1024,10 @@ namespace FluidScript.Compiler
                     //Might be array
                     exp = VisitArrayLiteral();
                     break;
+                case TokenType.RightParenthesis:
+                case TokenType.RightBracket:
+                    //skip end of expression
+                    return exp;
             }
             if (TokenType == TokenType.SemiColon)
                 return exp;
@@ -1048,12 +1117,14 @@ namespace FluidScript.Compiler
 
 
         /// <summary>
-        /// format &lt;int&gt;[1,2]
+        /// format &lt;int&gt;(size)[1,2]
         /// </summary>
         /// <returns></returns>
         private Expression VisitArrayLiteral()
         {
             TypeSyntax type = null;
+            Expression size = null;
+            Expression[] list = Expression.EmptyList;
             if (TokenType == TokenType.Less)
             {
                 //Next <
@@ -1062,15 +1133,24 @@ namespace FluidScript.Compiler
                 //>
                 if (TokenType == TokenType.Greater)
                     MoveNext();
+                //(
+                if (TokenType == TokenType.LeftParenthesis)
+                {
+                    MoveNext();
+                    size = VisitAssignmentExpression();
+                    if (TokenType == TokenType.RightParenthesis)
+                        MoveNext();
+                }
+
             }
             if (CheckSyntaxExpected(TokenType.LeftBracket))
             {
                 //[
                 MoveNext();
-                var list = VisitArgumentList(TokenType.Comma, TokenType.RightBracket).ToArray();
-                return new ArrayLiteralExpression(list, type);
+                list = VisitArgumentList(TokenType.Comma, TokenType.RightBracket).ToArray();
+
             }
-            throw new System.InvalidOperationException(string.Format("Invalid array declaration at {0}", Source.CurrentPosition));
+            return new ArrayLiteralExpression(list, type,size);
         }
 
         /// <summary>

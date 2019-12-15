@@ -6,6 +6,17 @@
     [System.Runtime.InteropServices.ComVisible(true)]
     public readonly struct Char : IFSObject, System.IConvertible
     {
+        /// <summary>
+        /// Min char Value
+        /// </summary>
+        public static readonly Char MinValue = new Char(char.MinValue);
+
+        /// <summary>
+        /// Max char Value
+        /// </summary>
+        public static readonly Char MaxValue = new Char(char.MaxValue);
+
+        [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly char m_value;
 
         /// <summary>
@@ -48,7 +59,7 @@
         public override bool Equals(object other)
         {
             return other is Char c &&
-                  m_value == c.m_value;
+                  m_value == c.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>
@@ -179,5 +190,15 @@
         /// Implicit Convert from <see cref="Char"/> to <see cref="int"/>
         /// </summary>
         public static implicit operator int(Char value) => value.m_value;
+
+        public static Integer operator +(Char left, Integer right)
+        {
+            return new Integer(left.m_value + right.m_value);
+        }
+
+        public static Integer operator -(Char left, Integer right)
+        {
+            return new Integer(left.m_value - right.m_value);
+        }
     }
 }

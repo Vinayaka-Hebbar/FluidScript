@@ -1,4 +1,5 @@
-﻿using FluidScript.Compiler.SyntaxTree;
+﻿using FluidScript.Compiler;
+using FluidScript.Compiler.SyntaxTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,6 +65,17 @@ namespace FluidScript.Reflection.Emit
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Marks a sequence point in the Microsoft intermediate language (MSIL) stream.
+        /// </summary>
+        /// <param name="span"> The start and end positions which define the sequence point. </param>
+        public void MarkSequencePoint(TextSpan span)
+        {
+#if NET40
+            MarkSequencePoint(DebugDoument, span);
+#endif
         }
 
 
@@ -262,7 +274,7 @@ namespace FluidScript.Reflection.Emit
             }
         }
 
-        #region Return
+#region Return
         /// <summary>
         /// Gets or sets the label the return statement should jump to (with the return value on
         /// top of the stack).  Will be <c>null</c> if code is being generated outside a function
@@ -287,7 +299,7 @@ namespace FluidScript.Reflection.Emit
 
 
 
-        #endregion
+#endregion
 
         ///<inheritdoc/>
         public override ILLocalVariable DeclareVariable(Type type, string name = null)
@@ -326,13 +338,34 @@ namespace FluidScript.Reflection.Emit
             Complete();
         }
 
-        #region Visitors
+#region Visitors
 
         /// <inheritdoc/>
         public Expression VisitUnary(UnaryExpression node)
         {
-            if (node.NodeType == ExpressionType.Parenthesized)
-                return node.Operand.Accept(this);
+            var operand = node.Operand.Accept(this);
+            string name = null;
+            switch (node.NodeType)
+            {
+                case ExpressionType.Parenthesized:
+                    return operand;
+                case ExpressionType.PostfixPlusPlus:
+                    name = "op_Increment";
+                    break;
+                case ExpressionType.PrefixPlusPlus:
+                    name = "op_Increment";
+                    break;
+                case ExpressionType.PostfixMinusMinus:
+                    name = "op_Decrement";
+                    break;
+                case ExpressionType.PrefixMinusMinus:
+                    name = "op_Decrement";
+                    break;
+            }
+            var method = TypeUtils.GetOperatorOverload(name, out Conversion[] conversions, operand.Type);
+            node.Conversions = conversions;
+            node.Method = method;
+            node.Type = method.ReturnType;
             return node;
         }
 
@@ -354,16 +387,32 @@ namespace FluidScript.Reflection.Emit
                 case ExpressionType.Divide:
                     opName = "op_Division";
                     break;
+                case ExpressionType.Percent:
+                    opName = "op_Modulus";
+                    break;
                 case ExpressionType.BangEqual:
                     opName = "op_Inequality";
                     break;
                 case ExpressionType.EqualEqual:
                     opName = "op_Equality";
                     break;
+                case ExpressionType.Greater:
+                    opName = "op_GreaterThan";
+                    break;
+                case ExpressionType.GreaterEqual:
+                    opName = "op_GreaterThanOrEqual";
+                    break;
+                case ExpressionType.Less:
+                    opName = "op_LessThan";
+                    break;
+                case ExpressionType.LessEqual:
+                    opName = "op_LessThanOrEqual";
+                    break;
             }
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
-            var method = TypeUtils.GetOperatorOverload(opName, out Conversion[] conversion, left.Type, right.Type);
+            var method = TypeUtils.GetOperatorOverload(opName, out Conversion[] conversions, left.Type, right.Type);
+            node.Conversions = conversions;
             node.Method = method;
             node.Type = method.ReturnType;
             return node;
@@ -372,6 +421,8 @@ namespace FluidScript.Reflection.Emit
         /// <inheritdoc/>
         public Expression VisitArrayLiteral(ArrayLiteralExpression node)
         {
+            if (node.Size != null)
+                node.Size.Accept(this);
             node.Type = node.ArrayType.GetType(TypeGenerator).MakeArrayType();
             return node;
         }
@@ -470,8 +521,14 @@ namespace FluidScript.Reflection.Emit
                 case int _:
                     type = typeof(Integer);
                     break;
+                case float _:
+                    type = typeof(Float);
+                    break;
                 case double _:
                     type = typeof(Double);
+                    break;
+                case char _:
+                    type = typeof(Char);
                     break;
                 case string _:
                     type = typeof(String);
@@ -616,6 +673,6 @@ namespace FluidScript.Reflection.Emit
             node.Type = left.Type;
             return node;
         }
-        #endregion
+#endregion
     }
 }

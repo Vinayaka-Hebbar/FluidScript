@@ -2,20 +2,32 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
+    /// <summary>
+    /// Literal expression
+    /// </summary>
     public sealed class LiteralExpression : Expression
     {
+        /// <summary>
+        /// Literal valie
+        /// </summary>
         public readonly object Value;
 
+        /// <summary>
+        /// Initializes new <see cref="LiteralExpression"/>
+        /// </summary>
+        /// <param name="value"></param>
         public LiteralExpression(object value) : base(ExpressionType.Literal)
         {
             Value = value;
         }
 
+        /// <inheritdoc/>
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
             return visitor.VisitLiteral(this);
         }
 
+        /// <inheritdoc/>
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             //todo unsigned to signed
@@ -23,52 +35,46 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 case sbyte _:
                     generator.LoadByte((sbyte)Value);
-                    generator.NewObject(ReflectionHelpers.Byte_New);
-                    Type = typeof(Byte);
+                    generator.NewObject(Helpers.Byte_New);
                     break;
                 case short _:
                     generator.LoadInt16((short)Value);
-                    generator.NewObject(ReflectionHelpers.Short_New);
-                    Type = typeof(Short);
+                    generator.NewObject(Helpers.Short_New);
                     break;
                 case int _:
                     generator.LoadInt32((int)Value);
-                    generator.NewObject(ReflectionHelpers.Integer_New);
-                    Type = typeof(Integer);
+                    generator.NewObject(Helpers.Integer_New);
                     break;
                 case long _:
                     generator.LoadInt64((long)Value);
-                    generator.NewObject(ReflectionHelpers.Long_New);
-                    Type = typeof(Long);
+                    generator.NewObject(Helpers.Long_New);
                     break;
                 case float _:
                     generator.LoadSingle((float)Value);
-                    generator.NewObject(ReflectionHelpers.Float_New);
-                    Type = typeof(Float);
+                    generator.NewObject(Helpers.Float_New);
                     break;
                 case double _:
                     generator.LoadDouble((double)Value);
-                    generator.NewObject(ReflectionHelpers.Double_New);
-                    Type = typeof(Double);
+                    generator.NewObject(Helpers.Double_New);
                     break;
-                case bool _:
-                    generator.LoadBool((bool)Value);
-                    generator.NewObject(ReflectionHelpers.Bool_New);
-                    Type = typeof(Boolean);
+                case bool value:
+                    generator.LoadField(value ? Helpers.Bool_True : Helpers.Bool_False);
+                    break;
+                case char _:
+                    generator.LoadChar((char)Value);
+                    generator.NewObject(Helpers.Char_New);
                     break;
                 case string _:
                     generator.LoadString(Value.ToString());
-                    generator.NewObject(ReflectionHelpers.String_New);
-                    Type = typeof(String);
+                    generator.NewObject(Helpers.String_New);
                     break;
                 case null:
                     generator.LoadNull();
-                    Type = typeof(IFSObject);
                     break;
             }
         }
 
-
+        /// <inheritdoc/>
         public override string ToString()
         {
             return Value.ToString();

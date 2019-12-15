@@ -1,12 +1,20 @@
 ﻿namespace FluidScript.Compiler.SyntaxTree
 {
+    /// <summary>
+    /// Base Expression
+    /// </summary>
     public class Expression : Node
     {
+        /// <summary>
+        /// Empty Expression
+        /// </summary>
         public static readonly Expression Empty = new EmptyExpression();
 
         public static readonly Expression Null = new NullExpression();
 
         public static readonly Expression Undefined = new NullExpression();
+
+        internal static readonly Expression[] EmptyList = new Expression[0];
 
         public Expression(ExpressionType nodeType)
         {

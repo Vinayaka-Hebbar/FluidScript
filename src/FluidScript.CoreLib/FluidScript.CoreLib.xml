@@ -451,7 +451,7 @@
         </member>
         <member name="M:FluidScript.Math.Sum(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
             <summary>
-            Computes the sum of a sequence of System.Int32 values.
+            Computes the sum of a sequence of <see cref="T:FluidScript.Integer"/> values.
             </summary>
             <param name="list">
              A sequence of <see cref="T:FluidScript.IFSObject"/> values to calculate the sum of.
@@ -460,23 +460,64 @@
         </member>
         <member name="M:FluidScript.Math.Average(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
             <summary>
-            Computes the average of a sequence of System.Int32 values.
+            Computes the average of a sequence of <see cref="T:FluidScript.Integer"/> values.
             </summary>
             <param name="list">
              A sequence of <see cref="T:FluidScript.IFSObject"/> values to calculate the average of.
             </param>
             <returns>The average of the values in the sequence.</returns>
         </member>
+        <member name="M:FluidScript.Math.Max(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
+            <summary>
+            Returns the maximum value in a sequence of <see cref="T:FluidScript.Integer"/> values.
+            </summary>
+            <param name="list">
+            A sequence of <see cref="T:FluidScript.Integer"/> values to determine the minimum value of.
+            </param>
+            <returns>
+            The minimum value in the sequence.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Math.Min(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
+            <summary>
+            Returns the minimum value in a sequence of <see cref="T:FluidScript.Integer"/> values.
+            </summary>
+            <param name="list">
+            A sequence of <see cref="T:FluidScript.Integer"/> values to determine the minimum value of.
+            </param>
+            <returns>
+            The minimum value in the sequence.
+            </returns>
+        </member>
         <member name="T:FluidScript.Boolean">
             <summary>
-            <see cref="T:System.Boolean"/> wrapper
+            Represents a Boolean value.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Boolean.True">
+            <summary>
+            True
+            </summary>
+        </member>
+        <member name="F:FluidScript.Boolean.False">
+            <summary>
+            False
             </summary>
         </member>
         <member name="M:FluidScript.Boolean.#ctor(System.Boolean)">
             <summary>
-            New <see cref="T:FluidScript.Boolean"/> instance
+            Init New <see cref="T:FluidScript.Boolean"/> instance
             </summary>
             <param name="value"></param>
+        </member>
+        <member name="M:FluidScript.Boolean.HashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Boolean.__ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Boolean.__Equals(FluidScript.IFSObject)">
+            <inheritdoc/>
         </member>
         <member name="M:FluidScript.Boolean.Equals(System.Object)">
             <inheritdoc/>
@@ -532,6 +573,54 @@
         <member name="M:FluidScript.Boolean.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
         </member>
+        <member name="M:FluidScript.Boolean.op_Implicit(System.Boolean)~FluidScript.Boolean">
+            <summary>
+            Implicit convert from <see cref="T:System.Boolean"/> to <see cref="T:FluidScript.Boolean"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Boolean.op_Implicit(FluidScript.Boolean)~System.Boolean">
+            <summary>
+            Implicit convert from <see cref="T:FluidScript.Boolean"/> to <see cref="T:System.Boolean"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Boolean.op_Equality(FluidScript.Boolean,FluidScript.Boolean)">
+            <summary>
+            op_Equality overload
+            </summary>
+        </member>
+        <member name="M:FluidScript.Boolean.op_Inequality(FluidScript.Boolean,FluidScript.Boolean)">
+            <summary>
+            op_Inequality overload
+            </summary>
+        </member>
+        <member name="T:FluidScript.Byte">
+            <summary>
+             Represents an 8-bit signed integer.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Byte.#ctor(System.SByte)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FluidScript.Byte"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Byte.__ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Byte.HashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Byte.__Equals(FluidScript.IFSObject)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Byte.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Byte.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Byte.ToString">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Byte.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
         </member>
@@ -580,6 +669,16 @@
         <member name="T:FluidScript.Char">
             <summary>
             Represents a character as a UTF-16 code unit.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Char.MinValue">
+            <summary>
+            Min char Value
+            </summary>
+        </member>
+        <member name="F:FluidScript.Char.MaxValue">
+            <summary>
+            Max char Value
             </summary>
         </member>
         <member name="M:FluidScript.Char.#ctor(System.Char)">
@@ -681,6 +780,15 @@
             Initializes a new instance of the <see cref="T:FluidScript.Double"/>
             </summary>
         </member>
+        <member name="M:FluidScript.Double.__ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Double.HashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Double.__Equals(FluidScript.IFSObject)">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Double.Equals(System.Object)">
             <inheritdoc/>
         </member>
@@ -734,6 +842,34 @@
         </member>
         <member name="M:FluidScript.Double.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
+        </member>
+        <member name="T:FluidScript.Float">
+            <summary>
+            Represents a single-precision floating-point number.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Float.#ctor(System.Single)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FluidScript.Float"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Float.__ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Float.HashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Float.__Equals(FluidScript.IFSObject)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Float.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Float.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Float.ToString">
+            <inheritdoc/>
         </member>
         <member name="M:FluidScript.Float.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
@@ -853,6 +989,34 @@
         <member name="M:FluidScript.Integer.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
         </member>
+        <member name="T:FluidScript.Long">
+            <summary>
+            Represents a 64-bit signed integer.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Long.#ctor(System.Int64)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FluidScript.Long"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Long.__ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Long.HashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Long.__Equals(FluidScript.IFSObject)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Long.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Long.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Long.ToString">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Long.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
         </member>
@@ -897,6 +1061,34 @@
         </member>
         <member name="M:FluidScript.Long.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
+        </member>
+        <member name="T:FluidScript.Short">
+            <summary>
+            Represents a 16-bit signed integer.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Short.#ctor(System.Int16)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FluidScript.Short"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Short.__ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Short.HashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Short.__Equals(FluidScript.IFSObject)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Short.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Short.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Short.ToString">
+            <inheritdoc/>
         </member>
         <member name="M:FluidScript.Short.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
@@ -1009,6 +1201,21 @@
         <member name="M:FluidScript.String.op_Implicit(System.String)~FluidScript.String">
             <summary>
             Implict conversion from <see cref="T:System.String"/> to <see cref="T:FluidScript.String"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.String.op_Addition(FluidScript.String,FluidScript.String)">
+            <summary>
+            op_Addition overload
+            </summary>
+        </member>
+        <member name="M:FluidScript.String.op_Equality(FluidScript.String,FluidScript.String)">
+            <summary>
+            op_Equality overload
+            </summary>
+        </member>
+        <member name="M:FluidScript.String.op_Inequality(FluidScript.String,FluidScript.String)">
+            <summary>
+            op_InEquality overload
             </summary>
         </member>
     </members>
