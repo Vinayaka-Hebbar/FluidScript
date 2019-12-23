@@ -177,9 +177,19 @@
             return new Integer(left.m_value + right.m_value);
         }
 
+        public static Integer operator +(Integer value)
+        {
+            return new Integer(+value.m_value);
+        }
+
         public static Integer operator -(Integer left, Integer right)
         {
             return new Integer(left.m_value - right.m_value);
+        }
+
+        public static Integer operator -(Integer value)
+        {
+            return new Integer(-value.m_value);
         }
 
         public static Integer operator *(Integer left, Integer right)
@@ -245,6 +255,29 @@
         public static Integer operator --(Integer value)
         {
             return new Integer(value.m_value + 1);
+        }
+
+        public static Integer operator &(Integer left,Integer right)
+        {
+            return new Integer(left.m_value & right.m_value);
+        }
+
+        public static Integer operator |(Integer left, Integer right)
+        {
+            return new Integer(left.m_value | right.m_value);
+        }
+
+        /// <summary>
+        /// op_ExclusiveOr implementation
+        /// </summary>
+        public static Integer operator ^(Integer left, Integer right)
+        {
+            return new Integer(left.m_value ^ right.m_value);
+        }
+
+        public static Integer operator ~(Integer value)
+        {
+            return new Integer(~value.m_value);
         }
     }
 }

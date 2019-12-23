@@ -11,6 +11,8 @@ namespace FluidScript.Compiler
     /// </summary>
     public class SyntaxVisitor : System.IDisposable
     {
+        private const char DotChar = '.';
+
         /// <summary>
         /// Source text
         /// </summary>
@@ -1517,13 +1519,18 @@ namespace FluidScript.Compiler
                             Source.ReadChar();
                             continue;
                         }
-                    case '.':
+                    case DotChar:
+                        //skip .
                         Source.ReadChar();
-                        c = Source.ReadChar();
-                        if (char.IsDigit(c))
+                        next = Source.PeekChar();
+                        if (char.IsDigit(next))
                         {
                             dot++;
+                            //add .
+                            builder.Append(DotChar);
                             builder.Append(next);
+                            //skip digit
+                            Source.ReadChar();
                             if (dot > 1)
                             {
                                 break;

@@ -149,7 +149,7 @@ namespace FluidScript.Reflection.Emit
                     if (data != null)
                         return data.Match(name);
                 }
-                return m.Name == name;
+                return name.Equals(name);
             }
             var member = Members.Where(m => m.BindingFlagsMatch(flags)).Select(mem => mem.MemberInfo).Where(HasMember);
             if (member.Any())

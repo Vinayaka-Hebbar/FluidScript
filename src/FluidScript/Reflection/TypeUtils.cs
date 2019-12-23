@@ -96,7 +96,8 @@ namespace FluidScript.Reflection
                         return m;
                 }
             }
-            throw new System.Exception("No operator overload");
+            conversions = new Emit.Conversion[0];
+            return null;
         }
 
         private static bool MatchTypes(MethodInfo method, System.Type[] types, out Emit.Conversion[] conversions)

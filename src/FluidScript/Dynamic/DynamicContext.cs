@@ -11,6 +11,7 @@ namespace FluidScript.Dynamic
     /// </summary>
     public sealed class DynamicContext : IDictionary<string, object>, Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider, System.Dynamic.IDynamicMetaObjectProvider
     {
+        internal static readonly IFSObject Null = new FSObject();
         internal readonly LocalScope scope;
 
         internal bool hasReturn;
@@ -58,6 +59,20 @@ namespace FluidScript.Dynamic
         }
 
         /// <summary>
+        /// Evaluate the <paramref name="statement"/>
+        /// </summary>
+        /// <exception cref="IndexOutOfRangeException"/>
+        /// <exception cref="NullReferenceException"/>
+        /// <exception cref="MissingMethodException"/>
+        public object Invoke(Statement statement)
+        {
+            statement.Accept(this);
+            if (LongJump != null)
+                return LongJump();
+            return null;
+        }
+
+        /// <summary>
         /// Evaluate the <paramref name="syntaxTree"/>
         /// </summary>
         /// <exception cref="IndexOutOfRangeException"/>
@@ -78,8 +93,9 @@ namespace FluidScript.Dynamic
             return null;
         }
 
+        #region Visitors
         /// <inheritdoc/>
-        public object VisitArrayLiteral(ArrayLiteralExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitArrayLiteral(ArrayLiteralExpression node)
         {
             Type type;
             if (node.ArrayType != null)
@@ -97,7 +113,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitAssignment(AssignmentExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitAssignment(AssignmentExpression node)
         {
             var value = node.Right.Accept(this);
             var left = node.Left;
@@ -156,7 +172,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitBinary(BinaryExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitBinary(BinaryExpression node)
         {
             string opName = null;
             switch (node.NodeType)
@@ -196,9 +212,14 @@ namespace FluidScript.Dynamic
                     break;
             }
             var left = node.Left.Accept(this);
+            if (left == null)
+                throw new OperationCanceledException(string.Concat("NullReference at ", node.Left.ToString()));
             var right = node.Right.Accept(this);
-            var method = Reflection.TypeUtils.GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversion, left.GetType(), right.GetType());
-            node.Method = method;
+            if (right == null)
+                throw new OperationCanceledException(string.Concat("NullReference at ", node.Right.ToString()));
+            var method = Reflection.TypeUtils.
+                GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversion, left.GetType(), right.GetType());
+            node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
             var args = new object[] { left, right };
             for (int i = 0; i < conversion.Length; i++)
             {
@@ -210,7 +231,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitCall(InvocationExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitCall(InvocationExpression node)
         {
             var target = node.Target;
             var instance = Instance;
@@ -258,7 +279,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitIndex(IndexExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitIndex(IndexExpression node)
         {
             var target = node.Target.Accept(this);
             var type = target.GetType();
@@ -275,7 +296,7 @@ namespace FluidScript.Dynamic
             {
                 var types = args.Select(arg => arg.GetType()).ToArray();
                 var indexer = type.GetProperty("Item", types);
-                node.Indexer = indexer ?? throw new Exception("Indexer not found");
+                node.Indexer = indexer ?? throw new Exception(string.Concat("Indexer not found at ", node.ToString()));
                 type = indexer.PropertyType;
                 value = node.Indexer.GetValue(target, args);
             }
@@ -284,7 +305,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitLiteral(LiteralExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitLiteral(LiteralExpression node)
         {
             object value = node.Value;
             switch (value)
@@ -314,7 +335,7 @@ namespace FluidScript.Dynamic
         {
             if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
             {
-                var data = (System.Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                var data = (Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
                 if (data != null)
                     return data.Match(filter);
             }
@@ -322,10 +343,12 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitMember(MemberExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            var member = target.GetType().FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, Reflection.TypeUtils.Any, this.HasMember, node.Name).FirstOrDefault();
+            var member = target.GetType()
+                .FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, Reflection.TypeUtils.Any, HasMember, node.Name)
+                .FirstOrDefault();
             if (member != null)
             {
                 if (member.MemberType == System.Reflection.MemberTypes.Field)
@@ -347,7 +370,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitMember(NameExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitMember(NameExpression node)
         {
             var name = node.Name;
             if (scope.TryGetValue(name, out LocalVariable variable))
@@ -380,7 +403,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitTernary(TernaryExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitTernary(TernaryExpression node)
         {
             var condition = node.First.Accept(this);
             switch (condition)
@@ -397,61 +420,81 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public object VisitThis(ThisExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitThis(ThisExpression node)
         {
             return Instance;
         }
 
         /// <inheritdoc/>
-        public object VisitUnary(UnaryExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitUnary(UnaryExpression node)
         {
             var value = node.Operand.Accept(this);
             Type type = value.GetType();
             string name = null;
-            bool updated = false;
-            bool modified = false;
+            //modified a++; updated new value
+            bool modified = false, updated = true;
             switch (node.NodeType)
             {
                 case ExpressionType.Parenthesized:
                     return value;
                 case ExpressionType.PostfixPlusPlus:
                     name = "op_Increment";
-                    updated = true;
+                    modified = true;
+                    updated = false;
                     break;
                 case ExpressionType.PrefixPlusPlus:
                     name = "op_Increment";
-                    updated = modified = true;
+                    modified = true;
                     break;
                 case ExpressionType.PostfixMinusMinus:
                     name = "op_Decrement";
-                    updated = true;
+                    modified = true;
+                    updated = false;
                     break;
                 case ExpressionType.PrefixMinusMinus:
                     name = "op_Decrement";
-                    updated = modified = true;
+                    modified = true;
+                    break;
+                case ExpressionType.Bang:
+                    name = "op_LogicalNot";
+                    break;
+                case ExpressionType.Plus:
+                    name = "op_UnaryPlus";
+                    break;
+                case ExpressionType.Minus:
+                    name = "op_UnaryNegation";
+                    break;
+                case ExpressionType.Circumflex:
+                    name = "op_ExclusiveOr";
+                    break;
+                case ExpressionType.Or:
+                    name = "op_BitwiseOr";
+                    break;
+                case ExpressionType.And:
+                    name = "op_BitwiseAnd";
                     break;
             }
+            //todo conversion
             var method = Reflection.TypeUtils.GetOperatorOverload(name, out Reflection.Emit.Conversion[] _, type);
             var obj = method.Invoke(null, new object[] { value });
-            if (updated)
+            node.Type = method.ReturnType;
+            if (modified)
             {
                 var exp = new AssignmentExpression(node.Operand, new LiteralExpression(obj));
                 exp.Accept(this);
-                return modified ? obj : value;
             }
-            node.Type = method.ReturnType;
-            return value;
+            return updated ? obj : value;
         }
 
         /// <inheritdoc/>
-        public void VisitExpression(ExpressionStatement node)
+        void Compiler.IStatementVisitor.VisitExpression(ExpressionStatement node)
         {
             var value = node.Expression.Accept(this);
             LongJump = () => value;
         }
 
         /// <inheritdoc/>
-        public object VisitDeclaration(VariableDeclarationExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitDeclaration(VariableDeclarationExpression node)
         {
             object value = null;
             Type type;
@@ -477,7 +520,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public void VisitReturn(ReturnOrThrowStatement node)
+        void Compiler.IStatementVisitor.VisitReturn(ReturnOrThrowStatement node)
         {
             hasReturn = true;
             var value = node.Expression?.Accept(this);
@@ -485,8 +528,9 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public void VisitBlock(BlockStatement node)
+        void Compiler.IStatementVisitor.VisitBlock(BlockStatement node)
         {
+            hasReturn = false;
             using (var context = scope.CreateContext())
             {
                 foreach (var statement in node.Statements)
@@ -496,16 +540,19 @@ namespace FluidScript.Dynamic
                         break;
                 }
             }
+            //for block having no return
+            if (!hasReturn)
+                LongJump = null;
         }
 
         /// <inheritdoc/>
-        public object VisitNull(NullExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitNull(NullExpression node)
         {
-            return null;
+            return Null;
         }
 
         /// <inheritdoc/>
-        public object VisitNullPropegator(NullPropegatorExpression node)
+        object Compiler.IExpressionVisitor<object>.VisitNullPropegator(NullPropegatorExpression node)
         {
             object value = node.Left.Accept(this);
             if (value is null)
@@ -517,7 +564,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public void VisitDeclaration(LocalDeclarationStatement node)
+        void Compiler.IStatementVisitor.VisitDeclaration(LocalDeclarationStatement node)
         {
             foreach (var item in node.DeclarationExpressions)
             {
@@ -526,7 +573,7 @@ namespace FluidScript.Dynamic
         }
 
         /// <inheritdoc/>
-        public void VisitLoop(LoopStatement node)
+        void Compiler.IStatementVisitor.VisitLoop(LoopStatement node)
         {
             hasBreak = hasContinue = false;
             //todo if value has implic converter
@@ -585,7 +632,7 @@ namespace FluidScript.Dynamic
         }
 
         ///<inheritdoc/>
-        public void VisitIf(IfStatement node)
+        void Compiler.IStatementVisitor.VisitIf(IfStatement node)
         {
             if (Convert.ToBoolean(node.Condition.Accept(this)))
             {
@@ -597,11 +644,20 @@ namespace FluidScript.Dynamic
             }
         }
 
-        System.Dynamic.DynamicMetaObject System.Dynamic.IDynamicMetaObjectProvider.GetMetaObject(System.Linq.Expressions.Expression parameter)
+        /// <inheritdoc/>
+        void Compiler.IStatementVisitor.VisitBreak(BreakStatement node)
         {
-            return new MetaObject(parameter, System.Dynamic.BindingRestrictions.Empty, this);
+            hasBreak = true;
         }
 
+        /// <inheritdoc/>
+        void Compiler.IStatementVisitor.VisitContinue(ContinueStatement node)
+        {
+            hasContinue = true;
+        }
+        #endregion
+
+        #region IDictionary
         bool IDictionary<string, object>.ContainsKey(string key)
         {
             return scope.Contains(key);
@@ -656,16 +712,6 @@ namespace FluidScript.Dynamic
             return scope.Remove(item.Key);
         }
 
-        IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()
-        {
-            return GetEnumerator(scope);
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator(scope);
-        }
-
         private static IEnumerator<KeyValuePair<string, object>> GetEnumerator(LocalScope scope)
         {
             foreach (LocalVariable item in scope)
@@ -677,16 +723,22 @@ namespace FluidScript.Dynamic
             }
         }
 
-        /// <inheritdoc/>
-        public void VisitBreak(BreakStatement node)
+        IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()
         {
-            hasBreak = true;
+            return GetEnumerator(scope);
         }
 
-        /// <inheritdoc/>
-        public void VisitContinue(ContinueStatement node)
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            hasContinue = true;
+            return GetEnumerator(scope);
         }
+        #endregion
+
+        #region MetadataProvider
+        System.Dynamic.DynamicMetaObject System.Dynamic.IDynamicMetaObjectProvider.GetMetaObject(System.Linq.Expressions.Expression parameter)
+        {
+            return new MetaObject(parameter, System.Dynamic.BindingRestrictions.Empty, this);
+        }
+        #endregion
     }
 }

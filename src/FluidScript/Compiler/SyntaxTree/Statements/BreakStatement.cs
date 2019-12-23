@@ -3,12 +3,11 @@
     /// <summary>
     /// Represents a break statement.
     /// </summary>
-    public class BreakStatement : Statement
+    public sealed class BreakStatement : Statement
     {
         /// <summary>
         /// Creates a new BreakStatement instance.
         /// </summary>
-        /// <param name="labels"> The labels that are associated with this statement. </param>
         public BreakStatement()
             : base(StatementType.Break)
         {

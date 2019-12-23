@@ -6,6 +6,7 @@
     public abstract class Statement : Node
     {
         private static readonly string[] NoLabels = new string[0];
+
         internal static readonly Statement Empty = new EmptyStatement();
 
         internal static readonly Statement Break = new BreakStatement();

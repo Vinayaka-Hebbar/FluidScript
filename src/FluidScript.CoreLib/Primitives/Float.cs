@@ -181,9 +181,19 @@
             return new Float(left.m_value + right.m_value);
         }
 
+        public static Float operator +(Float value)
+        {
+            return new Float(+value.m_value);
+        }
+
         public static Float operator -(Float left, Float right)
         {
             return new Float(left.m_value - right.m_value);
+        }
+
+        public static Float operator -(Float value)
+        {
+            return new Float(-value.m_value);
         }
 
         public static Float operator *(Float left, Float right)

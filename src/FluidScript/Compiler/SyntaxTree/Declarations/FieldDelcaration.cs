@@ -13,7 +13,6 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void Create(TypeGenerator generator)
         {
-            var builder = generator.GetBuilder();
             System.Reflection.FieldAttributes attrs = GetAttribute();
             foreach (var field in Declarations)
             {

@@ -49,8 +49,7 @@ namespace FluidScript.Dynamic
 
         public void Dispose()
         {
-            //Removes Local Variables
-            foreach (LocalVariable item in Instances.Keys)
+            foreach (var item in System.Linq.Enumerable.Reverse(Instances.Keys))
             {
                 _scope.RemoveAt(item.Index);
             }

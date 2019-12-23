@@ -19,6 +19,11 @@ namespace FluidScipt.ConsoleTest
             }
         }
 
+        public override String __ToString()
+        {
+            return _name;
+        }
+
         public Integer Add()
         {
             Integer x = 0;

@@ -234,6 +234,16 @@
         <member name="M:FluidScript.FSObject.ToString">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.FSObject.op_Equality(FluidScript.FSObject,FluidScript.FSObject)">
+            <summary>
+            Equal Overload
+            </summary>
+        </member>
+        <member name="M:FluidScript.FSObject.op_Inequality(FluidScript.FSObject,FluidScript.FSObject)">
+            <summary>
+            Not Equal Overload
+            </summary>
+        </member>
         <member name="T:FluidScript.IFSObject">
             <summary>
             Supports all classes in the FluidScipt
@@ -585,12 +595,17 @@
         </member>
         <member name="M:FluidScript.Boolean.op_Equality(FluidScript.Boolean,FluidScript.Boolean)">
             <summary>
-            op_Equality overload
+            op_Equality implementation
             </summary>
         </member>
         <member name="M:FluidScript.Boolean.op_Inequality(FluidScript.Boolean,FluidScript.Boolean)">
             <summary>
-            op_Inequality overload
+            op_Inequality implementation
+            </summary>
+        </member>
+        <member name="M:FluidScript.Boolean.op_LogicalNot(FluidScript.Boolean)">
+            <summary>
+            op_LogicalNot implementation
             </summary>
         </member>
         <member name="T:FluidScript.Byte">
@@ -988,6 +1003,11 @@
         </member>
         <member name="M:FluidScript.Integer.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
+        </member>
+        <member name="M:FluidScript.Integer.op_ExclusiveOr(FluidScript.Integer,FluidScript.Integer)">
+            <summary>
+            op_ExclusiveOr implementation
+            </summary>
         </member>
         <member name="T:FluidScript.Long">
             <summary>

@@ -184,7 +184,7 @@
         public static implicit operator bool(Boolean value) => value.m_value;
 
         /// <summary>
-        /// op_Equality overload
+        /// op_Equality implementation
         /// </summary>
         public static Boolean operator ==(Boolean left, Boolean right)
         {
@@ -192,12 +192,19 @@
         }
 
         /// <summary>
-        /// op_Inequality overload
+        /// op_Inequality implementation
         /// </summary>
         public static Boolean operator !=(Boolean left, Boolean right)
         {
-            return left.m_value == right.m_value ? True : False;
+            return left.m_value != right.m_value ? True : False;
         }
 
+        /// <summary>
+        /// op_LogicalNot implementation
+        /// </summary>
+        public static Boolean operator !(Boolean value)
+        {
+            return !value.m_value ? True : False;
+        }
     }
 }

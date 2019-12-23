@@ -44,5 +44,20 @@
             return __ToString().m_value;
         }
 
+        /// <summary>
+        /// Equal Overload
+        /// </summary>
+        public static Boolean operator ==(FSObject left, FSObject right)
+        {
+            return left.__Equals(right);
+        }
+
+        /// <summary>
+        /// Not Equal Overload
+        /// </summary>
+        public static Boolean operator !=(FSObject left, FSObject right)
+        {
+            return left.__Equals(right).m_value ? Boolean.False : Boolean.True;
+        }
     }
 }

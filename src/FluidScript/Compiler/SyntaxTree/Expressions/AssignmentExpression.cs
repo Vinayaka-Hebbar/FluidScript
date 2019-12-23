@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 var exp = (NameExpression)Left;
                 Binding binding = exp.Binding;
-                if (binding.IsMember && generator.Method.IsStatic == false)
+                if (binding.IsMember && binding.IsStatic == false)
                     generator.LoadArgument(0);
                 Right.GenerateCode(generator);
                 binding.GenerateSet(generator);

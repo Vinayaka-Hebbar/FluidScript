@@ -18,7 +18,7 @@ namespace FluidScript
         /// </summary>
         public ScriptEngine()
         {
-            Settings = new ParserSettings();
+            Settings = ParserSettings.Default;
         }
 
         /// <summary>
@@ -37,6 +37,22 @@ namespace FluidScript
         public Compiler.SyntaxTree.Statement GetStatement(string text)
         {
             using (SyntaxVisitor visitor = new SyntaxVisitor(new StringSource(text), Settings))
+            {
+                if (visitor.MoveNext())
+                    return visitor.VisitStatement();
+            }
+            return Compiler.SyntaxTree.Statement.Empty;
+        }
+
+        /// <summary>
+        /// Creates <see cref="Compiler.SyntaxTree.Statement"/> for <paramref name="text"/>
+        /// </summary>
+        /// <param name="text">Text to parse</param>
+        /// <param name="settings">Parse settings</param>
+        /// <returns>Parse <see cref="Compiler.SyntaxTree.Statement"/></returns>
+        public static Compiler.SyntaxTree.Statement GetStatement(string text, ParserSettings settings)
+        {
+            using (SyntaxVisitor visitor = new SyntaxVisitor(new StringSource(text), settings))
             {
                 if (visitor.MoveNext())
                     return visitor.VisitStatement();

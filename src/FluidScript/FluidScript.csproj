@@ -9,7 +9,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.0-alpha</Version>
+    <Version>1.0.2-beta</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -21,7 +21,7 @@
     <PackageReleaseNotes>Initial Release of FluidScript</PackageReleaseNotes>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript\FluidScript.xml</DocumentationFile>
   </PropertyGroup>
 
@@ -48,7 +48,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.0" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.2-alpha" />
   </ItemGroup>
 
 </Project>

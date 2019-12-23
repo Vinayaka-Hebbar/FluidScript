@@ -1,5 +1,4 @@
-﻿using FluidScript.Compiler;
-using FluidScript.Compiler.SyntaxTree;
+﻿using FluidScript.Compiler.SyntaxTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,7 +70,7 @@ namespace FluidScript.Reflection.Emit
         /// Marks a sequence point in the Microsoft intermediate language (MSIL) stream.
         /// </summary>
         /// <param name="span"> The start and end positions which define the sequence point. </param>
-        public void MarkSequencePoint(TextSpan span)
+        public void MarkSequencePoint(Compiler.TextSpan span)
         {
 #if NET40
             MarkSequencePoint(DebugDoument, span);
@@ -274,7 +273,7 @@ namespace FluidScript.Reflection.Emit
             }
         }
 
-#region Return
+        #region Return
         /// <summary>
         /// Gets or sets the label the return statement should jump to (with the return value on
         /// top of the stack).  Will be <c>null</c> if code is being generated outside a function
@@ -299,7 +298,7 @@ namespace FluidScript.Reflection.Emit
 
 
 
-#endregion
+        #endregion
 
         ///<inheritdoc/>
         public override ILLocalVariable DeclareVariable(Type type, string name = null)
@@ -338,10 +337,10 @@ namespace FluidScript.Reflection.Emit
             Complete();
         }
 
-#region Visitors
+        #region Visitors
 
         /// <inheritdoc/>
-        public Expression VisitUnary(UnaryExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitUnary(UnaryExpression node)
         {
             var operand = node.Operand.Accept(this);
             string name = null;
@@ -361,6 +360,24 @@ namespace FluidScript.Reflection.Emit
                 case ExpressionType.PrefixMinusMinus:
                     name = "op_Decrement";
                     break;
+                case ExpressionType.Bang:
+                    name = "op_LogicalNot";
+                    break;
+                case ExpressionType.Plus:
+                    name = "op_UnaryPlus";
+                    break;
+                case ExpressionType.Minus:
+                    name = "op_UnaryNegation";
+                    break;
+                case ExpressionType.Circumflex:
+                    name = "op_ExclusiveOr";
+                    break;
+                case ExpressionType.Or:
+                    name = "op_BitwiseOr";
+                    break;
+                case ExpressionType.And:
+                    name = "op_BitwiseAnd";
+                    break;
             }
             var method = TypeUtils.GetOperatorOverload(name, out Conversion[] conversions, operand.Type);
             node.Conversions = conversions;
@@ -370,7 +387,7 @@ namespace FluidScript.Reflection.Emit
         }
 
         /// <inheritdoc/>
-        public Expression VisitBinary(BinaryExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitBinary(BinaryExpression node)
         {
             string opName = null;
             switch (node.NodeType)
@@ -419,27 +436,38 @@ namespace FluidScript.Reflection.Emit
         }
 
         /// <inheritdoc/>
-        public Expression VisitArrayLiteral(ArrayLiteralExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitArrayLiteral(ArrayLiteralExpression node)
         {
             if (node.Size != null)
                 node.Size.Accept(this);
-            node.Type = node.ArrayType.GetType(TypeGenerator).MakeArrayType();
+            node.Type = node.ArrayType != null ? node.ArrayType.GetType(TypeGenerator).MakeArrayType() : typeof(IFSObject).MakeArrayType();
             return node;
         }
 
         /// <inheritdoc/>
-        public Expression VisitAssignment(AssignmentExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitAssignment(AssignmentExpression node)
         {
             node.Type = node.Right.Accept(this).Type;
             node.Left.Accept(this);
             return node;
         }
 
+        bool HasMember(System.Reflection.MemberInfo m, object filter)
+        {
+            if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
+            {
+                var data = (Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                if (data != null)
+                    return data.Match(filter);
+            }
+            return filter.Equals(m.Name);
+        }
+
         /// <inheritdoc/>
-        public Expression VisitMember(MemberExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            var member = target.Type.GetMember(node.Name).FirstOrDefault();
+            var member = target.Type.FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, TypeUtils.Any, HasMember, node.Name).FirstOrDefault();
             Binding binding = null;
             if (member != null)
             {
@@ -470,7 +498,7 @@ namespace FluidScript.Reflection.Emit
         }
 
         /// <inheritdoc/>
-        public Expression VisitCall(InvocationExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitCall(InvocationExpression node)
         {
             var target = node.Target.Accept(this);
             var types = GetTypes(node.Arguments);
@@ -513,7 +541,7 @@ namespace FluidScript.Reflection.Emit
         }
 
         /// <inheritdoc/>
-        public Expression VisitLiteral(LiteralExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitLiteral(LiteralExpression node)
         {
             Type type = null;
             switch (node.Value)
@@ -545,7 +573,7 @@ namespace FluidScript.Reflection.Emit
         }
 
         ///<inheritdoc/>
-        public Expression VisitTernary(TernaryExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitTernary(TernaryExpression node)
         {
             var conditionType = node.First.Accept(this).Type;
             if (conditionType == typeof(Boolean) || conditionType == typeof(bool))
@@ -575,7 +603,7 @@ namespace FluidScript.Reflection.Emit
         }
 
         /// <inheritdoc/>
-        public Expression VisitMember(NameExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitMember(NameExpression node)
         {
             var name = node.Name;
             var variable = GetLocalVariable(name);
@@ -617,14 +645,14 @@ namespace FluidScript.Reflection.Emit
         }
 
         /// <inheritdoc/>
-        public Expression VisitThis(ThisExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitThis(ThisExpression node)
         {
             node.Type = TypeGenerator;
             return node;
         }
 
         /// <inheritdoc/>
-        public Expression VisitIndex(IndexExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitIndex(IndexExpression node)
         {
             var target = node.Target.Accept(this);
             var type = target.Type;
@@ -644,7 +672,7 @@ namespace FluidScript.Reflection.Emit
         }
 
         /// <inheritdoc/>
-        public Expression VisitDeclaration(VariableDeclarationExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitDeclaration(VariableDeclarationExpression node)
         {
             if (node.VariableType == null)
             {
@@ -661,18 +689,18 @@ namespace FluidScript.Reflection.Emit
         }
 
         /// <inheritdoc/>
-        public Expression VisitNull(NullExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitNull(NullExpression node)
         {
             return node;
         }
 
         /// <inheritdoc/>
-        public Expression VisitNullPropegator(NullPropegatorExpression node)
+        Expression Compiler.IExpressionVisitor<Expression>.VisitNullPropegator(NullPropegatorExpression node)
         {
             var left = node.Left.Accept(this);
             node.Type = left.Type;
             return node;
         }
-#endregion
+        #endregion
     }
 }

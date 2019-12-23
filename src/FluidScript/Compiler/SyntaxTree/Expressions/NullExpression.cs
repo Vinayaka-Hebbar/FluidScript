@@ -2,6 +2,9 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
+    /// <summary>
+    /// Null Expression
+    /// </summary>
     public sealed class NullExpression : Expression
     {
         public NullExpression() : base(ExpressionType.Literal)
@@ -16,6 +19,11 @@ namespace FluidScript.Compiler.SyntaxTree
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             generator.LoadNull();
+        }
+
+        public override string ToString()
+        {
+            return "null";
         }
     }
 }

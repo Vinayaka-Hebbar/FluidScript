@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace FluidScript.Dynamic
+﻿namespace FluidScript.Dynamic
 {
-    internal sealed class LocalScope :  System.Collections.Generic.IEnumerable<LocalVariable>
+    internal sealed class LocalScope : System.Collections.Generic.IEnumerable<LocalVariable>
     {
         private readonly System.Collections.Generic.List<LocalVariable> LocalVariables;
 

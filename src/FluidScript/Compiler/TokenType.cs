@@ -60,7 +60,9 @@
         Multiply = 68,
         Divide = 69,
         Percent = 70,
-        //^
+        /// <summary>
+        ///^
+        /// </summary>
         Circumflex = 71,
         #endregion
         #region Logical & Shift
@@ -75,7 +77,9 @@
         GreaterEqual = 131,
         // == 
         EqualEqual = 132,
-        //!
+        /// <summary>
+        /// !
+        /// </summary>
         Bang = 133,
         // != 
         BangEqual = 134,

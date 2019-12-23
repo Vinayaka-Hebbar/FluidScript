@@ -183,9 +183,19 @@
             return new Double(left.m_value + right.m_value);
         }
 
+        public static Double operator +(Double value)
+        {
+            return new Double(+value.m_value);
+        }
+
         public static Double operator -(Double left, Double right)
         {
             return new Double(left.m_value - right.m_value);
+        }
+
+        public static Double operator -(Double value)
+        {
+            return new Double(-value.m_value);
         }
 
         public static Double operator *(Double left, Double right)

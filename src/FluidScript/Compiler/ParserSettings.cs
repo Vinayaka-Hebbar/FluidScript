@@ -6,6 +6,16 @@ namespace FluidScript.Compiler
 {
     public sealed class ParserSettings
     {
+        private static ParserSettings _default;
+        public static ParserSettings Default
+        {
+            get
+            {
+                if (_default == null)
+                    _default = new ParserSettings();
+                return _default;
+            }
+        }
         public ParserSettings()
         {
             Comparer = EqualityComparer<string>.Default;

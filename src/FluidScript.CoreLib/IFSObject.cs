@@ -9,6 +9,7 @@
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>A string that represents the current object.</returns>
+        [Runtime.Register("toString")]
         String __ToString();
         /// <summary>
         /// Determines whether the specified <see cref="IFSObject"/> is equal to the current <see cref="IFSObject"/>.
@@ -18,11 +19,13 @@
         /// true if the specified System.Object is equal to the current System.Object; otherwise,
         /// false.
         /// </returns>
+        [Runtime.Register("equals")]
         Boolean __Equals(IFSObject obj);
         /// <summary>
         /// Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>A hash code for the current <see cref="IFSObject"/>.</returns>
+        [Runtime.Register("hashCode")]
         Integer HashCode();
     }
 }

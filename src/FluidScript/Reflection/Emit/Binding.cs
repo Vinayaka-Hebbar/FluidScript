@@ -11,6 +11,8 @@ namespace FluidScript.Reflection.Emit
         public abstract Type Type { get; }
 
         public abstract bool IsMember { get; } 
+
+        public abstract bool IsStatic { get; }
     }
 
     public sealed class VariableBinding : Binding
@@ -25,6 +27,8 @@ namespace FluidScript.Reflection.Emit
         }
 
         public override bool IsMember { get; } = false;
+
+        public override bool IsStatic { get; } = false;
 
         public override Type Type { get; }
 
@@ -50,6 +54,8 @@ namespace FluidScript.Reflection.Emit
         }
 
         public override bool IsMember { get; } = false;
+
+        public override bool IsStatic { get; } = false;
 
         public override Type Type { get; }
 
@@ -81,6 +87,8 @@ namespace FluidScript.Reflection.Emit
         }
 
         public override bool IsMember { get; } = true;
+
+        public override bool IsStatic => _field.IsStatic;
 
         public override Type Type { get; }
 
@@ -114,11 +122,44 @@ namespace FluidScript.Reflection.Emit
 
         public override bool IsMember { get; } = true;
 
+        private System.Reflection.MethodInfo _getter;
+        public System.Reflection.MethodInfo Getter
+        {
+            get
+            {
+                if (_getter == null)
+                    _getter = _property.GetGetMethod(true);
+                return _getter;
+            }
+        }
+
+        private System.Reflection.MethodInfo _setter;
+        public System.Reflection.MethodInfo Setter
+        {
+            get
+            {
+                if (_setter == null)
+                    _setter = _property.GetSetMethod(true);
+                return _setter;
+            }
+        }
+
+        public override bool IsStatic
+        {
+            get
+            {
+                if (Getter != null)
+                    return Getter.IsStatic;
+                if (Setter != null)
+                    return Setter.IsStatic;
+                return false;
+            }
+        }
         public override Type Type { get; }
 
         public override void GenerateGet(MethodBodyGenerator generator)
         {
-            var get = _property.GetGetMethod(true);
+            var get = Getter;
             if (get is IMethodBaseGenerator)
                 get = (System.Reflection.MethodInfo)((IMethodBaseGenerator)get).MethodBase;
             generator.Call(get);
@@ -126,7 +167,7 @@ namespace FluidScript.Reflection.Emit
 
         public override void GenerateSet(MethodBodyGenerator generator)
         {
-            var set = _property.GetSetMethod(true);
+            var set = Setter;
             if (set is IMethodBaseGenerator)
                 set = (System.Reflection.MethodInfo)((IMethodBaseGenerator)set).MethodBase;
             generator.Call(set);
