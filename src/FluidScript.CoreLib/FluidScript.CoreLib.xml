@@ -236,12 +236,12 @@
         </member>
         <member name="M:FluidScript.FSObject.op_Equality(FluidScript.FSObject,FluidScript.FSObject)">
             <summary>
-            Equal Overload
+            Equal Implementation
             </summary>
         </member>
         <member name="M:FluidScript.FSObject.op_Inequality(FluidScript.FSObject,FluidScript.FSObject)">
             <summary>
-            Not Equal Overload
+            Not Equal Implementation
             </summary>
         </member>
         <member name="T:FluidScript.IFSObject">
@@ -520,13 +520,13 @@
             </summary>
             <param name="value"></param>
         </member>
-        <member name="M:FluidScript.Boolean.HashCode">
+        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Boolean.__ToString">
+        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Boolean.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Boolean.Equals(System.Object)">
@@ -618,13 +618,13 @@
             Initializes a new instance of the <see cref="T:FluidScript.Byte"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Byte.__ToString">
+        <member name="M:FluidScript.Byte.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Byte.HashCode">
+        <member name="M:FluidScript.Byte.FluidScript#IFSObject#HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Byte.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Byte.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Byte.Equals(System.Object)">
@@ -701,17 +701,17 @@
             Initializes a new instance of the <see cref="T:FluidScript.Char"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Char.HashCode">
+        <member name="M:FluidScript.Char.FluidScript#IFSObject#HashCode">
             <summary>
             returns the hashCode() for the instance
             </summary>
         </member>
-        <member name="M:FluidScript.Char.__ToString">
+        <member name="M:FluidScript.Char.FluidScript#IFSObject#__ToString">
             <summary>
             converts to string
             </summary>
         </member>
-        <member name="M:FluidScript.Char.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Char.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <summary>
             checks <paramref name="other"/> and <see cref="T:FluidScript.Integer"/> are equals
             </summary>
@@ -775,6 +775,11 @@
             Implicit Convert from <see cref="T:System.Char"/> to <see cref="T:FluidScript.Char"/>
             </summary>
         </member>
+        <member name="M:FluidScript.Char.op_Implicit(FluidScript.Char)~FluidScript.Integer">
+            <summary>
+            Implicit Convert from <see cref="T:FluidScript.Char"/> to <see cref="T:FluidScript.Integer"/>
+            </summary>
+        </member>
         <member name="M:FluidScript.Char.op_Implicit(FluidScript.Char)~System.Char">
             <summary>
             Implicit Convert from <see cref="T:FluidScript.Char"/> to <see cref="T:System.Char"/>
@@ -795,13 +800,13 @@
             Initializes a new instance of the <see cref="T:FluidScript.Double"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Double.__ToString">
+        <member name="M:FluidScript.Double.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Double.HashCode">
+        <member name="M:FluidScript.Double.FluidScript#IFSObject#HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Double.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Double.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Double.Equals(System.Object)">
@@ -868,13 +873,13 @@
             Initializes a new instance of the <see cref="T:FluidScript.Float"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Float.__ToString">
+        <member name="M:FluidScript.Float.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Float.HashCode">
+        <member name="M:FluidScript.Float.FluidScript#IFSObject#HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Float.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Float.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Float.Equals(System.Object)">
@@ -941,13 +946,13 @@
             Initializes a new instance of the <see cref="T:FluidScript.Integer"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Integer.HashCode">
+        <member name="M:FluidScript.Integer.FluidScript#IFSObject#HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Integer.__ToString">
+        <member name="M:FluidScript.Integer.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Integer.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Integer.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Integer.Equals(System.Object)">
@@ -1019,13 +1024,13 @@
             Initializes a new instance of the <see cref="T:FluidScript.Long"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Long.__ToString">
+        <member name="M:FluidScript.Long.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Long.HashCode">
+        <member name="M:FluidScript.Long.FluidScript#IFSObject#HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Long.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Long.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Long.Equals(System.Object)">
@@ -1092,13 +1097,13 @@
             Initializes a new instance of the <see cref="T:FluidScript.Short"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Short.__ToString">
+        <member name="M:FluidScript.Short.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Short.HashCode">
+        <member name="M:FluidScript.Short.FluidScript#IFSObject#HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Short.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Short.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Short.Equals(System.Object)">
@@ -1185,6 +1190,9 @@
         <member name="M:FluidScript.Runtime.RegisterAttribute.Equals(System.Object)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Runtime.RegisterAttribute.ToString">
+            <inheritdoc/>
+        </member>
         <member name="T:FluidScript.String">
             <summary>
             Represents text as a series of Unicode characters.
@@ -1221,6 +1229,11 @@
         <member name="M:FluidScript.String.op_Implicit(System.String)~FluidScript.String">
             <summary>
             Implict conversion from <see cref="T:System.String"/> to <see cref="T:FluidScript.String"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.String.op_Implicit(FluidScript.String)~System.String">
+            <summary>
+            Implict conversion from <see cref="T:FluidScript.String"/> to <see cref="T:System.String"/>
             </summary>
         </member>
         <member name="M:FluidScript.String.op_Addition(FluidScript.String,FluidScript.String)">

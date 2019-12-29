@@ -6,7 +6,11 @@
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public readonly struct Float : IFSObject, System.IConvertible
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct Float : IFSObject, System.IConvertible
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly float m_value;
@@ -21,21 +25,21 @@
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        public String __ToString()
+        String IFSObject.__ToString()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        public Integer HashCode()
+        Integer IFSObject.HashCode()
         {
             return m_value.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        public Boolean __Equals(IFSObject other)
+        Boolean IFSObject.__Equals(IFSObject other)
         {
             return other is Float f &&
                   m_value == f.m_value;

@@ -6,10 +6,16 @@
 
         internal LocalContext Current;
 
-        public LocalScope()
+        internal LocalScope()
         {
             LocalVariables = new System.Collections.Generic.List<LocalVariable>();
             Current = new LocalContext(this);
+        }
+
+        internal LocalScope(LocalScope other)
+        {
+            LocalVariables = new System.Collections.Generic.List<LocalVariable>(other.LocalVariables);
+            Current = other.Current;
         }
 
         /// <summary>
@@ -75,12 +81,11 @@
             return local;
         }
 
-        public LocalVariable Create(string name, System.Type type, object value)
+        public void Create(string name, System.Type type, object value)
         {
             var local = new LocalVariable(name, LocalVariables.Count, type);
             LocalVariables.Add(local);
             Current.Create(local, value);
-            return local;
         }
 
         internal void CreateOrModify(string name, object value)
@@ -117,6 +122,11 @@
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return LocalVariables.GetEnumerator();
+        }
+
+        internal bool Remove(LocalVariable item)
+        {
+            return LocalVariables.Remove(item);
         }
 
         internal bool Remove(string name)

@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Json.Serialization" Version="1.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.1" />
   </ItemGroup>
 
@@ -26,10 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Runtime.DynamicClasses">
-      <HintPath>bin\Debug\net461\Runtime.DynamicClasses.dll</HintPath>
+    <Reference Include="FluidScript.CoreLib">
+      <HintPath>..\src\FluidScript.CoreLib\bin\Debug\net40\FluidScript.CoreLib.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
 </Project>

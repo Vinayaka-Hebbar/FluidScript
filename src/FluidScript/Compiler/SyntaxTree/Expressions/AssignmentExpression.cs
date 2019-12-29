@@ -57,9 +57,8 @@ namespace FluidScript.Compiler.SyntaxTree
                 {
 
                     Iterate(exp.Arguments, (arg) => arg.GenerateCode(generator));
-                    System.Reflection.MethodInfo indexer = exp.Indexer.GetSetMethod(true);
                     //todo indexer argument convert
-                    generator.Call(indexer);
+                    generator.Call(exp.Setter);
                 }
             }
         }

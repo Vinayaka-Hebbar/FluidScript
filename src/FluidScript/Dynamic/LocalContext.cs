@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace FluidScript.Dynamic
 {
@@ -9,7 +8,7 @@ namespace FluidScript.Dynamic
 
         private readonly LocalScope _scope;
 
-        private readonly LocalContext _parent;
+        internal readonly LocalContext _parent;
 
         public LocalContext(LocalScope scope)
         {
@@ -25,6 +24,11 @@ namespace FluidScript.Dynamic
 
         internal void Modify(LocalVariable variable, object value)
         {
+            if (Instances.ContainsKey(variable) == false && _parent != null)
+            {
+                _parent.Modify(variable, value);
+                return;
+            }
             Instances[variable] = value;
         }
 
@@ -51,7 +55,7 @@ namespace FluidScript.Dynamic
         {
             foreach (var item in System.Linq.Enumerable.Reverse(Instances.Keys))
             {
-                _scope.RemoveAt(item.Index);
+                _scope.Remove(item);
             }
             _scope.Current = _parent;
         }
@@ -78,9 +82,13 @@ namespace FluidScript.Dynamic
         }
     }
 
-    internal readonly struct LocalVariable
+    internal
+#if LATEST_VS
+        readonly
+#endif
+        struct LocalVariable
     {
-        internal static readonly LocalVariable Empty = default;
+        internal static readonly LocalVariable Empty = new LocalVariable();
 
         internal readonly string Name;
         internal readonly int Index;

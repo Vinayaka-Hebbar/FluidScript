@@ -1,6 +1,7 @@
 ﻿using FluidScript;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace FluidScipt.ConsoleTest
 {
@@ -11,20 +12,26 @@ namespace FluidScipt.ConsoleTest
             //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
             Class1 class1 = new Class1();
             class1.Run();
-            class1.Print();
+            //class1.Print();
             Console.ReadKey();
         }
 
         private void Print()
         {
+            var value1 = FluidScript.Boolean.True;
+            var value2 = FluidScript.Boolean.True;
+            System.Linq.Expressions.Expression<Func<bool>> test = () => value1 && value2;
+            var body = test.Body;
+
+            Console.WriteLine(FluidScript.Boolean.True && FluidScript.Boolean.True);
         }
 
         private void Run()
         {
+
             var context = new FluidScript.Dynamic.DynamicContext(new FluidScript.Math());
-            context["a"] = new FluidScript.String("");
-            context["b"] = new Integer(20);
-            FluidScript.Compiler.SyntaxTree.Statement tree = ScriptEngine.GetStatement("b", FluidScript.Compiler.ParserSettings.Default);
+            context["a"] = new Integer(4);
+            FluidScript.Compiler.SyntaxTree.Statement tree = ScriptEngine.GetStatement("{a=}", FluidScript.Compiler.ParserSettings.Default);
             var re = context.Invoke(tree);
             Console.WriteLine(re);
         }
@@ -49,6 +56,23 @@ namespace FluidScipt.ConsoleTest
                 object result = instance.Add();
                 Console.WriteLine(result);
             }
+        }
+    }
+
+    [System.Serializable]
+    public sealed class DictionaryItems : Dictionary<string, double>
+    {
+        public DictionaryItems()
+        {
+        }
+
+        public DictionaryItems(IDictionary<string, double> items) : base(items)
+        {
+
+        }
+
+        public DictionaryItems(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
         }
     }
 

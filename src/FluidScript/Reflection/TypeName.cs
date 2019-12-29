@@ -3,7 +3,11 @@
     /// <summary>
     /// Full Type Name
     /// </summary>
-    public readonly struct TypeName
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct TypeName
     {
         public string FullName => Namespace == null ? Name : Namespace + "." + Name;
 

@@ -2,7 +2,11 @@
 
 namespace FluidScript.Compiler
 {
-    public readonly struct TextSpan
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct TextSpan
     {
         /// <summary>
         /// Creates a new SourceCodeSpan instance.

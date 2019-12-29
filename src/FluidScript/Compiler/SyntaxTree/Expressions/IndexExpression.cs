@@ -8,7 +8,9 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public readonly Expression[] Arguments;
 
-        public System.Reflection.PropertyInfo Indexer { get; internal set; }
+        public System.Reflection.MethodInfo Getter { get; internal set; }
+
+        public System.Reflection.MethodInfo Setter { get; internal set; }
 
         public IndexExpression(Expression target, Expression[] arguments) : base(ExpressionType.Indexer)
         {
@@ -39,9 +41,8 @@ namespace FluidScript.Compiler.SyntaxTree
             {
 
                 Iterate(Arguments, (arg) => arg.GenerateCode(generator));
-                System.Reflection.MethodInfo indexer = Indexer.GetGetMethod(true);
                 //todo indexer argument convert
-                generator.Call(indexer);
+                generator.Call(Getter);
             }
         }
 

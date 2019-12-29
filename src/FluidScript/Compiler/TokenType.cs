@@ -10,8 +10,9 @@
         Unicode = 5,
         String = 6,
         Bool = 7,
+        // empty slot
         Variable = 8,
-        Constant = 9,
+        SpecialVariable = 9,
         Identifier = 10,
         Parenthesized = 11,
         Invocation = 12,

@@ -74,6 +74,10 @@
         /// Implict conversion from <see cref="string"/> to <see cref="String"/>
         /// </summary>
         public static implicit operator String(string value) => new String(value);
+        /// <summary>
+        /// Implict conversion from <see cref="String"/> to <see cref="string"/>
+        /// </summary>
+        public static implicit operator string(String value) => value.m_value;
 
 
         /// <summary>

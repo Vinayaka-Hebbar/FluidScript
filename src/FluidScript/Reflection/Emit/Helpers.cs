@@ -10,7 +10,11 @@ namespace FluidScript.Reflection.Emit
         private const BindingFlags DeclaredStatic = DeclaredPublic | BindingFlags.Static;
         private const BindingFlags DeclaredInstance = DeclaredPublic | BindingFlags.Instance;
         private const BindingFlags DeclaredPublic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.ExactBinding;
-        private const BindingFlags PublicStatic = BindingFlags.Public | BindingFlags.Static;
+
+        #region Types
+
+        internal static readonly System.Type BooleanType = typeof(Boolean);
+        #endregion
 
         #region Object
         internal static readonly MethodInfo ObjectEquals_Two_Object;
@@ -18,25 +22,30 @@ namespace FluidScript.Reflection.Emit
         internal static readonly MethodInfo StringConcat_Two_String;
         internal static readonly MethodInfo StringConcat_Two_Object;
 
-        public static readonly ConstructorInfo Double_New;
-        public static readonly ConstructorInfo Float_New;
-        public static readonly ConstructorInfo Long_New;
-        public static readonly ConstructorInfo Integer_New;
-        public static readonly ConstructorInfo Short_New;
-        public static readonly ConstructorInfo Byte_New;
-        public static readonly ConstructorInfo Char_New;
-        public static readonly ConstructorInfo String_New;
+        internal static readonly ConstructorInfo Double_New;
+        internal static readonly ConstructorInfo Float_New;
+        internal static readonly ConstructorInfo Long_New;
+        internal static readonly ConstructorInfo Integer_New;
+        internal static readonly ConstructorInfo Short_New;
+        internal static readonly ConstructorInfo Byte_New;
+        internal static readonly ConstructorInfo Char_New;
+        internal static readonly ConstructorInfo String_New;
 
-        public static readonly FieldInfo Bool_True;
-        public static readonly FieldInfo Bool_False;
+        internal static readonly FieldInfo Bool_True;
+        internal static readonly FieldInfo Bool_False;
 
-        public static ConstructorInfo Register_Attr_Ctor;
 
-        public static MethodInfo Integer_to_Int32;
+        internal static readonly ConstructorInfo Register_Attr_Ctor;
+
+        internal static readonly MethodInfo Integer_to_Int32;
 
         #region Implicit Calls
-        public static MethodInfo Booolean_To_Bool;
+        internal static readonly MethodInfo Booolean_To_Bool;
+        #endregion
 
+        #region Logical Convert
+        internal static readonly MethodInfo LogicalAnd;
+        internal static readonly MethodInfo LogicalOr;
         #endregion
 
         #endregion
@@ -61,10 +70,13 @@ namespace FluidScript.Reflection.Emit
             Integer_to_Int32 = GetStaticMethod(typeof(Integer), "op_Implicit", typeof(Integer));
 
 
-            Bool_True = GetField(typeof(Boolean), nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
-            Bool_False = GetField(typeof(Boolean), nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
+            Bool_True = GetField(BooleanType, nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
+            Bool_False = GetField(BooleanType, nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
 
-            Booolean_To_Bool = GetStaticMethod(typeof(Boolean), Conversion.ImplicitConversionName, typeof(Boolean));
+            Booolean_To_Bool = GetStaticMethod(BooleanType, Conversion.ImplicitConversionName, BooleanType);
+
+            LogicalAnd = GetStaticMethod(BooleanType, "OpLogicalAnd", BooleanType, BooleanType);
+            LogicalOr = GetStaticMethod(BooleanType, "OpLogicalOr", BooleanType, BooleanType);
         }
 
         private static ConstructorInfo GetInstanceCtor(System.Type type, params System.Type[] parameterTypes)

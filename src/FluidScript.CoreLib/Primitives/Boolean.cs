@@ -6,7 +6,11 @@
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public readonly struct Boolean : IFSObject, System.IConvertible
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct Boolean : IFSObject, System.IConvertible
     {
         /// <summary>
         /// True
@@ -32,21 +36,21 @@
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        public Integer HashCode()
+        Integer IFSObject.HashCode()
         {
             return m_value.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        public String __ToString()
+        String IFSObject.__ToString()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        public Boolean __Equals(IFSObject other)
+        Boolean IFSObject.__Equals(IFSObject other)
         {
             return other is Boolean b &&
                   m_value == b.m_value ? True : False;
@@ -205,6 +209,16 @@
         public static Boolean operator !(Boolean value)
         {
             return !value.m_value ? True : False;
+        }
+
+        internal static Boolean OpLogicalAnd(Boolean left, Boolean right)
+        {
+            return left.m_value && right.m_value ? True : False;
+        }
+
+        internal static Boolean OpLogicalOr(Boolean left, Boolean right)
+        {
+            return left.m_value && right.m_value ? True : False;
         }
     }
 }

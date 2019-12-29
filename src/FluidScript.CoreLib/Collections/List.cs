@@ -5,7 +5,8 @@
     /// methods to search, sort, and manipulate lists.
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
-    public class List<T> : FSObject, IList, System.Collections.IEnumerable, System.Collections.Generic.IEnumerable<T> where T : IFSObject
+    public class List<T> : FSObject, IList, ICollection<T>
+        , System.Collections.IEnumerable, System.Collections.Generic.IEnumerable<T> where T : IFSObject
     {
         private const int _defaultCapacity = 4;
         internal const int MaxArrayLength = 0X7FEFFFFF;
@@ -84,7 +85,7 @@
         /// <summary>
         /// Read-only property describing how many elements are in the List.
         /// </summary>
-        [Runtime.Register("size")]
+        [Runtime.Register("count")]
         public int Count
         {
             get
@@ -121,6 +122,10 @@
                 return _syncRoot;
             }
         }
+
+        int ICollection<T>.Count => throw new System.NotImplementedException();
+
+        bool ICollection<T>.IsReadOnly => throw new System.NotImplementedException();
 
         private void EnsureCapacity(int min)
         {
@@ -457,7 +462,7 @@
         /// <returns>
         ///  A <see cref="List{T}.Enumerator"/> for the <see cref="List{T}"/>.
         /// </returns>
-        [Runtime.Register("iterate")]
+        [Runtime.Register("enumerator")]
         public Enumerator GetEnumerator()
         {
             return new Enumerator(this);
@@ -469,6 +474,12 @@
         }
 
         System.Collections.Generic.IEnumerator<T> System.Collections.Generic.IEnumerable<T>.GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        [Runtime.Register("enumerator")]
+        IEnumerator IEnumerable<T>.Enumerator()
         {
             return new Enumerator(this);
         }

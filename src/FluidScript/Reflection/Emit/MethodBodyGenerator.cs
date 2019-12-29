@@ -390,6 +390,7 @@ namespace FluidScript.Reflection.Emit
         Expression Compiler.IExpressionVisitor<Expression>.VisitBinary(BinaryExpression node)
         {
             string opName = null;
+            var nodeType = node.NodeType;
             switch (node.NodeType)
             {
                 case ExpressionType.Plus:
@@ -425,13 +426,40 @@ namespace FluidScript.Reflection.Emit
                 case ExpressionType.LessEqual:
                     opName = "op_LessThanOrEqual";
                     break;
+                case ExpressionType.And:
+                    opName = "op_BitwiseAnd";
+                    break;
+                case ExpressionType.Or:
+                    opName = "op_BitwiseOr";
+                    break;
+                case ExpressionType.Circumflex:
+                    opName = "op_ExclusiveOr";
+                    break;
             }
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
-            var method = TypeUtils.GetOperatorOverload(opName, out Conversion[] conversions, left.Type, right.Type);
+            System.Reflection.MethodInfo method = null;
+            Conversion[] conversions = null;
+            if (opName != null)
+            {
+                method = TypeUtils.
+                   GetOperatorOverload(opName, out conversions, left.Type, right.Type);
+                
+                node.Conversions = conversions;
+            }
+            else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
+            {
+                conversions = new Conversion[2];
+                System.Reflection.MethodInfo convertLeft = TypeUtils.GetBooleanOveraload(left.Type);
+                if (convertLeft != null)
+                    conversions[0] = new Conversion(convertLeft);
+                var convertRight = TypeUtils.GetBooleanOveraload(right.Type);
+                if (convertRight != null)
+                    conversions[1] = new Conversion(convertRight);
+                method = nodeType == ExpressionType.AndAnd ? Helpers.LogicalAnd : Helpers.LogicalOr;
+            }
             node.Conversions = conversions;
-            node.Method = method;
-            node.Type = method.ReturnType;
+            node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
             return node;
         }
 
@@ -531,6 +559,7 @@ namespace FluidScript.Reflection.Emit
             //todo ignore case
             if (methods.Length == 0)
                 throw new Exception(string.Concat("method ", name, " not found"));
+            //todo type conversion
             var method = (System.Reflection.MethodInfo)Type.DefaultBinder.SelectMethod(TypeUtils.Any, methods, types, null);
             if (method is IMethodBaseGenerator baseGenerator)
                 method = (System.Reflection.MethodInfo)baseGenerator.MethodBase;
@@ -651,6 +680,11 @@ namespace FluidScript.Reflection.Emit
             return node;
         }
 
+        private bool FindExactMethod(System.Reflection.MemberInfo m, object filterCriteria)
+        {
+            return filterCriteria.Equals(m.Name);
+        }
+
         /// <inheritdoc/>
         Expression Compiler.IExpressionVisitor<Expression>.VisitIndex(IndexExpression node)
         {
@@ -659,9 +693,11 @@ namespace FluidScript.Reflection.Emit
             if (type.IsArray == false)
             {
                 var types = GetTypes(node.Arguments);
-                var indexer = type.GetProperty("Item", types);
-                node.Indexer = indexer ?? throw new Exception("Indexer not found");
-                type = indexer.PropertyType;
+                var indexers = type
+                    .FindMembers(System.Reflection.MemberTypes.Method, TypeUtils.Any, FindExactMethod, "get_Item");
+                var indexer = TypeUtils.BindToMethod(indexers, types, out Conversion[] convers);
+                node.Getter = indexer ?? throw new Exception("Indexer not found");
+                type = indexer.ReturnType;
             }
             else
             {

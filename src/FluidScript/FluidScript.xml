@@ -288,7 +288,9 @@
             </summary>
         </member>
         <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.Circumflex">
+            <summary>
             ^
+            </summary>
         </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.Node">
             <summary>
@@ -983,6 +985,13 @@
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.MissingMethodException"/>
         </member>
+        <member name="M:FluidScript.Dynamic.DynamicContext.CreateContext(System.Object)">
+            <summary>
+            New Sub Context
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
             <inheritdoc/>
         </member>
@@ -1020,9 +1029,6 @@
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitDeclaration(FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Dynamic.DynamicContext.GetType(FluidScript.Reflection.TypeName)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IStatementVisitor#VisitReturn(FluidScript.Compiler.SyntaxTree.ReturnOrThrowStatement)">
@@ -2456,6 +2462,10 @@
         <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetNestedType(System.String,System.Reflection.BindingFlags)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetNestedTypes(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <me      </member>
         <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetNestedTypes(System.Reflection.BindingFlags)">
             <inheritdoc/>
         </member>

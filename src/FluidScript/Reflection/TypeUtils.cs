@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -7,8 +8,13 @@ namespace FluidScript.Reflection
     public static class TypeUtils
     {
         internal static readonly IList<Primitive> Inbuilts;
+
+        private static readonly Emit.Conversion[] NoConversions = new Emit.Conversion[0];
+
         private static readonly IDictionary<string, Primitive> InbuiltNames;
         internal const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+        internal const BindingFlags PublicStatic = BindingFlags.Public | BindingFlags.Static;
+        internal const BindingFlags DeclaredPublic = BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
         /// <summary>
         /// Must be primitive
@@ -74,6 +80,20 @@ namespace FluidScript.Reflection
             return false;
         }
 
+        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out Emit.Conversion[] conversions)
+        {
+            foreach (var m in members)
+            {
+                if (m.MemberType == MemberTypes.Method)
+                {
+                    if (MatchTypes((MethodInfo)m, types, out conversions))
+                        return (MethodInfo)m;
+                }
+            }
+            conversions = new Emit.Conversion[0];
+            return null;
+        }
+
         internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out Emit.Conversion[] conversions)
         {
             foreach (var m in methods)
@@ -96,11 +116,11 @@ namespace FluidScript.Reflection
                         return m;
                 }
             }
-            conversions = new Emit.Conversion[0];
+            conversions = NoConversions;
             return null;
         }
 
-        private static bool MatchTypes(MethodInfo method, System.Type[] types, out Emit.Conversion[] conversions)
+        internal static bool MatchTypes(MethodInfo method, System.Type[] types, out Emit.Conversion[] conversions)
         {
             var paramters = method.GetParameters();
             if (paramters.Length != types.Length)
@@ -136,10 +156,10 @@ namespace FluidScript.Reflection
 
         internal static bool HasImplicitConvert(System.Type from, System.Type to, out MethodInfo method)
         {
-            method = to.GetMethod(Emit.Conversion.ImplicitConversionName, BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = to.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { from }, null);
             if (method != null && method.ReturnType == to)
                 return true;
-            method = from.GetMethod(Emit.Conversion.ImplicitConversionName, BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
+            method = from.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { from }, null);
             return method != null && method.ReturnType == to;
         }
 
@@ -148,6 +168,15 @@ namespace FluidScript.Reflection
             return (state && (flags & trueFlag) == trueFlag)
                 || (!state && (flags & falseFlag) == falseFlag);
 
+        }
+
+        internal static MethodInfo GetBooleanOveraload(System.Type type)
+        {
+            if (type == Emit.Helpers.BooleanType)
+            {
+                return null;
+            }
+            return type.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null);
         }
     }
 }

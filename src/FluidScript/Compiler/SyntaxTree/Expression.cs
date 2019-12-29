@@ -33,7 +33,7 @@
         /// <returns></returns>
         public virtual TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            return default;
+            return default(TResult);
         }
 
         /// <summary>

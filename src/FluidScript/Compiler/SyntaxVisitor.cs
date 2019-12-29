@@ -104,8 +104,12 @@ namespace FluidScript.Compiler
                 case ']':
                     return TokenType.RightBracket;
                 case '@':
-                    c = Source.ReadChar();
-                    return TokenType.Variable;
+                    if (char.IsLetterOrDigit(n))
+                    {
+                        c = Source.ReadChar();
+                        return TokenType.SpecialVariable;
+                    }
+                    break;
                 case '?':
                     if (n == '?')
                     {
@@ -1000,6 +1004,9 @@ namespace FluidScript.Compiler
                     break;
                 case TokenType.Identifier:
                     exp = VisitIdentifier();
+                    break;
+                case TokenType.SpecialVariable:
+                    exp = new NameExpression(string.Concat("@", GetName()), ExpressionType.Identifier);
                     break;
 #if Emit
                 case TokenType.Variable:

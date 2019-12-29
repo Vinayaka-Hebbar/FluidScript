@@ -32,6 +32,14 @@
             get => Method != null;
         }
 
+        internal object Convert(object value)
+        {
+            return Method.Invoke(null, new object[] { value });
+        }
 
+        internal void Generate(MethodBodyGenerator generator)
+        {
+            generator.CallStatic(Method);
+        }
     }
 }

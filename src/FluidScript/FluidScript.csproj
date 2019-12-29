@@ -9,7 +9,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.2-beta</Version>
+    <Version>1.0.3-alpha</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -19,6 +19,10 @@
     <PackageTags>script</PackageTags>
     <AssemblyName>FluidScript</AssemblyName>
     <PackageReleaseNotes>Initial Release of FluidScript</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -48,7 +52,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.2-alpha" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.4-beta" />
   </ItemGroup>
 
 </Project>

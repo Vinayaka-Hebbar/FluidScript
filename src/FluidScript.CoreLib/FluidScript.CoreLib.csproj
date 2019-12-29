@@ -7,12 +7,21 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Version>1.0.2-alpha</Version>
+    <Version>1.0.4-beta</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
     <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript.CoreLib\FluidScript.CoreLib.xml</DocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Collections\Dictionary.cs" />
+    <Compile Remove="Collections\IDictionary.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="..\..\LICENSE">

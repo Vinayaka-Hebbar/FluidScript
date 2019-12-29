@@ -1,6 +1,10 @@
 ﻿namespace FluidScript.Compiler
 {
-    public readonly struct TextPosition
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct TextPosition
     {
         /// <summary>
         /// Creates a new SourceCodePosition instance.

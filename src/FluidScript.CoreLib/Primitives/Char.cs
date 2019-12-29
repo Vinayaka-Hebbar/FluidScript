@@ -4,7 +4,11 @@
     /// Represents a character as a UTF-16 code unit.
     /// </summary>
     [System.Runtime.InteropServices.ComVisible(true)]
-    public readonly struct Char : IFSObject, System.IConvertible
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct Char : IFSObject, System.IConvertible
     {
         /// <summary>
         /// Min char Value
@@ -31,7 +35,7 @@
         /// returns the hashCode() for the instance
         /// </summary>
         [Runtime.Register("hashCode")]
-        public Integer HashCode()
+        Integer IFSObject.HashCode()
         {
             return m_value.GetHashCode();
         }
@@ -40,7 +44,7 @@
         /// converts to string
         /// </summary>
         [Runtime.Register("toString")]
-        public String __ToString()
+        String IFSObject.__ToString()
         {
             return m_value.ToString();
         }
@@ -49,7 +53,7 @@
         /// checks <paramref name="other"/> and <see cref="Integer"/> are equals
         /// </summary>
         [Runtime.Register("equals")]
-        public Boolean __Equals(IFSObject other)
+        Boolean IFSObject.__Equals(IFSObject other)
         {
             return other is Char c &&
                   m_value == c.m_value;
@@ -180,6 +184,11 @@
         /// Implicit Convert from <see cref="char"/> to <see cref="Char"/>
         /// </summary>
         public static implicit operator Char(char value) => new Char(value);
+
+        /// <summary>
+        /// Implicit Convert from <see cref="Char"/> to <see cref="Integer"/>
+        /// </summary>
+        public static implicit operator Integer(Char value) => new Integer(value);
 
         /// <summary>
         /// Implicit Convert from <see cref="Char"/> to <see cref="char"/>

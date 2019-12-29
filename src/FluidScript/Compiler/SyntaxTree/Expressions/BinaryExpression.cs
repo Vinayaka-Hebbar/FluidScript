@@ -32,42 +32,16 @@ namespace FluidScript.Compiler.SyntaxTree
             //todo conversion 
             if (Method == null)
                 throw new System.NullReferenceException(nameof(Method));
-            var parameters = Method.GetParameters();
+            var conversions = Conversions;
             Left.GenerateCode(generator);
-            var first = parameters[0].ParameterType;
-            if (leftType != first)
-                EmitConvertion.Convert(generator, leftType, first);
+            var first = conversions[0];
+            if (first.HasConversion)
+                first.Generate(generator);
             Right.GenerateCode(generator);
-            var second = parameters[1].ParameterType;
-            if (rightType != second)
-                EmitConvertion.Convert(generator, rightType, second);
+            var second = conversions[1];
+            if (second.HasConversion)
+                second.Generate(generator);
             generator.Call(Method);
-            //case ExpressionType.Less:
-            //    LoadValues(generator);
-            //    generator.CompareLessThan();
-            //    break;
-            //case ExpressionType.LessEqual:
-            //    LoadValues(generator);
-            //    if (Left.GetRuntimeType(generator) == RuntimeType.Double || Right.GetRuntimeType(generator) == RuntimeType.Double)
-            //        generator.CompareGreaterThanUnsigned();
-            //    else
-            //        generator.CompareGreaterThan();
-            //    generator.LoadInt32(0);
-            //    generator.CompareEqual();
-            //    break;
-            //case ExpressionType.Greater:
-            //    LoadValues(generator);
-            //    generator.CompareGreaterThan();
-            //    break;
-            //case ExpressionType.GreaterEqual:
-            //    LoadValues(generator);
-            //    if (Left.GetRuntimeType(generator) == RuntimeType.Double || Right.GetRuntimeType(generator) == RuntimeType.Double)
-            //        generator.CompareLessThanUnsigned();
-            //    else
-            //        generator.CompareLessThan();
-            //    generator.LoadInt32(0);
-            //    generator.CompareEqual();
-            //    break;
         }
 
         public override string ToString()

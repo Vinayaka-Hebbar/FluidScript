@@ -6,7 +6,11 @@
     [System.Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public readonly struct Double : IFSObject, System.IConvertible
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct Double : IFSObject, System.IConvertible
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly double m_value;
@@ -21,21 +25,21 @@
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        public String __ToString()
+        String IFSObject.__ToString()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        public Integer HashCode()
+        Integer IFSObject.HashCode()
         {
             return m_value.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        public Boolean __Equals(IFSObject other)
+        Boolean IFSObject.__Equals(IFSObject other)
         {
             return other is Double d &&
                   m_value == d.m_value ? Boolean.True : Boolean.False;

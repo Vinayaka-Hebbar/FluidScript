@@ -12,15 +12,16 @@ namespace FluidScript.Dynamic
     public sealed class DynamicContext : IDictionary<string, object>, Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider, System.Dynamic.IDynamicMetaObjectProvider
     {
         internal static readonly IFSObject Null = new FSObject();
-        internal readonly LocalScope scope;
 
-        internal bool hasReturn;
+        private readonly LocalScope scope;
 
-        internal bool hasBreak;
+        private bool hasReturn;
 
-        internal bool hasContinue;
+        private bool hasBreak;
 
-        internal readonly object Instance;
+        private bool hasContinue;
+
+        private readonly object Instance;
 
         private Func<object> LongJump;
 
@@ -45,6 +46,12 @@ namespace FluidScript.Dynamic
         {
             Instance = instance;
             scope = new LocalScope();
+        }
+
+        private DynamicContext(object instance, LocalScope scope)
+        {
+            Instance = instance;
+            this.scope = scope;
         }
 
         /// <summary>
@@ -93,6 +100,49 @@ namespace FluidScript.Dynamic
             return null;
         }
 
+        /// <summary>
+        /// New Sub Context
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public DynamicContext CreateContext(object obj)
+        {
+            var scope = new LocalScope(this.scope);
+            scope.CreateContext();
+            foreach (var member in obj.GetType().GetMembers(Reflection.TypeUtils.DeclaredPublic))
+            {
+                string name = member.Name;
+                object value = Null;
+                Type type = null;
+                if (member.IsDefined(typeof(System.Diagnostics.DebuggerHiddenAttribute), false))
+                    continue;
+                if (member.IsDefined(typeof(Runtime.RegisterAttribute), false))
+                {
+                    var data = (Attribute)member.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
+                    name = data.ToString();
+                }
+                switch (member)
+                {
+                    case System.Reflection.FieldInfo _field:
+                        value = _field.GetValue(obj);
+                        type = _field.FieldType;
+                        break;
+                    case System.Reflection.PropertyInfo _prop:
+                        value = _prop.GetValue(obj, new object[0]);
+                        type = _prop.PropertyType;
+                        break;
+                    case System.Reflection.MethodInfo _method:
+                        //not get_ set_
+                        if (_method.IsSpecialName) continue;
+                        value = (Func<object[], object>)((args) => _method.Invoke(obj, args));
+                        type = _method.ReturnType;
+                        break;
+                }
+                scope.Create(name, type, value);
+            }
+            return new DynamicContext(Instance, scope);
+        }
+
         #region Visitors
         /// <inheritdoc/>
         object Compiler.IExpressionVisitor<object>.VisitArrayLiteral(ArrayLiteralExpression node)
@@ -104,8 +154,9 @@ namespace FluidScript.Dynamic
                 type = typeof(IFSObject);
             node.Type = typeof(Collections.List<>).MakeGenericType(type);
             var items = node.Expressions;
-            var array = (System.Collections.IList)Activator.CreateInstance(node.Type, new object[] { });
-            for (int index = 0; index < items.Length; index++)
+            var length = items.Length;
+            var array = (System.Collections.IList)Activator.CreateInstance(node.Type, new object[] { length });
+            for (int index = 0; index < length; index++)
             {
                 array.Add(items[index].Accept(this));
             }
@@ -142,10 +193,28 @@ namespace FluidScript.Dynamic
                 var type = instance.GetType();
                 if (typeof(System.Collections.IList).IsAssignableFrom(type))
                 {
-                    var array = (System.Collections.IList)instance;
                     var args = exp.Arguments.Select(arg => Convert.ToInt32(arg.Accept(this))).ToArray();
+                    var array = (System.Collections.IList)instance;
                     var first = args.First();
                     array.Insert(first, value);
+                }
+                else
+                {
+                    var args = exp.Arguments.Select(arg => arg.Accept(this)).ToList();
+                    args.Add(value);
+                    var types = args.Select(arg => arg.GetType()).ToArray();
+                    var indexers = type
+                        .FindMembers(System.Reflection.MemberTypes.Method, Reflection.TypeUtils.Any, FindExactMethod, "set_Item");
+                    var indexer = Reflection.TypeUtils.BindToMethod(indexers, types, out Reflection.Emit.Conversion[] convers);
+                    exp.Setter = indexer ?? throw new Exception(string.Concat("Indexer not found at ", node.ToString()));
+                    for (int i = 0; i < convers.Length; i++)
+                    {
+                        var conv = convers[i];
+                        if (conv.HasConversion)
+                            args[i] = convers[i].Convert(args[i]);
+                    }
+                    type = indexer.ReturnType;
+                    exp.Setter.Invoke(instance, args.ToArray());
                 }
                 return value;
             }
@@ -165,8 +234,14 @@ namespace FluidScript.Dynamic
             }
             else
             {
+                LocalContext context = scope.Current;
+                while (context._parent != null)
+                {
+                    context = context._parent;
+                }
+                var variable = scope.Create(name, value.GetType());
                 //create new variable
-                scope.Create(name, value.GetType(), value);
+                context.Create(variable, value);
             }
             return value;
         }
@@ -174,8 +249,10 @@ namespace FluidScript.Dynamic
         /// <inheritdoc/>
         object Compiler.IExpressionVisitor<object>.VisitBinary(BinaryExpression node)
         {
+
             string opName = null;
-            switch (node.NodeType)
+            ExpressionType nodeType = node.NodeType;
+            switch (nodeType)
             {
                 case ExpressionType.Plus:
                     opName = "op_Addition";
@@ -210,23 +287,48 @@ namespace FluidScript.Dynamic
                 case ExpressionType.LessEqual:
                     opName = "op_LessThanOrEqual";
                     break;
+                case ExpressionType.And:
+                    opName = "op_BitwiseAnd";
+                    break;
+                case ExpressionType.Or:
+                    opName = "op_BitwiseOr";
+                    break;
+                case ExpressionType.Circumflex:
+                    opName = "op_ExclusiveOr";
+                    break;
             }
             var left = node.Left.Accept(this);
             if (left == null)
-                throw new OperationCanceledException(string.Concat("NullReference at ", node.Left.ToString()));
+                //not found
+                left = Boolean.False;
             var right = node.Right.Accept(this);
             if (right == null)
-                throw new OperationCanceledException(string.Concat("NullReference at ", node.Right.ToString()));
-            var method = Reflection.TypeUtils.
-                GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversion, left.GetType(), right.GetType());
-            node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
+                //not found
+                right = Boolean.False;
+            System.Reflection.MethodInfo method = null;
             var args = new object[] { left, right };
-            for (int i = 0; i < conversion.Length; i++)
+            if (opName != null)
             {
-                Reflection.Emit.Conversion conv = conversion[i];
-                if (conv.HasConversion)
-                    args[i] = conv.Method.Invoke(null, new object[] { args[i] });
+                method = Reflection.TypeUtils.
+                   GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversions, left.GetType(), right.GetType());
+                for (int i = 0; i < conversions.Length; i++)
+                {
+                    Reflection.Emit.Conversion conv = conversions[i];
+                    if (conv.HasConversion)
+                        args[i] = conv.Convert(args[i]);
+                }
             }
+            else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
+            {
+                var convert = Reflection.TypeUtils.GetBooleanOveraload(left.GetType());
+                args[0] = convert == null ? left : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.False :
+                    convert.Invoke(null, new object[] { left });
+                convert = Reflection.TypeUtils.GetBooleanOveraload(right.GetType());
+                args[1] = convert == null ? right : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.False :
+                    method.Invoke(null, new object[] { right });
+                method = nodeType == ExpressionType.AndAnd ? Reflection.Emit.Helpers.LogicalAnd : Reflection.Emit.Helpers.LogicalOr;
+            }
+            node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
             return method.Invoke(null, args);
         }
 
@@ -258,7 +360,7 @@ namespace FluidScript.Dynamic
                     if (data != null)
                         return data.Match(name);
                 }
-                return m.Name == name;
+                return m.Name.Equals(name, StringComparison.OrdinalIgnoreCase);
             }
             var methods = resultType
                 .GetMethods(Reflection.TypeUtils.Any)
@@ -273,9 +375,14 @@ namespace FluidScript.Dynamic
                 if (conv.HasConversion)
                     args[i] = conv.Method.Invoke(null, new object[] { args[i] });
             }
-            node.Method = method;
+            node.Method = method ?? throw new OperationCanceledException(string.Concat("No suitable method for ", node));
             node.Type = method.ReturnType;
             return method.Invoke(instance, args);
+        }
+
+        private bool FindExactMethod(System.Reflection.MemberInfo m, object filterCriteria)
+        {
+            return filterCriteria.Equals(m.Name);
         }
 
         /// <inheritdoc/>
@@ -295,10 +402,18 @@ namespace FluidScript.Dynamic
             else
             {
                 var types = args.Select(arg => arg.GetType()).ToArray();
-                var indexer = type.GetProperty("Item", types);
-                node.Indexer = indexer ?? throw new Exception(string.Concat("Indexer not found at ", node.ToString()));
-                type = indexer.PropertyType;
-                value = node.Indexer.GetValue(target, args);
+                var indexers = type
+                    .FindMembers(System.Reflection.MemberTypes.Method, Reflection.TypeUtils.Any, FindExactMethod, "get_Item");
+                var indexer = Reflection.TypeUtils.BindToMethod(indexers, types, out Reflection.Emit.Conversion[] convers);
+                node.Getter = indexer ?? throw new Exception(string.Concat("Indexer not found at ", node.ToString()));
+                for (int i = 0; i < convers.Length; i++)
+                {
+                    var conv = convers[i];
+                    if (conv.HasConversion)
+                        args[i] = convers[i].Convert(args[i]);
+                }
+                type = indexer.ReturnType;
+                value = node.Getter.Invoke(target, args);
             }
             node.Type = type;
             return value;
@@ -322,9 +437,6 @@ namespace FluidScript.Dynamic
                 case bool _:
                     value = (bool)value ? Boolean.True : Boolean.False;
                     break;
-                case null:
-                    value = null;
-                    break;
             }
             node.Type = value.GetType();
             return value;
@@ -347,8 +459,8 @@ namespace FluidScript.Dynamic
         {
             var target = node.Target.Accept(this);
             var member = target.GetType()
-                .FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, Reflection.TypeUtils.Any, HasMember, node.Name)
-                .FirstOrDefault();
+           .FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, Reflection.TypeUtils.Any, HasMember, node.Name)
+           .FirstOrDefault();
             if (member != null)
             {
                 if (member.MemberType == System.Reflection.MemberTypes.Field)
@@ -366,7 +478,7 @@ namespace FluidScript.Dynamic
                     return property.GetValue(target, new object[0]);
                 }
             }
-            return default;
+            return default(object);
         }
 
         /// <inheritdoc/>
@@ -399,7 +511,7 @@ namespace FluidScript.Dynamic
                     return (IFSObject)property.GetValue(Instance, new object[0]);
                 }
             }
-            return default;
+            return default(object);
         }
 
         /// <inheritdoc/>
@@ -412,6 +524,7 @@ namespace FluidScript.Dynamic
                     if ((Boolean)condition)
                         return node.Second.Accept(this);
                     return node.Third.Accept(this);
+                case FSObject _ when condition == Null:
                 case null:
                     return node.Third.Accept(this);
                 default:
@@ -509,14 +622,6 @@ namespace FluidScript.Dynamic
             }
             scope.Create(node.Name, type, value);
             return value;
-        }
-
-        ///<inheritdoc/>
-        public Type GetType(Reflection.TypeName typeName)
-        {
-            if (Reflection.TypeUtils.TryGetType(typeName, out Type type))
-                return type;
-            return Type.GetType(typeName.FullName);
         }
 
         /// <inheritdoc/>
@@ -737,8 +842,19 @@ namespace FluidScript.Dynamic
         #region MetadataProvider
         System.Dynamic.DynamicMetaObject System.Dynamic.IDynamicMetaObjectProvider.GetMetaObject(System.Linq.Expressions.Expression parameter)
         {
-            return new MetaObject(parameter, System.Dynamic.BindingRestrictions.Empty, this);
+            return new MetaObject(parameter, System.Dynamic.BindingRestrictions.Empty, scope);
         }
         #endregion
+
+        #region TypeProvider
+
+        Type Reflection.Emit.ITypeProvider.GetType(Reflection.TypeName typeName)
+        {
+            if (Reflection.TypeUtils.TryGetType(typeName, out Type type))
+                return type;
+            return Type.GetType(typeName.FullName);
+        }
+        #endregion
+
     }
 }

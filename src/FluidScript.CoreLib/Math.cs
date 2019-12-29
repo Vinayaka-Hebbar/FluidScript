@@ -6,6 +6,7 @@
     /// </summary>
     public sealed class Math : FSObject
     {
+        public static readonly double PI = System.Math.PI;
         /// <summary>
         /// Returns a specified number raised to the specified power.
         /// </summary>

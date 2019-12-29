@@ -42,5 +42,11 @@
         {
             return Name.Equals(obj);
         }
+
+        ///<inheritdoc/>
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

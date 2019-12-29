@@ -2,7 +2,11 @@
 
 namespace FluidScript.Reflection
 {
-    public readonly struct Primitive
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct Primitive
     {
         public static readonly Primitive Any = new Primitive("any", typeof(object));
         public readonly string Name;
