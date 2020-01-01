@@ -1,7 +1,11 @@
 ﻿namespace FluidScript.Collections
 {
     [System.Serializable]
-    public struct KeyValuePair<TKey, TValue> : IFSObject
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct KeyValuePair<TKey, TValue> : IFSObject
     {
         private readonly TKey key;
         private readonly TValue value;
@@ -24,27 +28,27 @@
             get { return value; }
         }
 
-        [Runtime.Register("hashCode")]
-        public Integer HashCode()
-        {
-            return GetHashCode();
-        }
-
         public override string ToString()
         {
             return string.Concat("[", key != null ? key.ToString() : string.Empty, ", ", value != null ? value.ToString() : string.Empty, "]");
         }
 
+        [Runtime.Register("hashCode")]
+        Integer IFSObject.HashCode()
+        {
+            return GetHashCode();
+        }
+
         [Runtime.Register("equals")]
-        public Boolean __Equals(IFSObject obj)
+        Boolean IFSObject.__Equals(IFSObject obj)
         {
             return Equals(obj);
         }
 
         [Runtime.Register("toString")]
-        public String __ToString()
+        String IFSObject.__ToString()
         {
-            return 
+            return
                 new String(string.Concat("[", key != null ? key.ToString() : string.Empty, ", ", value != null ? value.ToString() : string.Empty, "]"));
         }
     }

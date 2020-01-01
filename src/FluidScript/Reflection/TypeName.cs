@@ -27,7 +27,7 @@
 
         public override bool Equals(object obj)
         {
-            if(obj is TypeName typeName)
+            if (obj is TypeName typeName)
             {
                 if (typeName.Namespace == null && Namespace == null)
                     return Name.Equals(typeName.Name);

@@ -573,9 +573,9 @@
             /// A 32-bit signed integer that is the hash code for this instance.
             /// </returns>
             [Runtime.Register("hashCode")]
-            public Integer HashCode()
+            Integer IFSObject.HashCode()
             {
-                return base.GetHashCode();
+                return GetHashCode();
             }
 
             /// <summary>
@@ -585,9 +585,9 @@
             /// A System.String containing a fully qualified type name.
             /// </returns>
             [Runtime.Register("toString")]
-            public String __ToString()
+            String IFSObject.__ToString()
             {
-                return base.ToString();
+                return ToString();
             }
 
             /// <summary>
@@ -599,7 +599,7 @@
             /// false.
             /// </returns>
             [Runtime.Register("equals")]
-            public Boolean __Equals(IFSObject obj)
+            Boolean IFSObject.__Equals(IFSObject obj)
             {
                 return ReferenceEquals(this, obj);
             }

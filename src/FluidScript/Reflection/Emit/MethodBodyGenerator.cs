@@ -444,7 +444,7 @@ namespace FluidScript.Reflection.Emit
             {
                 method = TypeUtils.
                    GetOperatorOverload(opName, out conversions, left.Type, right.Type);
-                
+
                 node.Conversions = conversions;
             }
             else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
@@ -460,6 +460,7 @@ namespace FluidScript.Reflection.Emit
             }
             node.Conversions = conversions;
             node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
+            node.Type = method.ReturnType;
             return node;
         }
 

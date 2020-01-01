@@ -17,7 +17,7 @@
         /// <summary>
         /// Initializes new <see cref="LabeledStatement"/>
         /// </summary>
-        public LabeledStatement(string name, Expression target): base(StatementType.Labeled)
+        public LabeledStatement(string name, Expression target) : base(StatementType.Labeled)
         {
             Name = name;
             Target = target;

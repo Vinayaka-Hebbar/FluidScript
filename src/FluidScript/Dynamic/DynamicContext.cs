@@ -11,8 +11,6 @@ namespace FluidScript.Dynamic
     /// </summary>
     public sealed class DynamicContext : IDictionary<string, object>, Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider, System.Dynamic.IDynamicMetaObjectProvider
     {
-        internal static readonly IFSObject Null = new FSObject();
-
         private readonly LocalScope scope;
 
         private bool hasReturn;
@@ -112,7 +110,7 @@ namespace FluidScript.Dynamic
             foreach (var member in obj.GetType().GetMembers(Reflection.TypeUtils.DeclaredPublic))
             {
                 string name = member.Name;
-                object value = Null;
+                object value = null;
                 Type type = null;
                 if (member.IsDefined(typeof(System.Diagnostics.DebuggerHiddenAttribute), false))
                     continue;
@@ -298,13 +296,7 @@ namespace FluidScript.Dynamic
                     break;
             }
             var left = node.Left.Accept(this);
-            if (left == null)
-                //not found
-                left = Boolean.False;
             var right = node.Right.Accept(this);
-            if (right == null)
-                //not found
-                right = Boolean.False;
             System.Reflection.MethodInfo method = null;
             var args = new object[] { left, right };
             if (opName != null)
@@ -320,6 +312,12 @@ namespace FluidScript.Dynamic
             }
             else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
             {
+                //left is null or not found
+                if (left == null)
+                    left = Boolean.False;
+                //right is null or not found
+                if (right == null)
+                    right = Boolean.False;
                 var convert = Reflection.TypeUtils.GetBooleanOveraload(left.GetType());
                 args[0] = convert == null ? left : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.False :
                     convert.Invoke(null, new object[] { left });
@@ -478,7 +476,7 @@ namespace FluidScript.Dynamic
                     return property.GetValue(target, new object[0]);
                 }
             }
-            return default(object);
+            return null;
         }
 
         /// <inheritdoc/>
@@ -511,7 +509,7 @@ namespace FluidScript.Dynamic
                     return (IFSObject)property.GetValue(Instance, new object[0]);
                 }
             }
-            return default(object);
+            return null;
         }
 
         /// <inheritdoc/>
@@ -524,7 +522,6 @@ namespace FluidScript.Dynamic
                     if ((Boolean)condition)
                         return node.Second.Accept(this);
                     return node.Third.Accept(this);
-                case FSObject _ when condition == Null:
                 case null:
                     return node.Third.Accept(this);
                 default:
@@ -653,7 +650,7 @@ namespace FluidScript.Dynamic
         /// <inheritdoc/>
         object Compiler.IExpressionVisitor<object>.VisitNull(NullExpression node)
         {
-            return Null;
+            return null;
         }
 
         /// <inheritdoc/>

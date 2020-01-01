@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace FluidScript.Compiler
 {
@@ -41,7 +40,7 @@ namespace FluidScript.Compiler
                 {"throw", IdentifierType.Throw },
             };
         }
-        
+
 
         public static bool TryGetIdentifier(string name, out IdentifierType type)
         {

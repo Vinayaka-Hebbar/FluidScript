@@ -88,6 +88,9 @@ namespace FluidScript.Dynamic
 #endif
         struct LocalVariable
     {
+        private const int hcf = 2063038313;
+        private const int hcs = -1521134295;
+
         internal static readonly LocalVariable Empty = new LocalVariable();
 
         internal readonly string Name;
@@ -112,14 +115,8 @@ namespace FluidScript.Dynamic
             return Name.Equals(obj);
         }
 
-        public override int GetHashCode()
-        {
-            return Name.GetHashCode();
-        }
+        public override int GetHashCode() => ((hcf + Name.GetHashCode()) * hcs) + Index;
 
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => string.Concat(Name, ":", Type.Name);
     }
 }

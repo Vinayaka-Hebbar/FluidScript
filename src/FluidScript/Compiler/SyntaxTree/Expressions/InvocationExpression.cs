@@ -1,5 +1,4 @@
 ﻿using FluidScript.Reflection.Emit;
-using System;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree

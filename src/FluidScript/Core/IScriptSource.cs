@@ -1,5 +1,5 @@
-﻿using System;
-using FluidScript.Compiler;
+﻿using FluidScript.Compiler;
+using System;
 
 namespace FluidScript.Library
 {

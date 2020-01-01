@@ -6,7 +6,7 @@ namespace FluidScript.Reflection.Emit
     /// <summary>
     /// Represents a generator of CIL bytes.
     /// </summary>
-    public abstract class ILGenerator 
+    public abstract class ILGenerator
     {
         private List<ILLocalVariable> temporaryVariables;
         /// <summary>
@@ -489,7 +489,7 @@ namespace FluidScript.Reflection.Emit
         /// </summary>
         /// <param name="type"> The type of the boxed value.  This should be a value type. </param>
         public abstract void UnboxObject(Type type);
-        
+
         /// <summary>
         /// Pops a value from the stack, converts it to a bool, then pushes it back onto
         /// the stack.
@@ -699,7 +699,7 @@ namespace FluidScript.Reflection.Emit
         /// </summary>
         /// <param name="type"> The element type. </param>
         public abstract void LoadArrayElement(Type type);
-        
+
         /// <summary>
         /// Pops the array, index and value off the stack and stores the value in the array.
         /// </summary>

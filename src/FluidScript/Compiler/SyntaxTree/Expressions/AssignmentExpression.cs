@@ -1,6 +1,4 @@
 ﻿using FluidScript.Reflection.Emit;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -37,7 +35,8 @@ namespace FluidScript.Compiler.SyntaxTree
                 exp.Target.GenerateCode(generator);
                 Right.GenerateCode(generator);
                 exp.Binding.GenerateSet(generator);
-            }else if(Left.NodeType == ExpressionType.Indexer)
+            }
+            else if (Left.NodeType == ExpressionType.Indexer)
             {
                 var exp = (IndexExpression)Left;
                 exp.Target.GenerateCode(generator);

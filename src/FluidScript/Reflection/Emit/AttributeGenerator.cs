@@ -22,7 +22,7 @@
         {
             get
             {
-                if(instance == null)
+                if (instance == null)
                 {
                     instance = System.Activator.CreateInstance(Type, Parameters);
                     //todo property

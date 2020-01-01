@@ -1,7 +1,7 @@
-﻿using System;
+﻿using FluidScript.Compiler.SyntaxTree;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
-using FluidScript.Compiler.SyntaxTree;
 
 namespace FluidScript.Reflection.Emit
 {

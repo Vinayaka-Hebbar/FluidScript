@@ -1,15 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <DefineConstants>TRACE;</DefineConstants>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.3-alpha</Version>
+    <Version>1.0.4-alpha</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -25,8 +19,11 @@
     <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript\FluidScript.xml</DocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
@@ -34,7 +31,7 @@
       <Version>4.7.0</Version>
     </PackageReference>
   </ItemGroup>
-  
+
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection.Emit.Lightweight">
       <Version>4.7.0</Version>
@@ -43,16 +40,20 @@
       <Version>4.7.0</Version>
     </PackageReference>
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <Compile Remove="RuntimeType.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-  
+
   <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.4-beta" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.4" />
   </ItemGroup>
 
 </Project>

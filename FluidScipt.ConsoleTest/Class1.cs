@@ -1,7 +1,6 @@
 ﻿using FluidScript;
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 
 namespace FluidScipt.ConsoleTest
 {
@@ -18,20 +17,15 @@ namespace FluidScipt.ConsoleTest
 
         private void Print()
         {
-            var value1 = FluidScript.Boolean.True;
-            var value2 = FluidScript.Boolean.True;
-            System.Linq.Expressions.Expression<Func<bool>> test = () => value1 && value2;
-            var body = test.Body;
-
             Console.WriteLine(FluidScript.Boolean.True && FluidScript.Boolean.True);
         }
 
         private void Run()
         {
-
             var context = new FluidScript.Dynamic.DynamicContext(new FluidScript.Math());
             context["a"] = new Integer(4);
-            FluidScript.Compiler.SyntaxTree.Statement tree = ScriptEngine.GetStatement("{a=}", FluidScript.Compiler.ParserSettings.Default);
+            context["b"] = new Integer(5);
+            FluidScript.Compiler.SyntaxTree.Statement tree = ScriptEngine.GetStatement("x&&y", FluidScript.Compiler.ParserSettings.Default);
             var re = context.Invoke(tree);
             Console.WriteLine(re);
         }
@@ -56,23 +50,6 @@ namespace FluidScipt.ConsoleTest
                 object result = instance.Add();
                 Console.WriteLine(result);
             }
-        }
-    }
-
-    [System.Serializable]
-    public sealed class DictionaryItems : Dictionary<string, double>
-    {
-        public DictionaryItems()
-        {
-        }
-
-        public DictionaryItems(IDictionary<string, double> items) : base(items)
-        {
-
-        }
-
-        public DictionaryItems(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
         }
     }
 

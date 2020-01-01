@@ -60,6 +60,12 @@
             return left.__Equals(right).m_value ? Boolean.False : Boolean.True;
         }
 
+        /// <summary>
+        /// convert cs objects to fluid object
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        [Runtime.Register("convert")]
         public static object Convert(object obj)
         {
             switch (obj)

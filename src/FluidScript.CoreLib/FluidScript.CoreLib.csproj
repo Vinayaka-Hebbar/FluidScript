@@ -4,18 +4,19 @@
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0</TargetFrameworks>
     <RootNamespace>FluidScript</RootNamespace>
     <AssemblyName>FluidScript.CoreLib</AssemblyName>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Version>1.0.4-beta</Version>
+    <Version>1.0.4</Version>
+    <Authors>Vinayaka Hebbar</Authors>
   </PropertyGroup>
 
   <PropertyGroup>
     <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript.CoreLib\FluidScript.CoreLib.xml</DocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>

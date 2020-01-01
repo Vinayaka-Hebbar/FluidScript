@@ -10,7 +10,7 @@ namespace FluidScript.Reflection.Emit
 
         public abstract Type Type { get; }
 
-        public abstract bool IsMember { get; } 
+        public abstract bool IsMember { get; }
 
         public abstract bool IsStatic { get; }
     }

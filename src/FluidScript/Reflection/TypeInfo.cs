@@ -11,10 +11,14 @@
         System.Type ResolvedType(Emit.ITypeProvider generator);
     }
 
-    public struct TypeInfo : ITypeInfo
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct TypeInfo : ITypeInfo
     {
-        public readonly static TypeInfo Any = new TypeInfo("any", RuntimeType.Any);
-        public readonly static TypeInfo Void = new TypeInfo("void", RuntimeType.Void);
+        public readonly static TypeInfo Any = new TypeInfo("any");
+        public readonly static TypeInfo Void = new TypeInfo("void");
 
         public string FullName { get; }
 
@@ -28,7 +32,7 @@
 
         public ITypeInfo ElementType => this;
 
-        public TypeInfo(string name, RuntimeType runtime = RuntimeType.Undefined)
+        public TypeInfo(string name)
         {
             FullName = name;
         }
@@ -56,14 +60,17 @@
             return FullName;
         }
 
-
         public ITypeInfo MakeArrayType()
         {
             return new ArrayTypeInfo(FullName, this, 1);
         }
     }
 
-    public struct ArrayTypeInfo : ITypeInfo
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct ArrayTypeInfo : ITypeInfo
     {
         public ITypeInfo ElementType { get; }
 
@@ -113,7 +120,6 @@
         {
             return FullName;
         }
-
 
         public ITypeInfo MakeArrayType()
         {

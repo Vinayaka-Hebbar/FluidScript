@@ -2465,10 +2465,6 @@
         <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetNestedTypes(System.Reflection.BindingFlags)">
             <inheritdoc/>
         </member>
-        <me      </member>
-        <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetNestedTypes(System.Reflection.BindingFlags)">
-            <inheritdoc/>
-        </member>
         <member name="M:FluidScript.Reflection.Emit.TypeGenerator.GetProperties(System.Reflection.BindingFlags)">
             <inheritdoc/>
         </member>
@@ -2536,11 +2532,6 @@
             </summary>
             <param name="typeName"></param>
             <returns></returns>
-        </member>
-        <member name="F:FluidScript.RuntimeType.Byte">
-            <summary>
-            sbyte
-            </summary>
         </member>
     </members>
 </doc>

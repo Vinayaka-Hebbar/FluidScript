@@ -1159,7 +1159,7 @@ namespace FluidScript.Compiler
                 list = VisitArgumentList(TokenType.Comma, TokenType.RightBracket).ToArray();
 
             }
-            return new ArrayLiteralExpression(list, type,size);
+            return new ArrayLiteralExpression(list, type, size);
         }
 
         /// <summary>
