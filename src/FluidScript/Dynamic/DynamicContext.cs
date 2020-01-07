@@ -83,19 +83,9 @@ namespace FluidScript.Dynamic
         /// <exception cref="IndexOutOfRangeException"/>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="MissingMethodException"/>
-        public object Invoke(Node syntaxTree)
+        public object Invoke(Expression syntaxTree)
         {
-            switch (syntaxTree)
-            {
-                case Expression exp:
-                    return exp.Accept(this);
-                case Statement statement:
-                    statement.Accept(this);
-                    if (LongJump != null)
-                        return LongJump();
-                    break;
-            }
-            return null;
+            return syntaxTree.Accept(this);
         }
 
         /// <summary>
@@ -233,9 +223,9 @@ namespace FluidScript.Dynamic
             else
             {
                 LocalContext context = scope.Current;
-                while (context._parent != null)
+                while (context.Parent != null)
                 {
-                    context = context._parent;
+                    context = context.Parent;
                 }
                 var variable = scope.Create(name, value.GetType());
                 //create new variable
@@ -301,6 +291,10 @@ namespace FluidScript.Dynamic
             var args = new object[] { left, right };
             if (opName != null)
             {
+                if (left is null)
+                    throw new OperationCanceledException(string.Concat("Null value present at ", node.Left, " in execution of ", node));
+                if (right is null)
+                    throw new OperationCanceledException(string.Concat("Null value present at ", node.Right, " in execution of ", node));
                 method = Reflection.TypeUtils.
                    GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversions, left.GetType(), right.GetType());
                 for (int i = 0; i < conversions.Length; i++)
@@ -319,10 +313,12 @@ namespace FluidScript.Dynamic
                 if (right == null)
                     right = Boolean.False;
                 var convert = Reflection.TypeUtils.GetBooleanOveraload(left.GetType());
-                args[0] = convert == null ? left : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.False :
+                //No bool conversion default true object exist
+                args[0] = convert == null ? left : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.True :
                     convert.Invoke(null, new object[] { left });
                 convert = Reflection.TypeUtils.GetBooleanOveraload(right.GetType());
-                args[1] = convert == null ? right : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.False :
+                //No bool conversion default true object exist
+                args[1] = convert == null ? right : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.True :
                     method.Invoke(null, new object[] { right });
                 method = nodeType == ExpressionType.AndAnd ? Reflection.Emit.Helpers.LogicalAnd : Reflection.Emit.Helpers.LogicalOr;
             }
@@ -387,6 +383,8 @@ namespace FluidScript.Dynamic
         object Compiler.IExpressionVisitor<object>.VisitIndex(IndexExpression node)
         {
             var target = node.Target.Accept(this);
+            if (target is null)
+                throw new Exception(string.Concat("Null value present at execution of ", node.Target));
             var type = target.GetType();
             object value = null;
             var args = node.Arguments.Select(arg => arg.Accept(this)).ToArray();
@@ -456,6 +454,8 @@ namespace FluidScript.Dynamic
         object Compiler.IExpressionVisitor<object>.VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
+            if (target is null)
+                throw new Exception(string.Concat("Null value present at execution of ", node.Target));
             var member = target.GetType()
            .FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, Reflection.TypeUtils.Any, HasMember, node.Name)
            .FirstOrDefault();
@@ -539,6 +539,8 @@ namespace FluidScript.Dynamic
         object Compiler.IExpressionVisitor<object>.VisitUnary(UnaryExpression node)
         {
             var value = node.Operand.Accept(this);
+            if (value is null)
+                throw new Exception(string.Concat("Null value present at execution of ", node));
             Type type = value.GetType();
             string name = null;
             //modified a++; updated new value
@@ -661,6 +663,8 @@ namespace FluidScript.Dynamic
             {
                 value = node.Right.Accept(this);
             }
+            if (value == null)
+                throw new OperationCanceledException(string.Concat("Null Exception in ", node));
             node.Type = value.GetType();
             return value;
         }

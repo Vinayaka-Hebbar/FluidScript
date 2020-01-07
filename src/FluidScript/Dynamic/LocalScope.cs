@@ -90,7 +90,7 @@
 
         internal void CreateOrModify(string name, object value)
         {
-            LocalVariable variable = LocalVariable.Empty;
+            LocalVariable? variable = null;
             foreach (var item in LocalVariables)
             {
                 if (item.Equals(name))
@@ -99,9 +99,11 @@
                     break;
                 }
             }
-            if (ReferenceEquals(variable, LocalVariable.Empty) == false)
-                variable = Create(name, value.GetType());
-            Current.Modify(variable, value);
+            if (variable.HasValue == false)
+            {
+                variable = Create(name, value?.GetType());
+            }
+            Current.Modify(variable.Value, value);
         }
 
         internal void RemoveAt(int index)

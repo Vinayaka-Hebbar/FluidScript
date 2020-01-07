@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net45</TargetFramework>
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
     <StartupObject>FluidScipt.ConsoleTest.Class1</StartupObject>
@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Json.Serialization" Version="1.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,9 +31,6 @@
       <HintPath>..\src\FluidScript.CoreLib\bin\Debug\net40\FluidScript.CoreLib.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Runtime.DynamicClasses">
-      <HintPath>bin\Debug\net461\Runtime.DynamicClasses.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

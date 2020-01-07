@@ -2,6 +2,9 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
+    /// <summary>
+    /// Indexer value[exps]
+    /// </summary>
     public sealed class IndexExpression : Expression
     {
         public readonly Expression Target;

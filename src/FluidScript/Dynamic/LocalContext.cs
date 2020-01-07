@@ -4,43 +4,43 @@ namespace FluidScript.Dynamic
 {
     internal sealed class LocalContext : System.IDisposable
     {
-        private readonly IDictionary<LocalVariable, object> Instances = new Dictionary<LocalVariable, object>();
+        private readonly IDictionary<LocalVariable, object> _instances = new Dictionary<LocalVariable, object>();
 
         private readonly LocalScope _scope;
 
-        internal readonly LocalContext _parent;
+        internal readonly LocalContext Parent;
 
-        public LocalContext(LocalScope scope)
+        internal LocalContext(LocalScope scope)
         {
             _scope = scope;
         }
 
-        public LocalContext(LocalScope scope, LocalContext parent)
+        internal LocalContext(LocalScope scope, LocalContext parent)
         {
             _scope = scope;
             _scope.Current = this;
-            _parent = parent;
+            Parent = parent;
         }
 
         internal void Modify(LocalVariable variable, object value)
         {
-            if (Instances.ContainsKey(variable) == false && _parent != null)
+            if (_instances.ContainsKey(variable) == false && Parent != null)
             {
-                _parent.Modify(variable, value);
+                Parent.Modify(variable, value);
                 return;
             }
-            Instances[variable] = value;
+            _instances[variable] = value;
         }
 
         internal object Find(string name)
         {
             if (_scope.TryGetValue(name, out LocalVariable variable))
             {
-                if (Instances.TryGetValue(variable, out object store))
+                if (_instances.TryGetValue(variable, out object store))
                     return store;
-                if (_parent != null)
+                if (Parent != null)
                 {
-                    return _parent.Find(name);
+                    return Parent.Find(name);
                 }
             }
             return null;
@@ -48,25 +48,25 @@ namespace FluidScript.Dynamic
 
         internal void Create(LocalVariable variable, object value)
         {
-            Instances[variable] = value;
+            _instances[variable] = value;
         }
 
         public void Dispose()
         {
-            foreach (var item in System.Linq.Enumerable.Reverse(Instances.Keys))
+            foreach (var item in System.Linq.Enumerable.Reverse(_instances.Keys))
             {
                 _scope.Remove(item);
             }
-            _scope.Current = _parent;
+            _scope.Current = Parent;
         }
 
         internal bool TryGetValue(LocalVariable item, out object value)
         {
-            if (Instances.TryGetValue(item, out value))
+            if (_instances.TryGetValue(item, out value))
                 return true;
-            if (_parent != null)
+            if (Parent != null)
             {
-                return _parent.TryGetValue(item, out value);
+                return Parent.TryGetValue(item, out value);
             }
             value = null;
             return false;
@@ -74,9 +74,9 @@ namespace FluidScript.Dynamic
 
         internal object GetValue(LocalVariable item)
         {
-            if (Instances.TryGetValue(item, out object value) == false && _parent != null)
+            if (_instances.TryGetValue(item, out object value) == false && Parent != null)
             {
-                return _parent.GetValue(item);
+                return Parent.GetValue(item);
             }
             return value;
         }
@@ -91,7 +91,7 @@ namespace FluidScript.Dynamic
         private const int hcf = 2063038313;
         private const int hcs = -1521134295;
 
-        internal static readonly LocalVariable Empty = new LocalVariable();
+        internal static readonly LocalVariable Empty = new LocalVariable(null, -1, null);
 
         internal readonly string Name;
         internal readonly int Index;
@@ -115,7 +115,10 @@ namespace FluidScript.Dynamic
             return Name.Equals(obj);
         }
 
-        public override int GetHashCode() => ((hcf + Name.GetHashCode()) * hcs) + Index;
+        public override int GetHashCode()
+        {
+            return ((hcf + Name.GetHashCode()) * hcs) + Index;
+        }
 
         public override string ToString() => string.Concat(Name, ":", Type.Name);
     }

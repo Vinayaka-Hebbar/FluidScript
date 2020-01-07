@@ -33,7 +33,11 @@
         /// <returns></returns>
         public virtual TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
+#if LATEST_VS 
+            return default;
+#else
             return default(TResult);
+#endif
         }
 
         /// <summary>

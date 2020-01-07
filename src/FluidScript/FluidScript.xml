@@ -184,6 +184,11 @@
         <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ToString">
             <inheritdoc/>
         </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.IndexExpression">
+            <summary>
+            Indexer value[exps]
+            </summary>
+        </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.LiteralExpression">
             <summary>
             Literal expression
@@ -977,7 +982,7 @@
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.MissingMethodException"/>
         </member>
-        <member name="M:FluidScript.Dynamic.DynamicContext.Invoke(FluidScript.Compiler.SyntaxTree.Node)">
+        <member name="M:FluidScript.Dynamic.DynamicContext.Invoke(FluidScript.Compiler.SyntaxTree.Expression)">
             <summary>
             Evaluate the <paramref name="syntaxTree"/>
             </summary>

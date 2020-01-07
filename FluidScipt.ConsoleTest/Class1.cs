@@ -11,22 +11,27 @@ namespace FluidScipt.ConsoleTest
             //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
             Class1 class1 = new Class1();
             class1.Run();
-            //class1.Print();
+            class1.Print();
             Console.ReadKey();
         }
 
         private void Print()
         {
-            Console.WriteLine(FluidScript.Boolean.True && FluidScript.Boolean.True);
+        }
+
+        private void OnHubRecieve(object obj)
+        {
+            Console.WriteLine(obj);
         }
 
         private void Run()
         {
             var context = new FluidScript.Dynamic.DynamicContext(new FluidScript.Math());
-            context["a"] = new Integer(4);
-            context["b"] = new Integer(5);
-            FluidScript.Compiler.SyntaxTree.Statement tree = ScriptEngine.GetStatement("x&&y", FluidScript.Compiler.ParserSettings.Default);
+            context["a"] = new FluidScript.Double(4);
+            FluidScript.Compiler.SyntaxTree.Statement tree = ScriptEngine.GetStatement("{return null;}", FluidScript.Compiler.ParserSettings.Default);
             var re = context.Invoke(tree);
+            FluidScript.Compiler.SyntaxTree.Statement tree1 = ScriptEngine.GetStatement("{a=2;}", FluidScript.Compiler.ParserSettings.Default);
+            var re1 = context.Invoke(tree1);
             Console.WriteLine(re);
         }
 
@@ -50,6 +55,14 @@ namespace FluidScipt.ConsoleTest
                 object result = instance.Add();
                 Console.WriteLine(result);
             }
+        }
+
+
+        public class Test
+        {
+            public int A { get; }
+            [System.Runtime.Serialization.DataMember]
+            public int B { get; }
         }
     }
 

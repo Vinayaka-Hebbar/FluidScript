@@ -15,5 +15,10 @@
         {
             return visitor.VisitNullPropegator(this);
         }
+
+        public override string ToString()
+        {
+            return string.Concat(Left.ToString(), "??", Right.ToString());
+        }
     }
 }
