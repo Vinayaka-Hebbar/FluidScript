@@ -37,8 +37,6 @@
             LocalVariables.Clear();
         }
 
-
-
         internal object GetValue(LocalVariable variable)
         {
             return Current.GetValue(variable);
@@ -46,21 +44,26 @@
 
         internal System.Collections.Generic.ICollection<string> Keys()
         {
-            string[] keys = new string[LocalVariables.Count];
-            for (int i = 0; i < LocalVariables.Count; i++)
+            var variables = Current.Variables;
+            string[] keys = new string[variables.Count];
+            int index = 0;
+            foreach (var variable in variables)
             {
-                keys[i] = LocalVariables[i].Name;
+                keys[index++] = variable.Name;
             }
             return keys;
         }
 
         internal System.Collections.Generic.ICollection<object> Values()
         {
-            object[] items = new object[LocalVariables.Count];
             var current = Current;
-            for (int i = 0; i < LocalVariables.Count; i++)
+            var variables = current.Variables;
+            object[] items = new object[variables.Count];
+            var index = 0;
+            foreach (var variable in variables)
             {
-                items[i] = current.GetValue(LocalVariables[i]);
+                items[index++] = current.GetValue(variable);
+
             }
             return items;
         }

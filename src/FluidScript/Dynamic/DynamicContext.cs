@@ -697,12 +697,18 @@ namespace FluidScript.Dynamic
         /// <inheritdoc/>
         object Compiler.IExpressionVisitor<object>.VisitAnonymousObject(AnonymousObjectExpression node)
         {
-            var dynamicValue = new DynamicContext(this);
-            foreach (var item in node.Members)
+            // todo this
+            using (scope.CreateContext())
             {
-                dynamicValue[item.Name] = dynamicValue.Invoke(item.Expression);
+                var scope = new LocalScope(this.scope);
+                var dynamicValue = new DynamicContext(Instance, scope);
+                foreach (var item in node.Members)
+                {
+                    var value = item.Expression.Accept(dynamicValue);
+                    scope.Create(item.Name, value.GetType(), value);
+                }
+                return dynamicValue;
             }
-            return dynamicValue;
         }
 
         /// <inheritdoc/>
@@ -898,8 +904,9 @@ namespace FluidScript.Dynamic
 
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
+            //todo list serialize
             var current = scope.Current;
-            foreach (var item in scope)
+            foreach (var item in current.Variables)
             {
                 var value = current.GetValue(item);
                 if (item.Type.IsPrimitive)
@@ -908,7 +915,7 @@ namespace FluidScript.Dynamic
                 {
                     info.AddValue(item.Name, Convert.ChangeType(value, convertible.GetTypeCode()), item.Type);
                 }
-                else if(value is String)
+                else if (value is String)
                 {
                     info.AddValue(item.Name, value.ToString(), typeof(string));
                 }

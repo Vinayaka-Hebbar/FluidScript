@@ -46,6 +46,14 @@ namespace FluidScript.Dynamic
             return null;
         }
 
+        internal ICollection<LocalVariable> Variables
+        {
+            get
+            {
+                return _instances.Keys;
+            }
+        }
+
         internal void Create(LocalVariable variable, object value)
         {
             _instances[variable] = value;

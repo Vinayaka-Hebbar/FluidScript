@@ -33,8 +33,10 @@ namespace FluidScipt.ConsoleTest
         private void Run()
         {
             var engine = new FluidScript.ScriptEngine();
-            var statement = engine.GetStatement("return {a:`my name is vinayaka`, b:2}");
-            var context = new FluidScript.Dynamic.DynamicContext(this);
+            var statement = engine.GetStatement("return {a:y/x, b:2}");
+            var context = new FluidScript.Dynamic.DynamicContext(new FluidScript.Math());
+            context["x"] = new FluidScript.Integer(10);
+            context["y"] = new FluidScript.Integer(20);
             object result = context.Invoke(statement);
             var json = Json.Serialization.JsonConvert.Serialize(result);
             Console.WriteLine(json);
