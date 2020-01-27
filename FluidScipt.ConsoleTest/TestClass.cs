@@ -1,37 +1,103 @@
-﻿using FluidScript;
+﻿using System;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
 
 namespace FluidScipt.ConsoleTest
 {
-    public class TestClass : FSObject
+    public class TestClass
     {
-        public Integer _x = 12;
-        public static readonly String _name = "vinayaka";
-        public TestClass Current { get => this; }
-        public Integer X
+        public static void Run()
         {
-            get
-            {
-                return Current._x;
-            }
-            set
-            {
-                Current._x = value;
-            }
+            User user = new User() { Name = "vinayaka"};
+            var result = Test<User>((u) => u.Name != user.Name && u.IsActive == true);
+            Console.WriteLine(result);
         }
 
-        public override String __ToString()
+        public static string Test<T>(Expression<Func<T, bool>> expression)
         {
-            return _name;
+            return Get(expression.Body);
         }
 
-        public Integer Add()
+        private static string Get(Expression expression)
         {
-            Integer x = 0;
-            for (var i=0; i < 10; i++)
+            switch (expression.NodeType)
             {
-                x++;
+                case ExpressionType.AndAlso:
+                    return GetBinaryLogical((BinaryExpression)expression, "and");
+                case ExpressionType.OrAssign:
+                    return GetBinaryLogical((BinaryExpression)expression, "or");
+                case ExpressionType.Equal:
+                    return GetBinary((BinaryExpression)expression, "=");
+                case ExpressionType.NotEqual:
+                    return GetBinary((BinaryExpression)expression, "!=");
+                case ExpressionType.MemberAccess:
+                    return GetMemberName((MemberExpression)expression);
+                case ExpressionType.Constant:
+                    return ((ConstantExpression)expression).Value.ToString();
             }
-            return x;
+            throw new FormatException("Condition format invalid");
+        }
+
+        private static object GetValue(Expression expression)
+        {
+            switch (expression.NodeType)
+            {
+                case ExpressionType.MemberAccess:
+                    return GetMemberValue((MemberExpression)expression);
+                case ExpressionType.Constant:
+                    return ((ConstantExpression)expression).Value;
+            }
+            throw new FormatException("Condition format invalid");
+        }
+
+        private static string GetMemberName(MemberExpression expression)
+        {
+            var member = expression.Member;
+            var attr = (DataMemberAttribute)Attribute.GetCustomAttribute(member, typeof(DataMemberAttribute));
+            if (attr != null && attr.Name != null)
+            {
+                return attr.Name;
+            }
+            return member.Name;
+        }
+
+        private static object GetMemberValue(MemberExpression memberAcess)
+        {
+            var expression = memberAcess.Expression;
+            object instance = GetValue(expression);
+            var member = memberAcess.Member;
+            switch (member)
+            {
+                case System.Reflection.FieldInfo field:
+                    return field.GetValue(instance);
+                case System.Reflection.PropertyInfo property:
+                    return property.GetValue(instance, new object[0]);
+            }
+            return string.Empty;
+        }
+
+        private static string GetBinaryLogical(BinaryExpression binary, string relation)
+        {
+            var left = binary.Left;
+            var right = binary.Right;
+            return string.Concat(Get(left), " ", relation, " ", Get(right));
+        }
+
+        private static string GetBinary(BinaryExpression binary, string operation)
+        {
+            var left = binary.Left;
+            var right = binary.Right;
+            return string.Concat(Get(left), " ", operation, " ", GetValue(right));
+        }
+
+        public class User
+        {
+            [DataMember(Name = "name")]
+            internal string Name;
+            [DataMember(Name = "isActive")]
+            internal bool IsActive;
+            [DataMember(Name = "age")]
+            public int Age { get; set; }
         }
     }
 }

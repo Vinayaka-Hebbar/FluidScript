@@ -11,10 +11,6 @@ namespace FluidScript.Reflection.Emit
         private const BindingFlags DeclaredInstance = DeclaredPublic | BindingFlags.Instance;
         private const BindingFlags DeclaredPublic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.ExactBinding;
 
-        #region Types
-
-        internal static readonly System.Type BooleanType = typeof(Boolean);
-        #endregion
 
         #region Object
         internal static readonly MethodInfo ObjectEquals_Two_Object;
@@ -67,16 +63,16 @@ namespace FluidScript.Reflection.Emit
             String_New = GetInstanceCtor(typeof(String), typeof(string));
             Register_Attr_Ctor = GetInstanceCtor(typeof(Runtime.RegisterAttribute), typeof(string));
 
-            Integer_to_Int32 = GetStaticMethod(typeof(Integer), "op_Implicit", typeof(Integer));
+            Integer_to_Int32 = GetImplicitConversion(typeof(Integer), "op_Implicit", typeof(int), typeof(Integer));
 
 
-            Bool_True = GetField(BooleanType, nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
-            Bool_False = GetField(BooleanType, nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
+            Bool_True = GetField(TypeUtils.BooleanType, nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
+            Bool_False = GetField(TypeUtils.BooleanType, nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
 
-            Booolean_To_Bool = GetStaticMethod(BooleanType, Conversion.ImplicitConversionName, BooleanType);
+            Booolean_To_Bool = GetStaticMethod(TypeUtils.BooleanType, Conversion.ImplicitConversionName, TypeUtils.BooleanType);
 
-            LogicalAnd = GetStaticMethod(BooleanType, "OpLogicalAnd", BooleanType, BooleanType);
-            LogicalOr = GetStaticMethod(BooleanType, "OpLogicalOr", BooleanType, BooleanType);
+            LogicalAnd = GetStaticMethod(TypeUtils.BooleanType, "OpLogicalAnd", TypeUtils.BooleanType, TypeUtils.BooleanType);
+            LogicalOr = GetStaticMethod(TypeUtils.BooleanType, "OpLogicalOr", TypeUtils.BooleanType, TypeUtils.BooleanType);
         }
 
         private static ConstructorInfo GetInstanceCtor(System.Type type, params System.Type[] parameterTypes)
@@ -87,7 +83,7 @@ namespace FluidScript.Reflection.Emit
             return result;
         }
 
-        public static MethodInfo GetStaticMethod(System.Type type, string name, params System.Type[] parameterTypes)
+        internal static MethodInfo GetStaticMethod(System.Type type, string name, params System.Type[] parameterTypes)
         {
             MethodInfo result = type.GetMethod(name, DeclaredStatic, null, parameterTypes, null);
             if (result == null)
@@ -95,7 +91,20 @@ namespace FluidScript.Reflection.Emit
             return result;
         }
 
-        public static FieldInfo GetField(System.Type type, string name, BindingFlags binding)
+        internal static MethodInfo GetImplicitConversion(System.Type type, string name, System.Type returnType, params System.Type[] parameterTypes)
+        {
+            var results = type.GetMember(name, MemberTypes.Method, DeclaredStatic);
+            foreach (MethodInfo method in results)
+            {
+                if (TypeUtils.MatchesArgumentTypes(method, parameterTypes) && TypeUtils.AreReferenceAssignable(method.ReturnType, returnType))
+                {
+                    return method;
+                }
+            }
+            throw new System.InvalidOperationException(string.Format("the convertion method {0}.{1}({2})", type.FullName, name, StringHelpers.Join(Separator, parameterTypes)));
+        }
+
+        internal static FieldInfo GetField(System.Type type, string name, BindingFlags binding)
         {
             FieldInfo result = type.GetField(name, binding);
             if (result == null)
@@ -104,7 +113,7 @@ namespace FluidScript.Reflection.Emit
 
         }
 
-        public static MethodInfo GetInstanceMethod(System.Type type, string name, params System.Type[] parameterTypes)
+        internal static MethodInfo GetInstanceMethod(System.Type type, string name, params System.Type[] parameterTypes)
         {
             MethodInfo result = type.GetMethod(name, DeclaredInstance, null, parameterTypes, null);
             if (result == null)

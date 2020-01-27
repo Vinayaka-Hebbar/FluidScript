@@ -39,17 +39,28 @@
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        Boolean IFSObject.__Equals(IFSObject other)
+        Boolean IFSObject.__Equals(IFSObject obj)
         {
-            return other is Float f &&
+            return obj is Float f &&
                   m_value == f.m_value;
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            return other is Float f &&
+            return obj is Float f &&
                   m_value == f.m_value;
+        }
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj"> The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value;
+        ///  otherwise, false.</returns>
+        public Boolean Equals(Float obj)
+        {
+            return m_value == obj.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>
@@ -168,8 +179,6 @@
 
         public static implicit operator Float(float value) => new Float(value);
 
-        public static implicit operator float(Float value) => value.m_value;
-
         public static implicit operator Float(Byte value) => new Float(value.m_value);
 
         public static implicit operator Float(Short value) => new Float(value.m_value);
@@ -179,6 +188,10 @@
         public static implicit operator Float(Integer value) => new Float(value.m_value);
 
         public static implicit operator Float(Long value) => new Float(value.m_value);
+
+        public static implicit operator float(Float value) => value.m_value;
+
+        public static implicit operator double(Float value) => value.m_value;
 
         public static Float operator +(Float left, Float right)
         {

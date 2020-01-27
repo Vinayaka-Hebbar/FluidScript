@@ -9,6 +9,12 @@ namespace FluidScript.Reflection
     {
         internal static readonly IList<Primitive> Inbuilts;
 
+
+        #region Types
+        internal static readonly System.Type BooleanType = typeof(Boolean);
+        internal static readonly System.Type ObjectType = typeof(object);
+        #endregion
+
         private static readonly Emit.Conversion[] NoConversions = new Emit.Conversion[0];
 
         private static readonly IDictionary<string, Primitive> InbuiltNames;
@@ -41,7 +47,7 @@ namespace FluidScript.Reflection
                 new Primitive("bool", typeof(Boolean)),
                 new Primitive("char", typeof(Char)),
                 new Primitive("string", typeof(String)),
-                new Primitive("any", typeof(FSObject)),
+                new Primitive("any", typeof(IFSObject)),
                 new Primitive("void", typeof(void))
             };
             InbuiltNames = Inbuilts.ToDictionary(item => item.Name);
@@ -86,7 +92,7 @@ namespace FluidScript.Reflection
             {
                 if (m.MemberType == MemberTypes.Method)
                 {
-                    if (MatchTypes((MethodInfo)m, types, out conversions))
+                    if (MatchesTypes((MethodInfo)m, types, out conversions))
                         return (MethodInfo)m;
                 }
             }
@@ -98,7 +104,7 @@ namespace FluidScript.Reflection
         {
             foreach (var m in methods)
             {
-                if (MatchTypes(m, types, out conversions))
+                if (MatchesTypes(m, types, out conversions))
                     return m;
             }
             conversions = new Emit.Conversion[0];
@@ -109,10 +115,10 @@ namespace FluidScript.Reflection
         {
             foreach (var type in types)
             {
-                var members = type.GetMember(name, BindingFlags.Public | BindingFlags.Static);
+                var members = type.GetMember(name, PublicStatic);
                 foreach (MethodInfo m in members)
                 {
-                    if (MatchTypes(m, types, out conversions))
+                    if (MatchesTypes(m, types, out conversions))
                         return m;
                 }
             }
@@ -120,7 +126,7 @@ namespace FluidScript.Reflection
             return null;
         }
 
-        internal static bool MatchTypes(MethodInfo method, System.Type[] types, out Emit.Conversion[] conversions)
+        internal static bool MatchesTypes(MethodInfo method, System.Type[] types, out Emit.Conversion[] conversions)
         {
             var paramters = method.GetParameters();
             if (paramters.Length != types.Length)
@@ -131,13 +137,13 @@ namespace FluidScript.Reflection
             conversions = new Emit.Conversion[paramters.Length];
             for (int i = 0; i < paramters.Length; i++)
             {
-                var expected = paramters[i].ParameterType;
-                var type = types[i];
-                if (expected == type || expected.IsAssignableFrom(type))
+                var dest = paramters[i].ParameterType;
+                var src = types[i];
+                if (dest.IsAssignableFrom(src))
                     conversions[i] = Emit.Conversion.NoConversion;
                 else
                 {
-                    if (HasImplicitConvert(type, expected, out MethodInfo opImplict) == false)
+                    if (TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
                         return false;
                     conversions[i] = new Emit.Conversion(opImplict);
                 }
@@ -145,22 +151,76 @@ namespace FluidScript.Reflection
             return true;
         }
 
-        internal static bool TryImplicitConvert(System.Type from, System.Type to, out MethodInfo method)
+        /// <summary>
+        /// Returns true if the method's parameter types are reference assignable from
+        /// the argument types, otherwise false.
+        /// 
+        /// An example that can make the method return false is that 
+        /// typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
+        /// returns a method with two double parameters, which doesn't match the provided
+        /// argument types.
+        /// </summary>
+        /// <returns></returns>
+        internal static bool MatchesArgumentTypes(MethodInfo m, params System.Type[] argTypes)
         {
-            method = to.GetMethod(Emit.Conversion.ImplicitConversionName, BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
-            if (method != null && method.ReturnType == to)
-                return true;
-            method = from.GetMethod(Emit.Conversion.ImplicitConversionName, BindingFlags.Public | BindingFlags.Static, null, new System.Type[1] { from }, null);
-            return method != null && method.ReturnType == to;
+            if (m == null || argTypes == null)
+            {
+                return false;
+            }
+            var ps = m.GetParameters();
+
+            if (ps.Length != argTypes.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < ps.Length; i++)
+            {
+                if (!AreReferenceAssignable(ps[i].ParameterType, argTypes[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
-        internal static bool HasImplicitConvert(System.Type from, System.Type to, out MethodInfo method)
+        internal static bool AreReferenceAssignable(System.Type dest, System.Type src)
         {
-            method = to.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { from }, null);
-            if (method != null && method.ReturnType == to)
+            // WARNING: This actually implements "Is this identity assignable and/or reference assignable?"
+            if (dest.IsAssignableFrom(src))
+            {
                 return true;
-            method = from.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { from }, null);
-            return method != null && method.ReturnType == to;
+            }
+            if (!dest.IsValueType && !src.IsValueType && dest.IsAssignableFrom(src))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        internal static bool TryImplicitConvert(System.Type src, System.Type dest, out MethodInfo method)
+        {
+            // todo base class convert
+            var methods = dest.GetMember(Emit.Conversion.ImplicitConversionName, MemberTypes.Method, PublicStatic);
+            foreach (MethodInfo m in methods)
+            {
+                if (MatchesArgumentTypes(m, src) && AreReferenceAssignable(m.ReturnType, dest))
+                {
+                    method = m;
+                    return true;
+                }
+            }
+            methods = src.GetMember(Emit.Conversion.ImplicitConversionName, MemberTypes.Method, PublicStatic);
+            foreach (MethodInfo m in methods)
+            {
+                if (MatchesArgumentTypes(m, src) && AreReferenceAssignable(m.ReturnType, dest))
+                {
+                    method = m;
+                    return true;
+                }
+            }
+            method = null;
+            return false;
         }
 
         internal static bool BindingFlagsMatch(bool state, BindingFlags flags, BindingFlags trueFlag, BindingFlags falseFlag)
@@ -172,11 +232,13 @@ namespace FluidScript.Reflection
 
         internal static MethodInfo GetBooleanOveraload(System.Type type)
         {
-            if (type == Emit.Helpers.BooleanType)
+            if (type == BooleanType)
             {
                 return null;
             }
-            return type.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null);
+            return type.IsPrimitive && type == typeof(bool)
+                ? BooleanType.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null)
+                : type.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null);
         }
     }
 }

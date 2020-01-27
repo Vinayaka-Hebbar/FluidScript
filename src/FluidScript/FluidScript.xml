@@ -20,6 +20,11 @@
             Binary Expression
             </summary>
         </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitAnonymousObject(FluidScript.Compiler.SyntaxTree.AnonymousObjectExpression)">
+            <summary>
+            AnonymousObject Expression
+            </summary>
+        </member>
         <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
             <summary>
             Array Literal
@@ -644,6 +649,7 @@
             <summary>
             Move to next <see cref="F:FluidScript.Compiler.SyntaxVisitor.TokenType"/>
             </summary>
+            <param name="skipLine">Indicates line to be skipped</param>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxVisitor.Reset">
             <summary>
@@ -1048,6 +1054,9 @@
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitNullPropegator(FluidScript.Compiler.SyntaxTree.NullPropegatorExpression)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitAnonymousObject(FluidScript.Compiler.SyntaxTree.AnonymousObjectExpression)">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IStatementVisitor#VisitDeclaration(FluidScript.Compiler.SyntaxTree.LocalDeclarationStatement)">
             <inheritdoc/>
         </member>
@@ -1063,9 +1072,20 @@
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IStatementVisitor#VisitContinue(FluidScript.Compiler.SyntaxTree.ContinueStatement)">
             <inheritdoc/>
         </member>
+        <member name="F:FluidScript.Dynamic.LocalScope.Current">
+            <summary>
+            Current Block
+            </summary>
+        </member>
         <member name="P:FluidScript.Dynamic.LocalScope.Item(System.String)">
             <summary>
             Getter and Setter of variables
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.MetaObject.GetRestrictions">
+            <summary>
+            Returns a Restrictions object which includes our current restrictions merged
+            with a restriction limiting our type
             </summary>
         </member>
         <member name="T:FluidScript.Reflection.Emit.Conversion">
@@ -2536,6 +2556,18 @@
             Must be primitive
             </summary>
             <param name="typeName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Reflection.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
+            <summary>
+            Returns true if the method's parameter types are reference assignable from
+            the argument types, otherwise false.
+            
+            An example that can make the method return false is that 
+            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
+            returns a method with two double parameters, which doesn't match the provided
+            argument types.
+            </summary>
             <returns></returns>
         </member>
     </members>

@@ -16,6 +16,12 @@ namespace FluidScript.Compiler
         /// Binary Expression
         /// </summary>
         TResult VisitBinary(BinaryExpression node);
+
+        /// <summary>
+        /// AnonymousObject Expression
+        /// </summary>
+        TResult VisitAnonymousObject(AnonymousObjectExpression node);
+
         /// <summary>
         /// Array Literal
         /// </summary>

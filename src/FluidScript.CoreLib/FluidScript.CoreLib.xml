@@ -539,6 +539,14 @@
         <member name="M:FluidScript.Boolean.Equals(System.Object)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Boolean.Equals(FluidScript.Boolean)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
+        </member>
         <member name="M:FluidScript.Boolean.GetHashCode">
             <inheritdoc/>
         </member>
@@ -637,6 +645,14 @@
         <member name="M:FluidScript.Byte.Equals(System.Object)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Byte.Equals(FluidScript.Byte)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
+        </member>
         <member name="M:FluidScript.Byte.GetHashCode">
             <inheritdoc/>
         </member>
@@ -720,11 +736,19 @@
         </member>
         <member name="M:FluidScript.Char.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
             <summary>
-            checks <paramref name="other"/> and <see cref="T:FluidScript.Integer"/> are equals
+            checks <paramref name="obj"/> and <see cref="T:FluidScript.Integer"/> are equals
             </summary>
         </member>
         <member name="M:FluidScript.Char.Equals(System.Object)">
             <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Char.Equals(FluidScript.Char)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
         </member>
         <member name="M:FluidScript.Char.GetHashCode">
             <inheritdoc/>
@@ -819,6 +843,14 @@
         <member name="M:FluidScript.Double.Equals(System.Object)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Double.Equals(FluidScript.Double)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
+        </member>
         <member name="M:FluidScript.Double.GetHashCode">
             <inheritdoc/>
         </member>
@@ -892,6 +924,14 @@
         <member name="M:FluidScript.Float.Equals(System.Object)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Float.Equals(FluidScript.Float)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
+        </member>
         <member name="M:FluidScript.Float.GetHashCode">
             <inheritdoc/>
         </member>
@@ -964,6 +1004,14 @@
         </member>
         <member name="M:FluidScript.Integer.Equals(System.Object)">
             <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Integer.Equals(FluidScript.Integer)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
         </member>
         <member name="M:FluidScript.Integer.GetHashCode">
             <inheritdoc/>
@@ -1043,6 +1091,14 @@
         <member name="M:FluidScript.Long.Equals(System.Object)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Long.Equals(FluidScript.Long)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
+        </member>
         <member name="M:FluidScript.Long.GetHashCode">
             <inheritdoc/>
         </member>
@@ -1115,6 +1171,14 @@
         </member>
         <member name="M:FluidScript.Short.Equals(System.Object)">
             <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Short.Equals(FluidScript.Short)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
         </member>
         <member name="M:FluidScript.Short.GetHashCode">
             <inheritdoc/>
@@ -1226,6 +1290,14 @@
         </member>
         <member name="M:FluidScript.String.Equals(System.Object)">
             <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.String.Equals(FluidScript.String)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj"> The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value;
+             otherwise, false.</returns>
         </member>
         <member name="M:FluidScript.String.GetHashCode">
             <inheritdoc/>

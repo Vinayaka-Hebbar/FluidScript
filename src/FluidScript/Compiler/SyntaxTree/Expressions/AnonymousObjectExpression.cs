@@ -5,15 +5,14 @@ namespace FluidScript.Compiler.SyntaxTree
     public sealed class AnonymousObjectExpression : Expression
     {
         public readonly AnonymousObjectMember[] Members;
-        public AnonymousObjectExpression(AnonymousObjectMember[] expressions) : base(ExpressionType.Block)
+        public AnonymousObjectExpression(AnonymousObjectMember[] expressions) : base(ExpressionType.AnonymousObject)
         {
             Members = expressions;
         }
 
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-            //todo implementation
-            return base.Accept(visitor);
+            return visitor.VisitAnonymousObject(this);
         }
 
         public override string ToString()

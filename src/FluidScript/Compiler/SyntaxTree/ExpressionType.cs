@@ -18,29 +18,30 @@
         Invocation = 12,
         Indexer = 13,
         AnonymousMethod = 14,
+        AnonymousObject = 15,
         //either 0->x or x = 0
-        Declaration = 15,
+        Declaration = 16,
         //Known types
         /// <summary>
         /// array block initailization
         /// </summary>
-        Block = 16,
-        Function = 17,
-        Argument = 18,
+        Block = 17,
+        Function = 18,
+        Argument = 19,
         //Stop
-        Comma = 24,
+        Comma = 25,
         //?
-        Question = 27,
+        Question = 28,
         /// <summary>
         /// .
         /// </summary>
-        MemberAccess = 29,
-        QualifiedNamespace = 30,
-        New = 31,
-        Array = 32,
-        Out = 33,
-        In = 34,
-        This = 35,
+        MemberAccess = 30,
+        QualifiedNamespace = 31,
+        New = 32,
+        Array = 33,
+        Out = 34,
+        In = 35,
+        This = 36,
         Labeled = 50,
         #region Math
         Plus = 66,

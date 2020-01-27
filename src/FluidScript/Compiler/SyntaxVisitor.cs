@@ -47,9 +47,9 @@ namespace FluidScript.Compiler
         /// <summary>
         /// labels like start: and goto start
         /// </summary>
-        //todo for inner block
         public string[] CurrentLabels
         {
+            //todo for inner block and forgotted
             get => _currentLabels.ToArray();
         }
 
@@ -68,6 +68,7 @@ namespace FluidScript.Compiler
         /// <summary>
         /// Move to next <see cref="TokenType"/>
         /// </summary>
+        /// <param name="skipLine">Indicates line to be skipped</param>
         public bool MoveNext(bool skipLine = true)
         {
             c = Source.ReadChar();

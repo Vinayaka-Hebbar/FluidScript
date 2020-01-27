@@ -58,6 +58,17 @@
                   m_value == s.m_value;
         }
 
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj"> The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value;
+        ///  otherwise, false.</returns>
+        public Boolean Equals(String obj)
+        {
+            return m_value == obj.m_value ? Boolean.True : Boolean.False;
+        }
+
         /// <inheritdoc/>
         public override int GetHashCode()
         {

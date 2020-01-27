@@ -25,34 +25,34 @@
         //Reserved
         // Other
 
-        NewLine = 17,
+        NewLine = 16,
         /// <summary>
         /// [
         /// </summary>
-        LeftBracket = 18,
-        RightBracket = 19,
+        LeftBracket = 19,
+        RightBracket = 20,
         /// <summary>
         /// (
         /// </summary>
-        LeftParenthesis = 20,
+        LeftParenthesis = 21,
         /// <summary>
         /// )
         /// </summary>
-        RightParenthesis = 21,
+        RightParenthesis = 22,
         /// <summary>
         /// {
         /// </summary>
-        LeftBrace = 22,
-        RightBrace = 23,
-        Comma = 24,
-        SemiColon = 25,
-        Colon = 26,
-        Question = 27,
-        NullPropagator = 28,
+        LeftBrace = 23,
+        RightBrace = 24,
+        Comma = 25,
+        SemiColon = 26,
+        Colon = 27,
+        Question = 28,
+        NullPropagator = 29,
         //property access
-        Dot = 29,
+        Dot = 30,
         //::
-        Qualified = 30,
+        Qualified = 31,
 
         //Math
         #region Math

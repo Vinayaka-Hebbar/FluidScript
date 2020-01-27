@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace FluidScript.Dynamic
 {
@@ -9,7 +10,8 @@ namespace FluidScript.Dynamic
     /// Runtime evaluation of Syntax tree 
     /// <list type="bullet">it will be not same as compiled </list>
     /// </summary>
-    public sealed class DynamicContext : IDictionary<string, object>, Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider, System.Dynamic.IDynamicMetaObjectProvider
+    [Serializable]
+    public sealed class DynamicContext : IDictionary<string, object>, Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider, System.Dynamic.IDynamicMetaObjectProvider, System.Runtime.Serialization.ISerializable
     {
         private readonly LocalScope scope;
 
@@ -162,7 +164,7 @@ namespace FluidScript.Dynamic
             if (nodeType == ExpressionType.Identifier)
             {
                 name = left.ToString();
-                if (scope.TryGetValue(name, out LocalVariable variable))
+                if (scope.TryGetMember(name, out LocalVariable variable))
                 {
                     scope.Current.Modify(variable, value);
                     return value;
@@ -295,8 +297,17 @@ namespace FluidScript.Dynamic
                     throw new OperationCanceledException(string.Concat("Null value present at ", node.Left, " in execution of ", node));
                 if (right is null)
                     throw new OperationCanceledException(string.Concat("Null value present at ", node.Right, " in execution of ", node));
+                var leftType = left.GetType();
+                var rightType = right.GetType();
+                if (leftType.IsPrimitive && rightType.IsPrimitive)
+                {
+                    left = FSObject.Convert(left);
+                    leftType = left.GetType();
+                    right = FSObject.Convert(right);
+                    rightType = right.GetType();
+                }
                 method = Reflection.TypeUtils.
-                   GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversions, left.GetType(), right.GetType());
+                   GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversions, leftType, rightType);
                 for (int i = 0; i < conversions.Length; i++)
                 {
                     Reflection.Emit.Conversion conv = conversions[i];
@@ -314,15 +325,16 @@ namespace FluidScript.Dynamic
                     right = Boolean.False;
                 var convert = Reflection.TypeUtils.GetBooleanOveraload(left.GetType());
                 //No bool conversion default true object exist
-                args[0] = convert == null ? left : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.True :
+                args[0] = convert == null ? left : convert.ReflectedType != Reflection.TypeUtils.BooleanType ? Boolean.True :
                     convert.Invoke(null, new object[] { left });
                 convert = Reflection.TypeUtils.GetBooleanOveraload(right.GetType());
                 //No bool conversion default true object exist
-                args[1] = convert == null ? right : convert.ReflectedType != Reflection.Emit.Helpers.BooleanType ? Boolean.True :
+                args[1] = convert == null ? right : convert.ReflectedType != Reflection.TypeUtils.BooleanType ? Boolean.True :
                     method.Invoke(null, new object[] { right });
                 method = nodeType == ExpressionType.AndAnd ? Reflection.Emit.Helpers.LogicalAnd : Reflection.Emit.Helpers.LogicalOr;
             }
-            node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
+            node.Method = method ?? throw new Exception(string.Concat("Invalid Operation at ", node.ToString()));
+            node.Type = method.ReturnType;
             return method.Invoke(null, args);
         }
 
@@ -456,6 +468,7 @@ namespace FluidScript.Dynamic
             var target = node.Target.Accept(this);
             if (target is null)
                 throw new Exception(string.Concat("Null value present at execution of ", node.Target));
+            object value = null;
             var member = target.GetType()
            .FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, Reflection.TypeUtils.Any, HasMember, node.Name)
            .FirstOrDefault();
@@ -465,7 +478,7 @@ namespace FluidScript.Dynamic
                 {
                     var field = (System.Reflection.FieldInfo)member;
                     node.Type = field.FieldType;
-                    return field.GetValue(target);
+                    value = field.GetValue(target);
 
                 }
                 else if (member.MemberType == System.Reflection.MemberTypes.Property)
@@ -473,22 +486,23 @@ namespace FluidScript.Dynamic
                     var property = (System.Reflection.PropertyInfo)member;
 
                     node.Type = property.PropertyType;
-                    return property.GetValue(target, new object[0]);
+                    value = property.GetValue(target, new object[0]);
                 }
             }
-            return null;
+            return value;
         }
 
         /// <inheritdoc/>
         object Compiler.IExpressionVisitor<object>.VisitMember(NameExpression node)
         {
             var name = node.Name;
-            if (scope.TryGetValue(name, out LocalVariable variable))
+            object value = null;
+            if (scope.TryGetMember(name, out LocalVariable variable))
             {
                 if (variable.Type == null)
                     throw new Exception(string.Concat("Use of undeclared variable ", variable));
                 node.Type = variable.Type;
-                return scope.Current.GetValue(variable);
+                value = scope.Current.GetValue(variable);
             }
             //find in the class level
             var member = Instance.GetType().GetMember(name).FirstOrDefault();
@@ -500,16 +514,16 @@ namespace FluidScript.Dynamic
                     if (field.FieldType == null)
                         throw new System.Exception(string.Concat("Use of undeclared field ", field));
                     node.Type = field.FieldType;
-                    return (IFSObject)field.GetValue(Instance);
+                    value = (IFSObject)field.GetValue(Instance);
                 }
                 if (member.MemberType == System.Reflection.MemberTypes.Property)
                 {
                     var property = (System.Reflection.PropertyInfo)member;
                     node.Type = property.PropertyType;
-                    return (IFSObject)property.GetValue(Instance, new object[0]);
+                    value = (IFSObject)property.GetValue(Instance, new object[0]);
                 }
             }
-            return null;
+            return value;
         }
 
         /// <inheritdoc/>
@@ -586,9 +600,20 @@ namespace FluidScript.Dynamic
                     name = "op_BitwiseAnd";
                     break;
             }
+            // not primitive supported it should be wrapped
+            if (type.IsPrimitive)
+            {
+                value = FSObject.Convert(value);
+                type = value.GetType();
+            }
             //todo conversion
-            var method = Reflection.TypeUtils.GetOperatorOverload(name, out Reflection.Emit.Conversion[] _, type);
-            var obj = method.Invoke(null, new object[] { value });
+            var method = Reflection.TypeUtils.GetOperatorOverload(name, out Reflection.Emit.Conversion[] conversions, type);
+            foreach (var conversion in conversions)
+            {
+                if (conversion.HasConversion)
+                    value = conversion.Convert(value);
+            }
+            object obj = method.Invoke(null, new object[1] { value });
             node.Type = method.ReturnType;
             if (modified)
             {
@@ -667,6 +692,17 @@ namespace FluidScript.Dynamic
                 throw new OperationCanceledException(string.Concat("Null Exception in ", node));
             node.Type = value.GetType();
             return value;
+        }
+
+        /// <inheritdoc/>
+        object Compiler.IExpressionVisitor<object>.VisitAnonymousObject(AnonymousObjectExpression node)
+        {
+            var dynamicValue = new DynamicContext(this);
+            foreach (var item in node.Members)
+            {
+                dynamicValue[item.Name] = dynamicValue.Invoke(item.Expression);
+            }
+            return dynamicValue;
         }
 
         /// <inheritdoc/>
@@ -761,6 +797,7 @@ namespace FluidScript.Dynamic
         {
             hasContinue = true;
         }
+
         #endregion
 
         #region IDictionary
@@ -781,7 +818,7 @@ namespace FluidScript.Dynamic
 
         bool IDictionary<string, object>.TryGetValue(string key, out object value)
         {
-            if (scope.TryGetValue(key, out LocalVariable variable))
+            if (scope.TryGetMember(key, out LocalVariable variable))
             {
                 value = scope.Current.GetValue(variable);
                 return true;
@@ -854,6 +891,32 @@ namespace FluidScript.Dynamic
             if (Reflection.TypeUtils.TryGetType(typeName, out Type type))
                 return type;
             return Type.GetType(typeName.FullName);
+        }
+        #endregion
+
+        #region ISerializable
+
+        void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            var current = scope.Current;
+            foreach (var item in scope)
+            {
+                var value = current.GetValue(item);
+                if (item.Type.IsPrimitive)
+                    info.AddValue(item.Name, current.GetValue(item), item.Type);
+                else if (value is IConvertible convertible)
+                {
+                    info.AddValue(item.Name, Convert.ChangeType(value, convertible.GetTypeCode()), item.Type);
+                }
+                else if(value is String)
+                {
+                    info.AddValue(item.Name, value.ToString(), typeof(string));
+                }
+                else
+                {
+                    info.AddValue(item.Name, value, item.Type);
+                }
+            }
         }
         #endregion
 

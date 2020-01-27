@@ -4,6 +4,9 @@
     {
         private readonly System.Collections.Generic.List<LocalVariable> LocalVariables;
 
+        /// <summary>
+        /// Current Block
+        /// </summary>
         internal LocalContext Current;
 
         internal LocalScope()
@@ -34,6 +37,13 @@
             LocalVariables.Clear();
         }
 
+
+
+        internal object GetValue(LocalVariable variable)
+        {
+            return Current.GetValue(variable);
+        }
+
         internal System.Collections.Generic.ICollection<string> Keys()
         {
             string[] keys = new string[LocalVariables.Count];
@@ -60,7 +70,7 @@
             return LocalVariables.Exists(v => v.Equals(name));
         }
 
-        internal bool TryGetValue(string name, out LocalVariable variable)
+        internal bool TryGetMember(string name, out LocalVariable variable)
         {
             foreach (var item in LocalVariables)
             {
@@ -101,7 +111,8 @@
             }
             if (variable.HasValue == false)
             {
-                variable = Create(name, value?.GetType());
+                // value not created
+                variable = Create(name, value == null ? Reflection.TypeUtils.ObjectType : value.GetType());
             }
             Current.Modify(variable.Value, value);
         }

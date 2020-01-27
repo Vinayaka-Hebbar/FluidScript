@@ -34,7 +34,7 @@ namespace FluidScript.Dynamic
 
         internal object Find(string name)
         {
-            if (_scope.TryGetValue(name, out LocalVariable variable))
+            if (_scope.TryGetMember(name, out LocalVariable variable))
             {
                 if (_instances.TryGetValue(variable, out object store))
                     return store;

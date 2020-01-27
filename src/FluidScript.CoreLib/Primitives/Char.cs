@@ -50,20 +50,31 @@
         }
 
         /// <summary>
-        /// checks <paramref name="other"/> and <see cref="Integer"/> are equals
+        /// checks <paramref name="obj"/> and <see cref="Integer"/> are equals
         /// </summary>
         [Runtime.Register("equals")]
-        Boolean IFSObject.__Equals(IFSObject other)
+        Boolean IFSObject.__Equals(IFSObject obj)
         {
-            return other is Char c &&
+            return obj is Char c &&
                   m_value == c.m_value;
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            return other is Char c &&
+            return obj is Char c &&
                   m_value == c.m_value ? Boolean.True : Boolean.False;
+        }
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj"> The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value;
+        ///  otherwise, false.</returns>
+        public Boolean Equals(Char obj)
+        {
+            return m_value == obj.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>

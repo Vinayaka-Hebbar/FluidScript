@@ -50,17 +50,28 @@
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        Boolean IFSObject.__Equals(IFSObject other)
+        Boolean IFSObject.__Equals(IFSObject obj)
         {
-            return other is Boolean b &&
+            return obj is Boolean b &&
                   m_value == b.m_value ? True : False;
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            return other is Boolean boolean &&
+            return obj is Boolean boolean &&
                   m_value == boolean.m_value;
+        }
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj"> The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value;
+        ///  otherwise, false.</returns>
+        public Boolean Equals(Boolean obj)
+        {
+            return m_value == obj.m_value? True : False;
         }
 
         /// <inheritdoc/>

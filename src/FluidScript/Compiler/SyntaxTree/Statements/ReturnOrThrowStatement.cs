@@ -46,15 +46,15 @@ namespace FluidScript.Compiler.SyntaxTree
                             lastStatement = block.Statements[block.Statements.Length - 1] == this;
                         }
                     }
-                    var returnType = generator.Method.ReturnType;
+                    var dest = generator.Method.ReturnType;
                     //todo variable name not used
                     if (generator.ReturnVariable == null)
-                        generator.ReturnVariable = generator.DeclareVariable(returnType);
-                    System.Type resolvedType = epression.Type;
-                    if (returnType != null && returnType != resolvedType)
+                        generator.ReturnVariable = generator.DeclareVariable(dest);
+                    System.Type src = epression.Type;
+                    if (dest != null && !dest.IsAssignableFrom(src))
                     {
                         //todo box value type
-                        if (Reflection.TypeUtils.TryImplicitConvert(resolvedType, returnType, out System.Reflection.MethodInfo method))
+                        if (Reflection.TypeUtils.TryImplicitConvert(src, dest, out System.Reflection.MethodInfo method))
                         {
                             generator.Call(method);
                         }

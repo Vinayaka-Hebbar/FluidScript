@@ -39,17 +39,28 @@
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        Boolean IFSObject.__Equals(IFSObject other)
+        Boolean IFSObject.__Equals(IFSObject obj)
         {
-            return other is Integer i &&
+            return obj is Integer i &&
                   m_value == i.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            return other is Integer integer &&
+            return obj is Integer integer &&
                   m_value == integer.m_value;
+        }
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj"> The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value;
+        ///  otherwise, false.</returns>
+        public Boolean Equals(Integer obj)
+        {
+            return m_value == obj.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>
@@ -175,6 +186,12 @@
         public static implicit operator Integer(Char value) => new Integer(value.m_value);
 
         public static implicit operator int(Integer integer) => integer.m_value;
+
+        public static implicit operator long(Integer integer) => integer.m_value;
+
+        public static implicit operator double(Integer integer) => integer.m_value;
+
+        public static implicit operator float(Integer integer) => integer.m_value;
 
         public static Integer operator +(Integer left, Integer right)
         {

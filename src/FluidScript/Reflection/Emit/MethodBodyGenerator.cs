@@ -738,6 +738,12 @@ namespace FluidScript.Reflection.Emit
             node.Type = left.Type;
             return node;
         }
+
+        Expression Compiler.IExpressionVisitor<Expression>.VisitAnonymousObject(AnonymousObjectExpression node)
+        {
+            //todo implementation
+            throw new NotImplementedException();
+        }
         #endregion
     }
 }

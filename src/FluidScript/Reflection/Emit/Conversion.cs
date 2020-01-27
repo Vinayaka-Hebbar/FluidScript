@@ -3,7 +3,7 @@
     /// <summary>
     /// Operator overload conversion
     /// </summary>
-    public class Conversion
+    public sealed class Conversion
     {
         internal const string ImplicitConversionName = "op_Implicit";
 
