@@ -1072,14 +1072,79 @@
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IStatementVisitor#VisitContinue(FluidScript.Compiler.SyntaxTree.ContinueStatement)">
             <inheritdoc/>
         </member>
-        <member name="F:FluidScript.Dynamic.LocalScope.Current">
+        <member name="F:FluidScript.Dynamic.LocalInstance.Current">
             <summary>
             Current Block
             </summary>
         </member>
-        <member name="P:FluidScript.Dynamic.LocalScope.Item(System.String)">
+        <member name="P:FluidScript.Dynamic.LocalInstance.Item(System.Int32)">
+            <summary>
+            Gets or sets the element at the specified index.
+            </summary>
+            <param name="index">
+            The zero-based index of the element to get or set.
+            </param>
+            <returns>
+            The element at the specified index.
+            </returns>
+        </member>
+        <member name="P:FluidScript.Dynamic.LocalInstance.Count">
+            <summary>
+            Read-only property describing how many elements are in the List.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Dynamic.LocalInstance.Capacity">
+            <summary>
+            Gets or sets the total number of elements the internal data structure can hold
+            without resizing.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Dynamic.LocalInstance.Item(System.String)">
             <summary>
             Getter and Setter of variables
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.LocalInstance.Add(FluidScript.Dynamic.LocalVariable)">
+            <summary>
+            Adds the given object to the end of this list. The size of the list is
+            increased by one. If required, the capacity of the list is doubled
+            before adding the new element.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.LocalInstance.RemoveAt(System.Int32)">
+            <summary>
+            Removes the element at the specified index of the <see cref="T:System.Collections.Generic.List`1"/>.
+            </summary>
+            <param name="index">
+            The zero-based index of the element to remove.
+            </param>
+        </member>
+        <member name="M:FluidScript.Dynamic.LocalInstance.IndexOf(FluidScript.Dynamic.LocalVariable)">
+            <summary>
+            Inserts an element into the System.Collections.Generic.List`1 at the specified
+            index.
+            </summary>
+            <param name="item">The zero-based index at which item should be inserted.</param>
+            <returns>
+            The object to insert. The value can be null for reference types.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Dynamic.LocalInstance.Remove(FluidScript.Dynamic.LocalVariable)">
+            <summary>
+            Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.List`1"/>.
+            </summary>
+            <param name="item">
+            The object to remove from the <see cref="T:System.Collections.Generic.List`1"/>. The value can
+                be null for reference types.
+            </param>
+            <returns>
+            true if item is successfully removed; otherwise, false. This method also returns
+            false if item was not found in the <see cref="T:System.Collections.Generic.List`1"/>.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Dynamic.LocalInstance.Clear">
+            <summary>
+            Removes all elements from the <see cref="T:System.Collections.Generic.List`1"/>
             </summary>
         </member>
         <member name="M:FluidScript.Dynamic.MetaObject.GetRestrictions">
@@ -1897,6 +1962,11 @@
         <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.#ctor(FluidScript.Reflection.Emit.IMethodBaseGenerator,System.Reflection.Emit.ILGenerator,System.Boolean)">
             <summary>
             Initializes new instance of <see cref="T:FluidScript.Reflection.Emit.MethodBodyGenerator"/>
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.DebugDoument">
+            <summary>
+            Debug Document writter
             </summary>
         </member>
         <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.Source">

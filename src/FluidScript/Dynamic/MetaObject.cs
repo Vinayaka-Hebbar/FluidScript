@@ -5,14 +5,12 @@ namespace FluidScript.Dynamic
 {
     internal sealed class MetaObject : DynamicMetaObject
     {
-        private readonly LocalScope m_value;
+        private readonly LocalInstance m_value;
 
-        public MetaObject(Expression expression, BindingRestrictions restrictions, LocalScope value) : base(expression, restrictions, value)
+        public MetaObject(Expression expression, LocalInstance value) : base(expression, BindingRestrictions.Empty, value)
         {
             m_value = value;
         }
-
-
 
         public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
         {
@@ -47,13 +45,14 @@ namespace FluidScript.Dynamic
                 }
                 else
                 {
-                    throw new System.InvalidCastException();
+                    throw new System.InvalidCastException(string.Concat(value.LimitType, " to ", variable.Type));
                 }
             }
             else
             {
                 // value not created
-                m_value.Create(binder.Name, result == null ? Reflection.TypeUtils.ObjectType : value.LimitType);
+                variable = m_value.Create(binder.Name, result == null ? Reflection.TypeUtils.ObjectType : value.LimitType);
+                m_value.Current[variable] = result;
             }
             var expression = Expression.Convert(Expression.Constant(result, result.GetType()), typeof(object));
             return new DynamicMetaObject(expression, BindingRestrictions.GetTypeRestriction(expression, result.GetType()), result);
@@ -61,7 +60,7 @@ namespace FluidScript.Dynamic
 
         public override System.Collections.Generic.IEnumerable<string> GetDynamicMemberNames()
         {
-            return m_value.Keys();
+            return m_value.Keys;
         }
 
         private BindingRestrictions GetBindingRestrictions()

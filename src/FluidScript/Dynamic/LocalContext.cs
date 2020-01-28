@@ -2,41 +2,39 @@
 
 namespace FluidScript.Dynamic
 {
-    internal sealed class LocalContext : System.IDisposable
+    internal sealed class LocalContext : Dictionary<LocalVariable, object>, System.IDisposable
     {
-        private readonly IDictionary<LocalVariable, object> _instances = new Dictionary<LocalVariable, object>();
-
-        private readonly LocalScope _scope;
+        private readonly LocalInstance _obj;
 
         internal readonly LocalContext Parent;
 
-        internal LocalContext(LocalScope scope)
+        internal LocalContext(LocalInstance scope)
         {
-            _scope = scope;
+            _obj = scope;
         }
 
-        internal LocalContext(LocalScope scope, LocalContext parent)
+        internal LocalContext(LocalInstance obj, LocalContext parent)
         {
-            _scope = scope;
-            _scope.Current = this;
+            _obj = obj;
+            _obj.Current = this;
             Parent = parent;
         }
 
         internal void Modify(LocalVariable variable, object value)
         {
-            if (_instances.ContainsKey(variable) == false && Parent != null)
+            if (ContainsKey(variable) == false && Parent != null)
             {
                 Parent.Modify(variable, value);
                 return;
             }
-            _instances[variable] = value;
+            this[variable] = value;
         }
 
         internal object Find(string name)
         {
-            if (_scope.TryGetMember(name, out LocalVariable variable))
+            if (_obj.TryGetMember(name, out LocalVariable variable))
             {
-                if (_instances.TryGetValue(variable, out object store))
+                if (TryGetValue(variable, out object store))
                     return store;
                 if (Parent != null)
                 {
@@ -46,35 +44,22 @@ namespace FluidScript.Dynamic
             return null;
         }
 
-        internal ICollection<LocalVariable> Variables
-        {
-            get
-            {
-                return _instances.Keys;
-            }
-        }
-
-        internal void Create(LocalVariable variable, object value)
-        {
-            _instances[variable] = value;
-        }
-
         public void Dispose()
         {
-            foreach (var item in System.Linq.Enumerable.Reverse(_instances.Keys))
+            foreach (var item in System.Linq.Enumerable.Reverse(Keys))
             {
-                _scope.Remove(item);
+                _obj.Remove(item);
             }
-            _scope.Current = Parent;
+            _obj.Current = Parent;
         }
 
-        internal bool TryGetValue(LocalVariable item, out object value)
+        internal bool TryFind(LocalVariable item, out object value)
         {
-            if (_instances.TryGetValue(item, out value))
+            if (TryGetValue(item, out value))
                 return true;
             if (Parent != null)
             {
-                return Parent.TryGetValue(item, out value);
+                return Parent.TryFind(item, out value);
             }
             value = null;
             return false;
@@ -82,19 +67,27 @@ namespace FluidScript.Dynamic
 
         internal object GetValue(LocalVariable item)
         {
-            if (_instances.TryGetValue(item, out object value) == false && Parent != null)
+            if (TryGetValue(item, out object value) == false && Parent != null)
             {
                 return Parent.GetValue(item);
             }
             return value;
         }
+
+        internal void CreateGlobal(LocalVariable variable, object value)
+        {
+            if (Parent != null)
+                Parent.CreateGlobal(variable, value);
+            else
+                this[variable] = value;
+        }
     }
 
-    internal
+    public
 #if LATEST_VS
         readonly
 #endif
-        struct LocalVariable
+        struct LocalVariable : IFSObject
     {
         private const int hcf = 2063038313;
         private const int hcs = -1521134295;
@@ -112,6 +105,8 @@ namespace FluidScript.Dynamic
             Type = type;
         }
 
+        public bool IsEmpty => Index > 0;
+
         public override bool Equals(object obj)
         {
             if (obj is LocalVariable other)
@@ -128,6 +123,24 @@ namespace FluidScript.Dynamic
             return ((hcf + Name.GetHashCode()) * hcs) + Index;
         }
 
+        [Runtime.Register("hashCode")]
+        public Integer HashCode()
+        {
+            return new Integer(((hcf + Name.GetHashCode()) * hcs) + Index);
+        }
+
         public override string ToString() => string.Concat(Name, ":", Type.Name);
+
+        [Runtime.Register("equals")]
+        public Boolean __Equals(IFSObject obj)
+        {
+            return Equals(obj) ? Boolean.True : Boolean.False;
+        }
+
+        [Runtime.Register("toString")]
+        public String __ToString()
+        {
+            return new String(string.Concat(Name, ":", Type.Name));
+        }
     }
 }

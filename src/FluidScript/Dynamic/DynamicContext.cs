@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 
 namespace FluidScript.Dynamic
 {
@@ -11,9 +10,10 @@ namespace FluidScript.Dynamic
     /// <list type="bullet">it will be not same as compiled </list>
     /// </summary>
     [Serializable]
-    public sealed class DynamicContext : IDictionary<string, object>, Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider, System.Dynamic.IDynamicMetaObjectProvider, System.Runtime.Serialization.ISerializable
+    public sealed class DynamicContext : IDictionary<string, object>, Compiler.IExpressionVisitor<object>, Compiler.IStatementVisitor, Reflection.Emit.ITypeProvider, System.Runtime.Serialization.ISerializable
     {
-        private readonly LocalScope scope;
+        [NonSerialized]
+        private readonly LocalInstance _local;
 
         private bool hasReturn;
 
@@ -21,22 +21,20 @@ namespace FluidScript.Dynamic
 
         private bool hasContinue;
 
-        private readonly object Instance;
-
         private Func<object> LongJump;
 
-        ICollection<string> IDictionary<string, object>.Keys => scope.Keys();
+        ICollection<string> IDictionary<string, object>.Keys => _local.Keys;
 
-        ICollection<object> IDictionary<string, object>.Values => scope.Values();
+        ICollection<object> IDictionary<string, object>.Values => _local.Values;
 
-        int ICollection<KeyValuePair<string, object>>.Count => scope.Count();
+        int ICollection<KeyValuePair<string, object>>.Count => _local.Count;
 
         bool ICollection<KeyValuePair<string, object>>.IsReadOnly => true;
 
         object IDictionary<string, object>.this[string key]
         {
-            get => scope[key];
-            set => scope[key] = value;
+            get => _local[key];
+            set => _local[key] = value;
         }
 
         /// <summary>
@@ -44,14 +42,12 @@ namespace FluidScript.Dynamic
         /// </summary>
         public DynamicContext(object instance)
         {
-            Instance = instance;
-            scope = new LocalScope();
+            _local = new LocalInstance(instance);
         }
 
-        private DynamicContext(object instance, LocalScope scope)
+        private DynamicContext(LocalInstance local)
         {
-            Instance = instance;
-            this.scope = scope;
+            _local = local;
         }
 
         /// <summary>
@@ -61,8 +57,8 @@ namespace FluidScript.Dynamic
         /// <returns>value stored in it</returns>
         public object this[string name]
         {
-            get => scope[name];
-            set => scope[name] = value;
+            get => _local[name];
+            set => _local[name] = value;
         }
 
         /// <summary>
@@ -97,8 +93,8 @@ namespace FluidScript.Dynamic
         /// <returns></returns>
         public DynamicContext CreateContext(object obj)
         {
-            var scope = new LocalScope(this.scope);
-            scope.CreateContext();
+            var local = new LocalInstance(_local);
+            local.CreateContext();
             foreach (var member in obj.GetType().GetMembers(Reflection.TypeUtils.DeclaredPublic))
             {
                 string name = member.Name;
@@ -128,9 +124,9 @@ namespace FluidScript.Dynamic
                         type = _method.ReturnType;
                         break;
                 }
-                scope.Create(name, type, value);
+                local.Create(name, type, value);
             }
-            return new DynamicContext(Instance, scope);
+            return new DynamicContext(local);
         }
 
         #region Visitors
@@ -159,14 +155,14 @@ namespace FluidScript.Dynamic
             var value = node.Right.Accept(this);
             var left = node.Left;
             string name = null;
-            var instance = Instance;
+            var instance = _local.Instance;
             ExpressionType nodeType = left.NodeType;
             if (nodeType == ExpressionType.Identifier)
             {
                 name = left.ToString();
-                if (scope.TryGetMember(name, out LocalVariable variable))
+                if (_local.TryGetMember(name, out LocalVariable variable))
                 {
-                    scope.Current.Modify(variable, value);
+                    _local.Current.Modify(variable, value);
                     return value;
                 }
             }
@@ -180,32 +176,24 @@ namespace FluidScript.Dynamic
             {
                 var exp = (IndexExpression)left;
                 instance = exp.Target.Accept(this);
+                if (instance == null)
+                    throw new ArgumentNullException(string.Concat("Null value present at ", node, " in execution of ", exp.Target));
                 var type = instance.GetType();
-                if (typeof(System.Collections.IList).IsAssignableFrom(type))
+                var args = exp.Arguments.Select(arg => arg.Accept(this)).ToList();
+                args.Add(value);
+                var types = args.Select(arg => arg.GetType()).ToArray();
+                var indexers = type
+                    .FindMembers(System.Reflection.MemberTypes.Method, Reflection.TypeUtils.Any, FindExactMethod, "set_Item");
+                var indexer = Reflection.TypeUtils.BindToMethod(indexers, types, out Reflection.Emit.Conversion[] convers);
+                exp.Setter = indexer ?? throw new Exception(string.Concat("Indexer not found at ", node.ToString()));
+                for (int i = 0; i < convers.Length; i++)
                 {
-                    var args = exp.Arguments.Select(arg => Convert.ToInt32(arg.Accept(this))).ToArray();
-                    var array = (System.Collections.IList)instance;
-                    var first = args.First();
-                    array.Insert(first, value);
+                    var conv = convers[i];
+                    if (conv.HasConversion)
+                        args[i] = convers[i].Convert(args[i]);
                 }
-                else
-                {
-                    var args = exp.Arguments.Select(arg => arg.Accept(this)).ToList();
-                    args.Add(value);
-                    var types = args.Select(arg => arg.GetType()).ToArray();
-                    var indexers = type
-                        .FindMembers(System.Reflection.MemberTypes.Method, Reflection.TypeUtils.Any, FindExactMethod, "set_Item");
-                    var indexer = Reflection.TypeUtils.BindToMethod(indexers, types, out Reflection.Emit.Conversion[] convers);
-                    exp.Setter = indexer ?? throw new Exception(string.Concat("Indexer not found at ", node.ToString()));
-                    for (int i = 0; i < convers.Length; i++)
-                    {
-                        var conv = convers[i];
-                        if (conv.HasConversion)
-                            args[i] = convers[i].Convert(args[i]);
-                    }
-                    type = indexer.ReturnType;
-                    exp.Setter.Invoke(instance, args.ToArray());
-                }
+                type = indexer.ReturnType;
+                exp.Setter.Invoke(instance, args.ToArray());
                 return value;
             }
             var memeber = instance.GetType().GetMember(name).FirstOrDefault();
@@ -222,16 +210,16 @@ namespace FluidScript.Dynamic
                     property.SetValue(instance, value, new object[0]);
                 }
             }
+            else if (instance is System.Dynamic.IDynamicMetaObjectProvider dynamic)
+            {
+                var metaObject = dynamic.GetMetaObject(System.Linq.Expressions.Expression.Parameter(typeof(object)));
+                metaObject.BindSetMember(new SetDynamicMember(name, true), new System.Dynamic.DynamicMetaObject(System.Linq.Expressions.Expression.Constant(value), System.Dynamic.BindingRestrictions.Empty, value));
+            }
             else
             {
-                LocalContext context = scope.Current;
-                while (context.Parent != null)
-                {
-                    context = context.Parent;
-                }
-                var variable = scope.Create(name, value.GetType());
-                //create new variable
-                context.Create(variable, value);
+                LocalContext context = _local.Current;
+                var variable = _local.Create(name, value.GetType());
+                context.CreateGlobal(variable, value);
             }
             return value;
         }
@@ -342,7 +330,7 @@ namespace FluidScript.Dynamic
         object Compiler.IExpressionVisitor<object>.VisitCall(InvocationExpression node)
         {
             var target = node.Target;
-            var instance = Instance;
+            var instance = _local.Instance;
             object[] args = node.Arguments.Select(arg => arg.Accept(this)).ToArray();
             var types = args.Select(arg => arg.GetType()).ToArray();
             string name = null;
@@ -489,6 +477,13 @@ namespace FluidScript.Dynamic
                     value = property.GetValue(target, new object[0]);
                 }
             }
+            else if (target is System.Dynamic.IDynamicMetaObjectProvider dynamic)
+            {
+                var metaObject = dynamic.GetMetaObject(System.Linq.Expressions.Expression.Parameter(typeof(object)));
+                var result = metaObject.BindGetMember(new GetDynamicMember(node.Name, true));
+                if (result.HasValue)
+                    return result.Value;
+            }
             return value;
         }
 
@@ -497,15 +492,16 @@ namespace FluidScript.Dynamic
         {
             var name = node.Name;
             object value = null;
-            if (scope.TryGetMember(name, out LocalVariable variable))
+            if (_local.TryGetMember(name, out LocalVariable variable))
             {
                 if (variable.Type == null)
                     throw new Exception(string.Concat("Use of undeclared variable ", variable));
                 node.Type = variable.Type;
-                value = scope.Current.GetValue(variable);
+                value = _local.Current.GetValue(variable);
             }
+            var instance = _local.Instance;
             //find in the class level
-            var member = Instance.GetType().GetMember(name).FirstOrDefault();
+            var member = instance.GetType().GetMember(name).FirstOrDefault();
             if (member != null)
             {
                 if (member.MemberType == System.Reflection.MemberTypes.Field)
@@ -514,13 +510,13 @@ namespace FluidScript.Dynamic
                     if (field.FieldType == null)
                         throw new System.Exception(string.Concat("Use of undeclared field ", field));
                     node.Type = field.FieldType;
-                    value = (IFSObject)field.GetValue(Instance);
+                    value = (IFSObject)field.GetValue(instance);
                 }
                 if (member.MemberType == System.Reflection.MemberTypes.Property)
                 {
                     var property = (System.Reflection.PropertyInfo)member;
                     node.Type = property.PropertyType;
-                    value = (IFSObject)property.GetValue(Instance, new object[0]);
+                    value = (IFSObject)property.GetValue(instance, new object[0]);
                 }
             }
             return value;
@@ -546,7 +542,7 @@ namespace FluidScript.Dynamic
         /// <inheritdoc/>
         object Compiler.IExpressionVisitor<object>.VisitThis(ThisExpression node)
         {
-            return Instance;
+            return _local;
         }
 
         /// <inheritdoc/>
@@ -644,7 +640,7 @@ namespace FluidScript.Dynamic
             {
                 type = node.VariableType.GetType(this);
             }
-            scope.Create(node.Name, type, value);
+            _local.Create(node.Name, type, value);
             return value;
         }
 
@@ -660,7 +656,7 @@ namespace FluidScript.Dynamic
         void Compiler.IStatementVisitor.VisitBlock(BlockStatement node)
         {
             hasReturn = false;
-            using (var context = scope.CreateContext())
+            using (var context = _local.CreateContext())
             {
                 foreach (var statement in node.Statements)
                 {
@@ -698,17 +694,16 @@ namespace FluidScript.Dynamic
         object Compiler.IExpressionVisitor<object>.VisitAnonymousObject(AnonymousObjectExpression node)
         {
             // todo this
-            using (scope.CreateContext())
+            var instance = new LocalInstance(_local);
+            //new context
+            instance.CreateContext();
+            var context = new DynamicContext(instance);
+            foreach (var item in node.Members)
             {
-                var scope = new LocalScope(this.scope);
-                var dynamicValue = new DynamicContext(Instance, scope);
-                foreach (var item in node.Members)
-                {
-                    var value = item.Expression.Accept(dynamicValue);
-                    scope.Create(item.Name, value.GetType(), value);
-                }
-                return dynamicValue;
+                var value = item.Expression.Accept(context);
+                instance.Create(item.Name, value.GetType(), value);
             }
+            return instance;
         }
 
         /// <inheritdoc/>
@@ -728,7 +723,7 @@ namespace FluidScript.Dynamic
             var statement = node.Body;
             if (node.NodeType == StatementType.For)
             {
-                using (var context = scope.CreateContext())
+                using (var context = _local.CreateContext())
                 {
                     for (node.InitStatement.Accept(this); Convert.ToBoolean(node.Condition.Accept(this)); node.IncrementStatement.Accept(this))
                     {
@@ -745,7 +740,7 @@ namespace FluidScript.Dynamic
             }
             else if (node.NodeType == StatementType.While)
             {
-                using (var context = scope.CreateContext())
+                using (var context = _local.CreateContext())
                 {
                     while (Convert.ToBoolean(node.Condition.Accept(this)))
                     {
@@ -762,7 +757,7 @@ namespace FluidScript.Dynamic
             }
             else if (node.NodeType == StatementType.DoWhile)
             {
-                using (var context = scope.CreateContext())
+                using (var context = _local.CreateContext())
                 {
                     do
                     {
@@ -809,24 +804,24 @@ namespace FluidScript.Dynamic
         #region IDictionary
         bool IDictionary<string, object>.ContainsKey(string key)
         {
-            return scope.Contains(key);
+            return _local.Contains(key);
         }
 
         void IDictionary<string, object>.Add(string key, object value)
         {
-            scope.CreateOrModify(key, value);
+            _local.CreateOrModify(key, value);
         }
 
         bool IDictionary<string, object>.Remove(string key)
         {
-            return scope.Remove(key);
+            return _local.Remove(key);
         }
 
         bool IDictionary<string, object>.TryGetValue(string key, out object value)
         {
-            if (scope.TryGetMember(key, out LocalVariable variable))
+            if (_local.TryGetMember(key, out LocalVariable variable))
             {
-                value = scope.Current.GetValue(variable);
+                value = _local.Current.GetValue(variable);
                 return true;
             }
             value = null;
@@ -835,17 +830,17 @@ namespace FluidScript.Dynamic
 
         void ICollection<KeyValuePair<string, object>>.Add(KeyValuePair<string, object> item)
         {
-            scope.CreateOrModify(item.Key, item.Value);
+            _local.CreateOrModify(item.Key, item.Value);
         }
 
         void ICollection<KeyValuePair<string, object>>.Clear()
         {
-            scope.Clear();
+            _local.Clear();
         }
 
         bool ICollection<KeyValuePair<string, object>>.Contains(KeyValuePair<string, object> item)
         {
-            return scope.Contains(item.Key);
+            return _local.Contains(item.Key);
         }
 
         void ICollection<KeyValuePair<string, object>>.CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
@@ -858,14 +853,14 @@ namespace FluidScript.Dynamic
 
         bool ICollection<KeyValuePair<string, object>>.Remove(KeyValuePair<string, object> item)
         {
-            return scope.Remove(item.Key);
+            return _local.Remove(item.Key);
         }
 
-        private static IEnumerator<KeyValuePair<string, object>> GetEnumerator(LocalScope scope)
+        private static IEnumerator<KeyValuePair<string, object>> GetEnumerator(LocalInstance scope)
         {
-            foreach (LocalVariable item in scope)
+            foreach (LocalVariable item in scope.Variables)
             {
-                if (scope.Current.TryGetValue(item, out object value))
+                if (scope.Current.TryFind(item, out object value))
                 {
                     yield return new KeyValuePair<string, object>(item.Name, value);
                 }
@@ -874,19 +869,12 @@ namespace FluidScript.Dynamic
 
         IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()
         {
-            return GetEnumerator(scope);
+            return GetEnumerator(_local);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return GetEnumerator(scope);
-        }
-        #endregion
-
-        #region MetadataProvider
-        System.Dynamic.DynamicMetaObject System.Dynamic.IDynamicMetaObjectProvider.GetMetaObject(System.Linq.Expressions.Expression parameter)
-        {
-            return new MetaObject(parameter, System.Dynamic.BindingRestrictions.Empty, scope);
+            return GetEnumerator(_local);
         }
         #endregion
 
@@ -902,28 +890,9 @@ namespace FluidScript.Dynamic
 
         #region ISerializable
 
-        void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
+        void System.Runtime.Serialization.ISerializable.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
         {
-            //todo list serialize
-            var current = scope.Current;
-            foreach (var item in current.Variables)
-            {
-                var value = current.GetValue(item);
-                if (item.Type.IsPrimitive)
-                    info.AddValue(item.Name, current.GetValue(item), item.Type);
-                else if (value is IConvertible convertible)
-                {
-                    info.AddValue(item.Name, Convert.ChangeType(value, convertible.GetTypeCode()), item.Type);
-                }
-                else if (value is String)
-                {
-                    info.AddValue(item.Name, value.ToString(), typeof(string));
-                }
-                else
-                {
-                    info.AddValue(item.Name, value, item.Type);
-                }
-            }
+            ((System.Runtime.Serialization.ISerializable)_local).GetObjectData(info, context);
         }
         #endregion
 

@@ -11,7 +11,7 @@ namespace FluidScipt.ConsoleTest
             //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
             Class1 class1 = new Class1();
             class1.Run();
-            class1.Print();
+            //class1.Print();
             Console.ReadKey();
         }
 
@@ -33,12 +33,15 @@ namespace FluidScipt.ConsoleTest
         private void Run()
         {
             var engine = new FluidScript.ScriptEngine();
-            var statement = engine.GetStatement("return {a:y/x, b:2}");
+            var statement = engine.GetStatement("{value={a:10,b:10};return value.a+value.b}");
             var context = new FluidScript.Dynamic.DynamicContext(new FluidScript.Math());
             context["x"] = new FluidScript.Integer(10);
             context["y"] = new FluidScript.Integer(20);
             object result = context.Invoke(statement);
-            var json = Json.Serialization.JsonConvert.Serialize(result);
+            var json = Json.Serialization.JsonConvert.Serialize(result, new System.Runtime.Serialization.Json.DataContractJsonSerializerSettings()
+            {
+                EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Never
+            });
             Console.WriteLine(json);
         }
 
