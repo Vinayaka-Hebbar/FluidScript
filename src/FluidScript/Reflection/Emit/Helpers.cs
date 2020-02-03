@@ -69,7 +69,7 @@ namespace FluidScript.Reflection.Emit
             Bool_True = GetField(TypeUtils.BooleanType, nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
             Bool_False = GetField(TypeUtils.BooleanType, nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
 
-            Booolean_To_Bool = GetStaticMethod(TypeUtils.BooleanType, Conversion.ImplicitConversionName, TypeUtils.BooleanType);
+            Booolean_To_Bool = GetStaticMethod(TypeUtils.BooleanType, TypeUtils.ImplicitConversionName, TypeUtils.BooleanType);
 
             LogicalAnd = GetStaticMethod(TypeUtils.BooleanType, "OpLogicalAnd", TypeUtils.BooleanType, TypeUtils.BooleanType);
             LogicalOr = GetStaticMethod(TypeUtils.BooleanType, "OpLogicalOr", TypeUtils.BooleanType, TypeUtils.BooleanType);

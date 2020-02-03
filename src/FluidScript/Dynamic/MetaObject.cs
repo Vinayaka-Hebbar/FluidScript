@@ -23,6 +23,7 @@ namespace FluidScript.Dynamic
             }
             else
             {
+                // todo null value should return
                 object value = new object();
                 var expression = Expression.Constant(value, typeof(object));
                 return new DynamicMetaObject(expression, BindingRestrictions.GetTypeRestriction(expression, typeof(object)), value);

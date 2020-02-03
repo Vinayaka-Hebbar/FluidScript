@@ -379,8 +379,8 @@ namespace FluidScript.Reflection.Emit
                     name = "op_BitwiseAnd";
                     break;
             }
-            var method = TypeUtils.GetOperatorOverload(name, out Conversion[] conversions, operand.Type);
-            node.Conversions = conversions;
+            var method = TypeUtils.GetOperatorOverload(name, out ParamBindList bindings, operand.Type);
+            node.Bindings = bindings;
             node.Method = method;
             node.Type = method.ReturnType;
             return node;
@@ -439,26 +439,24 @@ namespace FluidScript.Reflection.Emit
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
             System.Reflection.MethodInfo method = null;
-            Conversion[] conversions = null;
+            ParamBindList bindings = null;
             if (opName != null)
             {
                 method = TypeUtils.
-                   GetOperatorOverload(opName, out conversions, left.Type, right.Type);
-
-                node.Conversions = conversions;
+                   GetOperatorOverload(opName, out bindings, left.Type, right.Type);
             }
             else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
             {
-                conversions = new Conversion[2];
+                bindings = new ParamBindList(2);
                 System.Reflection.MethodInfo convertLeft = TypeUtils.GetBooleanOveraload(left.Type);
                 if (convertLeft != null)
-                    conversions[0] = new Conversion(convertLeft);
+                    bindings.Add(new ParamConvert(0, convertLeft));
                 var convertRight = TypeUtils.GetBooleanOveraload(right.Type);
                 if (convertRight != null)
-                    conversions[1] = new Conversion(convertRight);
+                    bindings.Add(new ParamConvert(1, convertRight));
                 method = nodeType == ExpressionType.AndAnd ? Helpers.LogicalAnd : Helpers.LogicalOr;
             }
-            node.Conversions = conversions;
+            node.Bindings = bindings;
             node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
             node.Type = method.ReturnType;
             return node;
@@ -696,7 +694,8 @@ namespace FluidScript.Reflection.Emit
                 var types = GetTypes(node.Arguments);
                 var indexers = type
                     .FindMembers(System.Reflection.MemberTypes.Method, TypeUtils.Any, FindExactMethod, "get_Item");
-                var indexer = TypeUtils.BindToMethod(indexers, types, out Conversion[] convers);
+                var indexer = TypeUtils.BindToMethod(indexers, types, out ParamBindList bindings);
+                //todo binding in array
                 node.Getter = indexer ?? throw new Exception("Indexer not found");
                 type = indexer.ReturnType;
             }
@@ -742,6 +741,11 @@ namespace FluidScript.Reflection.Emit
         Expression Compiler.IExpressionVisitor<Expression>.VisitAnonymousObject(AnonymousObjectExpression node)
         {
             //todo implementation
+            throw new NotImplementedException();
+        }
+
+        Expression Compiler.IExpressionVisitor<Expression>.VisitAnonymousFunction(AnonymousFunctionExpression node)
+        {
             throw new NotImplementedException();
         }
         #endregion

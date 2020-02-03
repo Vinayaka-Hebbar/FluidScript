@@ -113,8 +113,13 @@ namespace FluidScript.Dynamic
             {
                 if (Name == null && other.Name == null)
                     return true;
-                return Name.Equals(other.Name);
+                return other.Index == Index && Name.Equals(other.Name);
             }
+            return Name.Equals(obj);
+        }
+
+        public bool Equals(string obj)
+        {
             return Name.Equals(obj);
         }
 

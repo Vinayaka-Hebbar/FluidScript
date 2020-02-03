@@ -3,6 +3,7 @@
     /// <summary>
     /// Represents a character as a UTF-16 code unit.
     /// </summary>
+    [System.Serializable]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
@@ -90,7 +91,8 @@
         }
 
         #region Convertible
-        System.TypeCode System.IConvertible.GetTypeCode()
+        ///<inheritdoc/>
+        public System.TypeCode GetTypeCode()
         {
             return System.TypeCode.Char;
         }

@@ -5,11 +5,12 @@
     /// methods to search, sort, and manipulate lists.
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
+    [System.Serializable]
     public class List<T> : FSObject, IList, ICollection<T>
         , System.Collections.IEnumerable, System.Collections.Generic.IEnumerable<T> where T : IFSObject
     {
         private const int _defaultCapacity = 4;
-        internal const int MaxArrayLength = 0X7FEFFFFF;
+        public const int MaxArrayLength = 0X7FEFFFFF;
         static readonly T[] _emptyArray = new T[0];
         private T[] _items;
 
@@ -162,12 +163,7 @@
             }
             set
             {
-                if ((uint)index >= (uint)_size)
-                {
-                    throw new System.ArgumentOutOfRangeException(nameof(index));
-                }
-                _items[index] = value;
-                _version++;
+                Add(value);
             }
         }
 
@@ -454,6 +450,18 @@
                 return IndexOf((T)item);
             }
             return -1;
+        }
+
+        public T[] ToArray()
+        {
+            T[] array = new T[_size];
+            System.Array.Copy(_items, 0, array, 0, _size);
+            return array;
+        }
+
+        public override string ToString()
+        {
+            return string.Join(",", System.Linq.Enumerable.Select(this, (item)=> item.ToString()));
         }
 
         /// <summary>

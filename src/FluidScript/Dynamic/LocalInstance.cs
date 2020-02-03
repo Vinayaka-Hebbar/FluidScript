@@ -7,14 +7,13 @@ using System.Runtime.Serialization;
 namespace FluidScript.Dynamic
 {
     [System.Serializable]
-    internal sealed class LocalInstance : IDictionary<string, object>, System.Collections.IDictionary, IDynamicMetaObjectProvider, ISerializable
+    internal sealed class LocalInstance : IDictionary<string, object>, IDictionary, IDynamicMetaObjectProvider, ISerializable
     {
         private const int _defaultCapacity = 4;
         internal const int MaxArrayLength = 0X7FEFFFFF;
         static readonly LocalVariable[] _emptyArray = new LocalVariable[0];
         private LocalVariable[] _items;
         private int _size;
-        private int _version;
         /// <summary>
         /// Current Block
         /// </summary>
@@ -23,6 +22,9 @@ namespace FluidScript.Dynamic
 
         [System.NonSerialized]
         internal readonly object Instance;
+
+        [System.NonSerialized]
+        internal readonly LocalInstance Parent;
 
         internal LocalInstance(object instance)
         {
@@ -34,21 +36,8 @@ namespace FluidScript.Dynamic
         internal LocalInstance(LocalInstance other)
         {
             Instance = other.Instance;
-            if (other == null)
-                throw new System.ArgumentNullException(nameof(other));
-
-            var c = other._items;
-            int count = other._size;
-            if (count == 0)
-            {
-                _items = _emptyArray;
-            }
-            else
-            {
-                _items = new LocalVariable[count];
-                System.Array.Copy(c, 0, _items, 0, count);
-                _size = count;
-            }
+            _items = _emptyArray;
+            Parent = other ?? throw new System.ArgumentNullException(nameof(other));
             Current = other.Current;
         }
 
@@ -92,7 +81,6 @@ namespace FluidScript.Dynamic
                     throw new System.ArgumentOutOfRangeException(nameof(index));
                 }
                 _items[index] = value;
-                _version++;
             }
         }
 
@@ -214,12 +202,8 @@ namespace FluidScript.Dynamic
             set => CreateOrModify(name, value);
         }
 
-        internal object GetValue(LocalVariable variable)
-        {
-            return Current.GetValue(variable);
-        }
-
-        internal bool Contains(string name)
+        [Runtime.Register("contains")]
+        public bool Contains(string name)
         {
             return Exists(v => v.Equals(name));
         }
@@ -229,11 +213,36 @@ namespace FluidScript.Dynamic
             return Exists(v => v.Equals(obj));
         }
 
-        internal bool TryGetMember(string name, out LocalVariable variable)
+        /// <summary>
+        /// Get Member of current context
+        /// </summary>
+        internal bool TryGetVariable(string name, out LocalVariable variable)
         {
+            // todo fater access of name
             for (int index = 0; index < _size; index++)
             {
                 var item = _items[index];
+                if (item.Equals(name))
+                {
+                    variable = item;
+                    return true;
+                }
+            }
+            if (Parent != null)
+            {
+                return Parent.TryGetVariable(name, out variable);
+            }
+            variable = LocalVariable.Empty;
+            return false;
+        }
+
+        /// <summary>
+        /// Get Member of current context
+        /// </summary>
+        internal bool TryGetMember(string name, out LocalVariable variable)
+        {
+            foreach (var item in Current.Keys)
+            {
                 if (item.Equals(name))
                 {
                     variable = item;
@@ -268,7 +277,6 @@ namespace FluidScript.Dynamic
         {
             if (_size == _items.Length) EnsureCapacity(_size + 1);
             _items[_size++] = item;
-            _version++;
         }
 
         private void EnsureCapacity(int min)
@@ -284,12 +292,23 @@ namespace FluidScript.Dynamic
             }
         }
 
+        internal object GetValue(string name)
+        {
+            foreach (var item in Current.Keys)
+            {
+                if (item.Equals(name))
+                {
+                    return Current[item];
+                }
+            }
+            return null;
+        }
+
         internal void CreateOrModify(string name, object value)
         {
             LocalVariable? variable = null;
-            for (int index = 0; index < _size; index++)
+            foreach (var item in Current.Keys)
             {
-                var item = _items[index];
                 if (item.Equals(name))
                 {
                     variable = item;
@@ -330,7 +349,6 @@ namespace FluidScript.Dynamic
                 System.Array.Copy(_items, index + 1, _items, index, _size - index);
             }
             _items[_size] = LocalVariable.Empty;
-            _version++;
         }
 
         /// <summary>
@@ -382,7 +400,6 @@ namespace FluidScript.Dynamic
                 System.Array.Clear(_items, 0, _size);
                 _size = 0;
             }
-            _version++;
         }
 
         public bool Exists(System.Predicate<LocalVariable> match)
@@ -444,7 +461,7 @@ namespace FluidScript.Dynamic
 
         public override string ToString()
         {
-            return string.Join(",", System.Linq.Enumerable.Select(Current.Keys, (item)=> item.Name));
+            return string.Join(",\n", System.Linq.Enumerable.Select(Current.Keys, (item) => string.Concat(item.Name, " : ", item.Type)));
         }
 
         #region IDictionary
@@ -602,6 +619,21 @@ namespace FluidScript.Dynamic
         DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter)
         {
             return new MetaObject(parameter, this);
+        }
+        #endregion
+
+        #region Runtime Support
+
+        [Runtime.Register("getMemberNames")]
+        public Collections.List<String> GetMemberNames()
+        {
+            var variables = Current.Keys;
+            var keys = new Collections.List<String>(variables.Count);
+            foreach (var variable in variables)
+            {
+                keys.Add(variable.Name);
+            }
+            return keys;
         }
         #endregion
     }

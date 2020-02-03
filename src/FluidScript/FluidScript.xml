@@ -25,6 +25,11 @@
             AnonymousObject Expression
             </summary>
         </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitAnonymousFunction(FluidScript.Compiler.SyntaxTree.AnonymousFunctionExpression)">
+            <summary>
+            AnonymousFunction Expression
+            </summary>
+        </member>
         <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
             <summary>
             Array Literal
@@ -268,7 +273,7 @@
             Operator overload method
             </summary>
         </member>
-        <member name="P:FluidScript.Compiler.SyntaxTree.UnaryExpression.Conversions">
+        <member name="P:FluidScript.Compiler.SyntaxTree.UnaryExpression.Bindings">
             <summary>
             Type conversion of arguments
             </summary>
@@ -1104,6 +1109,16 @@
             Getter and Setter of variables
             </summary>
         </member>
+        <member name="M:FluidScript.Dynamic.LocalInstance.TryGetVariable(System.String,FluidScript.Dynamic.LocalVariable@)">
+            <summary>
+            Get Member of current context
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.LocalInstance.TryGetMember(System.String,FluidScript.Dynamic.LocalVariable@)">
+            <summary>
+            Get Member of current context
+            </summary>
+        </member>
         <member name="M:FluidScript.Dynamic.LocalInstance.Add(FluidScript.Dynamic.LocalVariable)">
             <summary>
             Adds the given object to the end of this list. The size of the list is
@@ -1151,26 +1166,6 @@
             <summary>
             Returns a Restrictions object which includes our current restrictions merged
             with a restriction limiting our type
-            </summary>
-        </member>
-        <member name="T:FluidScript.Reflection.Emit.Conversion">
-            <summary>
-            Operator overload conversion
-            </summary>
-        </member>
-        <member name="F:FluidScript.Reflection.Emit.Conversion.Method">
-            <summary>
-            Conversion method
-            </summary>
-        </member>
-        <member name="M:FluidScript.Reflection.Emit.Conversion.#ctor(System.Reflection.MethodInfo)">
-            <summary>
-            Initializes new <see cref="T:FluidScript.Reflection.Emit.Conversion"/>
-            </summary>
-        </member>
-        <member name="P:FluidScript.Reflection.Emit.Conversion.HasConversion">
-            <summary>
-            Indicates whether any conversion are there are not
             </summary>
         </member>
         <member name="T:FluidScript.Reflection.Emit.ILGenerator">
@@ -1964,11 +1959,6 @@
             Initializes new instance of <see cref="T:FluidScript.Reflection.Emit.MethodBodyGenerator"/>
             </summary>
         </member>
-        <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.DebugDoument">
-            <summary>
-            Debug Document writter
-            </summary>
-        </member>
         <member name="P:FluidScript.Reflection.Emit.MethodBodyGenerator.Source">
             <summary>
             Source code
@@ -2129,6 +2119,45 @@
         </member>
         <member name="M:FluidScript.Reflection.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitNullPropegator(FluidScript.Compiler.SyntaxTree.NullPropegatorExpression)">
             <inheritdoc/>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.ParamBind">
+            <summary>
+            Operator overload conversion
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ParamBind.#ctor(System.Int32)">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Reflection.Emit.ParamBind"/>
+            </summary>
+        </member>
+        <member name="F:FluidScript.Reflection.Emit.ParamConvert.Method">
+            <summary>
+            Conversion method
+            </summary>
+        </member>
+        <member name="T:FluidScript.Reflection.Emit.ParamBindList.Enumerator">
+            <summary>
+            Enumerates the elements of a <see cref="T:System.Collections.Generic.List`1"/>.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Reflection.Emit.ParamBindList.Enumerator.Current">
+            <summary>
+            Gets the element at the current position of the enumerator.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ParamBindList.Enumerator.Dispose">
+            <summary>
+            Releases all resources used by the <see cref="T:System.Collections.Generic.List`1"/>.Enumerator.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Reflection.Emit.ParamBindList.Enumerator.MoveNext">
+            <summary>
+            Advances the enumerator to the next element of the <see cref="T:System.Collections.Generic.List`1"/>.
+            </summary>
+            <returns>
+            true if the enumerator was successfully advanced to the next element; false if
+            the enumerator has passed the end of the collection.
+            </returns>
         </member>
         <member name="T:FluidScript.Reflection.Emit.ParameterInfo">
             <summary>
@@ -2636,6 +2665,13 @@
             An example that can make the method return false is that 
             typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
             returns a method with two double parameters, which doesn't match the provided
+            argument types.
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
+ith two double parameters, which doesn't match the provided
             argument types.
             </summary>
             <returns></returns>

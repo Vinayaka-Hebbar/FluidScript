@@ -21,7 +21,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Type conversion of arguments
         /// </summary>
-        public Conversion[] Conversions { get; internal set; }
+        public ParamBindList Bindings { get; internal set; }
 
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {

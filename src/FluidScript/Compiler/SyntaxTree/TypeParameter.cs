@@ -32,6 +32,8 @@
 
         public Reflection.Emit.ParameterInfo GetParameterInfo(Reflection.Emit.ITypeProvider provider)
         {
+            if (Type == null)
+                return new Reflection.Emit.ParameterInfo(Name, Index, Reflection.TypeUtils.ObjectType, IsVar);
             return new Reflection.Emit.ParameterInfo(Name, Index, Type.GetType(provider), IsVar);
 
         }

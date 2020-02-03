@@ -23,6 +23,11 @@ namespace FluidScript.Compiler
         TResult VisitAnonymousObject(AnonymousObjectExpression node);
 
         /// <summary>
+        /// AnonymousFunction Expression
+        /// </summary>
+        TResult VisitAnonymousFunction(AnonymousFunctionExpression node);
+
+        /// <summary>
         /// Array Literal
         /// </summary>
         TResult VisitArrayLiteral(ArrayLiteralExpression node);

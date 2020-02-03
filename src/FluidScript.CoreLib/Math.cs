@@ -171,7 +171,7 @@
         {
             return new Double(System.Math.Tan(value.m_value));
         }
-        
+
         /// <summary>
         /// Rounds a double-precision floating-point value to a specified number of fractional
         /// digits.
@@ -251,6 +251,18 @@
         public static Double Truncate(Double d)
         {
             return new Double(System.Math.Truncate(d.m_value));
+        }
+
+        /// <summary>
+        /// Returns the absolute value of a double-precision floating-point number.
+        /// </summary>
+        /// <param name="value">A number that is greater than or equal to System.Double.MinValue, but less than
+        /// or equal to System.Double.MaxValue.</param>
+        /// <returns>A double-precision floating-point number, x, such that 0 ≤ x ≤System.Double.MaxValue.</returns>
+        [Runtime.Register("abs")]
+        public static Double Abs(Double value)
+        {
+            return new Double(System.Math.Abs(value.m_value));
         }
 
         /// <summary>

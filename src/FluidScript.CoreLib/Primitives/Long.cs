@@ -76,7 +76,8 @@
         }
 
         #region Convertible
-        System.TypeCode System.IConvertible.GetTypeCode()
+        ///<inheritdoc/>
+        public System.TypeCode GetTypeCode()
         {
             return System.TypeCode.Int64;
         }

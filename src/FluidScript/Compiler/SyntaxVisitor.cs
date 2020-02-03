@@ -1115,8 +1115,8 @@ namespace FluidScript.Compiler
                 case IdentifierType.Undefined:
                     return Expression.Undefined;
 #endif
-                case IdentifierType.Lamda:
-                    ReadVariableName();
+                case IdentifierType.Function:
+                    // ignore func
                     MoveNext();
                     return VisitLamdaExpression();
                 case IdentifierType.This:

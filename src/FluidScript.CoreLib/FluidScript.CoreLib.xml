@@ -466,6 +466,14 @@
             dReturn 
             </returns>
         </member>
+        <member name="M:FluidScript.Math.Abs(FluidScript.Double)">
+            <summary>
+            Returns the absolute value of a double-precision floating-point number.
+            </summary>
+            <param name="value">A number that is greater than or equal to System.Double.MinValue, but less than
+            or equal to System.Double.MaxValue.</param>
+            <returns>A double-precision floating-point number, x, such that 0 ≤ x ≤System.Double.MaxValue.</returns>
+        </member>
         <member name="M:FluidScript.Math.Sum(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
             <summary>
             Computes the sum of a sequence of <see cref="T:FluidScript.Integer"/> values.
@@ -551,6 +559,9 @@
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Boolean.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Boolean.GetTypeCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Boolean.System#IConvertible#ToBoolean(System.IFormatProvider)">
@@ -659,6 +670,9 @@
         <member name="M:FluidScript.Byte.ToString">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Byte.GetTypeCode">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Byte.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
         </member>
@@ -754,6 +768,9 @@
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Char.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Char.GetTypeCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Char.System#IConvertible#ToBoolean(System.IFormatProvider)">
@@ -857,6 +874,9 @@
         <member name="M:FluidScript.Double.ToString">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Double.GetTypeCode">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Double.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
         </member>
@@ -938,6 +958,9 @@
         <member name="M:FluidScript.Float.ToString">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Float.GetTypeCode">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Float.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
         </member>
@@ -1017,6 +1040,9 @@
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Integer.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Integer.GetTypeCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Integer.System#IConvertible#ToBoolean(System.IFormatProvider)">
@@ -1105,6 +1131,9 @@
         <member name="M:FluidScript.Long.ToString">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Long.GetTypeCode">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Long.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
         </member>
@@ -1186,6 +1215,9 @@
         <member name="M:FluidScript.Short.ToString">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Short.GetTypeCode">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Short.System#IConvertible#ToBoolean(System.IFormatProvider)">
             <internalonly/>
         </member>
@@ -1264,6 +1296,11 @@
         <member name="M:FluidScript.Runtime.RegisterAttribute.ToString">
             <inheritdoc/>
         </member>
+        <member name="T:FluidScript.Runtime.Serialization">
+            <summary>
+            Todo serialization support
+            </summary>
+        </member>
         <member name="T:FluidScript.String">
             <summary>
             Represents text as a series of Unicode characters.
@@ -1304,6 +1341,54 @@
         </member>
         <member name="M:FluidScript.String.ToString">
             <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.String.GetTypeCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToBoolean(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToChar(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToSByte(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToByte(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToInt16(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToUInt16(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToInt32(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToUInt32(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToInt64(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToUInt64(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToSingle(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToDouble(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToDecimal(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToDateTime(System.IFormatProvider)">
+            <internalonly/>
+        </member>
+        <member name="M:FluidScript.String.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
+            <internalonly/>
         </member>
         <member name="M:FluidScript.String.op_Implicit(System.String)~FluidScript.String">
             <summary>

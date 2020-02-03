@@ -8,9 +8,12 @@ namespace FluidScipt.ConsoleTest
     {
         public static void Run()
         {
-            User user = new User() { Name = "vinayaka"};
-            var result = Test<User>((u) => u.Name != user.Name && u.IsActive == true);
-            Console.WriteLine(result);
+            JsonDictionary<string, string> values = new JsonDictionary<string, string>();
+           var type = values.GetType();
+            var se = type.IsSerializable;
+            values.Add("name", "vinayaka");
+            var json = Json.Serialization.JsonConvert.Serialize(values);
+            Console.WriteLine(json);
         }
 
         public static string Test<T>(Expression<Func<T, bool>> expression)

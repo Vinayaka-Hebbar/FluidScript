@@ -17,6 +17,11 @@ namespace FluidScript.Compiler.SyntaxTree
             Body = body;
         }
 
+        public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
+        {
+            return visitor.VisitAnonymousFunction(this);
+        }
+
         public override string ToString()
         {
             //todo return type

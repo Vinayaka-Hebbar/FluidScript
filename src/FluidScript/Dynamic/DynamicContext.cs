@@ -181,21 +181,24 @@ namespace FluidScript.Dynamic
                 var type = instance.GetType();
                 var args = exp.Arguments.Select(arg => arg.Accept(this)).ToList();
                 args.Add(value);
-                var types = args.Select(arg => arg.GetType()).ToArray();
                 var indexers = type
                     .FindMembers(System.Reflection.MemberTypes.Method, Reflection.TypeUtils.Any, FindExactMethod, "set_Item");
-                var indexer = Reflection.TypeUtils.BindToMethod(indexers, types, out Reflection.Emit.Conversion[] convers);
+                var indexer = Reflection.TypeUtils.BindToMethod(indexers, args, out Reflection.Emit.ParamBindList bindings);
                 exp.Setter = indexer ?? throw new Exception(string.Concat("Indexer not found at ", node.ToString()));
-                for (int i = 0; i < convers.Length; i++)
+                foreach (var binding in bindings)
                 {
-                    var conv = convers[i];
-                    if (conv.HasConversion)
-                        args[i] = convers[i].Convert(args[i]);
+                    if (binding.BindType == Reflection.Emit.ParamBind.ParamBindType.Convert)
+                    {
+                        args[binding.Index] = binding.Invoke(args);
+                    }
+                    // No params
                 }
                 type = indexer.ReturnType;
                 exp.Setter.Invoke(instance, args.ToArray());
                 return value;
             }
+            if (instance == null)
+                throw new Exception(string.Concat("null value at ", node.Left));
             var memeber = instance.GetType().GetMember(name).FirstOrDefault();
             if (memeber != null)
             {
@@ -295,12 +298,15 @@ namespace FluidScript.Dynamic
                     rightType = right.GetType();
                 }
                 method = Reflection.TypeUtils.
-                   GetOperatorOverload(opName, out Reflection.Emit.Conversion[] conversions, leftType, rightType);
-                for (int i = 0; i < conversions.Length; i++)
+                   GetOperatorOverload(opName, out Reflection.Emit.ParamBindList bindings, leftType, rightType);
+                // null method handled
+                foreach (var binding in bindings)
                 {
-                    Reflection.Emit.Conversion conv = conversions[i];
-                    if (conv.HasConversion)
-                        args[i] = conv.Convert(args[i]);
+                    if (binding.BindType == Reflection.Emit.ParamBind.ParamBindType.Convert)
+                    {
+                        args[binding.Index] = binding.Invoke(args);
+                    }
+                    // No Params
                 }
             }
             else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
@@ -332,7 +338,6 @@ namespace FluidScript.Dynamic
             var target = node.Target;
             var instance = _local.Instance;
             object[] args = node.Arguments.Select(arg => arg.Accept(this)).ToArray();
-            var types = args.Select(arg => arg.GetType()).ToArray();
             string name = null;
             ExpressionType nodeType = node.Target.NodeType;
             if (nodeType == ExpressionType.Identifier)
@@ -361,15 +366,21 @@ namespace FluidScript.Dynamic
                 .Where(HasMethod).ToArray();
 
             if (methods.Length == 0)
-                throw new Exception(string.Concat("method ", name, " not found"));
-            var method = Reflection.TypeUtils.BindToMethod(methods, types, out Reflection.Emit.Conversion[] conversion);
-            for (int i = 0; i < conversion.Length; i++)
+                throw new Exception(string.Concat("method '", name, "' not found in execution of ", node));
+            var method = Reflection.TypeUtils.BindToMethod(methods, args, out Reflection.Emit.ParamBindList bindings);
+            foreach (var binding in bindings)
             {
-                Reflection.Emit.Conversion conv = conversion[i];
-                if (conv.HasConversion)
-                    args[i] = conv.Method.Invoke(null, new object[] { args[i] });
+                if (binding.BindType == Reflection.Emit.ParamBind.ParamBindType.Convert)
+                {
+                    args[binding.Index] = binding.Invoke(args);
+                }
+                else if (binding.BindType == Reflection.Emit.ParamBind.ParamBindType.ParamArray)
+                {
+                    args = (object[])binding.Invoke(args);
+                    break;
+                }
             }
-            node.Method = method ?? throw new OperationCanceledException(string.Concat("No suitable method for ", node));
+            node.Method = method ?? throw new Exception(string.Concat("No suitable method for ", node));
             node.Type = method.ReturnType;
             return method.Invoke(instance, args);
         }
@@ -390,23 +401,35 @@ namespace FluidScript.Dynamic
             var args = node.Arguments.Select(arg => arg.Accept(this)).ToArray();
             if (typeof(System.Collections.IList).IsAssignableFrom(type))
             {
-                var array = (System.Collections.IList)target;
-                type = type.GetGenericArguments()[0];
+                var list = (System.Collections.IList)target;
+                if (type.IsArray)
+                {
+                    type = type.GetElementType();
+                }
+                else if (type.IsGenericType)
+                {
+                    type = type.GetGenericArguments()[0];
+                }
+                else
+                {
+                    type = typeof(object);
+                }
                 var first = args.Select(arg => Convert.ToInt32(arg)).FirstOrDefault();
-                value = array[first];
+                value = list[first];
             }
             else
             {
-                var types = args.Select(arg => arg.GetType()).ToArray();
                 var indexers = type
                     .FindMembers(System.Reflection.MemberTypes.Method, Reflection.TypeUtils.Any, FindExactMethod, "get_Item");
-                var indexer = Reflection.TypeUtils.BindToMethod(indexers, types, out Reflection.Emit.Conversion[] convers);
+                var indexer = Reflection.TypeUtils.BindToMethod(indexers, args, out Reflection.Emit.ParamBindList bindings);
                 node.Getter = indexer ?? throw new Exception(string.Concat("Indexer not found at ", node.ToString()));
-                for (int i = 0; i < convers.Length; i++)
+                foreach (var binding in bindings)
                 {
-                    var conv = convers[i];
-                    if (conv.HasConversion)
-                        args[i] = convers[i].Convert(args[i]);
+                    if (binding.BindType == Reflection.Emit.ParamBind.ParamBindType.Convert)
+                    {
+                        args[binding.Index] = binding.Invoke(args);
+                    }
+                    // No params array
                 }
                 type = indexer.ReturnType;
                 value = node.Getter.Invoke(target, args);
@@ -490,33 +513,35 @@ namespace FluidScript.Dynamic
         /// <inheritdoc/>
         object Compiler.IExpressionVisitor<object>.VisitMember(NameExpression node)
         {
-            var name = node.Name;
+            string name = node.Name;
             object value = null;
-            if (_local.TryGetMember(name, out LocalVariable variable))
+            if (_local.TryGetVariable(name, out LocalVariable variable))
             {
                 if (variable.Type == null)
-                    throw new Exception(string.Concat("Use of undeclared variable ", variable));
-                node.Type = variable.Type;
+                    throw new Exception("value not initalized");
                 value = _local.Current.GetValue(variable);
             }
-            var instance = _local.Instance;
-            //find in the class level
-            var member = instance.GetType().GetMember(name).FirstOrDefault();
-            if (member != null)
+            else
             {
-                if (member.MemberType == System.Reflection.MemberTypes.Field)
+                var instance = _local.Instance;
+                //find in the class level
+                var member = instance.GetType().GetMember(name).FirstOrDefault();
+                if (member != null)
                 {
-                    var field = (System.Reflection.FieldInfo)member;
-                    if (field.FieldType == null)
-                        throw new System.Exception(string.Concat("Use of undeclared field ", field));
-                    node.Type = field.FieldType;
-                    value = (IFSObject)field.GetValue(instance);
-                }
-                if (member.MemberType == System.Reflection.MemberTypes.Property)
-                {
-                    var property = (System.Reflection.PropertyInfo)member;
-                    node.Type = property.PropertyType;
-                    value = (IFSObject)property.GetValue(instance, new object[0]);
+                    if (member.MemberType == System.Reflection.MemberTypes.Field)
+                    {
+                        var field = (System.Reflection.FieldInfo)member;
+                        if (field.FieldType == null)
+                            throw new System.Exception(string.Concat("Use of undeclared field ", field));
+                        node.Type = field.FieldType;
+                        value = (IFSObject)field.GetValue(instance);
+                    }
+                    if (member.MemberType == System.Reflection.MemberTypes.Property)
+                    {
+                        var property = (System.Reflection.PropertyInfo)member;
+                        node.Type = property.PropertyType;
+                        value = (IFSObject)property.GetValue(instance, new object[0]);
+                    }
                 }
             }
             return value;
@@ -603,13 +628,17 @@ namespace FluidScript.Dynamic
                 type = value.GetType();
             }
             //todo conversion
-            var method = Reflection.TypeUtils.GetOperatorOverload(name, out Reflection.Emit.Conversion[] conversions, type);
-            foreach (var conversion in conversions)
+            var method = Reflection.TypeUtils.GetOperatorOverload(name, out Reflection.Emit.ParamBindList bindings, type);
+            if (method == null)
+                throw new Exception(string.Concat("Invalid operation at ", node));
+            var args = new object[1] { value };
+            foreach (var binding in bindings)
             {
-                if (conversion.HasConversion)
-                    value = conversion.Convert(value);
+                if (binding.BindType == Reflection.Emit.ParamBind.ParamBindType.Convert)
+                    value = binding.Invoke(args);
+                // no param array
             }
-            object obj = method.Invoke(null, new object[1] { value });
+            object obj = method.Invoke(null, args);
             node.Type = method.ReturnType;
             if (modified)
             {
@@ -642,6 +671,25 @@ namespace FluidScript.Dynamic
             }
             _local.Create(node.Name, type, value);
             return value;
+        }
+
+        object Compiler.IExpressionVisitor<object>.VisitAnonymousFunction(AnonymousFunctionExpression node)
+        {
+            var parameters = node.Parameters;
+            var resolvedParams = parameters.Select(arg => arg.GetParameterInfo(this)).ToArray();
+            var arguments = resolvedParams.Select(arg => arg.Type).ToArray();
+            var context = new DynamicContext(_local);
+            return new Function(arguments, new Func<object, object[], object>((target, args) =>
+               {
+                   var local = context._local;
+                   for (int index = 0; index < resolvedParams.Length; index++)
+                   {
+                       Reflection.Emit.ParameterInfo param = resolvedParams[index];
+                       local.Create(param.Name, param.Type, args[index]);
+                   }
+                   node.Body.Accept(context);
+                   return context.LongJump?.Invoke();
+               }));
         }
 
         /// <inheritdoc/>

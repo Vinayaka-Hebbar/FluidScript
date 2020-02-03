@@ -23,13 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\src\FluidScript.CoreLib\FluidScript.CoreLib.csproj" />
     <ProjectReference Include="..\src\FluidScript\FluidScript.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="FluidScript.CoreLib">
-      <HintPath>..\src\FluidScript.CoreLib\bin\Debug\net40\FluidScript.CoreLib.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 

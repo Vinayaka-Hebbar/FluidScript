@@ -27,7 +27,6 @@ namespace FluidScript.Compiler
                 {"val", IdentifierType.Val },
                 {"impl", IdentifierType.Implement },
                 {"func", IdentifierType.Function },
-                {"lamda", IdentifierType.Lamda },
                 {"if", IdentifierType.If},
                 {"else", IdentifierType.Else },
                 {"while",IdentifierType.While },

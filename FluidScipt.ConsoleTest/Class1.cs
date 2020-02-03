@@ -6,12 +6,13 @@ namespace FluidScipt.ConsoleTest
 {
     public class Class1
     {
+        // todo import static class
         static void Main(string[] args)
         {
             //Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax
             Class1 class1 = new Class1();
-            class1.Run();
-            //class1.Print();
+            //class1.Run();
+            class1.Print();
             Console.ReadKey();
         }
 
@@ -20,29 +21,16 @@ namespace FluidScipt.ConsoleTest
             TestClass.Run();
         }
 
-        public IEnumerable<int> GetValues(int max = 0)
-        {
-            yield return 1;
-            if (max < 10)
-            {
-                Console.WriteLine("Called");
-                yield return 10;
-            }
-        }
-
         private void Run()
         {
+            var type = typeof(int?);
             var engine = new FluidScript.ScriptEngine();
-            var statement = engine.GetStatement("{value={a:10,b:10};return value.a+value.b}");
+            var statement = engine.GetStatement("{value=1;}");
             var context = new FluidScript.Dynamic.DynamicContext(new FluidScript.Math());
             context["x"] = new FluidScript.Integer(10);
             context["y"] = new FluidScript.Integer(20);
             object result = context.Invoke(statement);
-            var json = Json.Serialization.JsonConvert.Serialize(result, new System.Runtime.Serialization.Json.DataContractJsonSerializerSettings()
-            {
-                EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Never
-            });
-            Console.WriteLine(json);
+            Console.WriteLine(result);
         }
 
         void EmitRun()
@@ -324,7 +312,6 @@ namespace FluidScipt.ConsoleTest
 
             private void Insert(TKey key, TValue value, bool add)
             {
-
                 if (key == null)
                 {
                     throw new KeyNotFoundException(nameof(key));
@@ -333,10 +320,6 @@ namespace FluidScipt.ConsoleTest
                 if (buckets == null) Initialize(0);
                 int hashCode = Comparer.GetHashCode(key) & 0x7FFFFFFF;
                 int targetBucket = hashCode % buckets.Length;
-
-#if FEATURE_RANDOMIZED_STRING_HASHING
-            int collisionCount = 0;
-#endif
 
                 for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
                 {
@@ -350,10 +333,6 @@ namespace FluidScipt.ConsoleTest
                         version++;
                         return;
                     }
-
-#if FEATURE_RANDOMIZED_STRING_HASHING
-                collisionCount++;
-#endif
                 }
                 int index;
                 if (freeCount > 0)

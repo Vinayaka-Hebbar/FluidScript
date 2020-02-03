@@ -10,7 +10,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public System.Reflection.MethodInfo Method { get; internal set; }
 
-        public Conversion[] Conversions { get; internal set; }
+        public ParamBindList Bindings { get; internal set; }
 
         public BinaryExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
         {
@@ -32,14 +32,14 @@ namespace FluidScript.Compiler.SyntaxTree
             //todo conversion 
             if (Method == null)
                 throw new System.NullReferenceException(nameof(Method));
-            var conversions = Conversions;
+            var bindings = Bindings;
             Left.GenerateCode(generator);
-            var first = conversions[0];
-            if (first.HasConversion)
+            var first = bindings[0];
+            if (first.BindType != ParamBind.ParamBindType.None)
                 first.Generate(generator);
             Right.GenerateCode(generator);
-            var second = conversions[1];
-            if (second.HasConversion)
+            var second = bindings[1];
+            if (second.BindType != ParamBind.ParamBindType.None)
                 second.Generate(generator);
             generator.Call(Method);
         }

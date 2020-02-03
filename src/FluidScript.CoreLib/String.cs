@@ -5,7 +5,7 @@
     /// </summary>
     [System.Serializable]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public sealed class String : FSObject
+    public sealed class String : FSObject, System.IConvertible
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly string m_value;
@@ -77,6 +77,107 @@
 
         /// <inheritdoc/>
         public override string ToString()
+        {
+            return m_value;
+        }
+
+        ///<inheritdoc/>
+        public System.TypeCode GetTypeCode()
+        {
+            return System.TypeCode.String;
+        }
+
+        /// <internalonly/>
+        bool System.IConvertible.ToBoolean(System.IFormatProvider provider)
+        {
+            return System.Convert.ToBoolean(m_value, provider);
+        }
+
+        /// <internalonly/>
+        char System.IConvertible.ToChar(System.IFormatProvider provider)
+        {
+            return System.Convert.ToChar(m_value, provider);
+        }
+
+        /// <internalonly/>
+        sbyte System.IConvertible.ToSByte(System.IFormatProvider provider)
+        {
+            return System.Convert.ToSByte(m_value, provider);
+        }
+
+        /// <internalonly/>
+        byte System.IConvertible.ToByte(System.IFormatProvider provider)
+        {
+            return System.Convert.ToByte(m_value, provider);
+        }
+
+        /// <internalonly/>
+        short System.IConvertible.ToInt16(System.IFormatProvider provider)
+        {
+            return System.Convert.ToInt16(m_value, provider);
+        }
+
+        /// <internalonly/>
+        ushort System.IConvertible.ToUInt16(System.IFormatProvider provider)
+        {
+            return System.Convert.ToUInt16(m_value, provider);
+        }
+
+        /// <internalonly/>
+        int System.IConvertible.ToInt32(System.IFormatProvider provider)
+        {
+            return System.Convert.ToInt32(m_value, provider);
+        }
+
+        /// <internalonly/>
+        uint System.IConvertible.ToUInt32(System.IFormatProvider provider)
+        {
+            return System.Convert.ToUInt32(m_value, provider);
+        }
+
+        /// <internalonly/>
+        long System.IConvertible.ToInt64(System.IFormatProvider provider)
+        {
+            return System.Convert.ToInt64(m_value, provider);
+        }
+
+        /// <internalonly/>
+        ulong System.IConvertible.ToUInt64(System.IFormatProvider provider)
+        {
+            return System.Convert.ToUInt64(m_value, provider);
+        }
+
+        /// <internalonly/>
+        float System.IConvertible.ToSingle(System.IFormatProvider provider)
+        {
+            return System.Convert.ToSingle(m_value, provider);
+        }
+
+        /// <internalonly/>
+        double System.IConvertible.ToDouble(System.IFormatProvider provider)
+        {
+            return System.Convert.ToDouble(m_value, provider);
+        }
+
+        /// <internalonly/>
+        decimal System.IConvertible.ToDecimal(System.IFormatProvider provider)
+        {
+            return System.Convert.ToDecimal(m_value, provider);
+        }
+
+        /// <internalonly/>
+        System.DateTime System.IConvertible.ToDateTime(System.IFormatProvider provider)
+        {
+            return System.Convert.ToDateTime(m_value, provider);
+        }
+
+        /// <internalonly/>
+        object System.IConvertible.ToType(System.Type type, System.IFormatProvider provider)
+        {
+            return m_value;
+        }
+
+        string System.IConvertible.ToString(System.IFormatProvider provider)
         {
             return m_value;
         }

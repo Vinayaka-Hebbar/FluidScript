@@ -9,13 +9,14 @@ namespace FluidScript.Reflection
     {
         internal static readonly IList<Primitive> Inbuilts;
 
+        internal const string ImplicitConversionName = "op_Implicit";
+
+        internal const string ExplicitConviersionName = "op_Explicit";
 
         #region Types
         internal static readonly System.Type BooleanType = typeof(Boolean);
         internal static readonly System.Type ObjectType = typeof(object);
         #endregion
-
-        private static readonly Emit.Conversion[] NoConversions = new Emit.Conversion[0];
 
         private static readonly IDictionary<string, Primitive> InbuiltNames;
         internal const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
@@ -86,66 +87,137 @@ namespace FluidScript.Reflection
             return false;
         }
 
-        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out Emit.Conversion[] conversions)
+        #region BindToMethod
+        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out Emit.ParamBindList bindings)
         {
+            bindings = new Emit.ParamBindList();
             foreach (var m in members)
             {
                 if (m.MemberType == MemberTypes.Method)
                 {
-                    if (MatchesTypes((MethodInfo)m, types, out conversions))
+                    if (MatchesTypes((MethodInfo)m, types, ref bindings))
                         return (MethodInfo)m;
                 }
             }
-            conversions = new Emit.Conversion[0];
             return null;
         }
 
-        internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out Emit.Conversion[] conversions)
+        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Collections.IList agrs, out Emit.ParamBindList bindings)
         {
+            bindings = new Emit.ParamBindList();
+            foreach (var m in members)
+            {
+                if (m.MemberType == MemberTypes.Method)
+                {
+                    if (MatchesTypes((MethodInfo)m, agrs, ref bindings))
+                        return (MethodInfo)m;
+                }
+            }
+            return null;
+        }
+
+        internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out Emit.ParamBindList bindings)
+        {
+            bindings = new Emit.ParamBindList();
             foreach (var m in methods)
             {
-                if (MatchesTypes(m, types, out conversions))
+                if (MatchesTypes(m, types, ref bindings))
                     return m;
             }
-            conversions = new Emit.Conversion[0];
             return null;
         }
 
-        internal static MethodInfo GetOperatorOverload(string name, out Emit.Conversion[] conversions, params System.Type[] types)
+        internal static MethodInfo BindToMethod(MethodInfo[] methods, object[] args, out Emit.ParamBindList bindings)
         {
+            bindings = new Emit.ParamBindList();
+            foreach (var m in methods)
+            {
+                if (MatchesTypes(m, args, ref bindings))
+                    return m;
+            }
+            return null;
+        }
+        #endregion
+
+        internal static MethodInfo GetOperatorOverload(string name, out Emit.ParamBindList bindings, params System.Type[] types)
+        {
+            bindings = new Emit.ParamBindList();
             foreach (var type in types)
             {
                 var members = type.GetMember(name, PublicStatic);
                 foreach (MethodInfo m in members)
                 {
-                    if (MatchesTypes(m, types, out conversions))
+                    if (MatchesTypes(m, types, ref bindings))
                         return m;
                 }
             }
-            conversions = NoConversions;
             return null;
         }
 
-        internal static bool MatchesTypes(MethodInfo method, System.Type[] types, out Emit.Conversion[] conversions)
+        internal static bool MatchesTypes(MethodInfo method, System.Collections.IList args, ref Emit.ParamBindList bindings)
         {
             var paramters = method.GetParameters();
-            if (paramters.Length != types.Length)
-            {
-                conversions = null;
-                return false;
-            }
-            conversions = new Emit.Conversion[paramters.Length];
+            bindings.Clear();
+            // arg length
+            var length = args.Count;
             for (int i = 0; i < paramters.Length; i++)
             {
-                var dest = paramters[i].ParameterType;
-                var src = types[i];
-                if (dest.IsAssignableFrom(src))
-                    conversions[i] = Emit.Conversion.NoConversion;
-                else
+                var param = paramters[i];
+                if (param.IsDefined(typeof(System.ParamArrayAttribute), false))
+                {
+                    bindings.Add(new Emit.ParamArrayBind(i, param.ParameterType));
+                    //No further check required
+                    break;
+                }
+                // matches current index
+                if (i >= length)
+                    return false;
+                var dest = param.ParameterType;
+                var arg = args[i];
+                if (arg == null)
+                {
+                    //for value type if nullable
+                    if (dest.IsValueType && !IsNullableType(dest))
+                        return false;
+                    else
+                        continue;
+                }
+                var src = arg.GetType();
+                if (!AreReferenceAssignable(dest, src))
                 {
                     if (TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
                         return false;
-                    conversions[i] = new Emit.Conversion(opImplict);
+                    bindings.Add(new Emit.ParamConvert(i, opImplict));
+                }
+            }
+            return true;
+        }
+
+        internal static bool MatchesTypes(MethodInfo method, System.Type[] types, ref Emit.ParamBindList bindings)
+        {
+            var paramters = method.GetParameters();
+            // clear previous bindings
+            bindings.Clear();
+            var length = types.Length;
+            for (int i = 0; i < paramters.Length; i++)
+            {
+                var param = paramters[i];
+                if (param.IsDefined(typeof(System.ParamArrayAttribute), false))
+                {
+                    bindings.Add(new Emit.ParamArrayBind(i, param.ParameterType));
+                    //No further check required
+                    break;
+                }
+                // matches current index
+                if (i >= length)
+                    return false;
+                var dest = param.ParameterType;
+                var src = types[i];
+                if (!AreReferenceAssignable(dest, src))
+                {
+                    if (TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
+                        return false;
+                    bindings.Add(new Emit.ParamConvert(i, opImplict));
                 }
             }
             return true;
@@ -198,10 +270,15 @@ namespace FluidScript.Reflection
             return false;
         }
 
+        internal static bool IsNullableType(System.Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>);
+        }
+
         internal static bool TryImplicitConvert(System.Type src, System.Type dest, out MethodInfo method)
         {
             // todo base class convert
-            var methods = dest.GetMember(Emit.Conversion.ImplicitConversionName, MemberTypes.Method, PublicStatic);
+            var methods = dest.GetMember(ImplicitConversionName, MemberTypes.Method, PublicStatic);
             foreach (MethodInfo m in methods)
             {
                 if (MatchesArgumentTypes(m, src) && AreReferenceAssignable(m.ReturnType, dest))
@@ -210,7 +287,7 @@ namespace FluidScript.Reflection
                     return true;
                 }
             }
-            methods = src.GetMember(Emit.Conversion.ImplicitConversionName, MemberTypes.Method, PublicStatic);
+            methods = src.GetMember(ImplicitConversionName, MemberTypes.Method, PublicStatic);
             foreach (MethodInfo m in methods)
             {
                 if (MatchesArgumentTypes(m, src) && AreReferenceAssignable(m.ReturnType, dest))
@@ -237,8 +314,8 @@ namespace FluidScript.Reflection
                 return null;
             }
             return type.IsPrimitive && type == typeof(bool)
-                ? BooleanType.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null)
-                : type.GetMethod(Emit.Conversion.ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null);
+                ? BooleanType.GetMethod(ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null)
+                : type.GetMethod(ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null);
         }
     }
 }
