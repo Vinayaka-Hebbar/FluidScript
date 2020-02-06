@@ -47,7 +47,7 @@ namespace FluidScript.Compiler.SyntaxTree
             if (Size != null)
             {
                 Size.GenerateCode(generator);
-                generator.CallStatic(Helpers.Integer_to_Int32);
+                generator.CallStatic(Utils.Helpers.Integer_to_Int32);
             }
             else
                 generator.LoadInt32(Expressions.Length);

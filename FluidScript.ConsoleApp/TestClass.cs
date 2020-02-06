@@ -8,10 +8,6 @@ namespace FluidScipt.ConsoleTest
     {
         public static void Run()
         {
-            JsonDictionary<string, string> values = new  JsonDictionary<string, string>();
-           var type = values.GetType();
-            var se = type.IsSerializable;
-            values.Add("name", "vinayaka");
         }
 
         public static string Test<T>(Expression<Func<T, bool>> expression)
@@ -90,15 +86,22 @@ namespace FluidScipt.ConsoleTest
             var right = binary.Right;
             return string.Concat(Get(left), " ", operation, " ", GetValue(right));
         }
+    }
 
-        public class User
+    [System.Serializable]
+    public struct User
+    {
+        [NonSerialized]
+        private string Value;
+
+        public User(string value)
         {
-            [DataMember(Name = "name")]
-            internal string Name;
-            [DataMember(Name = "isActive")]
-            internal bool IsActive;
-            [DataMember(Name = "age")]
-            public int Age { get; set; }
+            Value = value;
+        }
+
+        public override string ToString()
+        {
+            return Value;
         }
     }
 }

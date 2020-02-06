@@ -771,11 +771,6 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitExpressionList(FluidScript.Compiler.TokenType,FluidScript.Compiler.TokenType)">
-            <summary>
-            List of expression sperated by <paramref name="splitToken"/>
-            </summary>
-        </member>
         <member name="M:FluidScript.Compiler.SyntaxVisitor.VisitFunctionParameters">
             <summary>
             Dont Forget to Call ToArray x:int
@@ -908,6 +903,11 @@
             {
             </summary>
         </member>
+        <member name="F:FluidScript.Compiler.TokenType.RightBrace">
+            <summary>
+            }
+            </summary>
+        </member>
         <member name="F:FluidScript.Compiler.TokenType.Circumflex">
              <summary>
             ^
@@ -967,6 +967,85 @@
             <param name="path">Text to parse</param>
             <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
         </member>
+        <member name="P:FluidScript.Dynamic.DynamicClass.Item(System.Int32)">
+            <summary>
+            Gets or sets the element at the specified index.
+            </summary>
+            <param name="index">
+            The zero-based index of the element to get or set.
+            </param>
+            <returns>
+            The element at the specified index.
+            </returns>
+        </member>
+        <member name="P:FluidScript.Dynamic.DynamicClass.Count">
+            <summary>
+            Read-only property describing how many elements are in the List.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Dynamic.DynamicClass.Capacity">
+            <summary>
+            Gets or sets the total number of elements the internal data structure can hold
+            without resizing.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.DynamicClass.TryLookVariable(System.String,FluidScript.Dynamic.LocalVariable@)">
+            <summary>
+            Get Member of current context and parent context
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.DynamicClass.IndexOf(FluidScript.Dynamic.LocalVariable)">
+            <summary>
+            Inserts an element into the System.Collections.Generic.List`1 at the specified
+            index.
+            </summary>
+            <param name="item">The zero-based index at which item should be inserted.</param>
+            <returns>
+            The object to insert. The value can be null for reference types.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Dynamic.DynamicClass.Remove(FluidScript.Dynamic.LocalVariable)">
+            <summary>
+            Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.List`1"/>.
+            </summary>
+            <param name="item">
+            The object to remove from the <see cref="T:System.Collections.Generic.List`1"/>. The value can
+                be null for reference types.
+            </param>
+            <returns>
+            true if item is successfully removed; otherwise, false. This method also returns
+            false if item was not found in the <see cref="T:System.Collections.Generic.List`1"/>.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Dynamic.DynamicClass.Clear">
+            <summary>
+            Removes all elements from the <see cref="T:System.Collections.Generic.List`1"/>
+            </summary>
+        </member>
+        <member name="T:FluidScript.Dynamic.DynamicClass.Enumerator">
+            <summary>
+            Enumerates the elements of a <see cref="T:System.Collections.Generic.List`1"/>.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Dynamic.DynamicClass.Enumerator.Current">
+            <summary>
+            Gets the element at the current position of the enumerator.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.DynamicClass.Enumerator.Dispose">
+            <summary>
+            Releases all resources used by the <see cref="T:System.Collections.Generic.List`1"/>.Enumerator.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.DynamicClass.Enumerator.MoveNext">
+            <summary>
+            Advances the enumerator to the next element of the <see cref="T:System.Collections.Generic.List`1"/>.
+            </summary>
+            <returns>
+            true if the enumerator was successfully advanced to the next element; false if
+            the enumerator has passed the end of the collection.
+            </returns>
+        </member>
         <member name="T:FluidScript.Dynamic.DynamicContext">
             <summary>
             Runtime evaluation of Syntax tree 
@@ -974,6 +1053,11 @@
             </summary>
         </member>
         <member name="M:FluidScript.Dynamic.DynamicContext.#ctor(System.Object)">
+            <summary>
+            New runtime evaluation 
+            </summary>
+        </member>
+        <member name="M:FluidScript.Dynamic.DynamicContext.#ctor(FluidScript.Dynamic.DynamicContext)">
             <summary>
             New runtime evaluation 
             </summary>
@@ -1000,13 +1084,6 @@
             <exception cref="T:System.IndexOutOfRangeException"/>
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.MissingMethodException"/>
-        </member>
-        <member name="M:FluidScript.Dynamic.DynamicContext.CreateContext(System.Object)">
-            <summary>
-            New Sub Context
-            </summary>
-            <param name="obj"></param>
-            <returns></returns>
         </member>
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
             <inheritdoc/>
@@ -1077,95 +1154,41 @@
         <member name="M:FluidScript.Dynamic.DynamicContext.FluidScript#Compiler#IStatementVisitor#VisitContinue(FluidScript.Compiler.SyntaxTree.ContinueStatement)">
             <inheritdoc/>
         </member>
-        <member name="F:FluidScript.Dynamic.LocalInstance.Current">
-            <summary>
-            Current Block
-            </summary>
-        </member>
-        <member name="P:FluidScript.Dynamic.LocalInstance.Item(System.Int32)">
-            <summary>
-            Gets or sets the element at the specified index.
-            </summary>
-            <param name="index">
-            The zero-based index of the element to get or set.
-            </param>
-            <returns>
-            The element at the specified index.
-            </returns>
-        </member>
-        <member name="P:FluidScript.Dynamic.LocalInstance.Count">
-            <summary>
-            Read-only property describing how many elements are in the List.
-            </summary>
-        </member>
-        <member name="P:FluidScript.Dynamic.LocalInstance.Capacity">
-            <summary>
-            Gets or sets the total number of elements the internal data structure can hold
-            without resizing.
-            </summary>
-        </member>
-        <member name="P:FluidScript.Dynamic.LocalInstance.Item(System.String)">
+        <member name="P:FluidScript.Dynamic.DynamicObject.Item(System.String)">
             <summary>
             Getter and Setter of variables
             </summary>
         </member>
-        <member name="M:FluidScript.Dynamic.LocalInstance.TryGetVariable(System.String,FluidScript.Dynamic.LocalVariable@)">
+        <member name="M:FluidScript.Dynamic.DynamicObject.TryGetMember(System.String,FluidScript.Dynamic.LocalVariable@)">
             <summary>
-            Get Member of current context
+            Get current context variabke
             </summary>
         </member>
-        <member name="M:FluidScript.Dynamic.LocalInstance.TryGetMember(System.String,FluidScript.Dynamic.LocalVariable@)">
+        <member name="M:FluidScript.Dynamic.DynamicObject.Remove(FluidScript.Dynamic.LocalVariable)">
             <summary>
-            Get Member of current context
+            Remove item in hierarchy
             </summary>
         </member>
-        <member name="M:FluidScript.Dynamic.LocalInstance.Add(FluidScript.Dynamic.LocalVariable)">
+        <member name="M:FluidScript.Dynamic.DynamicObject.Modify(FluidScript.Dynamic.LocalVariable,System.Object)">
             <summary>
-            Adds the given object to the end of this list. The size of the list is
-            increased by one. If required, the capacity of the list is doubled
-            before adding the new element.
+            if exists in current context else in parent
             </summary>
         </member>
-        <member name="M:FluidScript.Dynamic.LocalInstance.RemoveAt(System.Int32)">
+        <member name="M:FluidScript.Dynamic.DynamicObject.Find(System.String)">
             <summary>
-            Removes the element at the specified index of the <see cref="T:System.Collections.Generic.List`1"/>.
+            Find the variable in the hierarchy
             </summary>
-            <param name="index">
-            The zero-based index of the element to remove.
-            </param>
+            <param name="name">name to find</param>
+            <returns>value</returns>
         </member>
-        <member name="M:FluidScript.Dynamic.LocalInstance.IndexOf(FluidScript.Dynamic.LocalVariable)">
+        <member name="M:FluidScript.Dynamic.DynamicObject.Detach">
             <summary>
-            Inserts an element into the System.Collections.Generic.List`1 at the specified
-            index.
-            </summary>
-            <param name="item">The zero-based index at which item should be inserted.</param>
-            <returns>
-            The object to insert. The value can be null for reference types.
-            </returns>
-        </member>
-        <member name="M:FluidScript.Dynamic.LocalInstance.Remove(FluidScript.Dynamic.LocalVariable)">
-            <summary>
-            Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.List`1"/>.
-            </summary>
-            <param name="item">
-            The object to remove from the <see cref="T:System.Collections.Generic.List`1"/>. The value can
-                be null for reference types.
-            </param>
-            <returns>
-            true if item is successfully removed; otherwise, false. This method also returns
-            false if item was not found in the <see cref="T:System.Collections.Generic.List`1"/>.
-            </returns>
-        </member>
-        <member name="M:FluidScript.Dynamic.LocalInstance.Clear">
-            <summary>
-            Removes all elements from the <see cref="T:System.Collections.Generic.List`1"/>
+            Detaches variables from instance
             </summary>
         </member>
-        <member name="M:FluidScript.Dynamic.MetaObject.GetRestrictions">
+        <member name="F:FluidScript.Dynamic.LocalVariable.HashCodeInit">
             <summary>
-            Returns a Restrictions object which includes our current restrictions merged
-            with a restriction limiting our type
+            calculated value
             </summary>
         </member>
         <member name="T:FluidScript.Reflection.Emit.ILGenerator">
@@ -2650,14 +2673,14 @@
             Full Type Name
             </summary>
         </member>
-        <member name="M:FluidScript.Reflection.TypeUtils.From(System.String)">
+        <member name="M:FluidScript.Utils.TypeUtils.From(System.String)">
             <summary>
             Must be primitive
             </summary>
             <param name="typeName"></param>
             <returns></returns>
         </member>
-        <member name="M:FluidScript.Reflection.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
+        <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
             <summary>
             Returns true if the method's parameter types are reference assignable from
             the argument types, otherwise false.
@@ -2665,13 +2688,6 @@
             An example that can make the method return false is that 
             typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
             returns a method with two double parameters, which doesn't match the provided
-            argument types.
-            </summary>
-            <returns></returns>
-        </member>
-    </members>
-</doc>
-ith two double parameters, which doesn't match the provided
             argument types.
             </summary>
             <returns></returns>

@@ -66,7 +66,7 @@ namespace FluidScript.Compiler
         }
 
         /// <summary>
-        /// Move to next <see cref="TokenType"/>
+        /// Move to next <see cref="SyntaxVisitor.TokenType"/>
         /// </summary>
         /// <param name="skipLine">Indicates line to be skipped</param>
         public bool MoveNext(bool skipLine = true)
@@ -74,6 +74,18 @@ namespace FluidScript.Compiler
             c = Source.ReadChar();
             TokenType = GetTokenType(skipLine);
             return c != char.MinValue;
+        }
+
+        private bool DontMoveNextIf(TokenType token)
+        {
+            return MoveNext() && TokenType != token;
+        }
+
+        public bool MoveNextIfOnly(TokenType token)
+        {
+            if (TokenType == token)
+                return MoveNext();
+            throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.Position));
         }
 
         /// <summary>
@@ -289,12 +301,13 @@ namespace FluidScript.Compiler
         /// </summary>
         public IEnumerable<MemberDeclaration> VisitMembers()
         {
-            while (TokenType != TokenType.RightBrace)
+            while (MoveNext())
             {
                 MemberDeclaration member = VisitMember();
                 yield return member;
-                if (TokenType == TokenType.SemiColon)
-                    MoveNext();
+                if (TokenType == TokenType.RightBrace)
+                    break;
+                CheckSyntaxExpected(TokenType.SemiColon);
             }
         }
 
@@ -377,10 +390,8 @@ namespace FluidScript.Compiler
                 //todo extends
                 if (TokenType == TokenType.LeftBrace)
                 {
-                    MoveNext();
                     var members = VisitMembers().ToArray();
-                    if (TokenType == TokenType.RightBrace)
-                        MoveNext();
+                    MoveNextIfOnly(TokenType.RightBrace);
                     return new TypeDeclaration(name, null, new TypeSyntax[0], members)
                     {
                         Source = Source
@@ -412,12 +423,11 @@ namespace FluidScript.Compiler
                 TypeParameter[] parameterList;
                 //return type
                 IEnumerable<TypeParameter> parameters = Enumerable.Empty<TypeParameter>();
-                if (CheckSyntaxExpected(TokenType.LeftParenthesis))
+                if (TokenType == TokenType.LeftParenthesis)
                     parameters = VisitFunctionParameters();
                 parameterList = parameters.ToArray();
-                if (CheckSyntaxExpected(TokenType.RightParenthesis))
-                    MoveNext();
-
+                //todo throw if other
+                MoveNextIfOnly(TokenType.RightParenthesis);
                 TypeSyntax returnType = null;
                 if (TokenType == TokenType.Colon)
                 {
@@ -442,10 +452,8 @@ namespace FluidScript.Compiler
             switch (TokenType)
             {
                 case TokenType.LeftBrace:
-                    MoveNext();
                     var statements = VisitListStatement().ToArray();
-                    if (TokenType == TokenType.RightBrace)
-                        MoveNext();
+                    MoveNextIfOnly(TokenType.RightBrace);
                     statement = new BlockStatement(statements, CurrentLabels);
                     break;
                 case TokenType.Identifier:
@@ -474,7 +482,7 @@ namespace FluidScript.Compiler
                 {
                     case IdentifierType.Return:
                         Expression expression = null;
-                        if (!CheckSyntaxExpected(TokenType.SemiColon))
+                        if (TokenType != TokenType.SemiColon)
                         {
                             expression = VisitExpression();
                         }
@@ -524,6 +532,7 @@ namespace FluidScript.Compiler
             {
                 MoveNext();
                 var initialization = VisitStatement();
+                //todo throw error if others
                 if (TokenType == TokenType.SemiColon)
                     MoveNext();
                 var start = Source.CurrentPosition;
@@ -650,8 +659,6 @@ namespace FluidScript.Compiler
                 if (TokenType == TokenType.RightParenthesis)
                     MoveNext();
                 Statement body = VisitStatement();
-                if (TokenType == TokenType.SemiColon)
-                    MoveNext();
                 Statement other = null;
                 if (CheckExpectedIdentifier(IdentifierType.Else))
                     other = VisitStatement();
@@ -672,10 +679,10 @@ namespace FluidScript.Compiler
                 MoveNext();
                 TypeParameter[] parameterList;
                 IEnumerable<TypeParameter> parameters = Enumerable.Empty<TypeParameter>();
-                if (CheckSyntaxExpected(TokenType.LeftParenthesis))
+                if (TokenType == TokenType.LeftParenthesis)
                     parameters = VisitFunctionParameters();
                 parameterList = parameters.ToArray();
-                if (CheckSyntaxExpected(TokenType.RightParenthesis))
+                if (TokenType == TokenType.RightParenthesis)
                     MoveNext();
                 TypeSyntax returnType = null;
                 if (TokenType == TokenType.Colon)
@@ -707,13 +714,12 @@ namespace FluidScript.Compiler
             BlockStatement statement;
             if (TokenType == TokenType.LeftBrace)
             {
-                MoveNext();
                 Statement[] statements = VisitListStatement().ToArray();
                 if (TokenType == TokenType.RightBrace)
                     MoveNext();
                 statement = new BlockStatement(statements, CurrentLabels);
             }
-            else if (CheckSyntaxExpected(TokenType.AnonymousMethod))
+            else if (TokenType == TokenType.AnonymousMethod)
             {
                 MoveNext();
                 statement = VisitAnonymousBlock();
@@ -728,10 +734,8 @@ namespace FluidScript.Compiler
         {
             if (TokenType == TokenType.LeftBrace)
             {
-                MoveNext();
                 Statement[] statements = VisitListStatement().ToArray();
-                if (TokenType == TokenType.RightBrace)
-                    MoveNext();
+                MoveNextIfOnly(TokenType.RightBrace);
                 return new BlockStatement(statements, CurrentLabels);
             }
             BlockStatement blockStatement = new BlockStatement(new Statement[] { new ReturnOrThrowStatement(VisitConditionalExpression(), StatementType.Return) }, CurrentLabels);
@@ -740,11 +744,12 @@ namespace FluidScript.Compiler
 
         public IEnumerable<Statement> VisitListStatement()
         {
-            while (TokenType != TokenType.RightBrace && TokenType != TokenType.End)
+            while (DontMoveNextIf(TokenType.RightBrace))
             {
                 yield return VisitStatement();
-                if (TokenType == TokenType.SemiColon || TokenType == TokenType.NewLine)
-                    MoveNext();
+                if (TokenType == TokenType.RightBrace)
+                    break;
+                CheckSyntaxExpected(TokenType.SemiColon, TokenType.NewLine);
             }
         }
 
@@ -1020,8 +1025,8 @@ namespace FluidScript.Compiler
                     break;
 #endif
                 case TokenType.LeftBrace:
-                    MoveNext();
                     var list = VisitAnonymousObjectMembers().ToArray();
+                    CheckSyntaxExpected(TokenType.RightBrace);
                     exp = new AnonymousObjectExpression(list);
                     break;
                 case TokenType.LeftParenthesis:
@@ -1039,8 +1044,6 @@ namespace FluidScript.Compiler
                     //skip end of expression
                     return exp;
             }
-            if (TokenType == TokenType.SemiColon)
-                return exp;
             MoveNext(false);
             //End of left
             return VisitRightExpression(exp);
@@ -1056,9 +1059,9 @@ namespace FluidScript.Compiler
                 switch (type)
                 {
                     case TokenType.LeftParenthesis:
-                        MoveNext();
                         var args = VisitArgumentList(TokenType.Comma, TokenType.RightParenthesis).ToArray();
                         exp = new InvocationExpression(exp, args);
+                        CheckSyntaxExpected(TokenType.RightParenthesis);
                         break;
                     case TokenType.NullPropagator:
                         MoveNext();
@@ -1070,9 +1073,9 @@ namespace FluidScript.Compiler
                         exp = new MemberExpression(exp, GetName(), (ExpressionType)type);
                         break;
                     case TokenType.LeftBracket:
-                        MoveNext();
                         args = VisitArgumentList(TokenType.Comma, TokenType.RightBracket).ToArray();
                         exp = new IndexExpression(exp, args);
+                        CheckSyntaxExpected(TokenType.RightBracket);
                         break;
                     default:
                         return exp;
@@ -1095,10 +1098,10 @@ namespace FluidScript.Compiler
                 case IdentifierType.New:
                     MoveNext();
                     Expression[] arguments;
-                    if (CheckSyntaxExpected(TokenType.LeftParenthesis))
+                    if (TokenType == TokenType.LeftParenthesis)
                     {
-                        MoveNext();
                         arguments = VisitArgumentList(TokenType.Comma, TokenType.LeftParenthesis).ToArray();
+                        CheckSyntaxExpected(TokenType.RightParenthesis);
                     }
                     else
                     {
@@ -1141,30 +1144,29 @@ namespace FluidScript.Compiler
                 MoveNext();
                 type = VisitType();
                 //>
-                if (TokenType == TokenType.Greater)
-                    MoveNext();
+                MoveNextIfOnly(TokenType.Greater);
                 //(
                 if (TokenType == TokenType.LeftParenthesis)
                 {
                     MoveNext();
                     size = VisitAssignmentExpression();
-                    if (TokenType == TokenType.RightParenthesis)
-                        MoveNext();
+                    MoveNextIfOnly(TokenType.RightParenthesis);
                 }
 
             }
-            if (CheckSyntaxExpected(TokenType.LeftBracket))
+            if (TokenType == TokenType.LeftBracket)
             {
                 //[
-                MoveNext();
                 list = VisitArgumentList(TokenType.Comma, TokenType.RightBracket).ToArray();
+                CheckSyntaxExpected(TokenType.RightBracket);
+                // next will go when enters right side
 
             }
             return new ArrayLiteralExpression(list, type, size);
         }
 
         /// <summary>
-        /// Indicates <see cref="TokenType"/> matches the <paramref name="expected"/>
+        /// Indicates <see cref="SyntaxVisitor.TokenType"/> matches the <paramref name="expected"/>
         /// </summary>
         protected bool CheckExpectedIdentifier(IdentifierType expected)
         {
@@ -1188,12 +1190,8 @@ namespace FluidScript.Compiler
         {
             if (TokenType == TokenType.LeftParenthesis)
             {
-                MoveNext();
                 var args = VisitFunctionParameters().ToArray();
-                if (TokenType == TokenType.RightParenthesis)
-                {
-                    MoveNext();
-                }
+                MoveNextIfOnly(TokenType.RightParenthesis);
                 TypeSyntax returnType = null;
                 if (TokenType == TokenType.Colon)
                 {
@@ -1211,26 +1209,13 @@ namespace FluidScript.Compiler
         /// <returns></returns>
         public IEnumerable<Expression> VisitArgumentList(TokenType splitToken, TokenType endToken)
         {
-            for (TokenType type = TokenType; type != endToken; type = TokenType)
+            while (DontMoveNextIf(endToken))
             {
                 Expression exp = VisitAssignmentExpression();
                 yield return exp;
-                if (TokenType == splitToken)
-                    MoveNext();
-            }
-        }
-
-        /// <summary>
-        /// List of expression sperated by <paramref name="splitToken"/>
-        /// </summary>
-        public IEnumerable<Expression> VisitExpressionList(TokenType splitToken, TokenType endToken)
-        {
-            for (TokenType type = TokenType; type != endToken; type = TokenType)
-            {
-                Expression exp = type == splitToken ? Expression.Empty : VisitExpression();
-                yield return exp;
-                if (TokenType == splitToken)
-                    MoveNext();
+                if (TokenType == endToken)
+                    break;
+                CheckSyntaxExpected(splitToken);
             }
         }
 
@@ -1241,9 +1226,7 @@ namespace FluidScript.Compiler
         public IEnumerable<TypeParameter> VisitFunctionParameters()
         {
             int index = 0;
-            if (TokenType == TokenType.LeftParenthesis)
-                MoveNext();
-            while (TokenType != TokenType.RightParenthesis)
+            while (MoveNext())
             {
                 if (TokenType == TokenType.Identifier)
                 {
@@ -1272,12 +1255,13 @@ namespace FluidScript.Compiler
                         expression = VisitConditionalExpression();
                     }
                     parameter.DefaultValue = expression;
-                    //todo check if method arguments needs any scopes
-                    if (TokenType == TokenType.Comma)
-                        MoveNext();
 
                     yield return parameter;
                 }
+                if (TokenType == TokenType.RightParenthesis)
+                    break;
+                //todo check if method arguments needs any scopes
+                CheckSyntaxExpected(TokenType.Comma);
             }
         }
 
@@ -1334,7 +1318,8 @@ namespace FluidScript.Compiler
         /// <returns></returns>
         public IEnumerable<AnonymousObjectMember> VisitAnonymousObjectMembers()
         {
-            while (TokenType != TokenType.RightBrace)
+            CheckSyntaxExpected(TokenType.LeftBrace);
+            while (MoveNext())
             {
                 if (TokenType == TokenType.Identifier)
                 {
@@ -1347,8 +1332,9 @@ namespace FluidScript.Compiler
                         yield return new AnonymousObjectMember(name, exp);
                     }
                 }
-                if (TokenType == TokenType.Comma)
-                    MoveNext();
+                if (TokenType == TokenType.RightBrace)
+                    break;
+                CheckSyntaxExpected(TokenType.Comma);
             }
         }
 
@@ -1357,34 +1343,43 @@ namespace FluidScript.Compiler
         /// </summary>
         public IEnumerable<VariableDeclarationExpression> VisitVarDeclarations()
         {
-            while (TokenType != TokenType.SemiColon && TokenType != TokenType.NewLine)
+            //var or field
+            do
             {
-                if (CheckSyntaxExpected(TokenType.Identifier))
+                CheckSyntaxExpected(TokenType.Identifier);
+                string name = GetName();
+                MoveNext();
+                TypeSyntax type = null;
+                Expression expression = null;
+                if (TokenType == TokenType.Colon)
                 {
-                    string name = GetName();
                     MoveNext();
-                    TypeSyntax type = null;
-                    Expression expression = null;
-                    if (TokenType == TokenType.Colon)
-                    {
-                        MoveNext();
-                        type = VisitType();
-                    }
-                    if (TokenType == TokenType.Equal)
-                    {
-                        MoveNext();
-                        expression = VisitAssignmentExpression();
-                    }
-                    yield return new VariableDeclarationExpression(name, type, expression);
+                    type = VisitType();
                 }
-                if (TokenType == TokenType.Comma)
+                if (TokenType == TokenType.Equal)
+                {
                     MoveNext();
-            }
+                    expression = VisitAssignmentExpression();
+                }
+                yield return new VariableDeclarationExpression(name, type, expression);
+                if (TokenType == TokenType.SemiColon || TokenType == TokenType.NewLine)
+                    break;
+                CheckSyntaxExpected(TokenType.Comma);
+            } while (MoveNext());
         }
 
-        internal bool CheckSyntaxExpected(TokenType type)
+        internal void CheckSyntaxExpected(TokenType type)
         {
-            return TokenType == type ? true : false;
+            if (TokenType == type)
+                return;
+            throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.Position));
+        }
+
+        internal void CheckSyntaxExpected(TokenType type1, TokenType type2)
+        {
+            if (TokenType == type1 || TokenType == type2)
+                return;
+            throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.Position));
         }
         #endregion
 

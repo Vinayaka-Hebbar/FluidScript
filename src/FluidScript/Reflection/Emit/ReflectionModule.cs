@@ -37,7 +37,7 @@ namespace FluidScript.Reflection.Emit
             Assembly = assembly;
             Module = module;
             Name = module.ScopeName;
-            _types = TypeUtils.Inbuilts.ToDictionary(item => (TypeName)item.Name, item => item.Type);
+            _types = Utils.TypeUtils.Inbuilts.ToDictionary(item => (TypeName)item.Name, item => item.Type);
         }
 
         public TypeGenerator DefineType(string name, System.Reflection.TypeAttributes attr, System.Type parent)

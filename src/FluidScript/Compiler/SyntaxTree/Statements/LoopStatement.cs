@@ -89,7 +89,7 @@
             {
                 generator.MarkSequencePoint(ConditionStatement.Span);
                 ConditionStatement.GenerateCode(generator);
-                generator.CallStatic(Reflection.Emit.Helpers.Booolean_To_Bool);
+                generator.CallStatic(Utils.Helpers.Booolean_To_Bool);
                 generator.BranchIfTrue(startOfLoop);
             }
 

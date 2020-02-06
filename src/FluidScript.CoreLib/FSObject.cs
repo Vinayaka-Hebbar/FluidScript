@@ -93,5 +93,11 @@
 
             }
         }
+
+        [Runtime.Register("isEquals")]
+        public static Boolean IsEquals(object arg1, object arg2)
+        {
+            return Equals(arg1, arg2);
+        }
     }
 }

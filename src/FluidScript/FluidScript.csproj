@@ -3,7 +3,7 @@
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0</TargetFrameworks>
     <DefineConstants>TRACE;</DefineConstants>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.7</Version>
+    <Version>1.0.9-mr2</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -54,7 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.6-alpha" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.6-beta" />
   </ItemGroup>
 
 </Project>

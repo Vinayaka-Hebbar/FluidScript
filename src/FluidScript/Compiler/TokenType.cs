@@ -43,6 +43,9 @@
         /// {
         /// </summary>
         LeftBrace = 23,
+        /// <summary>
+        /// }
+        /// </summary>
         RightBrace = 24,
         Comma = 25,
         SemiColon = 26,

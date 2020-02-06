@@ -52,7 +52,7 @@
             // Generate code for condition convert to System.Boolean
             condition.GenerateCode(generator);
             if (condition.Type == typeof(Boolean))
-                generator.CallStatic(Reflection.Emit.Helpers.Booolean_To_Bool);
+                generator.CallStatic(Utils.Helpers.Booolean_To_Bool);
             // We will need a label at the end of the if statement.
             var endOfEverything = generator.CreateLabel();
             if (Else == null)
@@ -89,7 +89,7 @@
         public override string ToString()
         {
             var elseCondition = Else == null ? string.Empty : string.Concat("else ", Else);
-            return string.Concat("(", Condition, ")", Then, "\n", elseCondition);
+            return string.Concat("if (", Condition, ")\n", Then, '\n', elseCondition);
         }
     }
 }

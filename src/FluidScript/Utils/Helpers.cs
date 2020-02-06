@@ -2,7 +2,7 @@
 using FluidScript.Library;
 using System.Reflection;
 
-namespace FluidScript.Reflection.Emit
+namespace FluidScript.Utils
 {
     internal static class Helpers
     {
@@ -13,10 +13,6 @@ namespace FluidScript.Reflection.Emit
 
 
         #region Object
-        internal static readonly MethodInfo ObjectEquals_Two_Object;
-        internal static readonly MethodInfo Object_ToString;
-        internal static readonly MethodInfo StringConcat_Two_String;
-        internal static readonly MethodInfo StringConcat_Two_Object;
 
         internal static readonly ConstructorInfo Double_New;
         internal static readonly ConstructorInfo Float_New;
@@ -42,16 +38,14 @@ namespace FluidScript.Reflection.Emit
         #region Logical Convert
         internal static readonly MethodInfo LogicalAnd;
         internal static readonly MethodInfo LogicalOr;
+        //for null value
+        internal static readonly MethodInfo IsEquals;
         #endregion
 
         #endregion
 
         static Helpers()
         {
-            ObjectEquals_Two_Object = GetInstanceMethod(typeof(object), "Equals", typeof(object));
-            Object_ToString = GetInstanceMethod(typeof(object), "ToString");
-            StringConcat_Two_String = GetStaticMethod(typeof(string), "Concat", typeof(string), typeof(string));
-            StringConcat_Two_Object = GetStaticMethod(typeof(string), "Concat", typeof(object), typeof(object));
 
             Double_New = GetInstanceCtor(typeof(Double), typeof(double));
             Float_New = GetInstanceCtor(typeof(Float), typeof(float));
@@ -63,7 +57,7 @@ namespace FluidScript.Reflection.Emit
             String_New = GetInstanceCtor(typeof(String), typeof(string));
             Register_Attr_Ctor = GetInstanceCtor(typeof(Runtime.RegisterAttribute), typeof(string));
 
-            Integer_to_Int32 = GetImplicitConversion(typeof(Integer), "op_Implicit", typeof(int), typeof(Integer));
+            Integer_to_Int32 = GetImplicitConversion(typeof(Integer), TypeUtils.ImplicitConversionName, typeof(int), typeof(Integer));
 
 
             Bool_True = GetField(TypeUtils.BooleanType, nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
@@ -73,6 +67,7 @@ namespace FluidScript.Reflection.Emit
 
             LogicalAnd = GetStaticMethod(TypeUtils.BooleanType, "OpLogicalAnd", TypeUtils.BooleanType, TypeUtils.BooleanType);
             LogicalOr = GetStaticMethod(TypeUtils.BooleanType, "OpLogicalOr", TypeUtils.BooleanType, TypeUtils.BooleanType);
+            IsEquals = GetStaticMethod(TypeUtils.FSType, nameof(FSObject.IsEquals), TypeUtils.ObjectType, TypeUtils.ObjectType);
         }
 
         private static ConstructorInfo GetInstanceCtor(System.Type type, params System.Type[] parameterTypes)

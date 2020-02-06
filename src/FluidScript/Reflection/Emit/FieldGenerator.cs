@@ -47,8 +47,8 @@ namespace FluidScript.Reflection.Emit
 
         public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
         {
-            return TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
-                && TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
+            return Utils.TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
+                && Utils.TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
         }
 
         public virtual void SetCustomAttribute(Type type, System.Reflection.ConstructorInfo ctor, object[] parameters)
@@ -77,8 +77,8 @@ namespace FluidScript.Reflection.Emit
 
         public Type GetType(string typeName)
         {
-            if (TypeUtils.IsInbuiltType(typeName))
-                return TypeUtils.GetInbuiltType(typeName);
+            if (Utils.TypeUtils.IsInbuiltType(typeName))
+                return Utils.TypeUtils.GetInbuiltType(typeName);
             return TypeGenerator.Module.GetType(typeName);
         }
 

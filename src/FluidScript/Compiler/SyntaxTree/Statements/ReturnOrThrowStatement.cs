@@ -54,7 +54,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     if (dest != null && !dest.IsAssignableFrom(src))
                     {
                         //todo box value type
-                        if (Reflection.TypeUtils.TryImplicitConvert(src, dest, out System.Reflection.MethodInfo method))
+                        if (Utils.TypeUtils.TryImplicitConvert(src, dest, out System.Reflection.MethodInfo method))
                         {
                             generator.Call(method);
                         }

@@ -50,7 +50,11 @@ namespace FluidScript.Compiler.SyntaxTree
                 generator.Call(ImplicitCall);
             }
             generator.DefineLabelPosition(end);
+        }
 
+        public override string ToString()
+        {
+            return string.Concat(First, '?', Second, ':', Third);
         }
     }
 }

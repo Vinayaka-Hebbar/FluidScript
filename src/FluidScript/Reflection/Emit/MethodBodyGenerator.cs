@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;

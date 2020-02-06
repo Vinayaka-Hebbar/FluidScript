@@ -1,9 +1,9 @@
-﻿namespace FluidScript
+﻿namespace FluidScript.Dynamic
 {
-    public sealed class Function : FSObject
+    internal sealed class Function
     {
         public System.Delegate Reference { get; }
-        public object[] ParameterTypes { get; }
+        public System.Type[] ParameterTypes { get; }
 
         public Function(System.Type[] parameterTypes, System.Delegate reference)
         {
@@ -11,11 +11,10 @@
             Reference = reference;
         }
 
-        [Runtime.Register("invoke")]
         public object Invoke(params object[] args)
         {
             //Todo type convert
-            return Reference.DynamicInvoke(Reference.Target, args);
+            return Reference.DynamicInvoke(new object[] { args });
         }
     }
 }

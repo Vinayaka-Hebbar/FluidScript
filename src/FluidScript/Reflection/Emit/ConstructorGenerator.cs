@@ -48,8 +48,8 @@ namespace FluidScript.Reflection.Emit
 
         public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
         {
-            return TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
-                 && TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
+            return Utils.TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
+                 && Utils.TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
         }
 
         public override object[] GetCustomAttributes(bool inherit)
@@ -92,7 +92,7 @@ namespace FluidScript.Reflection.Emit
         {
             if (TypeGenerator != null)
                 return TypeGenerator.GetType(typeName);
-            return TypeUtils.GetType(typeName);
+            return Utils.TypeUtils.GetType(typeName);
         }
 
         public void Build()

@@ -35,38 +35,38 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 case sbyte _:
                     generator.LoadByte((sbyte)Value);
-                    generator.NewObject(Helpers.Byte_New);
+                    generator.NewObject(Utils.Helpers.Byte_New);
                     break;
                 case short _:
                     generator.LoadInt16((short)Value);
-                    generator.NewObject(Helpers.Short_New);
+                    generator.NewObject(Utils.Helpers.Short_New);
                     break;
                 case int _:
                     generator.LoadInt32((int)Value);
-                    generator.NewObject(Helpers.Integer_New);
+                    generator.NewObject(Utils.Helpers.Integer_New);
                     break;
                 case long _:
                     generator.LoadInt64((long)Value);
-                    generator.NewObject(Helpers.Long_New);
+                    generator.NewObject(Utils.Helpers.Long_New);
                     break;
                 case float _:
                     generator.LoadSingle((float)Value);
-                    generator.NewObject(Helpers.Float_New);
+                    generator.NewObject(Utils.Helpers.Float_New);
                     break;
                 case double _:
                     generator.LoadDouble((double)Value);
-                    generator.NewObject(Helpers.Double_New);
+                    generator.NewObject(Utils.Helpers.Double_New);
                     break;
                 case bool value:
-                    generator.LoadField(value ? Helpers.Bool_True : Helpers.Bool_False);
+                    generator.LoadField(value ? Utils.Helpers.Bool_True : Utils.Helpers.Bool_False);
                     break;
                 case char _:
                     generator.LoadChar((char)Value);
-                    generator.NewObject(Helpers.Char_New);
+                    generator.NewObject(Utils.Helpers.Char_New);
                     break;
                 case string _:
                     generator.LoadString(Value.ToString());
-                    generator.NewObject(Helpers.String_New);
+                    generator.NewObject(Utils.Helpers.String_New);
                     break;
                 case null:
                     generator.LoadNull();

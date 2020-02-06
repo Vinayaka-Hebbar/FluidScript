@@ -63,7 +63,7 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 var pb = generator.GetBuilder().DefineProperty(name, System.Reflection.PropertyAttributes.None, type, null);
                 property = new PropertyGenerator(generator, pb);
-                property.SetCustomAttribute(typeof(Runtime.RegisterAttribute), Helpers.Register_Attr_Ctor, new[] { Name });
+                property.SetCustomAttribute(typeof(Runtime.RegisterAttribute), Utils.Helpers.Register_Attr_Ctor, new[] { Name });
                 generator.Add(property);
             }
 
@@ -90,7 +90,7 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 Parameters = parameters
             };
-            methodGen.SetCustomAttribute(typeof(Runtime.RegisterAttribute), Helpers.Register_Attr_Ctor, new object[] { Name });
+            methodGen.SetCustomAttribute(typeof(Runtime.RegisterAttribute), Utils.Helpers.Register_Attr_Ctor, new object[] { Name });
             generator.Add(methodGen);
         }
 
