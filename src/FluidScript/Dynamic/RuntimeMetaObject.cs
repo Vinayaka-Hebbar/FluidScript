@@ -1,8 +1,4 @@
-﻿
-
-using System.Linq;
-
-namespace FluidScript.Dynamic
+﻿namespace FluidScript.Dynamic
 {
     public sealed class RuntimeMetaObject
     {
@@ -17,7 +13,7 @@ namespace FluidScript.Dynamic
         {
             if (m_value.TryGetMember(name, out LocalVariable variable))
             {
-                var value = m_value.GetValue(variable);
+                var value = m_value.Data[variable.Index];
                 return new MetaResult(value, variable.Type);
             }
             else
@@ -28,61 +24,65 @@ namespace FluidScript.Dynamic
 
         internal object BindSetMember(string name, System.Type type, object value)
         {
+            // handle null type
             if (m_value.TryGetMember(name, out LocalVariable variable))
             {
-                if (Utils.TypeUtils.AreReferenceAssignable(variable.Type, type))
+                System.Type dest = variable.Type;
+                if (type == null)
                 {
-                    m_value.Modify(variable, value);
+                    if (Utils.TypeUtils.IsNullAssignable(dest))
+                        m_value.Update(variable, value);
+                    else
+                        throw new System.Exception(string.Concat("Can't assign null value to type ", dest));
                 }
-                else if (Utils.TypeUtils.TryImplicitConvert(type, variable.Type, out System.Reflection.MethodInfo implConvert))
+                else if (Utils.TypeUtils.AreReferenceAssignable(dest, type))
+                {
+                    m_value.Update(variable, value);
+                }
+                else if (Utils.TypeUtils.TryImplicitConvert(type, dest, out System.Reflection.MethodInfo implConvert))
                 {
                     value = implConvert.Invoke(null, new object[1] { value });
-                    m_value.Modify(variable, value);
+                    m_value.Update(variable, value);
                 }
                 else
                 {
-                    throw new System.InvalidCastException(string.Concat(type, " to ", variable.Type));
+                    throw new System.InvalidCastException(string.Concat(type, " to ", dest));
                 }
             }
             else
             {
                 // value not created
-                m_value.Add(name, type, value);
+                m_value.Insert(name, type, value, true);
             }
             return value;
         }
 
         internal object BindInvokeMemeber(string name, object[] args)
         {
-            var variables = m_value.FindValues(name, (item) => typeof(System.Delegate).IsAssignableFrom(item.Type)).ToArray();
-            if (variables.Length > 0)
+            object obj = null;
+            if (m_value.TryGetMember(name, out LocalVariable variable))
             {
-                object obj = null;
                 var bindings = new Reflection.Emit.ParamBindList();
                 System.Reflection.MethodInfo method = null;
-                for (int index = 0; index < variables.Length; index++)
+                var refer = (System.Delegate)m_value.Data[variable.Index];
+                System.Reflection.MethodInfo m = refer.Method;
+                // only static method can allowed
+                if (refer.Target is Function function)
                 {
-                    var refer = (System.Delegate)variables[index];
-                    System.Reflection.MethodInfo m = refer.Method;
-                    // only static method can allowed
-                    if (refer.Target is System.Reflection.MethodInfo)
+                    if (Utils.DynamicUtils.MatchesTypes(function.ParameterTypes, args, ref bindings))
                     {
-                        m = (System.Reflection.MethodInfo)refer.Target;
-                        if (Utils.TypeUtils.MatchesTypes(m, args, ref bindings))
-                        {
-                            method = m;
-                            break;
-                        }
+                        args = new object[] { args };
+                        obj = function;
+                        method = m;
                     }
-                    else if (refer.Target is Function function)
+                }
+                else
+                {
+                    m = refer.Method;
+                    if (Utils.DynamicUtils.MatchesTypes(m, args, ref bindings))
                     {
-                        if (Utils.TypeUtils.MatchesTypes(function.ParameterTypes, args, ref bindings))
-                        {
-                            args = new object[] { args };
-                            obj = function;
-                            method = m;
-                            break;
-                        }
+                        method = m;
+                        obj = refer.Target;
                     }
                 }
 
@@ -100,7 +100,8 @@ namespace FluidScript.Dynamic
                 }
                 return method.Invoke(obj, args);
             }
-            return null;
+            return obj;
+
         }
 
         internal System.Collections.Generic.IEnumerable<string> Keys

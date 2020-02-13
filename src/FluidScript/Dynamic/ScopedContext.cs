@@ -16,7 +16,7 @@ namespace FluidScript.Dynamic
         {
             _context = context;
             previous = context.Current;
-            current = _context.Current = new DynamicObject(_context.Class, previous);
+            current = _context.Current = new DynamicObject(_context.Data);
         }
 
         public void Dispose()

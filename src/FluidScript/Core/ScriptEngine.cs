@@ -45,6 +45,21 @@ namespace FluidScript
         }
 
         /// <summary>
+        /// Creates <see cref="Compiler.SyntaxTree.Expression"/> for <paramref name="text"/>
+        /// </summary>
+        /// <param name="text">Text to parse</param>
+        /// <returns>Parse <see cref="Compiler.SyntaxTree.Expression"/></returns>
+        public Compiler.SyntaxTree.Expression GetExpression(string text)
+        {
+            using (SyntaxVisitor visitor = new SyntaxVisitor(new StringSource(text), Settings))
+            {
+                if (visitor.MoveNext())
+                    return visitor.VisitExpression();
+            }
+            return Compiler.SyntaxTree.Expression.Empty;
+        }
+
+        /// <summary>
         /// Creates <see cref="Compiler.SyntaxTree.Statement"/> for <paramref name="text"/>
         /// </summary>
         /// <param name="text">Text to parse</param>

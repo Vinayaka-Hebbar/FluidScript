@@ -163,6 +163,7 @@
             }
             set
             {
+                //fault
                 Add(value);
             }
         }
@@ -486,11 +487,21 @@
             return new Enumerator(this);
         }
 
-        [Runtime.Register("enumerator")]
         IEnumerator IEnumerable<T>.Enumerator()
         {
             return new Enumerator(this);
         }
+
+        #region Runtime
+        [Runtime.Register("forEach")]
+        public void ForEach(Func iterate)
+        {
+            for(int i=0;i< _size;i++)
+            {
+                iterate(new object[] { _items[i] });
+            }
+        }
+        #endregion
 
         /// <summary>
         /// Enumerates the elements of a <see cref="List{T}"/>.

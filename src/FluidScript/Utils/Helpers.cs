@@ -40,6 +40,17 @@ namespace FluidScript.Utils
         internal static readonly MethodInfo LogicalOr;
         //for null value
         internal static readonly MethodInfo IsEquals;
+
+        private static MethodInfo toBoolean;
+        public static MethodInfo ToBoolean
+        {
+            get
+            {
+                if (toBoolean == null)
+                    toBoolean = GetStaticMethod(typeof(FSConvert), nameof(FSConvert.ToBoolean), TypeUtils.ObjectType);
+                return toBoolean;
+            }
+        }
         #endregion
 
         #endregion

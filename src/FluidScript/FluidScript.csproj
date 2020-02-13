@@ -3,7 +3,7 @@
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0</TargetFrameworks>
     <DefineConstants>TRACE;</DefineConstants>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.9-mr2</Version>
+    <Version>1.0.11-mr1</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -13,11 +13,16 @@
     <PackageTags>script</PackageTags>
     <AssemblyName>FluidScript</AssemblyName>
     <PackageReleaseNotes>Initial Release of FluidScript</PackageReleaseNotes>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
   </PropertyGroup>
+
+
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript\FluidScript.xml</DocumentationFile>
@@ -42,19 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Dynamic\Local.cs" />
-    <Compile Remove="RuntimeType.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.6-beta" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.7-beta" />
   </ItemGroup>
 
 </Project>

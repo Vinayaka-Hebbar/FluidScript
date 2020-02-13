@@ -1,27 +1,23 @@
-﻿namespace FluidScript.Dynamic
+﻿
+namespace FluidScript.Dynamic
 {
-    public struct LocalVariable : IFSObject
+    public struct LocalVariable : IFSObject, System.IEquatable<LocalVariable>
     {
-        /// <summary>
-        /// calculated value
-        /// </summary>
-        private const int HashCodeInit = 2063038313;
-        private const int HashMultiplier = -1521134295;
 
-        internal static readonly LocalVariable Empty = new LocalVariable(string.Empty, -1, null);
+        internal static readonly LocalVariable Empty = new LocalVariable(string.Empty, null);
 
         internal readonly string Name;
-        internal readonly int Index;
+        internal int Index;
+        internal int Next;
         internal readonly System.Type Type;
-        internal readonly int HashValue;
+        internal readonly int HashToken;
 
-
-        public LocalVariable(string name, int index, System.Type type)
+        internal LocalVariable(string name, System.Type type)
         {
             Name = name;
-            Index = index;
             Type = type;
-            HashValue = ((HashCodeInit + name.GetHashCode()) * HashMultiplier) + index;
+            HashToken = name.GetHashCode() & 0x7FFFFFFF;
+            Index = Next = -1;
         }
 
         public override bool Equals(object obj)
@@ -42,13 +38,13 @@
 
         public override int GetHashCode()
         {
-            return HashValue;
+            return HashToken;
         }
 
         [Runtime.Register("hashCode")]
         public Integer HashCode()
         {
-            return new Integer(HashValue);
+            return new Integer(HashToken);
         }
 
         public override string ToString() => string.Concat(Name, ":", Type.Name);
@@ -63,6 +59,11 @@
         public String __ToString()
         {
             return new String(string.Concat(Name, ":", Type.Name));
+        }
+
+        public bool Equals(LocalVariable other)
+        {
+            return Name == other.Name && other.Index == Index;
         }
     }
 }

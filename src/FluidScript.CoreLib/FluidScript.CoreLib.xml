@@ -244,13 +244,6 @@
             Not Equal Implementation
             </summary>
         </member>
-        <member name="M:FluidScript.FSObject.Convert(System.Object)">
-            <summary>
-            convert cs objects to fluid object
-            </summary>
-            <param name="obj"></param>
-            <returns></returns>
-        </member>
         <member name="T:FluidScript.IFSObject">
             <summary>
             Supports all classes in the FluidScipt

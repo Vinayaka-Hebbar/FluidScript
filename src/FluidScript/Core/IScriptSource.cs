@@ -25,6 +25,9 @@ namespace FluidScript.Library
 
         void SeekTo(long pos);
 
+        /// <summary>
+        /// revert to pos-1
+        /// </summary>
         void FallBack();
     }
 }

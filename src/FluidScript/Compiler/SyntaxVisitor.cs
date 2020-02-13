@@ -1091,41 +1091,45 @@ namespace FluidScript.Compiler
         public Expression VisitIdentifier()
         {
             var name = GetName();
-            if (!Keywords.TryGetIdentifier(name, out IdentifierType type))
-                return new NameExpression(name, ExpressionType.Identifier);
-            switch (type)
+            if (Keywords.TryGetIdentifier(name, out IdentifierType type))
             {
-                case IdentifierType.New:
-                    MoveNext();
-                    Expression[] arguments;
-                    if (TokenType == TokenType.LeftParenthesis)
-                    {
-                        arguments = VisitArgumentList(TokenType.Comma, TokenType.LeftParenthesis).ToArray();
-                        CheckSyntaxExpected(TokenType.RightParenthesis);
-                    }
-                    else
-                    {
-                        arguments = new Expression[0];
-                    }
-                    return new NewExpression(name, arguments);
-                case IdentifierType.True:
-                    return new LiteralExpression(true);
-                case IdentifierType.False:
-                    return new LiteralExpression(false);
-                case IdentifierType.Null:
-                    return Expression.Null;
+                switch (type)
+                {
+                    case IdentifierType.New:
+                        MoveNext();
+                        Expression[] arguments;
+                        if (TokenType == TokenType.LeftParenthesis)
+                        {
+                            arguments = VisitArgumentList(TokenType.Comma, TokenType.LeftParenthesis).ToArray();
+                            CheckSyntaxExpected(TokenType.RightParenthesis);
+                        }
+                        else
+                        {
+                            arguments = new Expression[0];
+                        }
+                        return new NewExpression(name, arguments);
+                    case IdentifierType.True:
+                        return new LiteralExpression(true);
+                    case IdentifierType.False:
+                        return new LiteralExpression(false);
+                    case IdentifierType.Null:
+                        return Expression.Null;
 #if Runtime
                 case IdentifierType.Undefined:
                     return Expression.Undefined;
 #endif
-                case IdentifierType.Function:
-                    // ignore func
-                    MoveNext();
-                    return VisitLamdaExpression();
-                case IdentifierType.This:
-                    return new ThisExpression();
+                    case IdentifierType.Function:
+                        // ignore func
+                        MoveNext();
+                        var lamda = VisitLamdaExpression();
+                        //to make last char not semicolon ex:func()=>1;
+                        Source.FallBack();
+                        return lamda;
+                    case IdentifierType.This:
+                        return new ThisExpression();
+                }
             }
-            return Expression.Empty;
+            return new NameExpression(name, ExpressionType.Identifier);
         }
 
 

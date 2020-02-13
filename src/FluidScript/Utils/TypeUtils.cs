@@ -19,6 +19,7 @@ namespace FluidScript.Utils
         internal static readonly System.Type BooleanType = typeof(Boolean);
         internal static readonly System.Type FSType = typeof(FSObject);
         internal static readonly System.Type ObjectType = typeof(object);
+        private const string ConvertibleType = "System.IConvertible";
         #endregion
 
         private static readonly IDictionary<string, Primitive> InbuiltNames;
@@ -91,7 +92,7 @@ namespace FluidScript.Utils
         }
 
         #region BindToMethod
-        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out Reflection.Emit.ParamBindList bindings)
+        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out ParamBindList bindings)
         {
             bindings = new Reflection.Emit.ParamBindList();
             foreach (var m in members)
@@ -105,21 +106,7 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Collections.IList agrs, out Reflection.Emit.ParamBindList bindings)
-        {
-            bindings = new ParamBindList();
-            foreach (var m in members)
-            {
-                if (m.MemberType == MemberTypes.Method)
-                {
-                    if (MatchesTypes((MethodInfo)m, agrs, ref bindings))
-                        return (MethodInfo)m;
-                }
-            }
-            return null;
-        }
-
-        internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out Reflection.Emit.ParamBindList bindings)
+        internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out ParamBindList bindings)
         {
             bindings = new ParamBindList();
             foreach (var m in methods)
@@ -130,19 +117,9 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static MethodInfo BindToMethod(MethodInfo[] methods, object[] args, out Reflection.Emit.ParamBindList bindings)
-        {
-            bindings = new ParamBindList();
-            foreach (var m in methods)
-            {
-                if (MatchesTypes(m, args, ref bindings))
-                    return m;
-            }
-            return null;
-        }
         #endregion
 
-        internal static MethodInfo GetOperatorOverload(string name, out Reflection.Emit.ParamBindList bindings, params System.Type[] types)
+        internal static MethodInfo GetOperatorOverload(string name, out ParamBindList bindings, params System.Type[] types)
         {
             bindings = new ParamBindList();
             foreach (var type in types)
@@ -157,82 +134,14 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static bool MatchesTypes(MethodInfo method, System.Collections.IList args, ref Reflection.Emit.ParamBindList bindings)
-        {
-            var paramters = method.GetParameters();
-            bindings.Clear();
-            // arg length
-            var length = args.Count;
-            for (int i = 0; i < paramters.Length; i++)
-            {
-                var param = paramters[i];
-                if (param.IsDefined(typeof(System.ParamArrayAttribute), false))
-                {
-                    bindings.Add(new ParamArrayBind(i, param.ParameterType));
-                    //No further check required
-                    break;
-                }
-                // matches current index
-                if (i >= length)
-                    return false;
-                var dest = param.ParameterType;
-                var arg = args[i];
-                if (arg == null)
-                {
-                    //for value type if nullable
-                    if (dest.IsValueType && !IsNullableType(dest))
-                        return false;
-                    else
-                        continue;
-                }
-                var src = arg.GetType();
-                if (!AreReferenceAssignable(dest, src))
-                {
-                    if (TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
-                        return false;
-                    bindings.Add(new ParamConvert(i, opImplict));
-                }
-            }
-            return true;
-        }
-
-        internal static bool MatchesTypes(System.Type[] types, System.Collections.IList args, ref ParamBindList bindings)
-        {
-            bindings.Clear();
-            // arg length
-            var length = args.Count;
-            for (int i = 0; i < types.Length; i++)
-            {
-                // matches current index
-                if (i >= length)
-                    return false;
-                var dest = types[i];
-                var arg = args[i];
-                if (arg == null)
-                {
-                    //for value type if nullable
-                    if (dest.IsValueType && !IsNullableType(dest))
-                        return false;
-                    else
-                        continue;
-                }
-                var src = arg.GetType();
-                if (!AreReferenceAssignable(dest, src))
-                {
-                    if (TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
-                        return false;
-                    bindings.Add(new ParamConvert(i, opImplict));
-                }
-            }
-            return true;
-        }
-
         internal static bool MatchesTypes(MethodInfo method, System.Type[] types, ref ParamBindList bindings)
         {
             var paramters = method.GetParameters();
+            var length = types.Length;
+            if (paramters.Length < length)
+                return false;
             // clear previous bindings
             bindings.Clear();
-            var length = types.Length;
             for (int i = 0; i < paramters.Length; i++)
             {
                 var param = paramters[i];
@@ -305,6 +214,11 @@ namespace FluidScript.Utils
             return false;
         }
 
+        internal static bool IsNullAssignable(System.Type type)
+        {
+            return type.IsValueType == false || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>));
+        }
+
         internal static bool IsNullableType(System.Type type)
         {
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>);
@@ -351,6 +265,10 @@ namespace FluidScript.Utils
             if (type.IsPrimitive && type == typeof(bool))
             {
                 return BooleanType.GetMethod(ImplicitConversionName, PublicStatic, null, new System.Type[1] { type }, null);
+            }
+            else if (type.GetInterface(ConvertibleType, false) != null)
+            {
+                return Helpers.ToBoolean;
             }
             var methods = type.GetMember(ImplicitConversionName, MemberTypes.Method, PublicStatic);
             foreach (MethodInfo method in methods)
