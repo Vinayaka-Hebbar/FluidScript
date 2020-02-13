@@ -21,12 +21,20 @@ namespace FluidScript.Compiler
 
         object IExpressionVisitor<object>.VisitAnonymousFunction(AnonymousFunctionExpression node)
         {
+            // todo compile this
             throw new NotImplementedException();
         }
 
         object IExpressionVisitor<object>.VisitAnonymousObject(AnonymousObjectExpression node)
         {
-            throw new NotImplementedException();
+            var objClass = new Dynamic.DynamicData(0);
+            var obj = new Dynamic.DynamicObject(objClass);
+            foreach (var item in node.Members)
+            {
+                var value = item.Expression.Accept(this);
+                obj.Insert(item.Name, value == null ? TypeUtils.ObjectType : value.GetType(), value, true);
+            }
+            return obj;
         }
 
         object IExpressionVisitor<object>.VisitArrayLiteral(ArrayLiteralExpression node)
@@ -252,8 +260,6 @@ namespace FluidScript.Compiler
             return method;
         }
 
-
-
         object IExpressionVisitor<object>.VisitCall(InvocationExpression node)
         {
             var target = node.Target;
@@ -458,7 +464,7 @@ namespace FluidScript.Compiler
                 {
                     var property = (System.Reflection.PropertyInfo)member;
                     node.Type = property.PropertyType;
-                    value = (IFSObject)property.GetValue(instance, new object[0]);
+                    value = property.GetValue(instance, new object[0]);
                 }
             }
             return value;
@@ -471,12 +477,35 @@ namespace FluidScript.Compiler
 
         object IExpressionVisitor<object>.VisitNullPropegator(NullPropegatorExpression node)
         {
-            throw new NotImplementedException();
+            object value = node.Left.Accept(this);
+            if (value is null)
+            {
+                value = node.Right.Accept(this);
+            }
+            node.Type = node.Left.Type;
+            return value;
         }
 
         object IExpressionVisitor<object>.VisitTernary(TernaryExpression node)
         {
-            throw new NotImplementedException();
+            var condition = node.First.Accept(this);
+            bool result = true;
+            switch (condition)
+            {
+                case Boolean b:
+                    result = b;
+                    break;
+                case IConvertible _:
+                    result = Convert.ToBoolean(condition);
+                    break;
+                case null:
+                    result = false;
+                    break;
+            }
+
+            if (result)
+                return node.Second.Accept(this);
+            return node.Third.Accept(this);
         }
 
         object IExpressionVisitor<object>.VisitThis(ThisExpression node)
@@ -486,7 +515,82 @@ namespace FluidScript.Compiler
 
         object IExpressionVisitor<object>.VisitUnary(UnaryExpression node)
         {
-            throw new NotImplementedException();
+            var value = node.Operand.Accept(this);
+            string name = null;
+            //modified a++; updated new value
+            bool modified = false, updated = true;
+            switch (node.NodeType)
+            {
+                case ExpressionType.Parenthesized:
+                    return value;
+                case ExpressionType.PostfixPlusPlus:
+                    name = "op_Increment";
+                    modified = true;
+                    updated = false;
+                    break;
+                case ExpressionType.PrefixPlusPlus:
+                    name = "op_Increment";
+                    modified = true;
+                    break;
+                case ExpressionType.PostfixMinusMinus:
+                    name = "op_Decrement";
+                    modified = true;
+                    updated = false;
+                    break;
+                case ExpressionType.PrefixMinusMinus:
+                    name = "op_Decrement";
+                    modified = true;
+                    break;
+                case ExpressionType.Bang:
+                    name = "op_LogicalNot";
+                    // here value is null it is as not defined
+                    if (value is null)
+                        return Boolean.True;
+                    break;
+                case ExpressionType.Plus:
+                    name = "op_UnaryPlus";
+                    break;
+                case ExpressionType.Minus:
+                    name = "op_UnaryNegation";
+                    break;
+                case ExpressionType.Circumflex:
+                    name = "op_ExclusiveOr";
+                    break;
+                case ExpressionType.Or:
+                    name = "op_BitwiseOr";
+                    break;
+                case ExpressionType.And:
+                    name = "op_BitwiseAnd";
+                    break;
+            }
+            if (value is null)
+                throw new Exception(string.Concat("Null value present at execution of ", node));
+            Type type = value.GetType();
+            // not primitive supported it should be wrapped
+            if (type.IsPrimitive)
+            {
+                value = FSConvert.ToAny(value);
+                type = value.GetType();
+            }
+            //todo conversion
+            var method = TypeUtils.GetOperatorOverload(name, out Reflection.Emit.ParamBindList bindings, type);
+            if (method == null)
+                throw new Exception(string.Concat("Invalid operation at ", node));
+            var args = new object[1] { value };
+            foreach (var binding in bindings)
+            {
+                if (binding.BindType == Reflection.Emit.ParamBind.ParamBindType.Convert)
+                    value = binding.Invoke(args);
+                // no param array
+            }
+            object obj = method.Invoke(null, args);
+            node.Type = method.ReturnType;
+            if (modified)
+            {
+                var exp = new AssignmentExpression(node.Operand, new LiteralExpression(obj));
+                exp.Accept(this);
+            }
+            return updated ? obj : value;
         }
     }
 }

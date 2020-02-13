@@ -623,13 +623,13 @@ namespace FluidScript.Dynamic
                         if (field.FieldType == null)
                             throw new Exception(string.Concat("Use of undeclared field ", field));
                         node.Type = field.FieldType;
-                        value = (IFSObject)field.GetValue(instance);
+                        value = field.GetValue(instance);
                     }
                     if (member.MemberType == System.Reflection.MemberTypes.Property)
                     {
                         var property = (System.Reflection.PropertyInfo)member;
                         node.Type = property.PropertyType;
-                        value = (IFSObject)property.GetValue(instance, new object[0]);
+                        value = property.GetValue(instance, new object[0]);
                     }
                 }
             }
