@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -15,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            Type = generator.TypeGenerator;
+            Type = generator.Method.DeclaringType;
             generator.LoadArgument(0);
         }
 

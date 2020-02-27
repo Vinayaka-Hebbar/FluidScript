@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -6,11 +6,11 @@ namespace FluidScript.Compiler.SyntaxTree
     public sealed class InvocationExpression : Expression
     {
         public readonly Expression Target;
-        public readonly Expression[] Arguments;
+        public readonly NodeList<Expression> Arguments;
 
         public System.Reflection.MethodInfo Method { get; internal set; }
 
-        public InvocationExpression(Expression target, Expression[] arguments) : base(ExpressionType.Invocation)
+        public InvocationExpression(Expression target, NodeList<Expression> arguments) : base(ExpressionType.Invocation)
         {
             Target = target;
             Arguments = arguments;

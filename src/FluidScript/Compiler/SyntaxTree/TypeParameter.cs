@@ -25,16 +25,11 @@
             return string.Concat(Name, ":", Type == null ? "any" : Type.ToString());
         }
 
-        public Reflection.ParameterInfo GetParameterInfo()
-        {
-            return new Reflection.ParameterInfo(Name, Type.GetTypeInfo(), Index, IsVar);
-        }
-
-        public Reflection.Emit.ParameterInfo GetParameterInfo(Reflection.Emit.ITypeProvider provider)
+        public Compiler.Emit.ParameterInfo GetParameterInfo(Compiler.ITypeProvider provider)
         {
             if (Type == null)
-                return new Reflection.Emit.ParameterInfo(Name, Index, Utils.TypeUtils.ObjectType, IsVar);
-            return new Reflection.Emit.ParameterInfo(Name, Index, Type.GetType(provider), IsVar);
+                return new Compiler.Emit.ParameterInfo(Name, Index, TypeProvider.ObjectType, IsVar);
+            return new Compiler.Emit.ParameterInfo(Name, Index, Type.GetType(provider), IsVar);
 
         }
     }

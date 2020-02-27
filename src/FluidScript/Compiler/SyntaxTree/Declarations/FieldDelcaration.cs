@@ -1,33 +1,31 @@
-﻿using FluidScript.Reflection.Emit;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public sealed class FieldDelcaration : MemberDeclaration
     {
-        public readonly VariableDeclarationExpression[] Declarations;
+        public readonly NodeList<VariableDeclarationExpression> Declarations;
 
-        public FieldDelcaration(VariableDeclarationExpression[] declarations)
+        public FieldDelcaration(NodeList<VariableDeclarationExpression> declarations)
         {
             Declarations = declarations;
         }
 
-        public override void Create(TypeGenerator generator)
+        public override void Create(Generators.TypeGenerator generator)
         {
             System.Reflection.FieldAttributes attrs = GetAttribute();
             foreach (var field in Declarations)
             {
-                generator.Add(new FieldGenerator(generator, attrs, field));
+                generator.Add(new Generators.FieldGenerator(generator, attrs, field));
             }
         }
 
         private System.Reflection.FieldAttributes GetAttribute()
         {
             System.Reflection.FieldAttributes attributes = System.Reflection.FieldAttributes.Public;
-            if ((Modifiers & Reflection.Modifiers.Private) == Reflection.Modifiers.Private)
+            if ((Modifiers & Modifiers.Private) == Modifiers.Private)
                 attributes = System.Reflection.FieldAttributes.Private;
-            if ((Modifiers & Reflection.Modifiers.ReadOnly) == Reflection.Modifiers.ReadOnly)
+            if ((Modifiers & Modifiers.ReadOnly) == Modifiers.ReadOnly)
                 attributes |= System.Reflection.FieldAttributes.InitOnly;
-            if ((Modifiers & Reflection.Modifiers.Static) == Reflection.Modifiers.Static)
+            if ((Modifiers & Modifiers.Static) == Modifiers.Static)
                 attributes |= System.Reflection.FieldAttributes.Static;
             //todo invalid modifier handle
             return attributes;

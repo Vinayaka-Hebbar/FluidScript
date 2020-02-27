@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 using System.Collections.Generic;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -10,7 +10,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public System.Reflection.MethodInfo Method { get; internal set; }
 
-        public ParamBindList Bindings { get; internal set; }
+        public Binders.ArgumentBinderList Bindings { get; internal set; }
 
         public BinaryExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
         {
@@ -27,19 +27,17 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            var leftType = Left.Type;
-            var rightType = Right.Type;
             //todo conversion 
             if (Method == null)
                 throw new System.NullReferenceException(nameof(Method));
             var bindings = Bindings;
             Left.GenerateCode(generator);
-            var first = bindings[0];
-            if (first.BindType != ParamBind.ParamBindType.None)
+            var first = bindings.BindingAt(0);
+            if (first != null)
                 first.Generate(generator);
             Right.GenerateCode(generator);
-            var second = bindings[1];
-            if (second.BindType != ParamBind.ParamBindType.None)
+            var second = bindings.BindingAt(1);
+            if (second != null)
                 second.Generate(generator);
             generator.Call(Method);
         }

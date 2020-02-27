@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -47,17 +47,28 @@ namespace FluidScript.Compiler.SyntaxTree
                         }
                     }
                     var dest = generator.Method.ReturnType;
+                    if (dest == null)
+                        throw new System.NullReferenceException(nameof(System.Reflection.MethodInfo.ReturnType));
                     //todo variable name not used
                     if (generator.ReturnVariable == null)
                         generator.ReturnVariable = generator.DeclareVariable(dest);
                     System.Type src = epression.Type;
-                    if (dest != null && !dest.IsAssignableFrom(src))
+                    if (!dest.IsAssignableFrom(src))
                     {
                         //todo box value type
                         if (Utils.TypeUtils.TryImplicitConvert(src, dest, out System.Reflection.MethodInfo method))
                         {
                             generator.Call(method);
+                            src = method.ReturnType;
                         }
+                        else
+                        {
+                            throw new System.Exception(string.Concat("can't cast ", src, " to ", dest));
+                        }
+                    }
+                    if (src.IsValueType && dest.IsValueType == false)
+                    {
+                        generator.Box(src);
                     }
                     generator.StoreVariable(generator.ReturnVariable);
 

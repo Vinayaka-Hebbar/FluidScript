@@ -43,7 +43,7 @@
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
         {
             // Generate code for the start of the statement.
             var statementLocals = new StatementLocals();
@@ -52,7 +52,7 @@
             // Generate code for condition convert to System.Boolean
             condition.GenerateCode(generator);
             if (condition.Type == typeof(Boolean))
-                generator.CallStatic(Utils.Helpers.Booolean_To_Bool);
+                generator.CallStatic(Utils.ReflectionHelpers.Booolean_To_Bool);
             // We will need a label at the end of the if statement.
             var endOfEverything = generator.CreateLabel();
             if (Else == null)

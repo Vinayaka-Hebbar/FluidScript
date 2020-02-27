@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 using System;
 using System.Linq;
 
@@ -12,7 +12,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// List of array items
         /// </summary>
-        public readonly Expression[] Expressions;
+        public readonly NodeList<Expression> Expressions;
 
         /// <summary>
         /// Array Size
@@ -28,7 +28,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Initializes new <see cref="ArrayLiteralExpression"/>
         /// </summary>
-        public ArrayLiteralExpression(Expression[] expressions, TypeSyntax type, Expression size) : base(ExpressionType.Array)
+        public ArrayLiteralExpression(NodeList<Expression> expressions, TypeSyntax type, Expression size) : base(ExpressionType.Array)
         {
             Expressions = expressions;
             ArrayType = type;
@@ -47,7 +47,7 @@ namespace FluidScript.Compiler.SyntaxTree
             if (Size != null)
             {
                 Size.GenerateCode(generator);
-                generator.CallStatic(Utils.Helpers.Integer_to_Int32);
+                generator.CallStatic(Utils.ReflectionHelpers.Integer_to_Int32);
             }
             else
                 generator.LoadInt32(Expressions.Length);

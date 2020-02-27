@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -7,11 +7,11 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly string Name;
         public readonly TypeSyntax BaseType;
-        public readonly TypeSyntax[] Implements;
+        public readonly NodeList<TypeSyntax> Implements;
 
-        public readonly MemberDeclaration[] Members;
+        public readonly NodeList<MemberDeclaration> Members;
 
-        public TypeDeclaration(string name, TypeSyntax baseType, TypeSyntax[] implements, MemberDeclaration[] members)
+        public TypeDeclaration(string name, TypeSyntax baseType, NodeList<TypeSyntax> implements, NodeList<MemberDeclaration> members)
         {
             Name = name;
             BaseType = baseType;
@@ -25,19 +25,19 @@ namespace FluidScript.Compiler.SyntaxTree
             set;
         }
 
-        public override void Create(TypeGenerator generator)
+        public override void Create(Generators.TypeGenerator generator)
         {
             throw new System.NotImplementedException();
         }
 
-        public System.Type Generate(ReflectionModule module)
+        public System.Type Generate(AssemblyGen module)
         {
             System.Type baseType;
             if (BaseType != null)
                 baseType = module.GetType(BaseType.ToString());
             else
                 baseType = typeof(FSObject);
-            var generator = module.DefineType(Name, System.Reflection.TypeAttributes.Public, baseType);
+            var generator = module.DefineType(Name, baseType, System.Reflection.TypeAttributes.Public);
             generator.Source = Source;
             foreach (var member in Members)
             {

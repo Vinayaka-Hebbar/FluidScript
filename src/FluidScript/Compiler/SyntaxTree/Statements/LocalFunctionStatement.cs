@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnType.ToString());
         }
 
-        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
         {
             Body.GenerateCode(generator);
             if (generator.ReturnTarget != null)

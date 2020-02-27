@@ -16,7 +16,7 @@
     /// information about covariance and contravariance, see Covariance and Contravariance
     /// in Generics.
     /// </typeparam>
-    public interface IEnumerator<T> : IFSObject, System.Collections.Generic.IEnumerator<T> where T : IFSObject
+    public interface IEnumerator<T> : IFSObject, System.Collections.Generic.IEnumerator<T>, IEnumerator
     {
     }
 }

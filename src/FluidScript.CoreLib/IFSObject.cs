@@ -20,12 +20,12 @@
         /// false.
         /// </returns>
         [Runtime.Register("equals")]
-        Boolean __Equals(IFSObject obj);
+        Boolean Equals(IFSObject obj);
         /// <summary>
         /// Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>A hash code for the current <see cref="IFSObject"/>.</returns>
         [Runtime.Register("hashCode")]
-        Integer HashCode();
+        Integer __HashCode();
     }
 }

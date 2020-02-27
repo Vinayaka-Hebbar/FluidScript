@@ -10,6 +10,12 @@ namespace FluidScript
             return Convert.ToBoolean(value) ? Boolean.True : Boolean.False;
         }
 
+        [Runtime.Register("toString")]
+        public static String ToString(object value)
+        {
+            return value == null ? new String(string.Empty) : new String(value.ToString());
+        }
+
         [Runtime.Register("toAny")]
         public static object ToAny(object value)
         {

@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,12 +12,12 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// List of statements
         /// </summary>
-        public readonly Statement[] Statements;
+        public readonly NodeList<Statement> Statements;
 
         /// <summary>
         /// Initializes new <see cref="BlockStatement"/>
         /// </summary>
-        public BlockStatement(Statement[] statements, string[] labels) : base(labels, StatementType.Block)
+        public BlockStatement(NodeList<Statement> statements, string[] labels) : base(labels, StatementType.Block)
         {
             Statements = statements;
         }

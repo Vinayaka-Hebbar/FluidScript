@@ -20,7 +20,7 @@
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
         {
             // Generate code for the start of the statement.
             var statementLocals = new StatementLocals();

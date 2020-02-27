@@ -8,7 +8,7 @@ namespace FluidScript.Compiler.SyntaxTree
     /// </summary>
     public abstract class Node
     {
-        static readonly IEnumerable<Node> emptyNodes = Enumerable.Empty<Node>();
+        static readonly IEnumerable<Node> EmptyNodes = Enumerable.Empty<Node>();
 
         /// <summary>
         /// Creates new <see cref="Node"/>
@@ -18,7 +18,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Child node iterator
         /// </summary>
-        public virtual IEnumerable<Node> ChildNodes() => emptyNodes;
+        public virtual IEnumerable<Node> ChildNodes() => EmptyNodes;
 
         /// <summary>
         /// Contains a specified node <typeparamref name="T"/>

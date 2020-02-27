@@ -1,29 +1,20 @@
-﻿using FluidScript.Reflection;
-using FluidScript.Reflection.Emit;
-using System;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public class ArrayTypeSyntax : TypeSyntax
     {
         public readonly TypeSyntax ElementType;
 
-        public readonly Expression[] Ranks;
+        public readonly NodeList<Expression> Ranks;
 
-        public ArrayTypeSyntax(TypeSyntax elementType, Expression[] sizes)
+        public ArrayTypeSyntax(TypeSyntax elementType, NodeList<Expression> sizes)
         {
             ElementType = elementType;
             Ranks = sizes;
         }
 
-        public override Type GetType(ITypeProvider provider)
+        public override System.Type GetType(ITypeProvider provider)
         {
             return ElementType.GetType(provider).MakeArrayType();
-        }
-
-        public override ITypeInfo GetTypeInfo()
-        {
-            return ElementType.GetTypeInfo().MakeArrayType();
         }
 
         public override string ToString()

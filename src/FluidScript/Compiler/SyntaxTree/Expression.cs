@@ -44,7 +44,7 @@
         /// Generates IL code for <see cref="Expression"/>
         /// </summary>
         /// <param name="generator"></param>
-        public virtual void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
+        public virtual void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
         {
             generator.NoOperation();
         }

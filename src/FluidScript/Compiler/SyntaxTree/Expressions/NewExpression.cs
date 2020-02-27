@@ -3,9 +3,9 @@
     public class NewExpression : Expression
     {
         public readonly string Name;
-        public readonly Expression[] Arguments;
+        public readonly NodeList<Expression> Arguments;
 
-        public NewExpression(string name, Expression[] arguments) : base(ExpressionType.New)
+        public NewExpression(string name, NodeList<Expression> arguments) : base(ExpressionType.New)
         {
             Name = name;
             Arguments = arguments;

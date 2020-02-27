@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 using System.Reflection;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -21,7 +21,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Type conversion of arguments
         /// </summary>
-        public ParamBindList Bindings { get; internal set; }
+        public Binders.ArgumentBinderList Bindings { get; internal set; }
 
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
@@ -40,13 +40,13 @@ namespace FluidScript.Compiler.SyntaxTree
                     //todo only for get; set; member
                     //i++ or Member++
                     var exp = (NameExpression)operand;
-                    Binding binding = exp.Binding;
-                    if (binding.IsMember && generator.Method.IsStatic == false)
+                    var binder = exp.Binder;
+                    if (binder.IsMember && generator.Method.IsStatic == false)
                         generator.LoadArgument(0);
-                    binding.GenerateGet(generator);
+                    binder.GenerateGet(generator);
                     //todo conversions
                     generator.CallStatic(Method);
-                    binding.GenerateSet(generator);
+                    binder.GenerateSet(generator);
                 }
                 else if (operand.NodeType == ExpressionType.MemberAccess)
                 {

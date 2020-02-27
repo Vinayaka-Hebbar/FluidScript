@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -15,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Binding for compiler generation
         /// </summary>
-        public Binding Binding { get; internal set; }
+        public Binders.Binder Binder { get; internal set; }
 
         /// <summary>
         /// Creates Identifier Expression
@@ -50,9 +50,9 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="generator"></param>
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            if (Binding.IsMember && Binding.IsStatic == false)
+            if (Binder.IsMember && Binder.IsStatic == false)
                 generator.LoadArgument(0);
-            Binding.GenerateGet(generator);
+            Binder.GenerateGet(generator);
         }
 
     }

@@ -29,6 +29,20 @@
             }
         }
 
+        public Integer Length
+        {
+            get
+            {
+                return new Integer(m_value.Length);
+            }
+        }
+
+        [Runtime.Register("indexOf")]
+        public Integer IndexOf(String value) => m_value.IndexOf(value.m_value);
+
+        [Runtime.Register("replace")]
+        public String Replace(String oldValue, String newValue) => m_value.Replace(oldValue.m_value, newValue?.m_value);
+
         /// <inheritdoc/>
         [Runtime.Register("toString")]
         public override String __ToString()
@@ -38,14 +52,14 @@
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        public override Integer HashCode()
+        public override Integer __HashCode()
         {
             return m_value.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        public override Boolean __Equals(IFSObject other)
+        public override Boolean Equals(IFSObject other)
         {
             return other is String s &&
                   m_value == s.m_value ? Boolean.True : Boolean.False;

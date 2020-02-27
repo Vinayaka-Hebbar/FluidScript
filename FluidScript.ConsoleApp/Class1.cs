@@ -4,29 +4,34 @@ namespace FluidScipt.ConsoleTest
 {
     public class Class1
     {
+        const string text = "datetime(`dd-mm-yyyy`)";
         // todo import static class
         static void Main(string[] args)
         {
-            var engine = new FluidScript.ScriptEngine();
-            Test instance = new Test()
-            {
-
-            };
-            var context = new FluidScript.Compiler.ExpressionVisitor(instance);
-            var expression = engine.GetExpression("{name:Value}.name");
-            object result = context.Visit(expression);
-            Console.WriteLine(result);
+            Test();
             Console.ReadKey();
         }
 
-        public static Func<int> Test()
+        private static void Test()
         {
-            var a = 1;
-            return () => a;
+            try
+            {
+                var compiler = new FluidScript.Compiler.DynamicCompiler(new Test());
+                compiler["r"] = FluidScript.Boolean.True;
+                compiler["s"] = new FluidScript.Double(1.3426);
+                var statement = FluidScript.ScriptParser.GetStatement(text);
+                object result = compiler.Invoke(statement);
+                Console.WriteLine(result);
+            }
+            catch (FluidScript.Compiler.ExecutionException ex)
+            {
+                Console.WriteLine($"{ex.Message},\ntrace:\nat {ex.StackTrace}");
+            }
         }
     }
 
-    public class Test
+
+    public class Test : FluidScript.Runtime.DynamicObject
     {
         public Test()
         {
@@ -36,9 +41,17 @@ namespace FluidScipt.ConsoleTest
                 };
         }
 
+        public FluidScript.Math Math { get; }
+
         public JsonDictionary<string, object> Values { get; }
 
-        public int Value { get; set; } = 20;
+        public string Name { get; } = "Vinayaka";
+
+        [FluidScript.Runtime.Register("datetime")]
+        public static FluidScript.String GetDataTime(FluidScript.String format)
+        {
+            return System.DateTime.Now.ToString(format.ToString());
+        }
 
         [FluidScript.Runtime.Register("datetime")]
         public static FluidScript.String GetDataTime()
@@ -46,10 +59,16 @@ namespace FluidScipt.ConsoleTest
             return System.DateTime.Now.ToString();
         }
 
-        [FluidScript.Runtime.Register("datetime")]
-        public static FluidScript.String GetDataTime(FluidScript.String format)
+        [FluidScript.Runtime.Register("add")]
+        public int Add(params FluidScript.Integer[] values)
         {
-            return System.DateTime.Now.ToString(format.ToString());
+            return System.Linq.Enumerable.Sum(values, value => value);
+        }
+
+        [FluidScript.Runtime.Register("add")]
+        public int Add(int a, int b)
+        {
+            return a + b;
         }
     }
 

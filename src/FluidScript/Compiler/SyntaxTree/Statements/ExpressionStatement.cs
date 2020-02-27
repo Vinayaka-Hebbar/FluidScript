@@ -14,7 +14,7 @@
             visitor.VisitExpression(this);
         }
 
-        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
         {
             Expression expression = Expression.Accept(generator);
             expression.GenerateCode(generator);

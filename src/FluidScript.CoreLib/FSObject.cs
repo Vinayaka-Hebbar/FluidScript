@@ -7,19 +7,19 @@
         public override bool Equals(object obj)
         {
             if (obj is IFSObject)
-                return __Equals((IFSObject)obj).m_value;
+                return Equals((IFSObject)obj).m_value;
             return base.Equals(obj);
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return ((IFSObject)this).HashCode().m_value;
+            return ((IFSObject)this).__HashCode().m_value;
         }
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        public virtual Integer HashCode()
+        public virtual Integer __HashCode()
         {
             return base.GetHashCode();
         }
@@ -33,7 +33,7 @@
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        public virtual Boolean __Equals(IFSObject obj)
+        public virtual Boolean Equals(IFSObject obj)
         {
             return ReferenceEquals(this, obj);
         }
@@ -49,7 +49,7 @@
         /// </summary>
         public static Boolean operator ==(FSObject left, FSObject right)
         {
-            return left.__Equals(right);
+            return left.Equals(right);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@
         /// </summary>
         public static Boolean operator !=(FSObject left, FSObject right)
         {
-            return left.__Equals(right).m_value ? Boolean.False : Boolean.True;
+            return left.Equals(right).m_value ? Boolean.False : Boolean.True;
         }
 
         [Runtime.Register("isEquals")]

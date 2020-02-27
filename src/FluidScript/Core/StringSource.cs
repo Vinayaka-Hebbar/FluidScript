@@ -1,6 +1,4 @@
-﻿using FluidScript.Compiler;
-
-namespace FluidScript.Library
+﻿namespace FluidScript.Library
 {
     public sealed class StringSource : IScriptSource
     {
@@ -25,7 +23,7 @@ namespace FluidScript.Library
 
         public string Path => null;
 
-        public TextPosition CurrentPosition => new TextPosition(line, column);
+        public Compiler.Debugging.TextPosition CurrentPosition => new Compiler.Debugging.TextPosition(line, column);
 
         void System.IDisposable.Dispose()
         {
@@ -52,12 +50,12 @@ namespace FluidScript.Library
         {
             pos = 0;
             line = 1;
-            column = 0;
+            column = 1;
         }
 
         public void NextLine()
         {
-            column = 0;
+            column = 1;
             line++;
         }
 
@@ -71,9 +69,9 @@ namespace FluidScript.Library
             return _text;
         }
 
-        public void FallBack()
+        public char FallBack()
         {
-            pos--;
+            return _text[--pos];
         }
     }
 }

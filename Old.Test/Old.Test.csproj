@@ -32,11 +32,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FluidScript, Version=1.0.9.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\FluidScript.1.0.9-mr2\lib\net40\FluidScript.dll</HintPath>
+    <Reference Include="FluidScript, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluidScript.1.0.12\lib\net40\FluidScript.dll</HintPath>
     </Reference>
-    <Reference Include="FluidScript.CoreLib, Version=1.0.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\FluidScript.CoreLib.1.0.6-beta\lib\net40\FluidScript.CoreLib.dll</HintPath>
+    <Reference Include="FluidScript.CoreLib, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluidScript.CoreLib.1.0.7-mr1\lib\net40\FluidScript.CoreLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

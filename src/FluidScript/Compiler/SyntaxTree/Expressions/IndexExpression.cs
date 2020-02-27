@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -9,13 +9,13 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly Expression Target;
 
-        public readonly Expression[] Arguments;
+        public readonly NodeList<Expression> Arguments;
 
         public System.Reflection.MethodInfo Getter { get; internal set; }
 
         public System.Reflection.MethodInfo Setter { get; internal set; }
 
-        public IndexExpression(Expression target, Expression[] arguments) : base(ExpressionType.Indexer)
+        public IndexExpression(Expression target, NodeList<Expression> arguments) : base(ExpressionType.Indexer)
         {
             Target = target;
             Arguments = arguments;
@@ -35,7 +35,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 Iterate(Arguments, (arg) =>
                 {
                     arg.GenerateCode(generator);
-                    generator.CallStatic(Utils.Helpers.Integer_to_Int32);
+                    generator.CallStatic(Utils.ReflectionHelpers.Integer_to_Int32);
                 });
                 System.Type elementType = type.GetElementType();
                 generator.LoadArrayElement(elementType);

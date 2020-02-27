@@ -1,5 +1,4 @@
-﻿using FluidScript.Compiler;
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 
@@ -75,7 +74,7 @@ namespace FluidScript.Library
             }
         }
 
-        public TextPosition CurrentPosition => new TextPosition(line, column);
+        public Compiler.Debugging.TextPosition CurrentPosition => new Compiler.Debugging.TextPosition(line, column);
 
         public void Dispose()
         {
@@ -84,7 +83,7 @@ namespace FluidScript.Library
 
         public void NextLine()
         {
-            column = 0;
+            column = 1;
             line++;
         }
 
@@ -259,15 +258,16 @@ namespace FluidScript.Library
             return charBuffer[charPos];
         }
 
-        public void FallBack()
+        public char FallBack()
         {
             if (charPos == 0)
             {
-                _stream.Position--;
                 Discard();
+                return charBuffer[charPos];
             }
-            charPos--;
             column--;
+            charPos--;
+            return charBuffer[charPos];
         }
 
         public void Reset()
@@ -275,6 +275,7 @@ namespace FluidScript.Library
             _stream.Seek(0, SeekOrigin.Begin);
             line = 1;
             column = 0;
+            Discard();
         }
 
         public void SeekTo(long pos)

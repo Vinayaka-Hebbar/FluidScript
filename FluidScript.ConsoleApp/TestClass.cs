@@ -22,20 +22,18 @@ namespace FluidScipt.ConsoleTest
         }
     }
 
-    [System.Serializable]
-    public struct User
+    public sealed class Closure
     {
-        [NonSerialized]
-        private string Value;
+        public object[] Values;
 
-        public User(string value)
+        public Closure(params object[] values)
         {
-            Value = value;
+            Values = values;
         }
 
-        public override string ToString()
+        public object Test(Closure closure)
         {
-            return Value;
+            return 2;
         }
     }
 }

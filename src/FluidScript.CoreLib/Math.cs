@@ -268,57 +268,186 @@
         /// <summary>
         /// Computes the sum of a sequence of <see cref="Integer"/> values.
         /// </summary>
-        /// <param name="list">
+        /// <param name="source">
         ///  A sequence of <see cref="IFSObject"/> values to calculate the sum of.
         /// </param>
         /// <returns>The sum of the values in the sequence.</returns>
         [Runtime.Register("sum")]
-        public static Double Sum(System.Collections.Generic.IEnumerable<IFSObject> list)
+        public static Integer Sum(System.Collections.Generic.IEnumerable<Integer> source)
         {
-            return new Double(System.Linq.Enumerable.Sum(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
+            int sum = 0;
+            checked
+            {
+                foreach (var item in source)
+                {
+                    sum += item.m_value;
+                }
+            }
+            return new Integer(sum);
         }
 
         /// <summary>
-        /// Computes the average of a sequence of <see cref="Integer"/> values.
+        /// Computes the sum of a sequence of <see cref="Integer"/> values.
         /// </summary>
-        /// <param name="list">
-        ///  A sequence of <see cref="IFSObject"/> values to calculate the average of.
+        /// <param name="source">
+        ///  A sequence of <see cref="Double"/> values to calculate the sum of.
+        /// </param>
+        /// <returns>The sum of the values in the sequence.</returns>
+        [Runtime.Register("sum")]
+        public static Double Sum(System.Collections.IEnumerable source)
+        {
+            double sum = 0;
+            foreach (object item in source)
+            {
+                sum += System.Convert.ToDouble(item);
+            }
+            return new Double(sum);
+        }
+
+        /// <summary>
+        /// Computes the average of a sequence of <see cref="object"/> values.
+        /// </summary>
+        /// <param name="source">
+        ///  A sequence of <see cref="object"/> values to calculate the average of.
         /// </param>
         /// <returns>The average of the values in the sequence.</returns>
         [Runtime.Register("avg")]
-        public static Double Average(System.Collections.Generic.IEnumerable<IFSObject> list)
+        public static Double Average(System.Collections.IEnumerable source)
         {
-            return new Double(System.Linq.Enumerable.Average(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
+            double sum = 0;
+            long count = 0;
+            checked
+            {
+                foreach (object value in source)
+                {
+                    sum += System.Convert.ToDouble(value);
+                    count++;
+                }
+            }
+            if (count > 0) return new Double(sum / count);
+            throw new System.Exception("No Elements");
         }
 
         /// <summary>
         /// Returns the maximum value in a sequence of <see cref="Integer"/> values.
         /// </summary>
-        /// <param name="list">
+        /// <param name="source">
         /// A sequence of <see cref="Integer"/> values to determine the minimum value of.
         /// </param>
         /// <returns>
         /// The minimum value in the sequence.
         /// </returns>
         [Runtime.Register("max")]
-        public static Integer Max(System.Collections.Generic.IEnumerable<IFSObject> list)
+        public static Integer Max(System.Collections.Generic.IEnumerable<Integer> source)
         {
-            return new Integer(System.Linq.Enumerable.Max(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
+            int value = 0;
+            bool hasValue = false;
+            foreach (Integer x in source)
+            {
+                if (hasValue)
+                {
+                    if (x > value) value = x;
+                }
+                else
+                {
+                    value = x.m_value;
+                    hasValue = true;
+                }
+            }
+            if (hasValue) return new Integer(value);
+            throw new System.Exception("No Elements");
+        }
+
+        /// <summary>
+        /// Returns the maximum value in a sequence of <see cref="object"/> values.
+        /// </summary>
+        /// <param name="source">
+        /// A sequence of <see cref="object"/> values to determine the minimum value of.
+        /// </param>
+        /// <returns>
+        /// The minimum value in the sequence.
+        /// </returns>
+        [Runtime.Register("max")]
+        public static Double Max(System.Collections.IEnumerable source)
+        {
+            double value = 0;
+            bool hasValue = false;
+            foreach (object v in source)
+            {
+                double x = System.Convert.ToDouble(v);
+                if (hasValue)
+                {
+                    if (x > value) value = x;
+                }
+                else
+                {
+                    value = x;
+                    hasValue = true;
+                }
+            }
+            if (hasValue) return new Double(value);
+            throw new System.Exception("No Elements");
         }
 
         /// <summary>
         /// Returns the minimum value in a sequence of <see cref="Integer"/> values.
         /// </summary>
-        /// <param name="list">
+        /// <param name="source">
         /// A sequence of <see cref="Integer"/> values to determine the minimum value of.
         /// </param>
         /// <returns>
         /// The minimum value in the sequence.
         /// </returns>
         [Runtime.Register("min")]
-        public static Integer Min(System.Collections.Generic.IEnumerable<IFSObject> list)
+        public static Integer Min(System.Collections.Generic.IEnumerable<Integer> source)
         {
-            return new Integer(System.Linq.Enumerable.Min(System.Linq.Enumerable.Select(list, item => System.Convert.ToInt32(item))));
+            int value = 0;
+            bool hasValue = false;
+            foreach (Integer x in source)
+            {
+                if (hasValue)
+                {
+                    if (x < value) value = x;
+                }
+                else
+                {
+                    value = x.m_value;
+                    hasValue = true;
+                }
+            }
+            if (hasValue) return new Integer(value);
+            throw new System.Exception("No Elements");
+        }
+
+        /// <summary>
+        /// Returns the minimum value in a sequence of <see cref="object"/> values.
+        /// </summary>
+        /// <param name="source">
+        /// A sequence of <see cref="object"/> values to determine the minimum value of.
+        /// </param>
+        /// <returns>
+        /// The minimum value in the sequence.
+        /// </returns>
+        [Runtime.Register("min")]
+        public static Double Min(System.Collections.IEnumerable source)
+        {
+            double value = 0;
+            bool hasValue = false;
+            foreach (object v in source)
+            {
+                double x = System.Convert.ToDouble(v);
+                if (hasValue)
+                {
+                    if (x < value || System.Double.IsNaN(x)) value = x;
+                }
+                else
+                {
+                    value = x;
+                    hasValue = true;
+                }
+            }
+            if (hasValue) return new Double(value);
+            throw new System.Exception("No Elements");
         }
     }
 }

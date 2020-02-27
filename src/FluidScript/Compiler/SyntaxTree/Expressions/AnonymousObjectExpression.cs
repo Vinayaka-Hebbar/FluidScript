@@ -4,8 +4,8 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public sealed class AnonymousObjectExpression : Expression
     {
-        public readonly AnonymousObjectMember[] Members;
-        public AnonymousObjectExpression(AnonymousObjectMember[] expressions) : base(ExpressionType.AnonymousObject)
+        public readonly NodeList<AnonymousObjectMember> Members;
+        public AnonymousObjectExpression(NodeList<AnonymousObjectMember> expressions) : base(ExpressionType.AnonymousObject)
         {
             Members = expressions;
         }

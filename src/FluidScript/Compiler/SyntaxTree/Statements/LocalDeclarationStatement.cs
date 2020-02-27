@@ -1,13 +1,13 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
     public sealed class LocalDeclarationStatement : Statement
     {
-        public readonly VariableDeclarationExpression[] DeclarationExpressions;
+        public readonly NodeList<VariableDeclarationExpression> DeclarationExpressions;
 
-        public LocalDeclarationStatement(VariableDeclarationExpression[] declarationExpressions) : base(StatementType.Declaration)
+        public LocalDeclarationStatement(NodeList<VariableDeclarationExpression> declarationExpressions) : base(StatementType.Declaration)
         {
             DeclarationExpressions = declarationExpressions;
         }

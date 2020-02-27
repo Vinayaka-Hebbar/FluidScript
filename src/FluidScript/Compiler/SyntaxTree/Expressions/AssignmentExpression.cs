@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 using FluidScript.Utils;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -24,11 +24,11 @@ namespace FluidScript.Compiler.SyntaxTree
             if (Left.NodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)Left;
-                Binding binding = exp.Binding;
-                if (binding.IsMember && binding.IsStatic == false)
+                var binder = exp.Binder;
+                if (binder.IsMember && binder.IsStatic == false)
                     generator.LoadArgument(0);
                 Right.GenerateCode(generator);
-                binding.GenerateSet(generator);
+                binder.GenerateSet(generator);
             }
             else if (Left.NodeType == ExpressionType.MemberAccess)
             {
@@ -47,7 +47,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     Iterate(exp.Arguments, (arg) =>
                     {
                         arg.GenerateCode(generator);
-                        generator.CallStatic(Helpers.Integer_to_Int32);
+                        generator.CallStatic(ReflectionHelpers.Integer_to_Int32);
                     });
                     Right.GenerateCode(generator);
                     System.Type elementType = type.GetElementType();

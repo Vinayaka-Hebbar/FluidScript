@@ -18,13 +18,13 @@
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
         {
             //initialize
             if (Value != null)
             {
                 var defValue = Value.Accept(generator);
-                System.Type type = VariableType == null ? defValue.Type : VariableType.GetType(generator.TypeGenerator);
+                System.Type type = VariableType == null ? defValue.Type : VariableType.GetType(generator.TypeProvider);
                 defValue.GenerateCode(generator);
                 var variable = generator.DeclareVariable(type, Name);
                 generator.StoreVariable(variable);

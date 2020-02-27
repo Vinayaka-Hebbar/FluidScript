@@ -20,9 +20,6 @@
             in Generics.
             </typeparam>
         </member>
-        <member name="T:FluidScript.Collections.IList">
-            <inheritdoc/>
-        </member>
         <member name="T:FluidScript.Collections.List`1">
             <summary>
             Represents a strongly typed list of objects that can be accessed by index. Provides
@@ -187,7 +184,7 @@
             the enumerator has passed the end of the collection.
             </returns>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Enumerator.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Collections.List`1.Enumerator.FluidScript#IFSObject#__HashCode">
             <summary>
             Returns the hash code for this instance.
             </summary>
@@ -203,7 +200,7 @@
             A System.String containing a fully qualified type name.
             </returns>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Enumerator.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Collections.List`1.Enumerator.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <summary>
             Determines whether the specified System.Object is equal to the current System.Object.
             </summary>
@@ -222,13 +219,13 @@
         <member name="M:FluidScript.FSObject.GetHashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.FSObject.HashCode">
+        <member name="M:FluidScript.FSObject.__HashCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.FSObject.__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.FSObject.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.FSObject.Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.FSObject.ToString">
@@ -255,7 +252,7 @@
             </summary>
             <returns>A string that represents the current object.</returns>
         </member>
-        <member name="M:FluidScript.IFSObject.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.IFSObject.Equals(FluidScript.IFSObject)">
             <summary>
             Determines whether the specified <see cref="T:FluidScript.IFSObject"/> is equal to the current <see cref="T:FluidScript.IFSObject"/>.
             </summary>
@@ -265,7 +262,7 @@
             false.
             </returns>
         </member>
-        <member name="M:FluidScript.IFSObject.HashCode">
+        <member name="M:FluidScript.IFSObject.__HashCode">
             <summary>
             Serves as a hash function for a particular type.
             </summary>
@@ -467,41 +464,72 @@
             or equal to System.Double.MaxValue.</param>
             <returns>A double-precision floating-point number, x, such that 0 ≤ x ≤System.Double.MaxValue.</returns>
         </member>
-        <member name="M:FluidScript.Math.Sum(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
+        <member name="M:FluidScript.Math.Sum(System.Collections.Generic.IEnumerable{FluidScript.Integer})">
             <summary>
             Computes the sum of a sequence of <see cref="T:FluidScript.Integer"/> values.
             </summary>
-            <param name="list">
+            <param name="source">
              A sequence of <see cref="T:FluidScript.IFSObject"/> values to calculate the sum of.
             </param>
             <returns>The sum of the values in the sequence.</returns>
         </member>
-        <member name="M:FluidScript.Math.Average(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
+        <member name="M:FluidScript.Math.Sum(System.Collections.IEnumerable)">
             <summary>
-            Computes the average of a sequence of <see cref="T:FluidScript.Integer"/> values.
+            Computes the sum of a sequence of <see cref="T:FluidScript.Integer"/> values.
             </summary>
-            <param name="list">
-             A sequence of <see cref="T:FluidScript.IFSObject"/> values to calculate the average of.
+            <param name="source">
+             A sequence of <see cref="T:FluidScript.Double"/> values to calculate the sum of.
+            </param>
+            <returns>The sum of the values in the sequence.</returns>
+        </member>
+        <member name="M:FluidScript.Math.Average(System.Collections.IEnumerable)">
+            <summary>
+            Computes the average of a sequence of <see cref="T:System.Object"/> values.
+            </summary>
+            <param name="source">
+             A sequence of <see cref="T:System.Object"/> values to calculate the average of.
             </param>
             <returns>The average of the values in the sequence.</returns>
         </member>
-        <member name="M:FluidScript.Math.Max(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
+        <member name="M:FluidScript.Math.Max(System.Collections.Generic.IEnumerable{FluidScript.Integer})">
             <summary>
             Returns the maximum value in a sequence of <see cref="T:FluidScript.Integer"/> values.
             </summary>
-            <param name="list">
+            <param name="source">
             A sequence of <see cref="T:FluidScript.Integer"/> values to determine the minimum value of.
             </param>
             <returns>
             The minimum value in the sequence.
             </returns>
         </member>
-        <member name="M:FluidScript.Math.Min(System.Collections.Generic.IEnumerable{FluidScript.IFSObject})">
+        <member name="M:FluidScript.Math.Max(System.Collections.IEnumerable)">
+            <summary>
+            Returns the maximum value in a sequence of <see cref="T:System.Object"/> values.
+            </summary>
+            <param name="source">
+            A sequence of <see cref="T:System.Object"/> values to determine the minimum value of.
+            </param>
+            <returns>
+            The minimum value in the sequence.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Math.Min(System.Collections.Generic.IEnumerable{FluidScript.Integer})">
             <summary>
             Returns the minimum value in a sequence of <see cref="T:FluidScript.Integer"/> values.
             </summary>
-            <param name="list">
+            <param name="source">
             A sequence of <see cref="T:FluidScript.Integer"/> values to determine the minimum value of.
+            </param>
+            <returns>
+            The minimum value in the sequence.
+            </returns>
+        </member>
+        <member name="M:FluidScript.Math.Min(System.Collections.IEnumerable)">
+            <summary>
+            Returns the minimum value in a sequence of <see cref="T:System.Object"/> values.
+            </summary>
+            <param name="source">
+            A sequence of <see cref="T:System.Object"/> values to determine the minimum value of.
             </param>
             <returns>
             The minimum value in the sequence.
@@ -528,13 +556,13 @@
             </summary>
             <param name="value"></param>
         </member>
-        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#__HashCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Boolean.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Boolean.Equals(System.Object)">
@@ -640,10 +668,10 @@
         <member name="M:FluidScript.Byte.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Byte.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Byte.FluidScript#IFSObject#__HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Byte.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Byte.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Byte.Equals(System.Object)">
@@ -731,7 +759,7 @@
             Initializes a new instance of the <see cref="T:FluidScript.Char"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Char.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Char.FluidScript#IFSObject#__HashCode">
             <summary>
             returns the hashCode() for the instance
             </summary>
@@ -741,7 +769,7 @@
             converts to string
             </summary>
         </member>
-        <member name="M:FluidScript.Char.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Char.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <summary>
             checks <paramref name="obj"/> and <see cref="T:FluidScript.Integer"/> are equals
             </summary>
@@ -844,10 +872,10 @@
         <member name="M:FluidScript.Double.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Double.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Double.FluidScript#IFSObject#__HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Double.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Double.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Double.Equals(System.Object)">
@@ -928,10 +956,10 @@
         <member name="M:FluidScript.Float.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Float.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Float.FluidScript#IFSObject#__HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Float.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Float.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Float.Equals(System.Object)">
@@ -1009,13 +1037,13 @@
             Initializes a new instance of the <see cref="T:FluidScript.Integer"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Integer.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Integer.FluidScript#IFSObject#__HashCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Integer.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Integer.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Integer.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Integer.Equals(System.Object)">
@@ -1101,10 +1129,10 @@
         <member name="M:FluidScript.Long.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Long.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Long.FluidScript#IFSObject#__HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Long.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Long.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Long.Equals(System.Object)">
@@ -1185,10 +1213,10 @@
         <member name="M:FluidScript.Short.FluidScript#IFSObject#__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Short.FluidScript#IFSObject#HashCode">
+        <member name="M:FluidScript.Short.FluidScript#IFSObject#__HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Short.FluidScript#IFSObject#__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.Short.FluidScript#IFSObject#Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Short.Equals(System.Object)">
@@ -1312,10 +1340,10 @@
         <member name="M:FluidScript.String.__ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.String.HashCode">
+        <member name="M:FluidScript.String.__HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.String.__Equals(FluidScript.IFSObject)">
+        <member name="M:FluidScript.String.Equals(FluidScript.IFSObject)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.String.Equals(System.Object)">

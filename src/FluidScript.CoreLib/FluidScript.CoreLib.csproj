@@ -4,7 +4,7 @@
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0</TargetFrameworks>
     <RootNamespace>FluidScript</RootNamespace>
     <AssemblyName>FluidScript.CoreLib</AssemblyName>
-    <Version>1.0.7-beta</Version>
+    <Version>1.0.8-beta</Version>
     <Authors>Vinayaka Hebbar</Authors>
   </PropertyGroup>
 

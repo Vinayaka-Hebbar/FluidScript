@@ -34,13 +34,13 @@
         }
 
         [Runtime.Register("hashCode")]
-        Integer IFSObject.HashCode()
+        Integer IFSObject.__HashCode()
         {
             return GetHashCode();
         }
 
         [Runtime.Register("equals")]
-        Boolean IFSObject.__Equals(IFSObject obj)
+        Boolean IFSObject.Equals(IFSObject obj)
         {
             return Equals(obj);
         }

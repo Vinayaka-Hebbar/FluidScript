@@ -1,5 +1,4 @@
-﻿using FluidScript.Compiler;
-using System;
+﻿using System;
 
 namespace FluidScript.Library
 {
@@ -13,10 +12,16 @@ namespace FluidScript.Library
 
         bool CanAdvance { get; }
 
-        TextPosition CurrentPosition { get; }
+        Compiler.Debugging.TextPosition CurrentPosition { get; }
 
+        /// <summary>
+        /// Read next char
+        /// </summary>
         char ReadChar();
 
+        /// <summary>
+        /// Peek next char
+        /// </summary>
         char PeekChar();
 
         void Reset();
@@ -26,8 +31,9 @@ namespace FluidScript.Library
         void SeekTo(long pos);
 
         /// <summary>
-        /// revert to pos-1
+        /// Revert to pos-1
         /// </summary>
-        void FallBack();
+        /// <returns>Current Char in the position</returns>
+        char FallBack();
     }
 }

@@ -32,7 +32,7 @@
             get; set;
         }
 
-        internal Expression Condition => ConditionStatement.Expression;
+        public Expression Condition => ConditionStatement.Expression;
 
         /// <summary>
         /// Increment or decrement operation
@@ -50,7 +50,7 @@
             visitor.VisitLoop(this);
         }
 
-        public override void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
         {
             // Generate code for the start of the statement.
             var statementLocals = new StatementLocals() { NonDefaultBreakStatementBehavior = true, NonDefaultSourceSpanBehavior = true };
@@ -89,7 +89,7 @@
             {
                 generator.MarkSequencePoint(ConditionStatement.Span);
                 ConditionStatement.GenerateCode(generator);
-                generator.CallStatic(Utils.Helpers.Booolean_To_Bool);
+                generator.CallStatic(Utils.ReflectionHelpers.Booolean_To_Bool);
                 generator.BranchIfTrue(startOfLoop);
             }
 

@@ -6,8 +6,8 @@
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     [System.Serializable]
-    public class List<T> : FSObject, IList, ICollection<T>
-        , System.Collections.IEnumerable, System.Collections.Generic.IEnumerable<T> where T : IFSObject
+    public class List<T> : FSObject, System.Collections.IList, ICollection<T>
+        , System.Collections.IEnumerable, System.Collections.Generic.IEnumerable<T> 
     {
         private const int _defaultCapacity = 4;
         public const int MaxArrayLength = 0X7FEFFFFF;
@@ -494,11 +494,11 @@
 
         #region Runtime
         [Runtime.Register("forEach")]
-        public void ForEach(Func iterate)
+        public void ForEach(System.Delegate iterate)
         {
             for(int i=0;i< _size;i++)
             {
-                iterate(new object[] { _items[i] });
+                iterate.DynamicInvoke(_items[i]);
             }
         }
         #endregion
@@ -592,7 +592,7 @@
             /// A 32-bit signed integer that is the hash code for this instance.
             /// </returns>
             [Runtime.Register("hashCode")]
-            Integer IFSObject.HashCode()
+            Integer IFSObject.__HashCode()
             {
                 return GetHashCode();
             }
@@ -618,7 +618,7 @@
             /// false.
             /// </returns>
             [Runtime.Register("equals")]
-            Boolean IFSObject.__Equals(IFSObject obj)
+            Boolean IFSObject.Equals(IFSObject obj)
             {
                 return ReferenceEquals(this, obj);
             }

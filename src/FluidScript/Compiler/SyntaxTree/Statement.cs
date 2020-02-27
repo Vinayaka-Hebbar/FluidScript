@@ -36,7 +36,7 @@
         /// <summary>
         /// Statement Position
         /// </summary>
-        public TextSpan Span
+        public Debugging.TextSpan Span
         {
             get;
             set;
@@ -64,7 +64,7 @@
         /// Creates IL code 
         /// </summary>
         /// <param name="generator">The generator to output the CIL to.</param>
-        public virtual void GenerateCode(Reflection.Emit.MethodBodyGenerator generator)
+        public virtual void GenerateCode(Emit.MethodBodyGenerator generator)
         {
             generator.NoOperation();
         }
@@ -92,7 +92,7 @@
             /// <summary>
             /// Gets or sets a label marking the end of the statement.
             /// </summary>
-            public Reflection.Emit.ILLabel EndOfStatement;
+            public Compiler.Emit.ILLabel EndOfStatement;
 
 #if DEBUG
             /// <summary>
@@ -107,7 +107,7 @@
         /// </summary>
         /// <param name="generator">The generator to output the CIL to. </param>
         /// <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
-        protected void GenerateStartOfStatement(Reflection.Emit.MethodBodyGenerator generator, StatementLocals locals)
+        protected void GenerateStartOfStatement(Compiler.Emit.MethodBodyGenerator generator, StatementLocals locals)
         {
 #if DEBUG && USE_DYNAMIC_IL_INFO
             // Statements must not produce or consume any values on the stack.
@@ -135,7 +135,7 @@
         /// </summary>
         /// <param name="generator"> The generator to output the CIL to. </param>
         /// <param name="locals"> Variables common to both GenerateStartOfStatement() and GenerateEndOfStatement(). </param>
-        protected void GenerateEndOfStatement(Reflection.Emit.MethodBodyGenerator generator, StatementLocals locals)
+        protected void GenerateEndOfStatement(Compiler.Emit.MethodBodyGenerator generator, StatementLocals locals)
         {
             if (locals.NonDefaultBreakStatementBehavior == false && this.HasLabels == true)
             {

@@ -32,14 +32,14 @@
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.HashCode()
+        Integer IFSObject.__HashCode()
         {
             return m_value.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        Boolean IFSObject.__Equals(IFSObject obj)
+        Boolean IFSObject.Equals(IFSObject obj)
         {
             return obj is Byte b &&
                   m_value == b.m_value;

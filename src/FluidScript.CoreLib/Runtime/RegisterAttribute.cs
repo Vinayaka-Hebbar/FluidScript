@@ -28,7 +28,7 @@
         ///<inheritdoc/>
         public override bool Match(object obj)
         {
-            return obj.Equals(Name);
+            return Name.Equals(obj);
         }
 
         ///<inheritdoc/>

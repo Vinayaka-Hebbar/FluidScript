@@ -1,4 +1,4 @@
-﻿using FluidScript.Reflection.Emit;
+﻿using FluidScript.Compiler.Emit;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +9,7 @@ namespace FluidScript.Compiler.SyntaxTree
         public readonly Expression Target;
         public readonly string Name;
 
-        public Binding Binding
+        public Binders.Binder Binding
         {
             get;
             protected internal set;
