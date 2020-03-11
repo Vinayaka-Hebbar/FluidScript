@@ -10,6 +10,7 @@ namespace FluidScript.Compiler.Emit
         ParameterInfo[] Parameters { get; }
         Statement SyntaxBody { get; }
         Type ReturnType { get; }
+        CallingConventions CallingConvention { get; }
 
         ITypeProvider Provider { get; set; }
         Type GetType(TypeName typeName);

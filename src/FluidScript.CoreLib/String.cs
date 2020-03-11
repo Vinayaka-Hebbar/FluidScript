@@ -43,6 +43,60 @@
         [Runtime.Register("replace")]
         public String Replace(String oldValue, String newValue) => m_value.Replace(oldValue.m_value, newValue?.m_value);
 
+        [Runtime.Register("split")]
+        public String[] Split(String separator)
+        {
+            unsafe
+            {
+                var value = m_value;
+                string m_seperator = separator.m_value;
+                int splitLength;
+                int count = 0;
+                int[] positions = new int[value.Length];
+                fixed (char* values = value)
+                {
+                    if (m_seperator == null || m_seperator.Length == 0)
+                    {
+                        return new String[1] { value };
+                    }
+                    else
+                    {
+                        splitLength = m_seperator.Length;
+                        for (int i = 0; i < value.Length; i++)
+                        {
+                            if (values[i] == m_seperator[0] && splitLength < value.Length - i)
+                            {
+                                if (splitLength == 1 || string.CompareOrdinal(value, i, m_seperator, 0, splitLength) == 0)
+                                {
+                                    positions[count++] = i;
+                                }
+                            }
+                        }
+
+                    }
+
+                    String[] result = new String[count + 1];
+                    var length = value.Length;
+                    int pos = 0;
+                    int index;
+                    for (index = 0; index < count && pos < length; index++)
+                    {
+                        var splitPos = positions[index];
+                        result[index] = value.Substring(pos, splitPos - pos);
+                        pos = splitPos + splitLength;
+                    }
+                    if (pos < length && count >= 0)
+                    {
+                        result[index] = value.Substring(pos);
+                    }
+                    return result;
+                }
+            }
+        }
+
+        [Runtime.Register("subString")]
+        public String SubString(int startIndex, int length) => m_value.Substring(startIndex, length);
+
         /// <inheritdoc/>
         [Runtime.Register("toString")]
         public override String __ToString()

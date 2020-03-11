@@ -1,85 +1,117 @@
 ﻿using FluidScript.Compiler.Binders;
-using System.Linq;
 using System.Reflection;
 
 namespace FluidScript.Utils
 {
     internal static class TypeHelpers
     {
-        internal static MethodInfo BindToMethod(MethodInfo[] methods, object[] args, out ArgumentBinderList bindings)
+        internal static MethodInfo BindToMethod(MethodInfo[] methods, object[] args, out ArgumenConversions conversions)
         {
-            bindings = new ArgumentBinderList();
+            conversions = new ArgumenConversions(args.Length);
             foreach (var m in methods)
             {
-                if (MatchesTypes(m, args, ref bindings))
+                if (MatchesTypes(m, args, conversions))
                     return m;
             }
             return null;
         }
 
-        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Collections.IList agrs, out ArgumentBinderList bindings)
+        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Collections.IList args, out ArgumenConversions conversions)
         {
-            bindings = new ArgumentBinderList();
+            conversions = new ArgumenConversions(args.Count);
             foreach (var m in members)
             {
                 if (m.MemberType == MemberTypes.Method)
                 {
-                    if (MatchesTypes((MethodInfo)m, agrs, ref bindings))
+                    if (MatchesTypes((MethodInfo)m, args, conversions))
                         return (MethodInfo)m;
                 }
             }
             return null;
         }
 
-        internal static bool MatchesTypes(MethodInfo method, System.Collections.IList args, ref ArgumentBinderList bindings)
+        internal static bool MatchesTypes(MethodInfo method, System.Collections.IList args, ArgumenConversions conversions)
         {
-            var paramters = method.GetParameters();
+            var parameters = method.GetParameters();
             // arg length
             var length = args.Count;
-            // no arg 
-            if (paramters.Length == 0 && length > 0)
+            // no arg
+            if (parameters.Length == 0 && length > 0)
                 return false;
-            bindings.Clear();
-            for (int i = 0; i < paramters.Length; i++)
+            conversions.Clear();
+            int i;
+            for (i = 0; i < parameters.Length; i++)
             {
-                var param = paramters[i];
+                var param = parameters[i];
                 var dest = param.ParameterType;
                 if (param.IsDefined(typeof(System.ParamArrayAttribute), false))
                 {
-                    // no arg ok
-                    bindings.Add(new ParamArrayBinder(i, param.ParameterType));
-                    //No further check required
-                    break;
+                    // parameters is extra example print(string, params string[] args) and print('hello')
+                    // in this case 2 and 1
+                    if (parameters.Length > length)
+                    {
+                        conversions.Add(new ParamArrayConversion(i, dest.GetElementType()));
+                        return true;
+                    }
+                    //No further check required if matchs
+                    return ParamArrayMatchs(args, i, dest.GetElementType(), conversions);
                 }
                 // matches current index
                 if (i >= length)
                     return false;
                 var arg = args[i];
-                if (arg == null)
+                if (arg is null)
                 {
-                    //for value type if nullable
                     if (dest.IsValueType && !TypeUtils.IsNullableType(dest))
                         return false;
-                    else
-                        continue;
                 }
-                var src = arg.GetType();
-                if (!TypeUtils.AreReferenceAssignable(dest, src))
+                else
                 {
-                    if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
-                        return false;
-                    bindings.Add(new ParamConvert(i, opImplict));
+                    var src = arg.GetType();
+                    if (!TypeUtils.AreReferenceAssignable(dest, src))
+                    {
+                        if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
+                            return false;
+                        conversions.Add(new ParamConversion(i, opImplict));
+                    }
                 }
             }
+            return i == length;
+        }
+
+        private static bool ParamArrayMatchs(System.Collections.IList args, int index, System.Type dest, ArgumenConversions conversions)
+        {
+            var binder = new ArgumenConversions();
+            // check first parameter type matches
+            for (var i = index; i < args.Count; i++)
+            {
+                var arg = args[i];
+                if (arg is null)
+                {
+                    if (dest.IsValueType && !TypeUtils.IsNullableType(dest))
+                        return false;
+                }
+                else
+                {
+                    var src = arg.GetType();
+                    if (!TypeUtils.AreReferenceAssignable(dest, src))
+                    {
+                        if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
+                            return false;
+                        conversions.Add(new ParamConversion(i, opImplict));
+                    }
+                }
+            }
+            conversions.Add(new ParamArrayConversion(index, dest, binder));
             return true;
         }
 
-        internal static bool MatchesTypes(System.Type[] types, System.Collections.IList args, ref ArgumentBinderList bindings)
+        internal static bool MatchesTypes(System.Type[] types, System.Collections.IList args, ArgumenConversions conversions)
         {
-            bindings.Clear();
             var length = args.Count;
             if (types.Length == 0 && length > 0)
                 return false;
+            conversions.Clear();
             // arg length
             for (int i = 0; i < types.Length; i++)
             {
@@ -101,34 +133,17 @@ namespace FluidScript.Utils
                 {
                     if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
                         return false;
-                    bindings.Add(new ParamConvert(i, opImplict));
+                    conversions.Add(new ParamConversion(i, opImplict));
                 }
             }
             return true;
-        }
-
-        internal static bool HasMember(MemberInfo m, object filter)
-        {
-            var data = (System.Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
-            return data != null ? data.Match(filter) : m.Name.Equals(filter);
-        }
-
-        internal static MemberInfo GetMember(object obj, string name)
-        {
-            if (obj == null)
-                return null;
-            var members = obj.GetType().FindMembers(MemberTypes.Field | MemberTypes.Property, TypeUtils.PublicInstance, HasMember, name);
-            if (members.Length > 0)
-                return members[0];
-            return null;
         }
 
         internal static MethodInfo[] GetPublicMethods(object obj, string name)
         {
             if (obj == null)
                 return new MethodInfo[0];
-            var type = obj.GetType();
-            return new ArrayFilterIterator<MethodInfo>(type.GetMethods(TypeUtils.Any), TypeUtils.HasMethod, name).ToArray();
+            return TypeUtils.GetPublicMethods(obj.GetType(), name);
         }
 
         internal static object InvokeSet(MemberInfo m, object obj, object value, out System.Type type)
@@ -170,7 +185,6 @@ namespace FluidScript.Utils
                 var f = (FieldInfo)m;
                 type = f.FieldType;
                 return f.GetValue(obj);
-
             }
             else if (m.MemberType == MemberTypes.Property)
             {
@@ -189,26 +203,14 @@ namespace FluidScript.Utils
             throw new System.MemberAccessException(string.Concat("cannot read to member", m.Name));
         }
 
-        internal static MethodInfo GetDelegateMethod(System.Delegate del, ref object[] args, out ArgumentBinderList binds)
+        internal static MethodInfo GetDelegateMethod(System.Delegate del, object[] args, out ArgumenConversions conversions)
         {
-            binds = new ArgumentBinderList();
+            conversions = new ArgumenConversions();
             MethodInfo m = del.Method;
             // only static method can allowed
-            if (del.Target is Runtime.Function function)
+            if (MatchesTypes(m, args, conversions))
             {
-                if (MatchesTypes(function.ParameterTypes, args, ref binds))
-                {
-                    args = new object[] { args };
-                    return m;
-                }
-            }
-            else
-            {
-                m = del.Method;
-                if (MatchesTypes(m, args, ref binds))
-                {
-                    return m;
-                }
+                return m;
             }
             return null;
         }

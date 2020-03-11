@@ -15,8 +15,16 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            Type = generator.Method.DeclaringType;
-            generator.LoadArgument(0);
+            var conventions = generator.Method.CallingConvention;
+            if ((conventions & System.Reflection.CallingConventions.HasThis) == System.Reflection.CallingConventions.HasThis)
+            {
+                generator.LoadArgument(0);
+            }
+            else
+            {
+                var variable = generator.GetLocalVariable("this");
+                generator.LoadVariable(variable);
+            }
         }
 
         public override string ToString()

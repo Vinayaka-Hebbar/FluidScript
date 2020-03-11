@@ -9,11 +9,16 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly Expression Target;
 
-        public readonly NodeList<Expression> Arguments;
+        public readonly INodeList<Expression> Arguments;
 
-        public System.Reflection.MethodInfo Getter { get; internal set; }
+        /// <summary>
+        /// Argument convert list
+        /// </summary>
+        public Binders.ArgumenConversions Conversions { get; set; }
 
-        public System.Reflection.MethodInfo Setter { get; internal set; }
+        public System.Reflection.MethodInfo Getter { get; set; }
+
+        public System.Reflection.MethodInfo Setter { get; set; }
 
         public IndexExpression(Expression target, NodeList<Expression> arguments) : base(ExpressionType.Indexer)
         {
@@ -35,7 +40,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 Iterate(Arguments, (arg) =>
                 {
                     arg.GenerateCode(generator);
-                    generator.CallStatic(Utils.ReflectionHelpers.Integer_to_Int32);
+                    generator.CallStatic(Utils.ReflectionHelpers.IntegerToInt32);
                 });
                 System.Type elementType = type.GetElementType();
                 generator.LoadArrayElement(elementType);

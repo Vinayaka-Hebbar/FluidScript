@@ -141,9 +141,7 @@ namespace FluidScript.Runtime
         {
             if (key == null)
                 throw new System.ArgumentNullException(nameof(key));
-            var local = new LocalVariable(key, type);
-            Insert(local, value, true);
-            return local;
+            return Insert(key, type, value);
         }
 
         internal void Update(LocalVariable local, object value)
@@ -162,20 +160,16 @@ namespace FluidScript.Runtime
             throw new KeyNotFoundException(local.Name);
         }
 
-        internal void Insert(LocalVariable key, object value, bool add)
+        internal LocalVariable Insert(string name, System.Type type, object value)
         {
             if (buckets == null) Initialize(0);
-            int hashCode = key.GetHashCode();
+            int hashCode = name.GetHashCode() & 0x7FFFFFFF;
             int targetBucket = hashCode % buckets.Length;
             for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
             {
-                if (entries[i].HashCode == hashCode && Equals(entries[i].Key, key))
+                if (entries[i].HashCode == hashCode && Equals(entries[i].Key.Name, name))
                 {
-                    if (add)
-                        throw new System.ArgumentException(string.Format("shadow variable name '{0}'", key));
-                    entries[i].Value = value;
-                    version++;
-                    return;
+                    throw new System.ArgumentException(string.Format("shadow variable name '{0}'", name));
                 }
             }
             int index;
@@ -195,12 +189,13 @@ namespace FluidScript.Runtime
                 index = count;
                 count++;
             }
-            key.Index = index;
+            var variable = new LocalVariable(name, type, index, hashCode);
             entries[index].HashCode = hashCode;
             entries[index].Next = buckets[targetBucket];
-            entries[index].Key = key;
+            entries[index].Key = variable;
             entries[index].Value = value;
             buckets[targetBucket] = index;
+            return variable;
         }
 
         #endregion
@@ -505,7 +500,5 @@ namespace FluidScript.Runtime
             return false;
         }
         #endregion
-
-
     }
 }

@@ -4,29 +4,28 @@ namespace FluidScipt.ConsoleTest
 {
     public class Class1
     {
-        const string text = "datetime(`dd-mm-yyyy`)";
+        const string text = @"{global.log = func (message):void=>this.print(message);global.log(`working`);}";
+
         // todo import static class
         static void Main(string[] args)
         {
-            Test();
+            new Class1().Test();
             Console.ReadKey();
         }
 
-        private static void Test()
+        private void Test()
         {
-            try
-            {
-                var compiler = new FluidScript.Compiler.DynamicCompiler(new Test());
-                compiler["r"] = FluidScript.Boolean.True;
-                compiler["s"] = new FluidScript.Double(1.3426);
-                var statement = FluidScript.ScriptParser.GetStatement(text);
-                object result = compiler.Invoke(statement);
-                Console.WriteLine(result);
-            }
-            catch (FluidScript.Compiler.ExecutionException ex)
-            {
-                Console.WriteLine($"{ex.Message},\ntrace:\nat {ex.StackTrace}");
-            }
+            var compiler = new FluidScript.Compiler.DynamicCompiler();
+            compiler["r"] = new FluidScript.Integer(2);
+            compiler["s"] = new FluidScript.Double(2);
+            var statement = FluidScript.ScriptParser.GetStatement(text);
+            var result = compiler.Invoke(statement);
+            Console.WriteLine(result);
+        }
+
+        public int Test(FluidScript.Integer value)
+        {
+            return value;
         }
     }
 
@@ -35,17 +34,12 @@ namespace FluidScipt.ConsoleTest
     {
         public Test()
         {
-            Values = new JsonDictionary<string, object>
-                {
-                    {"name", "Vinayaka" }
-                };
         }
 
         public FluidScript.Math Math { get; }
 
-        public JsonDictionary<string, object> Values { get; }
-
-        public string Name { get; } = "Vinayaka";
+        [FluidScript.Runtime.Register("name")]
+        public string Name { get; set; } = "Vinayaka";
 
         [FluidScript.Runtime.Register("datetime")]
         public static FluidScript.String GetDataTime(FluidScript.String format)
@@ -57,12 +51,6 @@ namespace FluidScipt.ConsoleTest
         public static FluidScript.String GetDataTime()
         {
             return System.DateTime.Now.ToString();
-        }
-
-        [FluidScript.Runtime.Register("add")]
-        public int Add(params FluidScript.Integer[] values)
-        {
-            return System.Linq.Enumerable.Sum(values, value => value);
         }
 
         [FluidScript.Runtime.Register("add")]

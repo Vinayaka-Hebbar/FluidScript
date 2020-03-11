@@ -43,6 +43,7 @@
         In = 35,
         This = 36,
         Labeled = 50,
+
         #region Math
         Plus = 66,
         Minus = 67,
@@ -53,6 +54,11 @@
         /// ^
         /// </summary>
         Circumflex = 71,
+        /// <summary>
+        /// <code>**</code>
+        /// <see cref="Lexer.TokenType.StarStar"/>
+        /// </summary>
+        StarStar = 72,
         #endregion
         #region Logical & Shift
         Equal = 127,

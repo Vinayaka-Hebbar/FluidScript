@@ -3,99 +3,253 @@ using System;
 
 namespace FluidScript.Compiler.Binders
 {
-    public abstract class Binder
+    public interface IBinder
     {
-        public abstract void GenerateGet(MethodBodyGenerator generator);
+        void GenerateGet(MethodBodyGenerator generator);
 
-        public abstract void GenerateSet(MethodBodyGenerator generator);
+        void GenerateSet(MethodBodyGenerator generator);
 
-        public abstract Type Type { get; }
+        Type Type { get; }
 
-        public abstract bool IsMember { get; }
+        bool IsMember { get; }
 
-        public abstract bool IsStatic { get; }
+        bool IsStatic { get; }
+
+        object Get(object obj);
+
+        void Set(object obj, object value);
     }
 
-    public sealed class VariableBinder : Binder
-    {
-        private readonly ILLocalVariable _variable;
+    #region Dynamic Variable
 
+    internal
+#if LATEST_VS
+        readonly
+#endif
+        struct EmptyBinder : IBinder
+    {
+        public bool IsStatic => false;
+
+        public Type Type => TypeProvider.ObjectType;
+
+        public bool IsMember => false;
+
+        public void GenerateGet(MethodBodyGenerator generator)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GenerateSet(MethodBodyGenerator generator)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object Get(object obj)
+        {
+            return null;
+        }
+
+        public void Set(object obj, object value)
+        {
+
+        }
+    }
+
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct DynamicVariableBinder : IBinder
+    {
+        readonly ILocalVariable variable;
+        readonly Runtime.DynamicObject target;
+
+        public DynamicVariableBinder(ILocalVariable variable, Runtime.DynamicObject target)
+        {
+            this.variable = variable;
+            this.target = target;
+        }
+
+        public bool IsStatic => false;
+
+        public Type Type => variable.Type;
+
+        public bool IsMember => false;
+
+        public void GenerateGet(MethodBodyGenerator generator)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GenerateSet(MethodBodyGenerator generator)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object Get(object obj)
+        {
+            return target[variable.Index];
+        }
+
+        public void Set(object obj, object value)
+        {
+            target[variable.Index] = value;
+        }
+    }
+    #endregion
+
+    #region RuntimeVariable
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct RuntimeVariableBinder : IBinder
+    {
+        readonly ILocalVariable variable;
+        readonly System.Runtime.CompilerServices.IRuntimeVariables variables;
+
+        public RuntimeVariableBinder(ILocalVariable variable, System.Runtime.CompilerServices.IRuntimeVariables variables)
+        {
+            this.variable = variable;
+            this.variables = variables;
+        }
+
+        public bool IsStatic => false;
+
+        public Type Type => variable.Type;
+
+        public bool IsMember => false;
+
+        public void GenerateGet(MethodBodyGenerator generator)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GenerateSet(MethodBodyGenerator generator)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object Get(object obj)
+        {
+            return variables[variable.Index];
+        }
+
+        public void Set(object obj, object value)
+        {
+            variables[variable.Index] = variable;
+        }
+    }
+    #endregion
+
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct VariableBinder : IBinder
+    {
+        readonly ILLocalVariable variable;
 
         public VariableBinder(ILLocalVariable variable)
         {
-            _variable = variable;
-            Type = variable.Type;
+            this.variable = variable;
         }
 
-        public override bool IsMember { get; } = false;
+        public bool IsMember => false;
 
-        public override bool IsStatic { get; } = false;
+        public bool IsStatic => false;
 
-        public override Type Type { get; }
+        public Type Type => variable.Type;
 
-        public override void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator)
         {
-            generator.LoadVariable(_variable);
+            generator.LoadVariable(variable);
         }
 
-        public override void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator)
         {
-            generator.StoreVariable(_variable);
+            generator.StoreVariable(variable);
+        }
+
+        public object Get(object obj)
+        {
+            throw new NotSupportedException(nameof(Get));
+        }
+
+        public void Set(object obj, object value)
+        {
+            throw new NotSupportedException(nameof(Set));
         }
     }
 
-    public sealed class ParameterBinder : Binder
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct ParameterBinder : IBinder
     {
-        private readonly ParameterInfo _parameter;
+        readonly ParameterInfo parameter;
 
         public ParameterBinder(ParameterInfo parameter)
         {
-            _parameter = parameter;
-            Type = parameter.Type;
+            this.parameter = parameter;
         }
 
-        public override bool IsMember { get; } = false;
+        public bool IsMember => false;
 
-        public override bool IsStatic { get; } = false;
+        public Type Type => parameter.Type;
 
-        public override Type Type { get; }
+        public bool IsStatic => false;
 
-        public override void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator)
         {
             if (generator.Method.IsStatic)
-                generator.LoadArgument(_parameter.Index);
+                generator.LoadArgument(parameter.Index);
             else
-                generator.LoadArgument(_parameter.Index + 1);
+                generator.LoadArgument(parameter.Index + 1);
         }
 
-        public override void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator)
         {
             if (generator.Method.IsStatic)
-                generator.StoreArgument(_parameter.Index);
+                generator.StoreArgument(parameter.Index);
             else
-                generator.StoreArgument(_parameter.Index + 1);
+                generator.StoreArgument(parameter.Index + 1);
+        }
+
+        public object Get(object obj)
+        {
+            throw new NotSupportedException(nameof(Get));
+        }
+
+        public void Set(object obj, object value)
+        {
+            throw new NotSupportedException(nameof(Set));
         }
     }
 
-    public sealed class FieldBinder : Binder
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct FieldBinder : IBinder
     {
-        private readonly System.Reflection.FieldInfo _field;
+        readonly System.Reflection.FieldInfo field;
 
         public FieldBinder(System.Reflection.FieldInfo field)
         {
-            _field = field;
-            Type = _field.FieldType;
+            this.field = field;
         }
 
-        public override bool IsMember { get; } = true;
+        public bool IsMember => true;
 
-        public override bool IsStatic => _field.IsStatic;
+        public bool IsStatic => field.IsStatic;
 
-        public override Type Type { get; }
+        public Type Type => field.FieldType;
 
-        public override void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator)
         {
-            var field = _field;
+            var field = this.field;
             if (field.FieldType == null)
                 throw new Exception(string.Concat("Use of undeclared field ", field));
             if (field is Generators.FieldGenerator)
@@ -103,49 +257,59 @@ namespace FluidScript.Compiler.Binders
             generator.LoadField(field);
         }
 
-        public override void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator)
         {
-            var field = _field;
+            var field = this.field;
             if (field is Generators.FieldGenerator)
                 field = ((Generators.FieldGenerator)field).FieldInfo;
             generator.StoreField(field);
         }
-    }
 
-    public sealed class PropertyBinder : Binder
-    {
-        private readonly System.Reflection.PropertyInfo _property;
-        public PropertyBinder(System.Reflection.PropertyInfo property)
+        public object Get(object obj)
         {
-            _property = property;
-            Type = property.PropertyType;
+            return field.GetValue(obj);
         }
 
-        public override bool IsMember { get; } = true;
+        public void Set(object obj, object value)
+        {
+            field.SetValue(obj, value);
+        }
+    }
 
-        private System.Reflection.MethodInfo _getter;
+    public struct PropertyBinder : IBinder
+    {
+        readonly System.Reflection.PropertyInfo property;
+
+        public PropertyBinder(System.Reflection.PropertyInfo property) : this()
+        {
+            this.property = property;
+        }
+
+        public bool IsMember => true;
+
+        private System.Reflection.MethodInfo m_getter;
         public System.Reflection.MethodInfo Getter
         {
             get
             {
-                if (_getter == null)
-                    _getter = _property.GetGetMethod(true);
-                return _getter;
+                if (m_getter == null)
+                    m_getter = property.GetGetMethod(true);
+                return m_getter;
             }
         }
 
-        private System.Reflection.MethodInfo _setter;
+        private System.Reflection.MethodInfo m_setter;
         public System.Reflection.MethodInfo Setter
         {
             get
             {
-                if (_setter == null)
-                    _setter = _property.GetSetMethod(true);
-                return _setter;
+                if (m_setter == null)
+                    m_setter = property.GetSetMethod(true);
+                return m_setter;
             }
         }
 
-        public override bool IsStatic
+        public bool IsStatic
         {
             get
             {
@@ -156,9 +320,9 @@ namespace FluidScript.Compiler.Binders
                 return false;
             }
         }
-        public override Type Type { get; }
+        public Type Type => property.PropertyType;
 
-        public override void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator)
         {
             var get = Getter;
             if (get is IMethodBaseGenerator)
@@ -166,12 +330,29 @@ namespace FluidScript.Compiler.Binders
             generator.Call(get);
         }
 
-        public override void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator)
         {
             var set = Setter;
             if (set is IMethodBaseGenerator)
                 set = (System.Reflection.MethodInfo)((IMethodBaseGenerator)set).MethodBase;
             generator.Call(set);
         }
+
+        public object Get(object obj)
+        {
+            var p = property;
+            if (!p.CanRead)
+                throw new MemberAccessException(string.Concat("Cannot read value from readonly property ", p.Name));
+            return p.GetValue(obj, new object[0]);
+        }
+
+        public void Set(object obj, object value)
+        {
+            var p = property;
+            if (!p.CanWrite)
+                throw new MemberAccessException(string.Concat("Cannot write to readonly property ", p.Name));
+            p.SetValue(obj, value, new object[0]);
+        }
     }
+
 }

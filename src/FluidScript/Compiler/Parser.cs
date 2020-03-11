@@ -77,12 +77,17 @@ namespace FluidScript.Compiler
             return c != char.MinValue;
         }
 
-        private bool DontMoveNextIf(TokenType token)
+        private bool MoveNextThenIf(TokenType token)
+        {
+            return MoveNext() && TokenType == token;
+        }
+
+        private bool MoveNextThenIfNot(TokenType token)
         {
             return MoveNext() && TokenType != token;
         }
 
-        public bool MoveNextIfOnly(TokenType token)
+        public bool MoveNextIf(TokenType token)
         {
             if (TokenType == token)
                 return MoveNext();
@@ -157,6 +162,11 @@ namespace FluidScript.Compiler
                     }
                     return TokenType.Minus;
                 case '*':
+                    if (n == '*')
+                    {
+                        c = Source.ReadChar();
+                        return TokenType.StarStar;
+                    }
                     return TokenType.Multiply;
                 case '/':
                     return TokenType.Divide;
@@ -244,12 +254,7 @@ namespace FluidScript.Compiler
                 case '_':
                     if (char.IsLetter(n))
                     {
-#if Emit
-                        c = Source.ReadChar();
-                        return TokenType.Constant;
-#else
                         return TokenType.Identifier;
-#endif
                     }
                     break;
                 case '\\':
@@ -393,7 +398,7 @@ namespace FluidScript.Compiler
                 if (TokenType == TokenType.LeftBrace)
                 {
                     var members = VisitMembers();
-                    MoveNextIfOnly(TokenType.RightBrace);
+                    MoveNextIf(TokenType.RightBrace);
                     return new TypeDeclaration(name, null, new NodeList<TypeSyntax>(), members)
                     {
                         Source = Source
@@ -429,7 +434,7 @@ namespace FluidScript.Compiler
                     parameters = VisitFunctionParameters().ToArray();
                 parameterList = new NodeList<TypeParameter>(parameters);
                 //todo throw if other
-                MoveNextIfOnly(TokenType.RightParenthesis);
+                MoveNextIf(TokenType.RightParenthesis);
                 TypeSyntax returnType = null;
                 if (TokenType == TokenType.Colon)
                 {
@@ -523,6 +528,7 @@ namespace FluidScript.Compiler
             //default label statment
             //restore to prev
             Source.SeekTo(start - 1);
+            //skips if new line
             MoveNext();
             return VisitExpressionStatement();
         }
@@ -539,14 +545,10 @@ namespace FluidScript.Compiler
                 //todo throw error if others
                 if (TokenType == TokenType.SemiColon)
                     MoveNext();
-                var start = Source.CurrentPosition;
-                var condition = new ExpressionStatement(VisitExpression())
-                {
-                    Span = new TextSpan(start, Source.CurrentPosition)
-                };
+                var condition = VisitExpression();
                 if (TokenType == TokenType.SemiColon)
                     MoveNext();
-                var increment = VisitStatement();
+                var increment = VisitExpressionList(TokenType.Comma, TokenType.RightParenthesis);
                 if (TokenType == TokenType.RightParenthesis)
                     MoveNext();
                 Statement statement;
@@ -560,9 +562,9 @@ namespace FluidScript.Compiler
                 }
                 return new LoopStatement(statement, StatementType.For)
                 {
-                    InitStatement = initialization,
-                    ConditionStatement = condition,
-                    IncrementStatement = increment
+                    Initialization = initialization,
+                    Condition = condition,
+                    Increments = increment
                 };
             }
             return Statement.Empty;
@@ -576,11 +578,7 @@ namespace FluidScript.Compiler
             if (TokenType == TokenType.LeftParenthesis)
             {
                 MoveNext();
-                var start = Source.CurrentPosition;
-                var condition = new ExpressionStatement(VisitExpression())
-                {
-                    Span = new TextSpan(start, Source.CurrentPosition)
-                };
+                var condition = VisitExpression();
                 if (TokenType == TokenType.RightParenthesis)
                     MoveNext();
                 Statement statement;
@@ -594,7 +592,7 @@ namespace FluidScript.Compiler
                 }
                 return new LoopStatement(statement, StatementType.While)
                 {
-                    ConditionStatement = condition
+                    Condition = condition
                 };
             }
             return Statement.Empty;
@@ -623,18 +621,17 @@ namespace FluidScript.Compiler
                 if (TokenType == TokenType.LeftParenthesis)
                 {
                     MoveNext();
-                    var start = Source.CurrentPosition;
-                    var condition = new ExpressionStatement(VisitExpression())
-                    {
-                        Span = new TextSpan(start, Source.CurrentPosition)
-                    };
+                    var condition = VisitExpression();
+                    //{
+                    //    Span = new TextSpan(start, Source.CurrentPosition)
+                    //};
                     if (TokenType == TokenType.RightParenthesis)
                         MoveNext();
                     if (TokenType == TokenType.SemiColon)
                         MoveNext();
                     return new LoopStatement(statement, StatementType.DoWhile)
                     {
-                        ConditionStatement = condition
+                        Condition = condition
                     };
                 }
             }
@@ -719,8 +716,9 @@ namespace FluidScript.Compiler
             if (TokenType == TokenType.LeftBrace)
             {
                 var statements = VisitStatementList();
+                // don't skip new line
                 if (TokenType == TokenType.RightBrace)
-                    MoveNext();
+                    MoveNext(false);
                 statement = new BlockStatement(statements, CurrentLabels);
             }
             else if (TokenType == TokenType.AnonymousMethod)
@@ -739,11 +737,14 @@ namespace FluidScript.Compiler
             if (TokenType == TokenType.LeftBrace)
             {
                 var statements = VisitStatementList();
-                MoveNextIfOnly(TokenType.RightBrace);
+                // skip new line
+                MoveNextIf(TokenType.RightBrace);
                 return new BlockStatement(statements, CurrentLabels);
             }
-            NodeList<Statement> list = new NodeList<Statement>();
-            list.Add(new ReturnOrThrowStatement(VisitConditionalExpression(), StatementType.Return));
+            NodeList<Statement> list = new NodeList<Statement>
+            {
+                new ReturnOrThrowStatement(VisitConditionalExpression(), StatementType.Return)
+            };
             BlockStatement blockStatement = new BlockStatement(list, CurrentLabels);
             return blockStatement;
         }
@@ -751,13 +752,26 @@ namespace FluidScript.Compiler
         public NodeList<Statement> VisitStatementList()
         {
             var list = new NodeList<Statement>();
-            while (DontMoveNextIf(TokenType.RightBrace))
+            while (MoveNextThenIfNot(TokenType.RightBrace))
             {
                 list.Add(VisitStatement());
                 if (TokenType == TokenType.RightBrace)
                     break;
                 CheckSyntaxExpected(TokenType.SemiColon, TokenType.NewLine);
             }
+            return list;
+        }
+
+        public NodeList<Statement> VisitStatementList(TokenType splitToken, TokenType endToken)
+        {
+            var list = new NodeList<Statement>();
+            do
+            {
+                list.Add(VisitStatement());
+                if (TokenType == endToken)
+                    break;
+                CheckSyntaxExpected(splitToken, TokenType.NewLine);
+            } while (MoveNext());
             return list;
         }
 
@@ -774,14 +788,9 @@ namespace FluidScript.Compiler
             return exp;
         }
 
-        public Expression VisitAssignmentExpression()
+        private Expression VisitAssignmentExpression()
         {
             Expression exp = VisitConditionalExpression();
-            return VisitAssignmentExpression(exp);
-        }
-
-        private Expression VisitAssignmentExpression(Expression exp)
-        {
             TokenType type = TokenType;
             if (type == TokenType.Equal)
             {
@@ -937,20 +946,35 @@ namespace FluidScript.Compiler
 
         public Expression VisitMultiplicationExpression()
         {
-            Expression exp = VisitUnaryExpression();
+            Expression exp = VisitExponentiation();
             for (TokenType type = TokenType;
                 type == TokenType.Multiply || type == TokenType.Divide || type == TokenType.Percent;
                 type = TokenType)
             {
                 MoveNext();
-                Expression right = VisitUnaryExpression();
+                Expression right = VisitExponentiation();
                 exp = new BinaryExpression(exp, right, (ExpressionType)type);
+            }
+            return exp;
+        }
+
+        public Expression VisitExponentiation()
+        {
+            Expression exp = VisitUnaryExpression();
+            for (TokenType type = TokenType;
+                type == TokenType.StarStar;
+                type = TokenType)
+            {
+                MoveNext();
+                Expression right = VisitExponentiation();
+                exp = new BinaryExpression(exp, right, ExpressionType.StarStar);
             }
             return exp;
         }
 
         public Expression VisitUnaryExpression()
         {
+            // todo await, typeof, delete 
             Expression exp;
             switch (TokenType)
             {
@@ -1022,16 +1046,6 @@ namespace FluidScript.Compiler
                 case TokenType.SpecialVariable:
                     exp = new NameExpression(string.Concat("@", ReadVariableName()), ExpressionType.Identifier);
                     break;
-#if Emit
-                case TokenType.Variable:
-                    var name = GetName();
-                    exp = new NameExpression(name, ExpressionType.Identifier);
-                    break;
-                case TokenType.Constant:
-                    name = GetName();
-                    exp = new NameExpression(name, ExpressionType.Identifier);
-                    break;
-#endif
                 case TokenType.LeftBrace:
                     var list = VisitAnonymousObjectMembers();
                     CheckSyntaxExpected(TokenType.RightBrace);
@@ -1135,11 +1149,18 @@ namespace FluidScript.Compiler
                         return lamda;
                     case IdentifierType.This:
                         return new ThisExpression();
+                    case IdentifierType.SizeOf:
+                        //skip sizeof
+                        if (MoveNextThenIf(TokenType.LeftParenthesis))
+                        {
+                            return new SizeOfExpression(VisitAssignmentExpression());
+                        }
+                        CheckSyntaxExpected(TokenType.RightParenthesis);
+                        break;
                 }
             }
             return new NameExpression(name, ExpressionType.Identifier);
         }
-
 
         /// <summary>
         /// format &lt;int&gt;(size)[1,2]
@@ -1156,13 +1177,13 @@ namespace FluidScript.Compiler
                 MoveNext();
                 type = VisitType();
                 //>
-                MoveNextIfOnly(TokenType.Greater);
+                MoveNextIf(TokenType.Greater);
                 //(
                 if (TokenType == TokenType.LeftParenthesis)
                 {
                     MoveNext();
                     size = VisitAssignmentExpression();
-                    MoveNextIfOnly(TokenType.RightParenthesis);
+                    MoveNextIf(TokenType.RightParenthesis);
                 }
 
             }
@@ -1191,7 +1212,8 @@ namespace FluidScript.Compiler
             }
             //Restore
             Source.SeekTo(start - 1);
-            MoveNext();
+            //do not skip line info
+            MoveNext(false);
             return false;
         }
 
@@ -1203,7 +1225,7 @@ namespace FluidScript.Compiler
             if (TokenType == TokenType.LeftParenthesis)
             {
                 var args = VisitFunctionParameters();
-                MoveNextIfOnly(TokenType.RightParenthesis);
+                MoveNextIf(TokenType.RightParenthesis);
                 TypeSyntax returnType = null;
                 if (TokenType == TokenType.Colon)
                 {
@@ -1222,13 +1244,30 @@ namespace FluidScript.Compiler
         public NodeList<Expression> VisitArgumentList(TokenType splitToken, TokenType endToken)
         {
             var list = new NodeList<Expression>();
-            while (DontMoveNextIf(endToken))
+            while (MoveNextThenIfNot(endToken))
             {
                 list.Add(VisitAssignmentExpression());
                 if (TokenType == endToken)
                     break;
                 CheckSyntaxExpected(splitToken);
             }
+            return list;
+        }
+
+        /// <summary>
+        /// Don't Forget to Call ToArray
+        /// </summary>
+        /// <returns></returns>
+        public NodeList<Expression> VisitExpressionList(TokenType splitToken, TokenType endToken)
+        {
+            var list = new NodeList<Expression>();
+            do
+            {
+                list.Add(VisitAssignmentExpression());
+                if (TokenType == endToken)
+                    break;
+                CheckSyntaxExpected(splitToken);
+            } while (MoveNext());
             return list;
         }
 

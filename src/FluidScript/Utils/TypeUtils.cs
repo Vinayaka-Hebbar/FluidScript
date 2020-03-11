@@ -9,43 +9,39 @@ namespace FluidScript.Utils
     {
 
         internal const string ImplicitConversionName = "op_Implicit";
-
         internal const string ExplicitConviersionName = "op_Explicit";
 
         #region Types
         private const string ConvertibleType = "System.IConvertible";
         #endregion
 
-        internal const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-        internal const BindingFlags PublicStatic = BindingFlags.Public | BindingFlags.Static;
-        internal const BindingFlags PublicDeclared = PublicInstance | BindingFlags.Static | BindingFlags.DeclaredOnly;
         internal const BindingFlags PublicInstance = BindingFlags.Public | BindingFlags.Instance;
-
-        static TypeUtils()
-        {
-        }
+        internal const BindingFlags PublicStatic = BindingFlags.Public | BindingFlags.Static;
+        internal const BindingFlags AnyPublic = PublicStatic | BindingFlags.Instance;
+        internal const BindingFlags Any = AnyPublic | BindingFlags.NonPublic;
+        internal const BindingFlags PublicDeclared = PublicInstance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
         #region BindToMethod
-        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out ArgumentBinderList bindings)
+        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out ArgumenConversions bindings)
         {
-            bindings = new ArgumentBinderList();
+            bindings = new ArgumenConversions();
             foreach (var m in members)
             {
                 if (m.MemberType == MemberTypes.Method)
                 {
-                    if (MatchesTypes((MethodInfo)m, types, ref bindings))
+                    if (MatchesTypes((MethodInfo)m, types, bindings))
                         return (MethodInfo)m;
                 }
             }
             return null;
         }
 
-        internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out ArgumentBinderList bindings)
+        internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out ArgumenConversions bindings)
         {
-            bindings = new ArgumentBinderList();
+            bindings = new ArgumenConversions(types.Length);
             foreach (var m in methods)
             {
-                if (MatchesTypes(m, types, ref bindings))
+                if (MatchesTypes(m, types, bindings))
                     return m;
             }
             return null;
@@ -53,48 +49,48 @@ namespace FluidScript.Utils
 
         #endregion
 
-        internal static MethodInfo GetOperatorOverload(string name, out ArgumentBinderList bindings, params System.Type[] types)
+        internal static MethodInfo GetOperatorOverload(string name, out ArgumenConversions conversions, params System.Type[] types)
         {
-            bindings = new ArgumentBinderList();
+            conversions = new ArgumenConversions();
             foreach (var type in types)
             {
                 var members = type.GetMember(name, PublicStatic);
                 foreach (MethodInfo m in members)
                 {
-                    if (MatchesTypes(m, types, ref bindings))
+                    if (MatchesTypes(m, types, conversions))
                         return m;
                 }
             }
             return null;
         }
 
-        internal static bool MatchesTypes(MethodInfo method, System.Type[] types, ref ArgumentBinderList bindings)
+        internal static bool MatchesTypes(MethodInfo method, System.Type[] types, ArgumenConversions conversions)
         {
             var paramters = method.GetParameters();
             var length = types.Length;
             if (paramters.Length < length)
                 return false;
             // clear previous bindings
-            bindings.Clear();
+            conversions.Clear();
             for (int i = 0; i < paramters.Length; i++)
             {
                 var param = paramters[i];
+                var dest = param.ParameterType;
                 if (param.IsDefined(typeof(System.ParamArrayAttribute), false))
                 {
-                    bindings.Add(new ParamArrayBinder(i, param.ParameterType));
+                    conversions.Add(new ParamArrayConversion(i, dest.GetElementType()));
                     //No further check required
                     break;
                 }
                 // matches current index
                 if (i >= length)
                     return false;
-                var dest = param.ParameterType;
                 var src = types[i];
                 if (!AreReferenceAssignable(dest, src))
                 {
                     if (TryImplicitConvert(src, dest, out MethodInfo m) == false)
                         return false;
-                    bindings.Add(new ParamConvert(i, m));
+                    conversions.Add(new ParamConversion(i, m));
                 }
             }
             return true;
@@ -217,8 +213,8 @@ namespace FluidScript.Utils
 
         internal static bool HasMethod(MethodInfo m, object filter)
         {
-            var data = (System.Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
-            return data != null ? data.Match(filter) : m.Name.Equals(filter);
+            var data = (System.Attribute[])m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
+            return data.Length > 0 ? data[0].Match(filter) : m.Name.Equals(filter);
         }
 
         internal static MethodInfo[] GetPublicMethods(System.Type type, string name)
@@ -226,6 +222,34 @@ namespace FluidScript.Utils
             if (type == null)
                 return new MethodInfo[0];
             return new ArrayFilterIterator<MethodInfo>(type.GetMethods(Any), HasMethod, name).ToArray();
+        }
+        #endregion
+
+        #region Member
+        /// <summary>
+        /// Get property and fields of <paramref name="type"/> with name <paramref name="name"/>
+        /// </summary>
+        internal static IBinder GetMember(System.Type type, string name)
+        {
+            if (type == null)
+                throw new System.ArgumentNullException(nameof(type));
+            var properties = type.GetProperties(AnyPublic);
+            for (int i = 0; i < properties.Length; i++)
+            {
+                var p = properties[i];
+                var data = (System.Attribute[])p.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
+                if ((data.Length > 0 && data[0].Match(name)) || p.Name.Equals(name))
+                    return new PropertyBinder(p);
+            }
+            var fields = type.GetFields(AnyPublic);
+            for (int i = 0; i < fields.Length; i++)
+            {
+                var f = fields[i];
+                var data = (System.Attribute[])f.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
+                if ((data.Length > 0 && data[0].Match(name)) || f.Name.Equals(name))
+                    return new FieldBinder(f);
+            }
+            return null;
         }
         #endregion
     }

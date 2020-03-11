@@ -7,14 +7,14 @@ using System.Linq;
 namespace FluidScript.Compiler.Generators
 {
     // Temporary Method info wrapper
-    public abstract class BaseMethodGenerator : System.Reflection.MethodInfo, Emit.IMethodBaseGenerator
+    public abstract class BaseMethodGenerator : System.Reflection.MethodInfo, IMethodBaseGenerator
     {
         protected IList<AttributeGenerator> _CustomAttributes;
 
         private readonly System.Reflection.MethodInfo methodInfo;
         internal readonly System.Type Declaring;
 
-        public BaseMethodGenerator(System.Reflection.MethodInfo method, ParameterInfo[] parameters, Type declaring)
+        public BaseMethodGenerator(System.Reflection.MethodInfo method, Emit.ParameterInfo[] parameters, Type declaring)
         {
             Name = method.Name;
             methodInfo = method;
@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.Generators
             MemberType = System.Reflection.MemberTypes.Method;
         }
 
-        public BaseMethodGenerator(System.Reflection.MethodInfo method, ParameterInfo[] parameters, Generators.TypeGenerator declaring)
+        public BaseMethodGenerator(System.Reflection.MethodInfo method, Emit.ParameterInfo[] parameters, Generators.TypeGenerator declaring)
         {
             Name = method.Name;
             methodInfo = method;
@@ -35,6 +35,7 @@ namespace FluidScript.Compiler.Generators
             Provider = declaring;
             Attributes = method.Attributes;
             MemberType = System.Reflection.MemberTypes.Method;
+            CallingConvention = method.CallingConvention;
         }
 
         public override System.Reflection.ICustomAttributeProvider ReturnTypeCustomAttributes => methodInfo.ReturnTypeCustomAttributes;
@@ -43,6 +44,8 @@ namespace FluidScript.Compiler.Generators
         {
             return methodInfo.GetBaseDefinition();
         }
+
+        public override System.Reflection.CallingConventions CallingConvention { get; }
 
         public override RuntimeMethodHandle MethodHandle => methodInfo.MethodHandle;
 
@@ -58,7 +61,7 @@ namespace FluidScript.Compiler.Generators
 
         public override Type ReturnType { get; }
 
-        public ParameterInfo[] Parameters { get; }
+        public Emit.ParameterInfo[] Parameters { get; }
 
         public override System.Reflection.MemberTypes MemberType { get; }
 
@@ -155,7 +158,7 @@ namespace FluidScript.Compiler.Generators
     {
         private readonly System.Reflection.Emit.MethodBuilder _builder;
 
-        public MethodGenerator(System.Reflection.Emit.MethodBuilder builder, ParameterInfo[] parameters, TypeGenerator declaring) : base(builder, parameters, declaring)
+        public MethodGenerator(System.Reflection.Emit.MethodBuilder builder, Emit.ParameterInfo[] parameters, TypeGenerator declaring) : base(builder, parameters, declaring)
         {
             _builder = builder;
         }
@@ -191,7 +194,7 @@ namespace FluidScript.Compiler.Generators
     public sealed class DynamicMethodGenerator : BaseMethodGenerator
     {
         private readonly System.Reflection.Emit.DynamicMethod _builder;
-        public DynamicMethodGenerator(System.Reflection.Emit.DynamicMethod builder, ParameterInfo[] parameters, Type declaring) : base(builder, parameters, declaring)
+        public DynamicMethodGenerator(System.Reflection.Emit.DynamicMethod builder, Emit.ParameterInfo[] parameters, Type declaring) : base(builder, parameters, declaring)
         {
             _builder = builder;
         }

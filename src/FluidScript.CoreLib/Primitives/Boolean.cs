@@ -4,7 +4,6 @@
     /// Represents a Boolean value.
     /// </summary>
     [System.Serializable]
-    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS

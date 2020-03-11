@@ -21,6 +21,40 @@ namespace FluidScript.Compiler.SyntaxTree
             Value = value;
         }
 
+        object m_value;
+        /// <summary>
+        /// Reflected Value of <see cref="Value"/>
+        /// </summary>
+        public object ReflectedValue
+        {
+            get
+            {
+                if (m_value == null)
+                {
+                    switch (Value)
+                    {
+                        case int i:
+                            m_value = new Integer(i);
+                            break;
+                        case double d:
+                            m_value = new Double(d);
+                            break;
+                        case string s:
+                            m_value = new String(s);
+                            break;
+                        case bool b:
+                            m_value = b ? Boolean.True : Boolean.False;
+                            break;
+                        default:
+                            m_value = Value;
+                            break;
+                    }
+                    Type = m_value.GetType();
+                }
+                return m_value;
+            }
+        }
+
         /// <inheritdoc/>
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
@@ -77,6 +111,13 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <inheritdoc/>
         public override string ToString()
         {
+            switch (Value)
+            {
+                case null:
+                    return "null";
+                case string _:
+                    return string.Concat("'", Value, "'");
+            }
             return Value.ToString();
         }
     }

@@ -21,7 +21,7 @@ namespace FluidScript.Compiler.Emit
                 .DefineDynamicType("Delegate" + types.Length, typeof(MulticastDelegate), TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass);
             builder.DefineConstructor(CtorAttributes, CallingConventions.Standard, _DelegateCtorSignature).SetImplementationFlags(ImplAttributes);
             builder.DefineMethod("Invoke", InvokeAttributes, returnType, types).SetImplementationFlags(ImplAttributes);
-#if NETFRAMEWORK
+#if NETFRAMEWORK || MONOANDROID
             return builder.CreateType();
 #else
             return builder.CreateTypeInfo();

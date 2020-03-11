@@ -17,6 +17,11 @@ namespace FluidScript.Compiler
         /// </summary>
         TResult VisitUnary(UnaryExpression node);
         /// <summary>
+        /// Size of expression
+        /// </summary>
+        TResult VisitSizeOf(SizeOfExpression node);
+
+        /// <summary>
         /// Binary Expression
         /// </summary>
         TResult VisitBinary(BinaryExpression node);

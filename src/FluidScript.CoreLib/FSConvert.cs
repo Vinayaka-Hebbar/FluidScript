@@ -2,12 +2,20 @@
 
 namespace FluidScript
 {
-    public static class FSConvert
+    public class FSConvert
     {
         [Runtime.Register("toBoolean")]
         public static Boolean ToBoolean(object value)
         {
             return Convert.ToBoolean(value) ? Boolean.True : Boolean.False;
+        }
+
+        [Runtime.Register("toNumber")]
+        public static Double ToNumber(object value)
+        {
+            if (!(value is IConvertible convertible))
+                return new Double(0);
+            return convertible.ToDouble(null);
         }
 
         [Runtime.Register("toString")]

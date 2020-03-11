@@ -7,6 +7,7 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly Expression Left;
         public readonly Expression Right;
+
         public AssignmentExpression(Expression left, Expression right) : base(ExpressionType.Equal)
         {
             Left = left;
@@ -35,7 +36,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 var exp = (MemberExpression)Left;
                 exp.Target.GenerateCode(generator);
                 Right.GenerateCode(generator);
-                exp.Binding.GenerateSet(generator);
+                exp.Binder.GenerateSet(generator);
             }
             else if (Left.NodeType == ExpressionType.Indexer)
             {
@@ -47,7 +48,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     Iterate(exp.Arguments, (arg) =>
                     {
                         arg.GenerateCode(generator);
-                        generator.CallStatic(ReflectionHelpers.Integer_to_Int32);
+                        generator.CallStatic(ReflectionHelpers.IntegerToInt32);
                     });
                     Right.GenerateCode(generator);
                     System.Type elementType = type.GetElementType();

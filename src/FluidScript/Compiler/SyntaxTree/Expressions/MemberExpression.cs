@@ -4,15 +4,21 @@ using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
+    /// <summary>
+    /// Member access expression
+    /// </summary>
     public class MemberExpression : Expression
     {
         public readonly Expression Target;
         public readonly string Name;
 
-        public Binders.Binder Binding
+        /// <summary>
+        /// Compiler generation binder
+        /// </summary>
+        public Binders.IBinder Binder
         {
             get;
-            protected internal set;
+            set;
         }
 
         public MemberExpression(Expression target, string name, ExpressionType opCode) : base(opCode)
@@ -39,15 +45,8 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            if (Target.NodeType == ExpressionType.This)
-            {
-                generator.LoadArgument(0);
-            }
-            else
-            {
-                Target.GenerateCode(generator);
-                Binding.GenerateGet(generator);
-            }
+            Target.GenerateCode(generator);
+            Binder?.GenerateGet(generator);
         }
     }
 }

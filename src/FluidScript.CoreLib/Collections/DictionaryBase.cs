@@ -27,7 +27,6 @@
 
         protected DictionaryBase()
         {
-
         }
 
         public bool IsReadOnly => false;
@@ -78,7 +77,7 @@
                 {
                     if (newEntries[i].HashCode != -1)
                     {
-                        newEntries[i].HashCode = (Comparer.GetHashCode(newEntries[i].Key) & 0x7FFFFFFF);
+                        newEntries[i].HashCode = Comparer.GetHashCode(newEntries[i].Key) & 0x7FFFFFFF;
                     }
                 }
             }

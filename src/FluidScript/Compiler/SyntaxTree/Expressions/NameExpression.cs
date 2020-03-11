@@ -15,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Binding for compiler generation
         /// </summary>
-        public Binders.Binder Binder { get; internal set; }
+        public Binders.IBinder Binder { get; internal set; }
 
         /// <summary>
         /// Creates Identifier Expression

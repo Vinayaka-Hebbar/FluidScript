@@ -1,10 +1,9 @@
 ﻿using System.Dynamic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace FluidScript.Runtime
 {
-    internal sealed class MetaObject : System.Dynamic.DynamicMetaObject
+    internal sealed class MetaObject : DynamicMetaObject
     {
         private readonly RuntimeMetaObject m_value;
 
@@ -16,11 +15,10 @@ namespace FluidScript.Runtime
         public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
         {
             var result = m_value.BindGetMember(binder.Name);
-            if (result.HasValue)
+            if (result != null)
             {
-                var data = result.Value;
-                var value = data.Value;
-                var expression = Expression.Convert(Expression.Constant(value, data.Type), binder.ReturnType);
+                var value = result.Get(Value);
+                var expression = Expression.Convert(Expression.Constant(value, result.Type), binder.ReturnType);
                 return new DynamicMetaObject(expression, GetTypeRestriction(this), value);
             }
             else
@@ -42,18 +40,18 @@ namespace FluidScript.Runtime
         {
             var name = binder.Name;
             var arguments = Utils.CollectionExtensions.Map(args, arg => arg.Value);
-            var del = m_value.GetDelegate(name, arguments, out Compiler.Binders.ArgumentBinderList binds);
+            var del = m_value.GetDelegate(name, arguments, out Compiler.Binders.ArgumenConversions conversions);
             var method = del.Method;
-
-            foreach (var binding in binds)
+            // todo check whether target is correct
+            foreach (var conversion in conversions)
             {
-                if (binding.BindType == Compiler.Binders.ArgumentBinder.ArgumentBindType.Convert)
+                if (conversion.ConversionType == Compiler.Binders.ConversionType.Convert)
                 {
-                    arguments[binding.Index] = binding.Invoke(arguments);
+                    arguments[conversion.Index] = conversion.Invoke(arguments);
                 }
-                else if (binding.BindType == Compiler.Binders.ArgumentBinder.ArgumentBindType.ParamArray)
+                else if (conversion.ConversionType == Compiler.Binders.ConversionType.ParamArray)
                 {
-                    arguments = (object[])binding.Invoke(arguments);
+                    arguments = (object[])conversion.Invoke(arguments);
                     break;
                 }
             }

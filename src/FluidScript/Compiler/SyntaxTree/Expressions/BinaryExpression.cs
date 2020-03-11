@@ -10,7 +10,10 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public System.Reflection.MethodInfo Method { get; internal set; }
 
-        public Binders.ArgumentBinderList Bindings { get; internal set; }
+        /// <summary>
+        /// Argument convert list
+        /// </summary>
+        public Binders.ArgumenConversions Conversions { get; internal set; }
 
         public BinaryExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
         {
@@ -30,13 +33,13 @@ namespace FluidScript.Compiler.SyntaxTree
             //todo conversion 
             if (Method == null)
                 throw new System.NullReferenceException(nameof(Method));
-            var bindings = Bindings;
+            var binders = Conversions;
             Left.GenerateCode(generator);
-            var first = bindings.BindingAt(0);
+            var first = binders.At(0);
             if (first != null)
                 first.Generate(generator);
             Right.GenerateCode(generator);
-            var second = bindings.BindingAt(1);
+            var second = binders.At(1);
             if (second != null)
                 second.Generate(generator);
             generator.Call(Method);
@@ -100,6 +103,9 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 case ExpressionType.OrOr:
                     operation = "||";
+                    break;
+                case ExpressionType.StarStar:
+                    operation = "**";
                     break;
             }
             return string.Concat(Left.ToString(), operation, Right.ToString());

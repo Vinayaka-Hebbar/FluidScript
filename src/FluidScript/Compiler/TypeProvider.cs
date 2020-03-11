@@ -15,9 +15,20 @@ namespace FluidScript.Compiler
 
     public sealed class TypeProvider : ITypeProvider
     {
-        internal static readonly System.Type BooleanType = typeof(Boolean);
-        internal static readonly System.Type FSType = typeof(FSObject);
-        internal static readonly System.Type ObjectType = typeof(object);
+        internal static readonly System.Type FSType;
+        internal static readonly System.Type ObjectType;
+
+        internal static readonly System.Type DoubleType;
+        internal static readonly System.Type FloatType;
+        internal static readonly System.Type LongType;
+        internal static readonly System.Type IntType;
+        internal static readonly System.Type ShortType;
+        internal static readonly System.Type ByteType;
+
+        internal static readonly System.Type StringType;
+        internal static readonly System.Type CharType;
+        internal static readonly System.Type BooleanType;
+        internal static readonly System.Type VoidType;
 
         internal static readonly Primitive[] Inbuilts;
         private static readonly System.Collections.Generic.IDictionary<string, Primitive> InbuiltMap;
@@ -28,19 +39,33 @@ namespace FluidScript.Compiler
         {
             Default = new TypeProvider();
 
+            FSType = typeof(FSObject);
+            ObjectType = typeof(object);
+            // Primitives
+            DoubleType = typeof(Double);
+            FloatType = typeof(Float);
+            LongType = typeof(Long);
+            IntType = typeof(Integer);
+            ShortType = typeof(Short);
+            ByteType = typeof(Byte);
+            StringType = typeof(String);
+            CharType = typeof(Char);
+            BooleanType = typeof(Boolean);
+            VoidType = typeof(void);
+
             Inbuilts = new Primitive[]
             {
-                new Primitive("byte", typeof(Byte)),
-                new Primitive("short", typeof(Short)),
-                new Primitive("int", typeof(Integer)),
-                new Primitive("long", typeof(Long)),
-                new Primitive("float", typeof(Float)),
-                new Primitive("double", typeof(Double)),
-                new Primitive( "bool", BooleanType),
-                new Primitive("char", typeof(Char)),
-                new Primitive("string", typeof(String)),
+                new Primitive("byte", ByteType),
+                new Primitive("short", ShortType),
+                new Primitive("int", IntType),
+                new Primitive("long", LongType),
+                new Primitive("float", FloatType),
+                new Primitive("double", DoubleType),
+                new Primitive("bool", BooleanType),
+                new Primitive("char", CharType),
+                new Primitive("string", StringType),
                 new Primitive("any", typeof(IFSObject)),
-                new Primitive("void", typeof(void))
+                new Primitive("void", VoidType)
             };
             InbuiltMap = System.Linq.Enumerable.ToDictionary(Inbuilts, item => item.Name);
         }

@@ -18,7 +18,7 @@
         /// <summary>
         /// Initialization
         /// </summary>
-        public Statement InitStatement
+        public Statement Initialization
         {
             get;
             set;
@@ -27,21 +27,17 @@
         /// <summary>
         /// Condition statement
         /// </summary>
-        public ExpressionStatement ConditionStatement
-        {
-            get; set;
-        }
-
-        public Expression Condition => ConditionStatement.Expression;
+        public Expression Condition { get; set; }
 
         /// <summary>
         /// Increment or decrement operation
         /// </summary>
-        public Statement IncrementStatement
+        public NodeList<Expression> Increments
         {
             get;
             set;
         }
+
         public bool CheckConditionAtEnd => NodeType == StatementType.DoWhile;
 
         /// <inheritdoc/>
@@ -50,7 +46,7 @@
             visitor.VisitLoop(this);
         }
 
-        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator)
         {
             // Generate code for the start of the statement.
             var statementLocals = new StatementLocals() { NonDefaultBreakStatementBehavior = true, NonDefaultSourceSpanBehavior = true };
@@ -60,8 +56,8 @@
             var breakTarget = generator.CreateLabel();
 
             // Emit the initialization statement.
-            if (InitStatement != null)
-                InitStatement.GenerateCode(generator);
+            if (Initialization != null)
+                Initialization.GenerateCode(generator);
 
             // The inner loop starts here.
             var startOfLoop = generator.CreateLabel();
@@ -80,16 +76,16 @@
             generator.DefineLabelPosition(continueTarget);
 
             // Increment the loop variable.
-            if (IncrementStatement != null)
-                IncrementStatement.GenerateCode(generator);
+            if (Increments != null)
+                Increments.ForEach(e => e.GenerateCode(generator));
 
             generator.DefineLabelPosition(startOfCondition);
             // Check the condition and jump to the end if it is false.
-            if (ConditionStatement != null)
+            if (Condition != null)
             {
-                generator.MarkSequencePoint(ConditionStatement.Span);
-                ConditionStatement.GenerateCode(generator);
-                generator.CallStatic(Utils.ReflectionHelpers.Booolean_To_Bool);
+                // generator.MarkSequencePoint(ConditionStatement.Span);
+                Condition.GenerateCode(generator);
+                generator.CallStatic(Utils.ReflectionHelpers.BoooleanToBool);
                 generator.BranchIfTrue(startOfLoop);
             }
 
@@ -105,15 +101,15 @@
         {
             if (NodeType == StatementType.For)
             {
-                return string.Concat("for(", InitStatement, ";", ConditionStatement, ";", IncrementStatement, ")\n{", Body, "\n}\n");
+                return string.Concat("for(", Initialization, ";", Condition, ";", string.Join(",", Increments.Map(e => e.ToString())), ")\n{", Body, "\n}\n");
             }
             else if (NodeType == StatementType.While)
             {
-                return string.Concat("while(", ConditionStatement, ")\n{", Body, "\n}\n");
+                return string.Concat("while(", Condition, ")\n{", Body, "\n}\n");
             }
             else if (NodeType == StatementType.DoWhile)
             {
-                return string.Concat("do\n{", Body, "\n}\nwhile (", ConditionStatement, ")");
+                return string.Concat("do\n{", Body, "\n}\nwhile (", Condition, ")");
             }
             else
             {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public sealed class NodeList<T> : IEnumerable<T> where T : Node
+    public sealed class NodeList<T> : INodeList<T> where T : Node
     {
         static readonly T[] EmptyNodeList = new T[0];
         int size;
@@ -61,11 +61,27 @@ namespace FluidScript.Compiler.SyntaxTree
             return res;
         }
 
+        public void ForEach(System.Action<T> selector)
+        {
+            for (int i = 0; i < size; i++)
+            {
+                selector(items[i]);
+            }
+        }
+
         public T[] ToArray()
         {
             var res = new T[size];
             System.Array.Copy(items, 0, res, 0, size);
             return res;
+        }
+
+        /// <summary>
+        /// Copy to array starts from <paramref name="index"/>
+        /// </summary>
+        public void CopyTo(System.Array array, int index)
+        {
+            System.Array.Copy(items, index, array, 0, array.Length);
         }
 
         public IEnumerator<T> GetEnumerator()

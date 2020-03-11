@@ -29,38 +29,111 @@ namespace FluidScript.Utils
 
         internal static readonly ConstructorInfo Register_Attr_Ctor;
 
-        internal static readonly MethodInfo Integer_to_Int32;
-
         #region Implicit Calls
-        internal static readonly MethodInfo Booolean_To_Bool;
+
+        private static MethodInfo m_booleanToBool;
+        internal static MethodInfo BoooleanToBool
+        {
+            get
+            {
+                if (m_booleanToBool == null)
+                    m_booleanToBool = GetStaticMethod(TypeProvider.BooleanType, TypeUtils.ImplicitConversionName, TypeProvider.BooleanType);
+                return m_booleanToBool;
+            }
+        }
+
+        private static MethodInfo m_intergerToInt32;
+        internal static MethodInfo IntegerToInt32
+        {
+            get
+            {
+                if (m_intergerToInt32 == null)
+                    m_intergerToInt32 = GetImplicitConversion(TypeProvider.IntType, TypeUtils.ImplicitConversionName, typeof(int), TypeProvider.IntType);
+                return m_intergerToInt32;
+            }
+        }
+
         #endregion
 
         #region Logical Convert
-        internal static readonly MethodInfo LogicalAnd;
-        internal static readonly MethodInfo LogicalOr;
-        //for null value
 
-        private static MethodInfo toBoolean;
-        public static MethodInfo ToBoolean
+        private static MethodInfo m_logicalAnd;
+        internal static MethodInfo LogicalAnd
         {
             get
             {
-                if (toBoolean == null)
-                    toBoolean = GetStaticMethod(typeof(FSConvert), nameof(FSConvert.ToBoolean), TypeProvider.ObjectType);
-                return toBoolean;
+                if (m_logicalAnd == null)
+                    m_logicalAnd = GetStaticMethod(TypeProvider.BooleanType, "OpLogicalAnd", TypeProvider.BooleanType, TypeProvider.BooleanType);
+                return m_logicalAnd;
             }
         }
 
-        private static MethodInfo isEquals;
-        public static MethodInfo IsEquals
+        private static MethodInfo m_logicalOr;
+        internal static MethodInfo LogicalOr
         {
             get
             {
-                if(isEquals == null)
-                    isEquals = GetStaticMethod(TypeProvider.FSType, nameof(FSObject.IsEquals), TypeProvider.ObjectType, TypeProvider.ObjectType);
-                return isEquals;
+                if (m_logicalOr == null)
+                    m_logicalOr = GetStaticMethod(TypeProvider.BooleanType, "OpLogicalOr", TypeProvider.BooleanType, TypeProvider.BooleanType);
+                return m_logicalOr;
             }
         }
+
+        private static MethodInfo m_toBoolean;
+        internal static MethodInfo ToBoolean
+        {
+            get
+            {
+                if (m_toBoolean == null)
+                    m_toBoolean = GetStaticMethod(typeof(FSConvert), nameof(FSConvert.ToBoolean), TypeProvider.ObjectType);
+                return m_toBoolean;
+            }
+        }
+
+        private static MethodInfo m_mathPow;
+        internal static MethodInfo MathPow
+        {
+            get
+            {
+                if (m_mathPow == null)
+                    m_mathPow = GetStaticMethod(typeof(Math), nameof(Math.Pow), TypeProvider.DoubleType, TypeProvider.DoubleType);
+                return m_mathPow;
+            }
+        }
+
+        private static MethodInfo m_isEquals;
+        internal static MethodInfo IsEquals
+        {
+            get
+            {
+                if (m_isEquals == null)
+                    m_isEquals = GetStaticMethod(TypeProvider.FSType, nameof(FSObject.IsEquals), TypeProvider.ObjectType, TypeProvider.ObjectType);
+                return m_isEquals;
+            }
+        }
+
+        private static MethodInfo m_logicalNot;
+        internal static MethodInfo LogicalNot
+        {
+            get
+            {
+                if (m_logicalNot == null)
+                    m_logicalNot = GetStaticMethod(TypeProvider.BooleanType, "op_LogicalNot", TypeProvider.BooleanType);
+                return m_logicalNot;
+            }
+        }
+
+        private static MethodInfo m_list_getItem;
+        internal static MethodInfo List_GetItem
+        {
+            get
+            {
+                if (m_list_getItem == null)
+                    m_list_getItem = GetInstanceMethod(typeof(System.Collections.IList), "get_Item", typeof(int));
+                return m_list_getItem;
+            }
+        }
+
         #endregion
 
         #endregion
@@ -68,25 +141,19 @@ namespace FluidScript.Utils
         static ReflectionHelpers()
         {
 
-            Double_New = GetInstanceCtor(typeof(Double), typeof(double));
-            Float_New = GetInstanceCtor(typeof(Float), typeof(float));
-            Long_New = GetInstanceCtor(typeof(Long), typeof(long));
-            Integer_New = GetInstanceCtor(typeof(Integer), typeof(int));
-            Short_New = GetInstanceCtor(typeof(Short), typeof(short));
-            Byte_New = GetInstanceCtor(typeof(Byte), typeof(sbyte));
-            Char_New = GetInstanceCtor(typeof(Char), typeof(char));
-            String_New = GetInstanceCtor(typeof(String), typeof(string));
+            Double_New = GetInstanceCtor(TypeProvider.DoubleType, typeof(double));
+            Float_New = GetInstanceCtor(TypeProvider.FloatType, typeof(float));
+            Long_New = GetInstanceCtor(TypeProvider.LongType, typeof(long));
+            Integer_New = GetInstanceCtor(TypeProvider.IntType, typeof(int));
+            Short_New = GetInstanceCtor(TypeProvider.ShortType, typeof(short));
+            Byte_New = GetInstanceCtor(TypeProvider.ByteType, typeof(sbyte));
+            Char_New = GetInstanceCtor(TypeProvider.CharType, typeof(char));
+            String_New = GetInstanceCtor(TypeProvider.StringType, typeof(string));
             Register_Attr_Ctor = GetInstanceCtor(typeof(Runtime.RegisterAttribute), typeof(string));
-            Integer_to_Int32 = GetImplicitConversion(typeof(Integer), TypeUtils.ImplicitConversionName, typeof(int), typeof(Integer));
-
 
             Bool_True = GetField(TypeProvider.BooleanType, nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
             Bool_False = GetField(TypeProvider.BooleanType, nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
 
-            Booolean_To_Bool = GetStaticMethod(TypeProvider.BooleanType, TypeUtils.ImplicitConversionName, TypeProvider.BooleanType);
-
-            LogicalAnd = GetStaticMethod(TypeProvider.BooleanType, "OpLogicalAnd", TypeProvider.BooleanType, TypeProvider.BooleanType);
-            LogicalOr = GetStaticMethod(TypeProvider.BooleanType, "OpLogicalOr", TypeProvider.BooleanType, TypeProvider.BooleanType);
         }
 
         private static ConstructorInfo GetInstanceCtor(System.Type type, params System.Type[] parameterTypes)

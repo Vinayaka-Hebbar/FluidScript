@@ -37,6 +37,7 @@ namespace FluidScript.Compiler.Lexer
                 {"switch", IdentifierType.Switch },
                 {"break", IdentifierType.Break },
                 {"throw", IdentifierType.Throw },
+                {"sizeof", IdentifierType.SizeOf}
             };
         }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace FluidScript.Runtime
 {
-    internal sealed class DynamicLocals : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>
+    internal sealed class DynamicLocals : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>, System.Runtime.CompilerServices.IRuntimeVariables
     {
         static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
 
@@ -92,8 +92,8 @@ namespace FluidScript.Runtime
             {
                 throw new System.NullReferenceException(nameof(name));
             }
-            var key = new LocalVariable(name, type);
-            current.Store(Insert(key, value));
+            var key = Insert(name, type, value);
+            current.Store(key.Index);
         }
 
         internal void InsertAtRoot(string name, System.Type type, object value)
@@ -102,20 +102,20 @@ namespace FluidScript.Runtime
             {
                 throw new System.NullReferenceException(nameof(name));
             }
-            var key = new LocalVariable(name, type);
-            current.StoreAtRoot(Insert(key, value));
+            var key = Insert(name, type, value);
+            current.StoreAtRoot(key.Index);
         }
 
-        internal int Insert(LocalVariable key, object value)
+        internal LocalVariable Insert(string name, System.Type type, object value)
         {
             if (buckets == null) Initialize(0);
-            int hashCode = key.GetHashCode();
+            int hashCode = name.GetHashCode() & 0x7FFFFFFF;
             int targetBucket = hashCode % buckets.Length;
             for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
             {
-                if (entries[i].HashCode == hashCode && Comparer.Equals(entries[i].Key, key))
+                if (entries[i].HashCode == hashCode && string.Equals(entries[i].Key.Name, name))
                 {
-                    throw new System.ArgumentException(string.Concat("Adding shadow variable ", key));
+                    throw new System.ArgumentException(string.Concat("Adding shadow variable ", name));
                 }
             }
             int index;
@@ -135,14 +135,14 @@ namespace FluidScript.Runtime
                 index = count;
                 count++;
             }
-            key.Index = index;
+            var variable = new LocalVariable(name, type, index, hashCode);
             entries[index].HashCode = hashCode;
             entries[index].Next = buckets[targetBucket];
-            entries[index].Key = key;
+            entries[index].Key = variable;
             entries[index].Value = value;
             buckets[targetBucket] = index;
             version++;
-            return index;
+            return variable;
         }
 
         internal void Update(LocalVariable key, object value)
@@ -175,6 +175,9 @@ namespace FluidScript.Runtime
             return -1;
         }
 
+        /// <summary>
+        /// create's a scope for variables inside a block
+        /// </summary>
         internal System.IDisposable EnterScope()
         {
             return new LocalScope(this);
@@ -269,7 +272,7 @@ namespace FluidScript.Runtime
 
         bool ICollection<KeyValuePair<string, object>>.Remove(KeyValuePair<string, object> item)
         {
-            throw new System.NotSupportedException("Remove not supported in dynamic object");
+            throw new System.NotSupportedException("Remove not supported");
         }
 
         public Enumerator GetEnumerator()
@@ -284,7 +287,11 @@ namespace FluidScript.Runtime
 
         #endregion
 
-        private struct LocalScope : System.IDisposable
+        private
+#if LATEST_VS
+            readonly
+#endif
+            struct LocalScope : System.IDisposable
         {
             private readonly DynamicLocals locals;
 

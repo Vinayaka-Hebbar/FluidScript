@@ -1,4 +1,4 @@
-﻿#if NETFRAMEWORK
+﻿#if NETFRAMEWORK || MONOANDROID
 using System.Diagnostics.SymbolStore;
 #endif
 using FluidScript.Compiler.Generators;
@@ -18,7 +18,7 @@ namespace FluidScript.Compiler.Emit
 
         private int dynamicCount;
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || MONOANDROID
 
         /// <summary>
         /// Gets the language type GUID for the symbol store.
@@ -56,7 +56,7 @@ namespace FluidScript.Compiler.Emit
         public AssemblyGen(string assemblyName, string version)
         {
             System.Reflection.AssemblyName name = new System.Reflection.AssemblyName(string.Concat(assemblyName, ", Version=", version));
-#if NETFRAMEWORK
+#if NETFRAMEWORK || MONOANDROID
             var assembly = System.AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
             var module = assembly.DefineDynamicModule(name.Name, false);
 #else
@@ -94,7 +94,7 @@ namespace FluidScript.Compiler.Emit
             return Module.GetType(typeName);
         }
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || MONOANDROID
         internal ISymbolDocumentWriter DefineDocument(string url)
         {
             return Module.DefineDocument(url, LanguageType, LanguageVendor, DocumentType);

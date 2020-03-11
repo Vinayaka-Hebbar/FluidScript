@@ -72,11 +72,20 @@ namespace FluidScript.Compiler
 
         public Expression VisitCall(InvocationExpression node)
         {
-            for (int i = 0; i < node.Arguments.Length; i++)
+            node.Arguments.ForEach(arg => arg.Accept(this));
+            var exp = node.Target.Accept(this);
+            if(exp.NodeType == ExpressionType.Identifier)
             {
-                node.Arguments[i].Accept(this);
+                var identifier = (NameExpression)exp;
+                var name = identifier.Name;
+                if (Parameters.Contains(name) == false && HoistedLocals.ContainsKey(name) == false)
+                    HoistedLocals.Add(name, exp);
             }
-            node.Target.Accept(this);
+            else if(node.NodeType == ExpressionType.MemberAccess)
+            {
+                var member = (MemberExpression)exp;
+                member.Target.Accept(this);
+            }
             return node;
         }
 
@@ -113,10 +122,7 @@ namespace FluidScript.Compiler
 
         public Expression VisitIndex(IndexExpression node)
         {
-            for (int i = 0; i < node.Arguments.Length; i++)
-            {
-                node.Arguments[i].Accept(this);
-            }
+            node.Arguments.ForEach(arg => arg.Accept(this));
             node.Target.Accept(this);
             return node;
         }
@@ -128,9 +134,9 @@ namespace FluidScript.Compiler
 
         public void VisitLoop(LoopStatement node)
         {
-            node.InitStatement?.Accept(this);
-            node.Condition?.Accept(this);
-            node.IncrementStatement?.Accept(this);
+            node.Initialization?.Accept(this);
+            node.Condition.Accept(this);
+            node.Increments?.ForEach(e => e.Accept(this));
             node.Body.Accept(this);
         }
 
@@ -163,6 +169,12 @@ namespace FluidScript.Compiler
         public void VisitReturn(ReturnOrThrowStatement node)
         {
             node.Expression.Accept(this);
+        }
+
+        public Expression VisitSizeOf(SizeOfExpression node)
+        {
+            node.Value.Accept(this);
+            return node;
         }
 
         public Expression VisitTernary(TernaryExpression node)

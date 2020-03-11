@@ -1,22 +1,22 @@
 ﻿using System;
 
-namespace Old.Test
+namespace New.Test
 {
     class Program
     {
-        const string text = "pow(2,5)";
+        const string text = "Math.pow(3,3)";
         static void Main(string[] args)
         {
             try
             {
-                var compiler = new FluidScript.Compiler.DynamicCompiler(new FluidScript.Math());
+                var compiler = new FluidScript.Compiler.DynamicCompiler();
                 compiler["r"] = new FluidScript.Integer(2);
                 compiler["s"] = new FluidScript.Double(1.3426);
+                var statement = FluidScript.ScriptParser.GetStatement(text);
                 var sw = new System.Diagnostics.Stopwatch();
                 sw.Start();
-                for (int i = 0; i < 10000; i++)
+                for (int i = 0; i < 100000; i++)
                 {
-                    var statement = FluidScript.ScriptParser.GetStatement(text);
                     var result = compiler.Invoke(statement);
                 }
                 sw.Stop();
@@ -27,6 +27,16 @@ namespace Old.Test
                 Console.WriteLine($"{ex.Message},\ntrace:\nat {ex.StackTrace}");
             }
             Console.ReadKey();
+        }
+
+        public class Class1
+        {
+            public Class2 Class2 { get; set; } = new Class2();
+        }
+
+        public class Class2
+        {
+            public Type Type { get; set; } = typeof(Class1);
         }
     }
 }

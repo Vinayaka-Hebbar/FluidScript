@@ -1,12 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0;</TargetFrameworks>
     <DefineConstants>TRACE;</DefineConstants>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.13-mr1</Version>
-  </PropertyGroup>
-
-  <PropertyGroup>
+    <Version>1.0.14-mr1</Version>
     <Title>FluidScript</Title>
     <PackageId>FluidScript</PackageId>
     <Product>FluidScript</Product>
@@ -14,7 +12,7 @@
     <AssemblyName>FluidScript</AssemblyName>
     <PackageReleaseNotes>Initial Release of FluidScript</PackageReleaseNotes>
     <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Description>Scripting library for .NET</Description>
   </PropertyGroup>
 
 
@@ -32,8 +30,8 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|AnyCPU'">
+    
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
@@ -53,10 +51,11 @@
 
   <ItemGroup>
     <Compile Remove="Runtime\DynamicData.cs" />
+    <Compile Remove="Runtime\Function.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.8-beta" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.9-beta" />
   </ItemGroup>
 
 </Project>

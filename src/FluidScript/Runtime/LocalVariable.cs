@@ -1,22 +1,28 @@
 ﻿
 namespace FluidScript.Runtime
 {
-    public struct LocalVariable : IFSObject, System.IEquatable<LocalVariable>
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct LocalVariable : Compiler.Emit.ILocalVariable, System.IEquatable<LocalVariable>
     {
-        internal static readonly LocalVariable Empty = new LocalVariable(string.Empty, null);
+        internal static readonly LocalVariable Empty = new LocalVariable(string.Empty, null, -1, 0);
 
-        internal readonly string Name;
-        internal int Index;
-        internal int Next;
-        internal readonly System.Type Type;
-        readonly int _hashCode;
+        public string Name { get; }
 
-        internal LocalVariable(string name, System.Type type)
+        public int Index { get; }
+
+        public System.Type Type { get; }
+
+        readonly int HashCode;
+
+        internal LocalVariable(string name, System.Type type, int index, int hashCode)
         {
             Name = name;
             Type = type;
-            _hashCode = name.GetHashCode() & 0x7FFFFFFF;
-            Index = Next = -1;
+            HashCode = hashCode;
+            Index = index;
         }
 
         public override bool Equals(object obj)
@@ -37,27 +43,7 @@ namespace FluidScript.Runtime
 
         public override int GetHashCode()
         {
-            return _hashCode;
-        }
-
-        [Runtime.Register("hashCode")]
-        public Integer __HashCode()
-        {
-            return new Integer(_hashCode);
-        }
-
-        public override string ToString() => string.Concat(Name, ":", Type.Name);
-
-        [Runtime.Register("equals")]
-        public Boolean Equals(IFSObject obj)
-        {
-            return Equals(obj) ? Boolean.True : Boolean.False;
-        }
-
-        [Runtime.Register("toString")]
-        public String __ToString()
-        {
-            return new String(string.Concat(Name, ":", Type.Name));
+            return HashCode;
         }
 
         public bool Equals(LocalVariable other)

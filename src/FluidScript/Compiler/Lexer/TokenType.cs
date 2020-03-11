@@ -68,7 +68,12 @@
         ///^
         /// </summary>
         Circumflex = 71,
+        /// <summary>
+        /// ** for pow
+        /// </summary>
+        StarStar = 72,
         #endregion
+
         #region Logical & Shift
         Equal = 127,
         // <
@@ -100,6 +105,7 @@
         //&&
         AndAnd = 140,
         #endregion
+
         #region PostFix Prefix
         PlusPlus = 141,
         MinusMinus = 142,

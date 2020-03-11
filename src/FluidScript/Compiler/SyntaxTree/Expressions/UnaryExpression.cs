@@ -21,7 +21,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Type conversion of arguments
         /// </summary>
-        public Binders.ArgumentBinderList Bindings { get; internal set; }
+        public Binders.ArgumenConversions Conversions { get; set; }
 
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
@@ -53,10 +53,10 @@ namespace FluidScript.Compiler.SyntaxTree
                     var exp = (MemberExpression)operand;
                     exp.Target.GenerateCode(generator);
                     generator.Duplicate();
-                    exp.Binding.GenerateGet(generator);
+                    exp.Binder.GenerateGet(generator);
                     //todo conversions
                     generator.CallStatic(Method);
-                    exp.Binding.GenerateSet(generator);
+                    exp.Binder.GenerateSet(generator);
                 }
             }
 

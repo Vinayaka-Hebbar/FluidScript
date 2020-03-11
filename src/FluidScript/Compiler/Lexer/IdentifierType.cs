@@ -29,6 +29,7 @@
         Continue,
         Switch,
         Break,
-        Throw
+        Throw,
+        SizeOf
     }
 }

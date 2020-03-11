@@ -44,7 +44,7 @@ namespace FluidScript.Compiler
 
         object IExpressionVisitor<object>.VisitAnonymousFunction(AnonymousFunctionExpression node)
         {
-            return node.Compile(this);
+            return node.Compile(Target.GetType(), this);
         }
 
         object IExpressionVisitor<object>.VisitAnonymousObject(AnonymousObjectExpression node)
@@ -85,15 +85,15 @@ namespace FluidScript.Compiler
             string name = null;
             var obj = Locals;
             ExpressionType nodeType = left.NodeType;
-            System.Reflection.MemberInfo member = null;
+            Binders.IBinder binder = null;
             System.Type type = null;
             if (nodeType == ExpressionType.Identifier)
             {
                 name = left.ToString();
                 if (obj == null)
                     ExecutionException.ThrowNullError(node.Left, node);
-                member = obj.GetType().GetMember(name).FirstOrDefault();
-                if (member == null)
+                binder = TypeUtils.GetMember(obj.GetType(), name);
+                if (binder == null)
                 {
                     if (obj is Runtime.IRuntimeMetaObjectProvider runtime)
                     {
@@ -103,7 +103,7 @@ namespace FluidScript.Compiler
                         return value;
                     }
                     obj = Target;
-                    member = TypeHelpers.GetMember(obj, name);
+                    binder = TypeUtils.GetMember(obj.GetType(), name);
                 }
             }
             else if (nodeType == ExpressionType.MemberAccess)
@@ -111,7 +111,7 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)left;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                member = TypeHelpers.GetMember(obj, name);
+                binder = TypeUtils.GetMember(exp.Target.Type, name);
             }
             else if (nodeType == ExpressionType.Indexer)
             {
@@ -122,15 +122,15 @@ namespace FluidScript.Compiler
                 var args = exp.Arguments.Map(arg => arg.Accept(this)).AddLast(value);
                 var indexers = obj.GetType()
                     .GetMember("set_Item", System.Reflection.MemberTypes.Method, TypeUtils.Any);
-                var indexer = TypeHelpers.BindToMethod(indexers, args, out Binders.ArgumentBinderList bindings);
+                var indexer = TypeHelpers.BindToMethod(indexers, args, out Binders.ArgumenConversions conversions);
                 if (indexer == null)
-                    ExecutionException.ThrowMissingIndexer(obj, "set", node);
+                    ExecutionException.ThrowMissingIndexer(exp.Target.Type, "set", node);
                 exp.Setter = indexer;
-                foreach (var binding in bindings)
+                foreach (var conversion in conversions)
                 {
-                    if (binding.BindType == Binders.ArgumentBinder.ArgumentBindType.Convert)
+                    if (conversion.ConversionType == Binders.ConversionType.Convert)
                     {
-                        args[binding.Index] = binding.Invoke(args);
+                        args[conversion.Index] = conversion.Invoke(args);
                     }
                     // No params
                 }
@@ -139,11 +139,7 @@ namespace FluidScript.Compiler
                 exp.Setter.Invoke(obj, args.ToArray());
                 return value;
             }
-            if (member != null)
-            {
-                value = TypeHelpers.InvokeSet(member, obj, value, out type);
-            }
-            else if (obj is Runtime.IRuntimeMetaObjectProvider runtime)
+            else if (binder is null && obj is Runtime.IRuntimeMetaObjectProvider runtime)
             {
                 var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
                 value = result.Value;
@@ -151,9 +147,10 @@ namespace FluidScript.Compiler
             }
             else
             {
-                ExecutionException.ThrowMissingMember(obj, name, node.Left, node);
+                ExecutionException.ThrowMissingMember(obj.GetType(), name, node.Left, node);
             }
             node.Type = type;
+            binder.Set(obj, value);
             return value;
         }
 
@@ -217,6 +214,9 @@ namespace FluidScript.Compiler
                 case ExpressionType.OrOr:
                     method = VisitLogical(nodeType, ref args);
                     break;
+                case ExpressionType.StarStar:
+                    method = ReflectionHelpers.MathPow;
+                    break;
             }
             if (opName != null)
             {
@@ -235,13 +235,13 @@ namespace FluidScript.Compiler
                     rightType = right.GetType();
                 }
                 method = TypeUtils.
-                   GetOperatorOverload(opName, out Binders.ArgumentBinderList bindings, leftType, rightType);
+                   GetOperatorOverload(opName, out Binders.ArgumenConversions conversions, leftType, rightType);
                 // null method handled
-                foreach (var binding in bindings)
+                foreach (var conversion in conversions)
                 {
-                    if (binding.BindType == Binders.ArgumentBinder.ArgumentBindType.Convert)
+                    if (conversion.ConversionType == Binders.ConversionType.Convert)
                     {
-                        args[binding.Index] = binding.Invoke(args);
+                        args[conversion.Index] = conversion.Invoke(args);
                     }
                     // No Params
                 }
@@ -295,13 +295,13 @@ namespace FluidScript.Compiler
                 rightType = second.GetType();
             }
             System.Reflection.MethodInfo method = TypeUtils.
-                GetOperatorOverload(opName, out Binders.ArgumentBinderList bindings, leftType, rightType);
+                GetOperatorOverload(opName, out Binders.ArgumenConversions conversions, leftType, rightType);
             // null method handled
-            foreach (var binding in bindings)
+            foreach (var binder in conversions)
             {
-                if (binding.BindType == Binders.ArgumentBinder.ArgumentBindType.Convert)
+                if (binder.ConversionType == Binders.ConversionType.Convert)
                 {
-                    args[binding.Index] = binding.Invoke(args);
+                    args[binder.Index] = binder.Invoke(args);
                 }
                 // No Params
             }
@@ -316,14 +316,14 @@ namespace FluidScript.Compiler
             string name = null;
             System.Reflection.MethodInfo method = null;
             ExpressionType nodeType = node.Target.NodeType;
-            Binders.ArgumentBinderList bindings = null;
+            Binders.ArgumenConversions conversions = null;
             if (nodeType == ExpressionType.Identifier)
             {
                 name = target.ToString();
                 obj = Locals;
                 var methods = TypeHelpers.GetPublicMethods(obj, name);
                 if (methods.Length > 0)
-                    method = TypeHelpers.BindToMethod(methods, args, out bindings);
+                    method = TypeHelpers.BindToMethod(methods, args, out conversions);
                 if (method == null)
                 {
                     // find in target
@@ -331,8 +331,8 @@ namespace FluidScript.Compiler
                     methods = TypeHelpers.GetPublicMethods(obj, name);
                     // if not methods
                     if (methods.Length == 0)
-                        ExecutionException.ThrowMissingMethod(obj, name, node);
-                    method = TypeHelpers.BindToMethod(methods, args, out bindings);
+                        ExecutionException.ThrowMissingMethod(obj.GetType(), name, node);
+                    method = TypeHelpers.BindToMethod(methods, args, out conversions);
                 }
             }
             else if (nodeType == ExpressionType.MemberAccess)
@@ -343,17 +343,17 @@ namespace FluidScript.Compiler
                 var methods = TypeUtils.GetPublicMethods(exp.Target.Type, name);
                 if (methods.Length > 0)
                 {
-                    method = TypeHelpers.BindToMethod(methods, args, out bindings);
+                    method = TypeHelpers.BindToMethod(methods, args, out conversions);
                 }
                 else if (obj is Runtime.IRuntimeMetaObjectProvider runtime)
                 {
-                    var del = runtime.GetMetaObject().GetDelegate(name, args, out bindings);
+                    var del = runtime.GetMetaObject().GetDelegate(name, args, out conversions);
                     obj = del.Target;
                     method = del.Method;
                 }
                 else
                 {
-                    ExecutionException.ThrowMissingMethod(obj, name, node);
+                    ExecutionException.ThrowMissingMethod(exp.Target.Type, name, node);
                 }
             }
             else
@@ -365,26 +365,26 @@ namespace FluidScript.Compiler
                     ExecutionException.ThrowInvalidOp(target, node);
                 name = "Invoke";
                 System.Reflection.MethodInfo invoke = res.GetType().GetMethod(name);
-                bindings = new Binders.ArgumentBinderList();
-                if (!TypeHelpers.MatchesTypes(invoke, args, ref bindings))
+                conversions = new Binders.ArgumenConversions();
+                if (!TypeHelpers.MatchesTypes(invoke, args, conversions))
                     ExecutionException.ThrowArgumentMisMatch(node.Target, node);
                 method = invoke;
                 obj = res;
             }
-            foreach (var binding in bindings)
+            foreach (var conversion in conversions)
             {
-                if (binding.BindType == Binders.ArgumentBinder.ArgumentBindType.Convert)
+                if (conversion.ConversionType == Binders.ConversionType.Convert)
                 {
-                    args[binding.Index] = binding.Invoke(args);
+                    args[conversion.Index] = conversion.Invoke(args);
                 }
-                else if (binding.BindType == Binders.ArgumentBinder.ArgumentBindType.ParamArray)
+                else if (conversion.ConversionType == Binders.ConversionType.ParamArray)
                 {
-                    args = (object[])binding.Invoke(args);
+                    args = (object[])conversion.Invoke(args);
                     break;
                 }
             }
             if (method == null)
-                ExecutionException.ThrowMissingMethod(obj, name, node);
+                ExecutionException.ThrowMissingMethod(obj.GetType(), name, node);
             node.Method = method;
             node.Type = method.ReturnType;
             return method.Invoke(obj, args);
@@ -414,15 +414,15 @@ namespace FluidScript.Compiler
             {
                 var indexers = type
                     .GetMember("get_Item", System.Reflection.MemberTypes.Method, TypeUtils.Any);
-                var indexer = TypeHelpers.BindToMethod(indexers, args, out Binders.ArgumentBinderList bindings);
+                var indexer = TypeHelpers.BindToMethod(indexers, args, out Binders.ArgumenConversions conversions);
                 if (indexer == null)
-                    ExecutionException.ThrowMissingIndexer(obj, "get", node);
+                    ExecutionException.ThrowMissingIndexer(node.Target.Type, "get", node);
                 node.Getter = indexer;
-                foreach (var binding in bindings)
+                foreach (var conversion in conversions)
                 {
-                    if (binding.BindType == Binders.ArgumentBinder.ArgumentBindType.Convert)
+                    if (conversion.ConversionType == Binders.ConversionType.Convert)
                     {
-                        args[binding.Index] = binding.Invoke(args);
+                        args[conversion.Index] = conversion.Invoke(args);
                     }
                     // No params array
                 }
@@ -435,84 +435,57 @@ namespace FluidScript.Compiler
 
         object IExpressionVisitor<object>.VisitLiteral(LiteralExpression node)
         {
-            object value = node.Value;
-            switch (value)
-            {
-                case int _:
-                    value = new Integer((int)value);
-                    break;
-                case double _:
-                    value = new Double((double)value);
-                    break;
-                case string _:
-                    value = new String(value.ToString());
-                    break;
-                case bool _:
-                    value = (bool)value ? Boolean.True : Boolean.False;
-                    break;
-            }
-            node.Type = value.GetType();
-            return value;
+            return node.ReflectedValue;
         }
 
         object IExpressionVisitor<object>.VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            object value = null;
-            var member = TypeHelpers.GetMember(target, node.Name);
-            Type type = null;
-            // member not found is ok
-            if (member != null)
+            var binder = TypeUtils.GetMember(node.Target.Type, node.Name);
+            if (binder is null)
             {
-                value = TypeHelpers.InvokeGet(member, target, out type);
-            }
-            else if (target is Runtime.IRuntimeMetaObjectProvider runtime)
-            {
-                var metaObject = runtime.GetMetaObject();
-                var result = metaObject.BindGetMember(node.Name);
-                if (result.HasValue)
+                if (target is Runtime.IRuntimeMetaObjectProvider runtime)
                 {
-                    var data = result.Value;
-                    type = data.Type;
-                    value = data.Value;
+                    binder = runtime.GetMetaObject().BindGetMember(node.Name);
+                }
+                else if (target is null)
+                {
+                    // target null member cannot be invoked
+                    ExecutionException.ThrowNullError(node);
+                }
+                else
+                {
+                    node.Type = TypeProvider.ObjectType;
+                    return null;
                 }
             }
-            else
-            {
-                ExecutionException.ThrowMissingMember(target, node.Name, node);
-            }
-            node.Type = type;
-            return value;
+            node.Binder = binder;
+            node.Type = binder.Type;
+            return binder.Get(target);
         }
 
         object IExpressionVisitor<object>.VisitMember(NameExpression node)
         {
             string name = node.Name;
-            var obj = Locals;
-            //find in the class level
-            var m = TypeHelpers.GetMember(obj, name);
-            object value;
-            if (m == null)
+            object obj = Locals;
+            Binders.IBinder binder = TypeUtils.GetMember(obj.GetType(), name);
+            if (binder is null)
             {
-                if (obj is Runtime.IRuntimeMetaObjectProvider dynamic)
-                {
-                    var result = dynamic.GetMetaObject().BindGetMember(name);
-                    if (result.HasValue)
-                    {
-                        var data = result.Value;
-                        node.Type = data.Type;
-                        value = data.Value;
-                        return value;
-                    }
-                }
                 obj = Target;
-                m = TypeHelpers.GetMember(obj, name);
+                //find in the class level
+                binder = TypeUtils.GetMember(obj.GetType(), name);
+                if (binder is null && obj is Runtime.IRuntimeMetaObjectProvider dynamic)
+                {
+                    binder = dynamic.GetMetaObject().BindGetMember(name);
+                }
+                else
+                {
+                    ExecutionException.ThrowMissingMember(obj.GetType(), name, node);
+                }
             }
-            if (m == null)
-                ExecutionException.ThrowMissingMember(obj, name, node);
-            value = TypeHelpers.InvokeGet(m, obj, out Type type);
-            node.Type = type;
-            return value;
+            node.Binder = binder;
+            node.Type = binder.Type;
+            return binder.Get(obj);
         }
 
         object IExpressionVisitor<object>.VisitNull(NullExpression node)
@@ -556,6 +529,16 @@ namespace FluidScript.Compiler
         object IExpressionVisitor<object>.VisitThis(ThisExpression node)
         {
             return Target;
+        }
+
+        object IExpressionVisitor<object>.VisitSizeOf(SizeOfExpression node)
+        {
+            var value = node.Value.Accept(this);
+            if (value == null)
+                return 0;
+            if (value is System.Collections.ICollection collection)
+                return collection.Count;
+            return System.Runtime.InteropServices.Marshal.SizeOf(value);
         }
 
         object IExpressionVisitor<object>.VisitUnary(UnaryExpression node)
@@ -620,14 +603,14 @@ namespace FluidScript.Compiler
                 type = value.GetType();
             }
             //todo conversion
-            var method = TypeUtils.GetOperatorOverload(name, out Binders.ArgumentBinderList bindings, type);
+            var method = TypeUtils.GetOperatorOverload(name, out Binders.ArgumenConversions conversions, type);
             if (method == null)
                 ExecutionException.ThrowInvalidOp(node);
             var args = new object[1] { value };
-            foreach (var binding in bindings)
+            foreach (var conversion in conversions)
             {
-                if (binding.BindType == Binders.ArgumentBinder.ArgumentBindType.Convert)
-                    value = binding.Invoke(args);
+                if (conversion.ConversionType == Binders.ConversionType.Convert)
+                    value = conversion.Invoke(args);
                 // no param array
             }
             object obj = method.Invoke(null, args);

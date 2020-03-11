@@ -30,6 +30,7 @@
         {
             if (size == indexes.Length)
             {
+                // checked for overflow of integer
                 int[] newItems = new int[checked(size * 2)];
                 System.Array.Copy(indexes, 0, newItems, 0, size);
                 indexes = newItems;

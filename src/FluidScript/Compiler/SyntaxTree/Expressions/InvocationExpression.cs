@@ -1,4 +1,5 @@
-﻿using FluidScript.Compiler.Emit;
+﻿using FluidScript.Compiler.Binders;
+using FluidScript.Compiler.Emit;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -6,9 +7,15 @@ namespace FluidScript.Compiler.SyntaxTree
     public sealed class InvocationExpression : Expression
     {
         public readonly Expression Target;
-        public readonly NodeList<Expression> Arguments;
 
-        public System.Reflection.MethodInfo Method { get; internal set; }
+        public readonly INodeList<Expression> Arguments;
+
+        public System.Reflection.MethodInfo Method { get; set; }
+
+        /// <summary>
+        /// Argument convert list
+        /// </summary>
+        public ArgumenConversions Convertions { get; set; }
 
         public InvocationExpression(Expression target, NodeList<Expression> arguments) : base(ExpressionType.Invocation)
         {
@@ -24,15 +31,38 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            foreach (var item in Arguments)
-            {
-                item.GenerateCode(generator);
-            }
-            if (Target.NodeType == ExpressionType.Identifier && Method.IsStatic == false)
-            {
-                generator.LoadArgument(0);
-            }
             Target.GenerateCode(generator);
+            for (int i = 0; i < Arguments.Length; i++)
+            {
+                var item = Arguments[i];
+                var conversion = Convertions.At(i);
+                if (conversion != null)
+                {
+                    if (conversion.ConversionType == ConversionType.Convert)
+                    {
+                        conversion.Generate(generator, item);
+                    }
+                    else if (conversion.ConversionType == ConversionType.ParamArray)
+                    {
+                        var arguments = new Expression[Arguments.Length - i];
+                        Arguments.CopyTo(arguments, conversion.Index);
+                        conversion.Generate(generator, arguments);
+                        break;
+                    }
+                }
+                else
+                {
+                    item.GenerateCode(generator);
+                }
+            }
+            // remaing binding
+            if (Arguments.Length < Convertions.Count)
+            {
+                foreach (var binder in Convertions.Skip(Arguments.Length))
+                {
+                    binder.Generate(generator);
+                } 
+            }
             generator.Call(Method);
         }
 

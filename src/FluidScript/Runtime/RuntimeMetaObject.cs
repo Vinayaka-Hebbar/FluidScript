@@ -1,6 +1,6 @@
 ﻿namespace FluidScript.Runtime
 {
-    public sealed class RuntimeMetaObject
+    public class RuntimeMetaObject
     {
         private readonly DynamicObject m_value;
 
@@ -9,20 +9,19 @@
             m_value = value;
         }
 
-        internal TypedValue? BindGetMember(string name)
+        public virtual Compiler.Binders.IBinder BindGetMember(string name)
         {
             if (m_value.TryGetMember(name, out LocalVariable variable))
             {
-                var value = m_value[variable.Index];
-                return new TypedValue(value, variable.Type);
+                return new Compiler.Binders.DynamicVariableBinder(variable, m_value);
             }
             else
             {
-                return null;
+                return new Compiler.Binders.EmptyBinder();
             }
         }
 
-        internal TypedValue? BindSetMember(string name, System.Type type, object value)
+        public virtual TypedValue? BindSetMember(string name, System.Type type, object value)
         {
             // handle null type
             if (m_value.TryGetMember(name, out LocalVariable variable))
@@ -58,33 +57,21 @@
             }
         }
 
-        internal System.Delegate GetDelegate(string name, object[] args, out Compiler.Binders.ArgumentBinderList binds)
+        internal System.Delegate GetDelegate(string name, object[] args, out Compiler.Binders.ArgumenConversions binders)
         {
             System.Reflection.MethodInfo method = null;
             object obj = null;
-            binds = new Compiler.Binders.ArgumentBinderList();
+            binders = new Compiler.Binders.ArgumenConversions();
             if (m_value.TryGetMember(name, out LocalVariable variable))
             {
                 if (m_value[variable.Index] is System.Delegate refer)
                 {
                     System.Reflection.MethodInfo m = refer.Method;
                     // only static method can allowed
-                    if (refer.Target is Function function)
+                    if (Utils.TypeHelpers.MatchesTypes(m, args, binders))
                     {
-                        if (Utils.TypeHelpers.MatchesTypes(function.ParameterTypes, args, ref binds))
-                        {
-                            args = new object[] { args };
-                            obj = function;
-                            method = m;
-                        }
-                    }
-                    else
-                    {
-                        if (Utils.TypeHelpers.MatchesTypes(m, args, ref binds))
-                        {
-                            method = m;
-                            obj = refer.Target;
-                        }
+                        method = m;
+                        obj = refer.Target;
                     }
                     return refer;
                 }

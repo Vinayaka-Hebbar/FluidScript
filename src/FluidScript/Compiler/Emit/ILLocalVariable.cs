@@ -1,9 +1,16 @@
 ﻿namespace FluidScript.Compiler.Emit
 {
+    public interface ILocalVariable
+    {
+        int Index { get; }
+        System.Type Type { get; }
+        string Name { get; }
+    }
+
     /// <summary>
     /// Represents a local variable in CIL code.
     /// </summary>
-    public class ILLocalVariable
+    public class ILLocalVariable : ILocalVariable
     {
         /// <summary>
         /// Gets the zero-based index of the local variable within the method body.

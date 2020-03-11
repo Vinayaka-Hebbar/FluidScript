@@ -10,20 +10,21 @@ namespace FluidScript.Compiler
         const int InvalidOp = 4;
         const int MissingIndexer = 6;
         const int ArgumentMisMatch = 7;
+        const int NotSupported = 8;
 
 
         public readonly Node[] NodeTree;
 
-        public readonly object Target;
+        public readonly System.Type Type;
 
         public readonly string Value;
 
         public readonly int Reason;
 
-        private ExecutionException(object target, string value, int reason, Node[] tree)
+        private ExecutionException(System.Type type, string value, int reason, Node[] tree)
         {
             NodeTree = tree;
-            Target = target;
+            Type = type;
             Value = value;
             Reason = reason;
         }
@@ -35,35 +36,39 @@ namespace FluidScript.Compiler
                 switch (Reason)
                 {
                     case MissingMethod:
-                        return Target == null
+                        return Type == null
                              ? string.Concat("cannot find method '", Value, "' from null")
-                             : string.Concat("method '", Value, "' not found in ", Target.GetType().Name);
+                             : string.Concat("method '", Value, "' not found in ", Type.Name);
                     case MissingMember:
-                        return Target == null
+                        return Type == null
                            ? string.Concat("cannot find member '", Value, "' from null")
-                           : string.Concat("member '", Value, "' not found in ", Target.GetType().Name);
+                           : string.Concat("member '", Value, "' not found in ", Type.Name);
                     case MissingIndexer:
-                        return Target == null
+                        return Type == null
                            ? string.Concat("cannot find '", Value, "' indexer from null")
-                           : string.Concat("indexer '", Value, "' not found in ", Target.GetType().Name);
+                           : string.Concat("indexer '", Value, "' not found in ", Type.Name);
                     case InvalidOp:
                         return "Invalid operation";
                     case NullReference:
-                        return "null reference error";
+                        return "Null reference error";
                     case ArgumentMisMatch:
-                        return "argument mismatch";
+                        return "Argument mismatch";
+                    case NotSupported:
+                        return "Not suppored";
                 }
                 return base.Message;
             }
         }
 
+        internal static void ThrowNotSupported(params Node[] tree) => throw new ExecutionException(null, null, NotSupported, tree);
+
         public override string StackTrace => string.Join("\nin ", System.Linq.Enumerable.Select(NodeTree, node => node.ToString()));
 
-        internal static void ThrowMissingMethod(object target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMethod, tree);
+        internal static void ThrowMissingMethod(System.Type target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMethod, tree);
 
-        internal static void ThrowMissingMember(object target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMember, tree);
+        internal static void ThrowMissingMember(System.Type target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMember, tree);
 
-        internal static void ThrowMissingIndexer(object target, string type, params Node[] tree) => throw new ExecutionException(target, type, MissingIndexer, tree);
+        internal static void ThrowMissingIndexer(System.Type target, string type, params Node[] tree) => throw new ExecutionException(target, type, MissingIndexer, tree);
 
         internal static void ThrowNullError(params Node[] tree) => throw new ExecutionException(null, null, NullReference, tree);
 

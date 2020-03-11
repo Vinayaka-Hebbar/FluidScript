@@ -31,7 +31,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
 
         //todo working on scope for better emit
-        public System.Delegate Compile(IExpressionVisitor<object> visitor)
+        public System.Delegate Compile(System.Type target, IExpressionVisitor<object> visitor)
         {
             //pass scoped arguments // refer System.Linq.Expression.Compiler folder
             var provider = TypeProvider.Default;
@@ -43,25 +43,21 @@ namespace FluidScript.Compiler.SyntaxTree
             var names = Parameters.Map(para => para.Name).AddFirst("closure");
             int length = Parameters.Length;
             System.Type[] types = new System.Type[length];
-            var parameters = new Emit.ParameterInfo[length + 1];
+            var parameters = new Emit.ParameterInfo[length];
             for (int i = 0; i < Parameters.Length; i++)
             {
-
                 var para = Parameters[i];
-                var index = i + 1;
                 System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.GetType(provider);
-                parameters[index] = new Emit.ParameterInfo(para.Name, index, type, para.IsVar);
+                parameters[i] = new Emit.ParameterInfo(para.Name, i + 1, type, para.IsVar);
                 types[i] = type;
             }
             // Emit First Argument
-            parameters[0] = new Emit.ParameterInfo(null, 0, typeof(Runtime.Closure), false);
             var lamdaVisit = new LamdaVisitor(names);
             Body.Accept(lamdaVisit);
-            parameters = parameters.AddFirst(new Emit.ParameterInfo(null, 0, typeof(Runtime.Closure), false));
             var parameterTypes = types.AddFirst(typeof(Runtime.Closure));
             var method = new System.Reflection.Emit.DynamicMethod("lambda_method", returnType, parameterTypes, true);
 
-            var methodGen = new Generators.DynamicMethodGenerator(method, parameters, null)
+            var methodGen = new Generators.DynamicMethodGenerator(method, parameters, target)
             {
                 SyntaxBody = Body,
                 Provider = provider

@@ -37,9 +37,6 @@
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Data.Runtime.Sql, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Data.Runtime.Sql.1.0.11-alpha\lib\net45\Data.Runtime.Sql.dll</HintPath>
-    </Reference>
     <Reference Include="Json.Serialization, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Json.Serialization.1.0.0\lib\net45\Json.Serialization.dll</HintPath>
     </Reference>

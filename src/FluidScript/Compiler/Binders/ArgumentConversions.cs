@@ -3,30 +3,33 @@ using System.Collections.Generic;
 
 namespace FluidScript.Compiler.Binders
 {
-    public sealed class ArgumentBinderList : IEnumerable<ArgumentBinder>
+    /// <summary>
+    /// Argument convert list
+    /// </summary>
+    public sealed class ArgumenConversions : IEnumerable<ArgumentConversion>
     {
         private const int _defaultCapacity = 4;
         internal const int MaxArrayLength = 0X7FEFFFFF;
-        static readonly ArgumentBinder[] _emptyArray = new ArgumentBinder[0];
-        private ArgumentBinder[] _items;
+        static readonly ArgumentConversion[] _emptyArray = new ArgumentConversion[0];
+        private ArgumentConversion[] _items;
         private int size;
 
-        public ArgumentBinderList(int capacity)
+        public ArgumenConversions(int capacity)
         {
             if (capacity < 0)
                 throw new System.ArgumentOutOfRangeException(nameof(capacity));
             if (capacity == 0)
                 _items = _emptyArray;
             else
-                _items = new ArgumentBinder[capacity];
+                _items = new ArgumentConversion[capacity];
         }
 
-        public ArgumentBinderList()
+        public ArgumenConversions()
         {
             _items = _emptyArray;
         }
 
-        public void Add(ArgumentBinder item)
+        public void Add(ArgumentConversion item)
         {
             if (size == _items.Length) EnsureCapacity(size + 1);
             _items[size++] = item;
@@ -41,22 +44,18 @@ namespace FluidScript.Compiler.Binders
                 // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
                 if ((uint)newCapacity > MaxArrayLength) newCapacity = MaxArrayLength;
                 if (newCapacity < min) newCapacity = min;
-                ArgumentBinder[] newItems = new ArgumentBinder[newCapacity];
+                ArgumentConversion[] newItems = new ArgumentConversion[newCapacity];
                 if (size > 0)
                     System.Array.Copy(_items, 0, newItems, 0, size);
                 _items = newItems;
             }
         }
 
-        public ArgumentBinder BindingAt(int index)
+        public ArgumentConversion At(int index)
         {
-            for (int i = 0; i < size; i++)
+            if(index < size)
             {
-                var item = _items[i];
-                if (item.Index == index)
-                {
-                    return item;
-                }
+                return _items[index];
             }
             return null;
         }
@@ -67,7 +66,7 @@ namespace FluidScript.Compiler.Binders
             size = 0;
         }
 
-        IEnumerator<ArgumentBinder> IEnumerable<ArgumentBinder>.GetEnumerator()
+        IEnumerator<ArgumentConversion> IEnumerable<ArgumentConversion>.GetEnumerator()
         {
             return new Enumerator(this);
         }
@@ -80,15 +79,15 @@ namespace FluidScript.Compiler.Binders
         public int Count { get => size; }
 
         /// <summary>
-        /// Enumerates the elements of a <see cref="ArgumentBinderList"/>.
+        /// Enumerates the elements of a <see cref="ArgumenConversions"/>.
         /// </summary>
-        internal struct Enumerator : IEnumerator<ArgumentBinder>
+        internal struct Enumerator : IEnumerator<ArgumentConversion>
         {
-            private readonly ArgumentBinderList list;
+            private readonly ArgumenConversions list;
             private int index;
-            private ArgumentBinder current;
+            private ArgumentConversion current;
 
-            internal Enumerator(ArgumentBinderList list)
+            internal Enumerator(ArgumenConversions list)
             {
                 this.list = list;
                 index = 0;
@@ -98,7 +97,7 @@ namespace FluidScript.Compiler.Binders
             /// <summary>
             /// Gets the element at the current position of the enumerator.
             /// </summary>
-            public ArgumentBinder Current
+            public ArgumentConversion Current
             {
                 get
                 {
@@ -135,12 +134,14 @@ namespace FluidScript.Compiler.Binders
             /// </returns>
             public bool MoveNext()
             {
-                ArgumentBinderList localList = list;
+                ArgumenConversions localList = list;
 
                 if ((uint)index < (uint)localList.size)
                 {
-                    current = localList._items[index];
-                    index++;
+                    current = localList._items[index++];
+                    // skip if null
+                    if (current == null)
+                        return MoveNext();
                     return true;
                 }
                 return MoveNextRare();
