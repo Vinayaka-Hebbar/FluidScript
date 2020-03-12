@@ -50,7 +50,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Compiler\RuntimeCompiler.cs" />
     <Compile Remove="Runtime\DynamicData.cs" />
     <Compile Remove="Runtime\Function.cs" />
   </ItemGroup>
