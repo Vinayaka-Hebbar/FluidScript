@@ -36,7 +36,7 @@
         /// returns the hashCode() for the instance
         /// </summary>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.__HashCode()
+        Integer IFSObject.GetHashCode()
         {
             return m_value.GetHashCode();
         }
@@ -45,7 +45,7 @@
         /// converts to string
         /// </summary>
         [Runtime.Register("toString")]
-        String IFSObject.__ToString()
+        String IFSObject.ToString()
         {
             return m_value.ToString();
         }
@@ -54,7 +54,7 @@
         /// checks <paramref name="obj"/> and <see cref="Integer"/> are equals
         /// </summary>
         [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(IFSObject obj)
+        Boolean IFSObject.Equals(object obj)
         {
             return obj is Char c &&
                   m_value == c.m_value;

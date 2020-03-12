@@ -2,6 +2,9 @@
 
 namespace FluidScript
 {
+    /// <summary>
+    /// Global object for runtime
+    /// </summary>
     public class GlobalObject
     {
         protected GlobalObject()
@@ -22,16 +25,19 @@ namespace FluidScript
         [Register("lib")]
         public static GlobalObject Instance { get; } = new GlobalObject();
 
-        DynamicObject m_global;
+        DynamicObject m_runtime;
 
+        /// <summary>
+        /// Runtime Values
+        /// </summary>
         [Register("global")]
-        public virtual DynamicObject Global
+        public virtual DynamicObject Runtime
         {
             get
             {
-                if (m_global == null)
-                    m_global = new DynamicObject();
-                return m_global;
+                if (m_runtime == null)
+                    m_runtime = new DynamicObject();
+                return m_runtime;
             }
         }
         #endregion

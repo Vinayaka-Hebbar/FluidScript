@@ -1,5 +1,4 @@
 ﻿using FluidScript.Compiler;
-using FluidScript.Library;
 using System.Reflection;
 
 namespace FluidScript.Utils
@@ -124,6 +123,7 @@ namespace FluidScript.Utils
         }
 
         private static MethodInfo m_list_getItem;
+
         internal static MethodInfo List_GetItem
         {
             get

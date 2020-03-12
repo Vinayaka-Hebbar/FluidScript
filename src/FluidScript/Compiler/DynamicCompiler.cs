@@ -3,81 +3,60 @@ using FluidScript.Runtime;
 using FluidScript.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FluidScript.Compiler
 {
     /// <summary>
-    /// Runtime evaluation of Syntax tree 
+    /// Runtime evaluation of Syntax tree with <see cref="Locals"/>
     /// <list type="bullet">it will be not same as compiled </list>
     /// </summary>
-    public sealed class DynamicCompiler : IEnumerable<KeyValuePair<string, object>>, IExpressionVisitor<object>, IStatementVisitor
+    public sealed class DynamicCompiler : CompilerBase, IEnumerable<KeyValuePair<string, object>>, IStatementVisitor
     {
-        private readonly object target;
-
         private readonly BranchContext context = new BranchContext();
 
-        private readonly DynamicLocals locals;
+        private readonly RuntimeVariables locals;
 
         public int Count => locals.Count;
 
         /// <summary>
         /// New runtime evaluation with <see cref="GlobalObject"/>
         /// </summary>
-        public DynamicCompiler()
+        public DynamicCompiler() : base(GlobalObject.Instance)
         {
-            target = GlobalObject.Instance;
-            locals = new DynamicLocals();
+            locals = new RuntimeVariables();
         }
 
         /// <summary>
         /// New runtime evaluation 
         /// </summary>
-        public DynamicCompiler(object target)
+        public DynamicCompiler(object target) : base(target)
         {
-            this.target = target;
-            locals = new DynamicLocals();
+            locals = new RuntimeVariables();
         }
 
-        public DynamicCompiler(DynamicObject target)
+        public DynamicCompiler(DynamicObject target) : base(target)
         {
-            this.target = target ?? throw new ArgumentNullException(nameof(target));
-            locals = new DynamicLocals();
+            locals = new RuntimeVariables();
         }
 
-        public DynamicCompiler(object target, IDictionary<string, object> locals)
+        public DynamicCompiler(object target, IDictionary<string, object> locals) : base(target)
         {
-            this.target = target ?? throw new ArgumentNullException(nameof(target));
-            this.locals = new DynamicLocals(locals);
+            this.locals = new RuntimeVariables(locals);
         }
 
         /// <summary>
         /// New runtime evaluation 
         /// </summary>
-        public DynamicCompiler(DynamicCompiler other)
+        public DynamicCompiler(DynamicCompiler other) : base(other.Target)
         {
-            target = other.target;
-            locals = new DynamicLocals(other.locals);
+            locals = new RuntimeVariables(other.locals);
         }
 
-        public IDictionary<string, object> Locals
+        public IRuntimeVariables Locals
         {
             get
             {
                 return locals;
-            }
-        }
-
-        public object Target { get => target; }
-
-        private static System.Reflection.FieldInfo m_targetField;
-        internal static System.Reflection.FieldInfo TargetField
-        {
-            get
-            {
-                if (m_targetField == null)
-                    m_targetField = typeof(DynamicCompiler).GetField(nameof(target), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                return m_targetField;
             }
         }
 
@@ -121,70 +100,15 @@ namespace FluidScript.Compiler
             return expression.Accept(this);
         }
 
-        public void StaticImport<T>()
-        {
-            var objType = typeof(T);
-            foreach (var member in objType.GetMembers(TypeUtils.PublicStatic))
-            {
-                string name = member.Name;
-                object value = null;
-                Type type = null;
-                if (member.IsDefined(typeof(System.Diagnostics.DebuggerHiddenAttribute), false))
-                    continue;
-                if (member.IsDefined(typeof(RegisterAttribute), false))
-                {
-                    var data = (Attribute)member.GetCustomAttributes(typeof(RegisterAttribute), false).FirstOrDefault();
-                    name = data.ToString();
-                }
-                switch (member)
-                {
-                    case System.Reflection.FieldInfo field:
-                        value = field.GetValue(null);
-                        type = field.FieldType;
-                        break;
-                    case System.Reflection.PropertyInfo _prop:
-                        value = _prop.GetValue(null, new object[0]);
-                        type = _prop.PropertyType;
-                        break;
-                    case System.Reflection.MethodInfo method:
-                        //not get_ set_
-                        if (method.IsSpecialName) continue;
-                        var refer = (Func<object, object[], object>)method.Invoke;
-                        value = refer;
-                        type = value.GetType();
-                        break;
-                }
-                locals.Create(name, type, value);
-            }
-        }
-
         #region Visitors
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitArrayLiteral(ArrayLiteralExpression node)
-        {
-            Type type;
-            if (node.ArrayType != null)
-                type = node.ArrayType.GetType(TypeProvider.Default);
-            else
-                type = typeof(object);
-            node.Type = typeof(Collections.List<>).MakeGenericType(type);
-            var items = node.Expressions;
-            var length = items.Length;
-            var array = (System.Collections.IList)Activator.CreateInstance(node.Type, new object[] { length });
-            for (int index = 0; index < length; index++)
-            {
-                array.Add(items[index].Accept(this));
-            }
-            return array;
-        }
 
         /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitAssignment(AssignmentExpression node)
+        public override object VisitAssignment(AssignmentExpression node)
         {
             var value = node.Right.Accept(this);
             var left = node.Left;
             string name = null;
-            object obj = target;
+            object obj = Target;
             Binders.IBinder binder = null;
             ExpressionType nodeType = left.NodeType;
             Type type = node.Right.Type;
@@ -200,7 +124,7 @@ namespace FluidScript.Compiler
                 }
                 else if (exp.Binder is null)
                 {
-                    binder = TypeUtils.GetMember(target.GetType(), name);
+                    binder = TypeUtils.GetMember(Target.GetType(), name);
                     exp.Binder = binder;
                 }
                 if (binder is null)
@@ -229,33 +153,27 @@ namespace FluidScript.Compiler
                 var args = exp.Arguments.Map(arg => arg.Accept(this)).AddLast(value);
                 if (exp.Setter == null)
                 {
-                    var indexers = obj.GetType()
+                    var indexers = exp.Target.Type
                     .GetMember("set_Item", System.Reflection.MemberTypes.Method, TypeUtils.Any);
-                    var indexer = TypeHelpers.BindToMethod(indexers, args, out Binders.ArgumenConversions conversions);
+                    var indexer = TypeHelpers.BindToMethod(indexers, args, out Binders.ArgumentConversions conversions);
                     if (indexer == null)
                         ExecutionException.ThrowMissingIndexer(exp.Target.Type, "set", exp.Target, node);
 
                     exp.Conversions = conversions;
                     exp.Setter = indexer;
                     // ok to be node.Right.Type instead of indexer.GetParameters().Last().ParameterType
-                    Binders.ArgumentConversion valueBind = conversions.At(args.Length - 1);
+                    Binders.Conversion valueBind = conversions.At(args.Length - 1);
                     node.Type = (valueBind == null) ? node.Right.Type : valueBind.Type;
                 }
-                foreach (var conversion in exp.Conversions)
-                {
-                    if (conversion.ConversionType == Binders.ConversionType.Convert)
-                    {
-                        args[conversion.Index] = conversion.Invoke(args);
-                    }
-                    // No params
-                }
+                args = exp.Conversions.Invoke(args);
                 exp.Setter.Invoke(obj, args);
                 return value;
             }
             if (binder == null)
             {
-                if (obj is IRuntimeMetaObjectProvider runtime)
+                if (obj is IMetaObjectProvider runtime)
                 {
+                    //todo binder for dynamic
                     var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
                     value = result.Value;
                     node.Type = result.Type;
@@ -266,292 +184,29 @@ namespace FluidScript.Compiler
                     ExecutionException.ThrowMissingMember(obj.GetType(), name, node.Left, node);
                 }
             }
-            if (binder.Type != type && TypeUtils.TryImplicitConvert(type, binder.Type, out System.Reflection.MethodInfo method))
+            if (!TypeUtils.AreReferenceAssignable(binder.Type, type) && TypeUtils.TryImplicitConvert(type, binder.Type, out System.Reflection.MethodInfo method))
             {
                 // implicit casting
                 value = method.Invoke(null, new object[] { value });
+            }
+            else
+            {
+                ExecutionException.ThrowInvalidCast(binder.Type, node);
             }
             binder.Set(obj, value);
             node.Type = binder.Type;
             return value;
         }
 
-        #region Binary
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitBinary(BinaryExpression node)
-        {
-            // todo compatible for system type
-            string opName = null;
-            ExpressionType nodeType = node.NodeType;
-            switch (nodeType)
-            {
-                case ExpressionType.Plus:
-                    return InvokeAddition(node);
-                case ExpressionType.Minus:
-                    opName = "op_Subtraction";
-                    break;
-                case ExpressionType.Multiply:
-                    opName = "op_Multiply";
-                    break;
-                case ExpressionType.Divide:
-                    opName = "op_Division";
-                    break;
-                case ExpressionType.Percent:
-                    opName = "op_Modulus";
-                    break;
-                case ExpressionType.BangEqual:
-                    return VisitCompare(node, "op_Inequality");
-                case ExpressionType.EqualEqual:
-                    return VisitCompare(node, "op_Equality");
-                case ExpressionType.Greater:
-                    opName = "op_GreaterThan";
-                    break;
-                case ExpressionType.GreaterEqual:
-                    opName = "op_GreaterThanOrEqual";
-                    break;
-                case ExpressionType.Less:
-                    opName = "op_LessThan";
-                    break;
-                case ExpressionType.LessEqual:
-                    opName = "op_LessThanOrEqual";
-                    break;
-                case ExpressionType.And:
-                    opName = "op_BitwiseAnd";
-                    break;
-                case ExpressionType.Or:
-                    opName = "op_BitwiseOr";
-                    break;
-                case ExpressionType.Circumflex:
-                    opName = "op_ExclusiveOr";
-                    break;
-                case ExpressionType.AndAnd:
-                case ExpressionType.OrOr:
-                    return VisitLogical(node);
-                case ExpressionType.StarStar:
-                    return VisitExponentiation(node);
-            }
-            return Invoke(node, opName);
-        }
-
-        private object InvokeAddition(BinaryExpression node)
-        {
-            var left = node.Left.Accept(this);
-            var right = node.Right.Accept(this);
-            if (Convert.GetTypeCode(left) == TypeCode.String && Convert.GetTypeCode(right) != TypeCode.String)
-            {
-                right = FSConvert.ToString(right);
-            }
-            return Invoke(node, "op_Addition", left, right);
-        }
-
-        private object Invoke(BinaryExpression node, string opName)
-        {
-            if (opName == null)
-                ExecutionException.ThrowInvalidOp(node);
-            var left = node.Left.Accept(this);
-            var right = node.Right.Accept(this);
-            return Invoke(node, opName, left, right);
-        }
-
-        private static object Invoke(BinaryExpression node, string opName, object left, object right)
-        {
-            if (left is null)
-                ExecutionException.ThrowNullError(node.Left, node);
-            if (right is null)
-                ExecutionException.ThrowNullError(node.Right, node);
-            var leftType = left.GetType();
-            var rightType = right.GetType();
-            if (leftType.IsPrimitive && rightType.IsPrimitive)
-            {
-                left = FSConvert.ToAny(left);
-                leftType = left.GetType();
-
-                right = FSConvert.ToAny(right);
-                rightType = right.GetType();
-            }
-            if (node.Method == null)
-            {
-                var method = TypeUtils.
-                   GetOperatorOverload(opName, out Binders.ArgumenConversions conversions, leftType, rightType);
-                if (method == null)
-                    ExecutionException.ThrowInvalidOp(node);
-                node.Method = method;
-                node.Type = method.ReturnType;
-                node.Conversions = conversions;
-            }
-            object[] args = new object[2] { left, right };
-            // null method handled
-            foreach (var conversion in node.Conversions)
-            {
-                if (conversion.ConversionType == Binders.ConversionType.Convert)
-                {
-                    args[conversion.Index] = conversion.Invoke(args);
-                }
-                // No Params
-            }
-            // operator overload invoke
-            return node.Method.Invoke(null, args);
-        }
-
-        private object VisitExponentiation(BinaryExpression node)
-        {
-            var left = node.Left.Accept(this);
-            var right = node.Right.Accept(this);
-            object[] args = new object[2] { left, right };
-            if (node.Method == null)
-            {
-                var conversions = new Binders.ArgumenConversions(2);
-                if (TypeHelpers.MatchesTypes(ReflectionHelpers.MathPow, args, conversions))
-                {
-                    node.Conversions = conversions;
-                    node.Method = ReflectionHelpers.MathPow;
-                    node.Type = TypeProvider.DoubleType;
-                }
-                else
-                {
-                    ExecutionException.ThrowArgumentMisMatch(node);
-                }
-            }
-            foreach (var conversion in node.Conversions)
-            {
-                if (conversion.ConversionType == Binders.ConversionType.Convert)
-                {
-                    args[conversion.Index] = conversion.Invoke(args);
-                }
-            }
-            return node.Method.Invoke(null, args);
-        }
-
-        private object VisitLogical(BinaryExpression node)
-        {
-            var left = node.Left.Accept(this);
-            var right = node.Right.Accept(this);
-            //left is null or not found
-            if (left is null)
-                left = Boolean.False;
-            //right is null or not found
-            if (right is null)
-                right = Boolean.False;
-            var convert = TypeUtils.GetBooleanOveraload(left.GetType());
-            //No bool conversion default true object exist
-            left = convert == null ? left : convert.ReflectedType != TypeProvider.BooleanType ? Boolean.True :
-                convert.Invoke(null, new object[] { left });
-            convert = TypeUtils.GetBooleanOveraload(right.GetType());
-            //No bool conversion default true object exist
-            right = convert == null ? right : convert.ReflectedType != TypeProvider.BooleanType ? Boolean.True :
-                convert.Invoke(null, new object[] { right });
-            object[] args = new object[2] { left, right };
-            if (node.Method == null)
-            {
-                System.Reflection.MethodInfo method = node.NodeType == ExpressionType.AndAnd ? ReflectionHelpers.LogicalAnd : ReflectionHelpers.LogicalOr;
-                node.Method = method;
-                node.Type = method.ReturnType;
-            }
-            return node.Method.Invoke(null, args);
-        }
-
-        private object VisitCompare(BinaryExpression node, string opName)
-        {
-            var left = node.Left.Accept(this);
-            var right = node.Right.Accept(this);
-            if (left is null || right is null)
-            {
-                object value = ReflectionHelpers.IsEquals.Invoke(null, new object[2] { left, right });
-                if (node.NodeType == ExpressionType.BangEqual)
-                    value = ReflectionHelpers.LogicalNot.Invoke(null, new object[1] { value });
-                return value;
-            }
-            var leftType = left.GetType();
-            var rightType = right.GetType();
-            if (leftType.IsPrimitive && rightType.IsPrimitive)
-            {
-                left = FSConvert.ToAny(left);
-                leftType = left.GetType();
-                right = FSConvert.ToAny(right);
-                rightType = right.GetType();
-            }
-            if (node.Method == null)
-            {
-                System.Reflection.MethodInfo method = TypeUtils.
-                    GetOperatorOverload(opName, out Binders.ArgumenConversions conversions, leftType, rightType);
-                node.Method = method;
-                node.Conversions = conversions;
-                node.Type = method.ReturnType;
-            }
-            var args = new object[2] { left, right };
-            // null method handled
-            foreach (var conversion in node.Conversions)
-            {
-                if (conversion.ConversionType == Binders.ConversionType.Convert)
-                {
-                    args[conversion.Index] = conversion.Invoke(args);
-                }
-                // No Params
-            }
-            return node.Method.Invoke(null, args);
-        }
-        #endregion
-
         #region Call
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitCall(InvocationExpression node)
-        {
-            object[] args = node.Arguments.Map(arg => arg.Accept(this));
-            object target = node.Method == null ? ResolveCall(node, args) : CallTarget(node);
-            foreach (var convertion in node.Convertions)
-            {
-                if (convertion.ConversionType == Binders.ConversionType.Convert)
-                {
-                    args[convertion.Index] = convertion.Invoke(args);
-                }
-                else if (convertion.ConversionType == Binders.ConversionType.ParamArray)
-                {
-                    args = (object[])convertion.Invoke(args);
-                    break;
-                }
-            }
-            return node.Method.Invoke(target, args);
-        }
-
-        private object CallTarget(InvocationExpression node)
-        {
-            object obj;
-            ExpressionType nodeType = node.Target.NodeType;
-            if (nodeType == ExpressionType.Identifier)
-            {
-                obj = ((NameExpression)node.Target).Binder.Get(this);
-            }
-            else if (nodeType == ExpressionType.MemberAccess)
-            {
-                var exp = (MemberExpression)node.Target;
-                obj = exp.Target.Accept(this);
-
-                if (exp.Binder != null)
-                {
-                    var value = exp.Binder.Get(obj);
-                    if (value is Delegate del)
-                    {
-                        obj = del;
-                    }
-                }
-            }
-            else
-            {
-                obj = node.Target.Accept(this);
-            }
-
-            return obj;
-        }
 
         /// <summary>
         /// Get method
         /// </summary>
         /// <returns>target to invoke</returns>
-        private object ResolveCall(InvocationExpression node, object[] args)
+        protected override object ResolveCall(InvocationExpression node, object[] args)
         {
-            Binders.ArgumenConversions conversions = null;
+            Binders.ArgumentConversions conversions = null;
             var target = node.Target;
             System.Reflection.MethodInfo method = null;
             string name;
@@ -578,7 +233,7 @@ namespace FluidScript.Compiler
                 }
                 else
                 {
-                    obj = this.target;
+                    obj = Target;
                     var type = obj.GetType();
                     var methods = TypeUtils.GetPublicMethods(type, name);
                     if (methods.Length == 0)
@@ -598,13 +253,13 @@ namespace FluidScript.Compiler
                 {
                     method = TypeHelpers.BindToMethod(methods, args, out conversions);
                 }
-                else if (obj is IRuntimeMetaObjectProvider runtime)
+                else if (obj is IMetaObjectProvider runtime)
                 {
                     exp.Binder = runtime.GetMetaObject().BindGetMember(name);
                     var value = exp.Binder.Get(obj);
                     if (value is Delegate del)
                     {
-                        conversions = new Binders.ArgumenConversions();
+                        conversions = new Binders.ArgumentConversions();
                         name = nameof(Action.Invoke);
                         method = del.GetType().GetMethod(name);
                         if (TypeHelpers.MatchesTypes(method, args, conversions))
@@ -630,7 +285,7 @@ namespace FluidScript.Compiler
                 name = nameof(Action.Invoke);
                 //Multi Delegate Invoke()
                 System.Reflection.MethodInfo invoke = res.GetType().GetMethod(name);
-                conversions = new Binders.ArgumenConversions();
+                conversions = new Binders.ArgumentConversions();
                 if (!TypeHelpers.MatchesTypes(invoke, args, conversions))
                     ExecutionException.ThrowArgumentMisMatch(node.Target, node);
                 method = invoke;
@@ -646,64 +301,9 @@ namespace FluidScript.Compiler
         }
         #endregion
 
-        object IExpressionVisitor<object>.Visit(Expression node)
-        {
-            return node.Accept(this);
-        }
 
         /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitIndex(IndexExpression node)
-        {
-            var obj = node.Target.Accept(this);
-            if (obj is null)
-                ExecutionException.ThrowNullError(node);
-            var args = node.Arguments.Map(arg => arg.Accept(this));
-            if (node.Getter == null)
-                ResolveIndexer(node, args);
-            foreach (var conversion in node.Conversions)
-            {
-                if (conversion.ConversionType == Binders.ConversionType.Convert)
-                {
-                    args[conversion.Index] = conversion.Invoke(args);
-                }
-                // No params array
-            }
-            return node.Getter.Invoke(obj, args);
-        }
-
-        private static void ResolveIndexer(IndexExpression node, object[] args)
-        {
-            System.Reflection.MethodInfo indexer;
-            var type = node.Target.Type;
-            Binders.ArgumenConversions conversions;
-            if (type.IsArray)
-            {
-                indexer = ReflectionHelpers.List_GetItem;
-                conversions = new Binders.ArgumenConversions();
-                if (TypeHelpers.MatchesTypes(indexer, args, conversions))
-                    ExecutionException.ThrowMissingIndexer(type, "get", node);
-            }
-            else
-            {
-                var indexers = type
-                    .GetMember("get_Item", System.Reflection.MemberTypes.Method, TypeUtils.Any);
-                indexer = TypeHelpers.BindToMethod(indexers, args, out conversions);
-                if (indexer == null)
-                    ExecutionException.ThrowMissingIndexer(type, "get", node);
-            }
-            node.Conversions = conversions;
-            node.Getter = indexer;
-            node.Type = indexer.ReturnType;
-        }
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitLiteral(LiteralExpression node)
-        {
-            return node.ReflectedValue;
-        }
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitMember(MemberExpression node)
+        public override object VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
             if (node.Binder == null)
@@ -711,7 +311,7 @@ namespace FluidScript.Compiler
                 var binder = TypeUtils.GetMember(node.Target.Type, node.Name);
                 if (binder is null)
                 {
-                    if (target is IRuntimeMetaObjectProvider runtime)
+                    if (target is IMetaObjectProvider runtime)
                     {
                         binder = runtime.GetMetaObject().BindGetMember(node.Name);
                     }
@@ -733,10 +333,10 @@ namespace FluidScript.Compiler
         }
 
         /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitMember(NameExpression node)
+        public override object VisitMember(NameExpression node)
         {
             string name = node.Name;
-            object obj = target;
+            object obj = Target;
             Binders.IBinder binder;
             if (node.Binder == null)
             {
@@ -763,148 +363,18 @@ namespace FluidScript.Compiler
         }
 
         /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitTernary(TernaryExpression node)
-        {
-            var condition = node.First.Accept(this);
-            bool result = true;
-            switch (condition)
-            {
-                case Boolean b:
-                    result = b;
-                    break;
-                case bool _:
-                    result = (bool)condition;
-                    break;
-                case null:
-                    result = false;
-                    break;
-            }
-            object value;
-            if (result)
-            {
-                value = node.Second.Accept(this);
-                node.Type = node.Second.Type;
-            }
-            else
-            {
-                value = node.Third.Accept(this);
-                node.Type = node.Third.Type;
-            }
-            return value;
-        }
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitThis(ThisExpression node)
-        {
-            node.Type = target.GetType();
-            return target;
-        }
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitUnary(UnaryExpression node)
-        {
-            var value = node.Operand.Accept(this);
-            string name = null;
-            //modified a++; updated new value
-            bool modified = false, updated = true;
-            switch (node.NodeType)
-            {
-                case ExpressionType.Parenthesized:
-                    node.Type = node.Operand.Type;
-                    return value;
-                case ExpressionType.PostfixPlusPlus:
-                    name = "op_Increment";
-                    modified = true;
-                    updated = false;
-                    break;
-                case ExpressionType.PrefixPlusPlus:
-                    name = "op_Increment";
-                    modified = true;
-                    break;
-                case ExpressionType.PostfixMinusMinus:
-                    name = "op_Decrement";
-                    modified = true;
-                    updated = false;
-                    break;
-                case ExpressionType.PrefixMinusMinus:
-                    name = "op_Decrement";
-                    modified = true;
-                    break;
-                case ExpressionType.Bang:
-                    name = "op_LogicalNot";
-                    // here value is null it is as not defined
-                    if (value is null)
-                        return Boolean.True;
-                    break;
-                case ExpressionType.Plus:
-                    name = "op_UnaryPlus";
-                    break;
-                case ExpressionType.Minus:
-                    name = "op_UnaryNegation";
-                    break;
-                case ExpressionType.Circumflex:
-                    name = "op_ExclusiveOr";
-                    break;
-                case ExpressionType.Or:
-                    name = "op_BitwiseOr";
-                    break;
-                case ExpressionType.And:
-                    name = "op_BitwiseAnd";
-                    break;
-            }
-            if (value is null)
-                ExecutionException.ThrowNullError(node.Operand, node);
-            Type type = node.Operand.Type;
-            // no primitive supported it should be wrapped
-            if (type.IsPrimitive)
-            {
-                value = FSConvert.ToAny(value);
-                type = value.GetType();
-            }
-            var args = new object[1] { value };
-            //resolve call
-            if (node.Method == null)
-            {
-                var method = TypeUtils.GetOperatorOverload(name, out Binders.ArgumenConversions conversions, type);
-                if (method == null)
-                    ExecutionException.ThrowInvalidOp(node);
-                node.Conversions = conversions;
-                node.Method = method;
-                node.Type = method.ReturnType;
-            }
-            foreach (var conversion in node.Conversions)
-            {
-                if (conversion.ConversionType == Binders.ConversionType.Convert)
-                    value = conversion.Invoke(args);
-                // no param array supported
-            }
-            object obj = node.Method.Invoke(null, args);
-            if (modified)
-            {
-                var exp = new AssignmentExpression(node.Operand, new LiteralExpression(obj));
-                exp.Accept(this);
-            }
-            return updated ? obj : value;
-        }
-
-        /// <inheritdoc/>
         void IStatementVisitor.VisitExpression(ExpressionStatement node)
         {
             node.Expression.Accept(this);
         }
 
         /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitDeclaration(VariableDeclarationExpression node)
+        public override object VisitDeclaration(VariableDeclarationExpression node)
         {
             object value = node.Value?.Accept(this);
             Type varType = value is null ? node.VariableType?.GetType(TypeProvider.Default) ?? TypeProvider.ObjectType : value.GetType();
             locals.Create(node.Name, varType, value);
             return value;
-        }
-
-        object IExpressionVisitor<object>.VisitAnonymousFunction(AnonymousFunctionExpression node)
-        {
-            return node.Compile(target.GetType(), this);
         }
 
         /// <inheritdoc/>
@@ -931,48 +401,6 @@ namespace FluidScript.Compiler
                         break;
                 }
             }
-        }
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitNull(NullExpression node)
-        {
-            return null;
-        }
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitNullPropegator(NullPropegatorExpression node)
-        {
-            object value = node.Left.Accept(this);
-            if (value is null)
-            {
-                value = node.Right.Accept(this);
-            }
-            node.Type = node.Left.Type;
-            return value;
-        }
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitAnonymousObject(AnonymousObjectExpression node)
-        {
-            var members = node.Members;
-            var obj = new DynamicObject(members.Length);
-            for (int index = 0; index < members.Length; index++)
-            {
-                AnonymousObjectMember item = members[index];
-                var value = item.Expression.Accept(this);
-                obj.Add(item.Name, value);
-            }
-            node.Type = typeof(DynamicObject);
-            return obj;
-        }
-
-        /// <inheritdoc/>
-        object IExpressionVisitor<object>.VisitSizeOf(SizeOfExpression node)
-        {
-            var value = node.Value.Accept(this);
-            if (value == null)
-                return 0;
-            return System.Runtime.InteropServices.Marshal.SizeOf(value);
         }
 
         /// <inheritdoc/>

@@ -1,7 +1,7 @@
 ﻿using FluidScript.Compiler.Debugging;
 using FluidScript.Compiler.Lexer;
 using FluidScript.Compiler.SyntaxTree;
-using FluidScript.Library;
+using FluidScript.Compiler;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -1048,19 +1048,19 @@ namespace FluidScript.Compiler
                     break;
                 case TokenType.LeftBrace:
                     var list = VisitAnonymousObjectMembers();
-                    CheckSyntaxExpected(TokenType.RightBrace);
                     exp = new AnonymousObjectExpression(list);
+                    CheckSyntaxExpected(TokenType.RightBrace);
                     break;
                 case TokenType.LeftParenthesis:
                     MoveNext();
-                    exp = new UnaryExpression(VisitAssignmentExpression(), ExpressionType.Parenthesized);
+                    exp = new UnaryExpression(VisitExpression(), ExpressionType.Parenthesized);
                     CheckSyntaxExpected(TokenType.RightParenthesis);
                     break;
                 case TokenType.LeftBracket:
                 case TokenType.Less:
                     //Might be array
                     exp = VisitArrayLiteral();
-                    break;
+                    return VisitRightExpression(exp);
                 case TokenType.RightParenthesis:
                 case TokenType.RightBracket:
                     //skip end of expression
@@ -1163,14 +1163,14 @@ namespace FluidScript.Compiler
         }
 
         /// <summary>
-        /// format &lt;int&gt;(size)[1,2]
+        /// format &lt;int&gt;[1,2](size)
         /// </summary>
         /// <returns></returns>
         private Expression VisitArrayLiteral()
         {
             TypeSyntax type = null;
-            Expression size = null;
             var list = new NodeList<Expression>();
+            NodeList<Expression> arguments = null;
             if (TokenType == TokenType.Less)
             {
                 //Next <
@@ -1178,24 +1178,22 @@ namespace FluidScript.Compiler
                 type = VisitType();
                 //>
                 MoveNextIf(TokenType.Greater);
-                //(
-                if (TokenType == TokenType.LeftParenthesis)
-                {
-                    MoveNext();
-                    size = VisitAssignmentExpression();
-                    MoveNextIf(TokenType.RightParenthesis);
-                }
-
             }
+            //[
             if (TokenType == TokenType.LeftBracket)
             {
                 //[
                 list = VisitArgumentList(TokenType.Comma, TokenType.RightBracket);
-                CheckSyntaxExpected(TokenType.RightBracket);
+                MoveNextIf(TokenType.RightBracket);
                 // next will go when enters right side
-
             }
-            return new ArrayLiteralExpression(list, type, size);
+            //(
+            if (TokenType == TokenType.LeftParenthesis)
+            {
+                arguments = VisitArgumentList(TokenType.Comma, TokenType.RightParenthesis);
+                MoveNextIf(TokenType.RightParenthesis);
+            }
+            return new ArrayLiteralExpression(list, type, arguments);
         }
 
         /// <summary>

@@ -25,21 +25,21 @@
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        String IFSObject.__ToString()
+        String IFSObject.ToString()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.__HashCode()
+        Integer IFSObject.GetHashCode()
         {
             return m_value.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(IFSObject obj)
+        Boolean IFSObject.Equals(object obj)
         {
             return obj is Short s &&
                   m_value == s.m_value ? Boolean.True : Boolean.False;

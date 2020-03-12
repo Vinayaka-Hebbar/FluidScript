@@ -7,7 +7,7 @@
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     [System.Serializable]
     public class List<T> : FSObject, System.Collections.IList, ICollection<T>
-        , System.Collections.IEnumerable, System.Collections.Generic.IEnumerable<T> 
+        , System.Collections.IEnumerable, System.Collections.Generic.IEnumerable<T>
     {
         private const int _defaultCapacity = 4;
         public const int MaxArrayLength = 0X7FEFFFFF;
@@ -28,7 +28,6 @@
             _items = _emptyArray;
         }
 
-
         /// <summary>
         /// Adds an object to the end of the <see cref="List{T}"/>
         /// </summary>
@@ -36,48 +35,55 @@
         /// The object to be added to the end of the System.Collections.Generic.List`1. The
         /// value can be null for reference types.
         /// </param>        
-        public List(int capacity)
+        public List(Integer capacity)
         {
-            if (capacity < 0)
+            var c = capacity.m_value;
+            if (c < 0)
                 throw new System.ArgumentOutOfRangeException(nameof(capacity));
-            if (capacity == 0)
+            if (c == 0)
                 _items = _emptyArray;
             else
-                _items = new T[capacity];
+                _items = new T[c];
         }
 
         /// <summary>
-        /// Gets or sets the total number of elements the internal data structure can hold
-        /// without resizing.
+        /// Constructs a List, copying the contents of the given collection. The
+        /// size and capacity of the new list will both be equal to the size of the
+        /// given collection.
         /// </summary>
-        [Runtime.Register("capacity")]
-        public int Capacity
+        /// <param name="collection">The collection whose elements are copied to the new list</param>
+        /// <exception cref="System.ArgumentNullException">capacity is less than 0.</exception>
+        public List(System.Collections.Generic.IEnumerable<T> collection)
         {
-            get
-            {
-                return _items.Length;
-            }
-            set
-            {
-                if (value < _size)
-                {
-                    throw new System.ArgumentOutOfRangeException(nameof(value));
-                }
+            if (collection == null)
+                throw new System.ArgumentNullException(nameof(collection));
 
-                if (value != _items.Length)
+            if (collection is ICollection<T> c)
+            {
+                int count = c.Count;
+                if (count == 0)
                 {
-                    if (value > 0)
+                    _items = _emptyArray;
+                }
+                else
+                {
+                    _items = new T[count];
+                    c.CopyTo(_items, 0);
+                    _size = count;
+                }
+            }
+            else
+            {
+                _size = 0;
+                _items = _emptyArray;
+                // This enumerable could be empty.  Let Add allocate a new array, if needed.
+                // Note it will also go to _defaultCapacity first, not 1, then 2, etc.
+
+                using (var en = collection.GetEnumerator())
+                {
+                    while (en.MoveNext())
                     {
-                        T[] newItems = new T[value];
-                        if (_size > 0)
-                        {
-                            System.Array.Copy(_items, 0, newItems, 0, _size);
-                        }
-                        _items = newItems;
-                    }
-                    else
-                    {
-                        _items = _emptyArray;
+                        Add(en.Current);
                     }
                 }
             }
@@ -124,9 +130,7 @@
             }
         }
 
-        int ICollection<T>.Count => throw new System.NotImplementedException();
-
-        bool ICollection<T>.IsReadOnly => throw new System.NotImplementedException();
+        bool ICollection<T>.IsReadOnly => false;
 
         private void EnsureCapacity(int min)
         {
@@ -137,7 +141,10 @@
                 // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
                 if ((uint)newCapacity > MaxArrayLength) newCapacity = MaxArrayLength;
                 if (newCapacity < min) newCapacity = min;
-                Capacity = newCapacity;
+                T[] newItems = new T[newCapacity];
+                if (_size > 0)
+                    System.Array.Copy(_items, 0, newItems, 0, _size);
+                _items = newItems;
             }
         }
 
@@ -150,16 +157,17 @@
         /// <returns>
         /// The element at the specified index.
         /// </returns>
-        public T this[int index]
+        public T this[Integer index]
         {
             get
             {
+                int i = index.m_value;
                 // Following trick can reduce the range check by one
-                if ((uint)index >= (uint)_size)
+                if ((uint)i >= (uint)_size)
                 {
                     throw new System.ArgumentOutOfRangeException(nameof(index));
                 }
-                return _items[index];
+                return _items[i];
             }
             set
             {
@@ -220,6 +228,50 @@
             return Count - 1;
         }
 
+        /// <summary>
+        /// Adds the elements of the given collection to the end of this list. If
+        /// required, the capacity of the list is increased to twice the previous
+        /// capacity or the new size, whichever is larger.
+        /// </summary>
+        /// <param name="collection">
+        /// The collection whose elements should be added to the end of the System.Collections.Generic.List`1.
+        /// The collection itself cannot be null, but it can contain elements that are null,
+        /// if type T is a reference type
+        /// </param>
+        /// <exception cref="System.ArgumentNullException">collection is null.</exception>
+        [Runtime.Register("addRange")]
+        public void AddRange(IEnumerable<T> collection)
+        {
+            if (collection == null)
+                throw new System.ArgumentNullException(nameof(collection));
+
+            if (collection is ICollection<T> c)
+            {
+                int count = c.Count;
+                if (count > 0)
+                {
+                    var index = _size;
+                    var newItems = new T[count];
+                    c.CopyTo(newItems, 0);
+                    newItems.CopyTo(_items, index);
+                    _size += count;
+                }
+            }
+            else
+            {
+                // This enumerable could be empty.  Let Add allocate a new array, if needed.
+                // Note it will also go to _defaultCapacity first, not 1, then 2, etc.
+
+                using (System.Collections.Generic.IEnumerator<T> en = collection.GetEnumerator())
+                {
+                    while (en.MoveNext())
+                    {
+                        Add(en.Current);
+                    }
+                }
+            }
+        }
+
         // Inserts an element into this list at a given index. The size of the list
         // is increased by one. If required, the capacity of the list is doubled
         // before inserting the new element.
@@ -231,19 +283,20 @@
         /// <param name="index">The zero-based index at which item should be inserted.</param>
         /// <param name="item">The object to insert. The value can be null for reference types.</param>
         [Runtime.Register("insert")]
-        public void Insert(int index, T item)
+        public void Insert(Integer index, T item)
         {
+            int i = index.m_value;
             // Note that insertions at the end are legal.
-            if ((uint)index > (uint)_size)
+            if ((uint)i > (uint)_size)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(index));
             }
             if (_size == _items.Length) EnsureCapacity(_size + 1);
-            if (index < _size)
+            if (i < _size)
             {
-                System.Array.Copy(_items, index, _items, index + 1, _size - index);
+                System.Array.Copy(_items, i, _items, i + 1, _size - i);
             }
-            _items[index] = item;
+            _items[i] = item;
             _size++;
             _version++;
         }
@@ -460,9 +513,20 @@
             return array;
         }
 
+        [Runtime.Register("clone")]
+        public List<T> Clone()
+        {
+            List<T> clone = new List<T>(_size);
+            for (int i = 0; i < _size; i++)
+            {
+                clone.Add(_items[i]);
+            }
+            return clone;
+        }
+
         public override string ToString()
         {
-            return string.Join(",", System.Linq.Enumerable.Select(this, (item)=> item.ToString()));
+            return string.Join(",", System.Linq.Enumerable.Select(this, (item) => item.ToString()));
         }
 
         /// <summary>
@@ -496,7 +560,7 @@
         [Runtime.Register("forEach")]
         public void ForEach(System.Delegate iterate)
         {
-            for(int i=0;i< _size;i++)
+            for (int i = 0; i < _size; i++)
             {
                 iterate.DynamicInvoke(_items[i]);
             }
@@ -560,6 +624,7 @@
             /// true if the enumerator was successfully advanced to the next element; false if
             /// the enumerator has passed the end of the collection.
             /// </returns>
+            [Runtime.Register("moveNext")]
             public bool MoveNext()
             {
                 List<T> localList = list;
@@ -592,7 +657,7 @@
             /// A 32-bit signed integer that is the hash code for this instance.
             /// </returns>
             [Runtime.Register("hashCode")]
-            Integer IFSObject.__HashCode()
+            Integer IFSObject.GetHashCode()
             {
                 return GetHashCode();
             }
@@ -604,7 +669,7 @@
             /// A System.String containing a fully qualified type name.
             /// </returns>
             [Runtime.Register("toString")]
-            String IFSObject.__ToString()
+            String IFSObject.ToString()
             {
                 return ToString();
             }
@@ -618,7 +683,7 @@
             /// false.
             /// </returns>
             [Runtime.Register("equals")]
-            Boolean IFSObject.Equals(IFSObject obj)
+            Boolean IFSObject.Equals(object obj)
             {
                 return ReferenceEquals(this, obj);
             }

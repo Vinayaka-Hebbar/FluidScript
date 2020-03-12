@@ -18,7 +18,7 @@
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator)
         {
             //initialize
             if (Value != null)

@@ -9,7 +9,7 @@ namespace FluidScript.Compiler.Generators
         private readonly System.Reflection.Emit.ConstructorBuilder _builder;
         private readonly System.Type[] _baseParameterTypes;
 
-        public ConstructorGenerator(System.Reflection.Emit.ConstructorBuilder builder, ParameterInfo[] parameters, System.Type[] baseParameterTypes, TypeGenerator generator, Compiler.SyntaxTree.Statement statement)
+        public ConstructorGenerator(System.Reflection.Emit.ConstructorBuilder builder, ParameterInfo[] parameters, System.Type[] baseParameterTypes, TypeGenerator generator, SyntaxTree.Statement statement)
         {
             _builder = builder;
             _baseParameterTypes = baseParameterTypes;
@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Reflection.MemberTypes MemberType { get; }
 
-        public Compiler.SyntaxTree.Statement SyntaxBody { get; }
+        public SyntaxTree.Statement SyntaxBody { get; }
 
         public System.Reflection.MemberInfo MemberInfo => this;
 

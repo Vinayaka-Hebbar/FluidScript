@@ -1,4 +1,4 @@
-﻿namespace FluidScript.Library
+﻿namespace FluidScript.Compiler
 {
     public sealed class StringSource : IScriptSource
     {

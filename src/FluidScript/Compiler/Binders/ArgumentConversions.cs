@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace FluidScript.Compiler.Binders
@@ -6,33 +7,48 @@ namespace FluidScript.Compiler.Binders
     /// <summary>
     /// Argument convert list
     /// </summary>
-    public sealed class ArgumenConversions : IEnumerable<ArgumentConversion>
+    public sealed class ArgumentConversions : IEnumerable<Conversion>
     {
         private const int _defaultCapacity = 4;
         internal const int MaxArrayLength = 0X7FEFFFFF;
-        static readonly ArgumentConversion[] _emptyArray = new ArgumentConversion[0];
-        private ArgumentConversion[] _items;
+        static readonly Conversion[] _emptyArray = new Conversion[0];
+        private Conversion[] _items;
         private int size;
 
-        public ArgumenConversions(int capacity)
+        public ArgumentConversions(int capacity)
         {
             if (capacity < 0)
                 throw new System.ArgumentOutOfRangeException(nameof(capacity));
             if (capacity == 0)
                 _items = _emptyArray;
             else
-                _items = new ArgumentConversion[capacity];
+                _items = new Conversion[capacity];
         }
 
-        public ArgumenConversions()
+        public ArgumentConversions()
         {
             _items = _emptyArray;
         }
 
-        public void Add(ArgumentConversion item)
+        public void Add(Conversion item)
         {
             if (size == _items.Length) EnsureCapacity(size + 1);
             _items[size++] = item;
+        }
+
+        public void Insert(int index, Conversion item)
+        {
+            if ((uint)index > (uint)size)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+            if (size == _items.Length) EnsureCapacity(size + 1);
+            if (index < size)
+            {
+                Array.Copy(_items, index, _items, index + 1, size - index);
+            }
+            _items[index] = item;
+            size++;
         }
 
         private void EnsureCapacity(int min)
@@ -44,16 +60,16 @@ namespace FluidScript.Compiler.Binders
                 // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
                 if ((uint)newCapacity > MaxArrayLength) newCapacity = MaxArrayLength;
                 if (newCapacity < min) newCapacity = min;
-                ArgumentConversion[] newItems = new ArgumentConversion[newCapacity];
+                Conversion[] newItems = new Conversion[newCapacity];
                 if (size > 0)
                     System.Array.Copy(_items, 0, newItems, 0, size);
                 _items = newItems;
             }
         }
 
-        public ArgumentConversion At(int index)
+        public Conversion At(int index)
         {
-            if(index < size)
+            if (index < size)
             {
                 return _items[index];
             }
@@ -66,7 +82,7 @@ namespace FluidScript.Compiler.Binders
             size = 0;
         }
 
-        IEnumerator<ArgumentConversion> IEnumerable<ArgumentConversion>.GetEnumerator()
+        IEnumerator<Conversion> IEnumerable<Conversion>.GetEnumerator()
         {
             return new Enumerator(this);
         }
@@ -76,18 +92,44 @@ namespace FluidScript.Compiler.Binders
             return new Enumerator(this);
         }
 
+        public TList Invoke<TList>(TList values) where TList : IList
+        {
+            if (size > 0)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    var conversion = _items[i];
+                    if (conversion != null)
+                    {
+                        int index = conversion.Index;
+                        switch (conversion.ConversionType)
+                        {
+                            case ConversionType.Convert:
+                                var arg = values[index];
+                                values[index] = conversion.Invoke(arg);
+                                break;
+                            case ConversionType.ParamArray:
+                                values[index] = conversion.Invoke(values);
+                                return values;
+                        }
+                    }
+                }
+            }
+            return values;
+        }
+
         public int Count { get => size; }
 
         /// <summary>
-        /// Enumerates the elements of a <see cref="ArgumenConversions"/>.
+        /// Enumerates the elements of a <see cref="ArgumentConversions"/>.
         /// </summary>
-        internal struct Enumerator : IEnumerator<ArgumentConversion>
+        internal struct Enumerator : IEnumerator<Conversion>
         {
-            private readonly ArgumenConversions list;
+            private readonly ArgumentConversions list;
             private int index;
-            private ArgumentConversion current;
+            private Conversion current;
 
-            internal Enumerator(ArgumenConversions list)
+            internal Enumerator(ArgumentConversions list)
             {
                 this.list = list;
                 index = 0;
@@ -97,7 +139,7 @@ namespace FluidScript.Compiler.Binders
             /// <summary>
             /// Gets the element at the current position of the enumerator.
             /// </summary>
-            public ArgumentConversion Current
+            public Conversion Current
             {
                 get
                 {
@@ -134,7 +176,7 @@ namespace FluidScript.Compiler.Binders
             /// </returns>
             public bool MoveNext()
             {
-                ArgumenConversions localList = list;
+                ArgumentConversions localList = list;
 
                 if ((uint)index < (uint)localList.size)
                 {

@@ -22,9 +22,9 @@ namespace FluidScript.Utils
         internal const BindingFlags PublicDeclared = PublicInstance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
         #region BindToMethod
-        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out ArgumenConversions bindings)
+        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Type[] types, out ArgumentConversions bindings)
         {
-            bindings = new ArgumenConversions();
+            bindings = new ArgumentConversions();
             foreach (var m in members)
             {
                 if (m.MemberType == MemberTypes.Method)
@@ -36,9 +36,9 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static MethodInfo BindToMethod(MethodInfo[] methods, System.Type[] types, out ArgumenConversions bindings)
+        internal static TMethod BindToMethod<TMethod>(TMethod[] methods, System.Type[] types, out ArgumentConversions bindings) where TMethod : MethodBase
         {
-            bindings = new ArgumenConversions(types.Length);
+            bindings = new ArgumentConversions(types.Length);
             foreach (var m in methods)
             {
                 if (MatchesTypes(m, types, bindings))
@@ -49,9 +49,9 @@ namespace FluidScript.Utils
 
         #endregion
 
-        internal static MethodInfo GetOperatorOverload(string name, out ArgumenConversions conversions, params System.Type[] types)
+        internal static MethodInfo GetOperatorOverload(string name, out ArgumentConversions conversions, params System.Type[] types)
         {
-            conversions = new ArgumenConversions();
+            conversions = new ArgumentConversions();
             foreach (var type in types)
             {
                 var members = type.GetMember(name, PublicStatic);
@@ -64,7 +64,7 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static bool MatchesTypes(MethodInfo method, System.Type[] types, ArgumenConversions conversions)
+        internal static bool MatchesTypes(MethodBase method, System.Type[] types, ArgumentConversions conversions)
         {
             var paramters = method.GetParameters();
             var length = types.Length;
@@ -211,10 +211,16 @@ namespace FluidScript.Utils
 
         #region Methods
 
+        /// <summary>
+        /// Find only registered methods
+        /// </summary>
+        /// <param name="m"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         internal static bool HasMethod(MethodInfo m, object filter)
         {
             var data = (System.Attribute[])m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
-            return data.Length > 0 ? data[0].Match(filter) : m.Name.Equals(filter);
+            return data.Length > 0 ? data[0].Match(filter) : false;
         }
 
         internal static MethodInfo[] GetPublicMethods(System.Type type, string name)

@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Type BaseType { get; }
 
-        public Library.IScriptSource Source
+        public IScriptSource Source
         {
             get;
             set;
@@ -250,7 +250,7 @@ namespace FluidScript.Compiler.Generators
         /// <inheritdoc/>
         public override System.Reflection.MemberInfo[] GetMembers(System.Reflection.BindingFlags bindingAttr)
         {
-            return __GetMembers(bindingAttr).ToArray();
+            return InternalGetMembers(bindingAttr).ToArray();
         }
 
         /// <inheritdoc/>
@@ -307,7 +307,7 @@ namespace FluidScript.Compiler.Generators
             return _builder.InvokeMember(name, invokeAttr, binder, target, args);
         }
 
-        private IEnumerable<System.Reflection.MemberInfo> __GetMembers(System.Reflection.BindingFlags flags)
+        private IEnumerable<System.Reflection.MemberInfo> InternalGetMembers(System.Reflection.BindingFlags flags)
         {
             foreach (var member in Members)
             {

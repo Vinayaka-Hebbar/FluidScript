@@ -98,43 +98,9 @@
         public String SubString(int startIndex, int length) => m_value.Substring(startIndex, length);
 
         /// <inheritdoc/>
-        [Runtime.Register("toString")]
-        public override String __ToString()
+        public override string ToString()
         {
-            return m_value.ToString();
-        }
-
-        /// <inheritdoc/>
-        [Runtime.Register("hashCode")]
-        public override Integer __HashCode()
-        {
-            return m_value.GetHashCode();
-        }
-
-        /// <inheritdoc/>
-        [Runtime.Register("equals")]
-        public override Boolean Equals(IFSObject other)
-        {
-            return other is String s &&
-                  m_value == s.m_value ? Boolean.True : Boolean.False;
-        }
-
-        /// <inheritdoc/>
-        public override bool Equals(object other)
-        {
-            return other is String s &&
-                  m_value == s.m_value;
-        }
-
-        /// <summary>
-        /// Indicates whether this instance and a specified object are equal.
-        /// </summary>
-        /// <param name="obj"> The object to compare with the current instance.</param>
-        /// <returns>true if obj and this instance are the same type and represent the same value;
-        ///  otherwise, false.</returns>
-        public Boolean Equals(String obj)
-        {
-            return m_value == obj.m_value ? Boolean.True : Boolean.False;
+            return m_value;
         }
 
         /// <inheritdoc/>
@@ -143,10 +109,23 @@
             return m_value.GetHashCode();
         }
 
-        /// <inheritdoc/>
-        public override string ToString()
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj"> The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value;
+        ///  otherwise, false.</returns>
+        [Runtime.Register("equals")]
+        public Boolean Equals(String obj)
         {
-            return m_value;
+            return m_value == obj.m_value ? Boolean.True : Boolean.False;
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object other)
+        {
+            return other is String s &&
+                  m_value == s.m_value;
         }
 
         ///<inheritdoc/>

@@ -386,7 +386,7 @@ namespace FluidScript.Compiler.Emit
                     name = "op_BitwiseAnd";
                     break;
             }
-            var method = TypeUtils.GetOperatorOverload(name, out ArgumenConversions bindings, operand.Type);
+            var method = TypeUtils.GetOperatorOverload(name, out ArgumentConversions bindings, operand.Type);
             node.Conversions = bindings;
             node.Method = method;
             node.Type = method.ReturnType;
@@ -446,7 +446,7 @@ namespace FluidScript.Compiler.Emit
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
             System.Reflection.MethodInfo method = null;
-            ArgumenConversions bindings = null;
+            ArgumentConversions bindings = null;
             if (opName != null)
             {
                 method = TypeUtils.
@@ -454,7 +454,7 @@ namespace FluidScript.Compiler.Emit
             }
             else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
             {
-                bindings = new ArgumenConversions(2);
+                bindings = new ArgumentConversions(2);
                 System.Reflection.MethodInfo convertLeft = TypeUtils.GetBooleanOveraload(left.Type);
                 if (convertLeft != null)
                     bindings.Add(new ParamConversion(0, convertLeft));
@@ -472,9 +472,37 @@ namespace FluidScript.Compiler.Emit
         /// <inheritdoc/>
         Expression IExpressionVisitor<Expression>.VisitArrayLiteral(ArrayLiteralExpression node)
         {
-            if (node.Size != null)
-                node.Size.Accept(this);
-            node.Type = node.ArrayType != null ? node.ArrayType.GetType(TypeProvider).MakeArrayType() : typeof(IFSObject).MakeArrayType();
+            var type = node.ArrayType != null ? node.ArrayType.GetType(TypeProvider) : typeof(object);
+            node.Type = type.MakeArrayType();
+            if (node.Arguments != null)
+            {
+                var types = node.Arguments.Map(arg => arg.Accept(this).Type);
+                if (node.Constructor == null)
+                {
+                    var ctors = node.Type.GetConstructors(TypeUtils.PublicInstance);
+                    var ctor = TypeUtils.BindToMethod(ctors, types, out ArgumentConversions conversions);
+                    if (ctor == null)
+                        ExecutionException.ThrowMissingMethod(node.Type, "ctor", node);
+                    node.Constructor = ctor;
+                    node.ArgumentConversions = conversions;
+                }
+            }
+            else if (node.Constructor == null)
+            {
+                node.Constructor = node.Type.GetConstructor(TypeUtils.PublicInstance, null, new Type[0], null);
+            }
+            var items = node.Expressions;
+            var arrayConversions = node.ArrayConversions ?? new ArgumentConversions(items.Length);
+            for (int index = 0; index < items.Length; index++)
+            {
+                Expression expression = items[index];
+                var value = expression.Accept(this);
+                if (!TypeUtils.AreReferenceAssignable(type, expression.Type) && TypeUtils.TryImplicitConvert(expression.Type, type, out System.Reflection.MethodInfo implicitCall))
+                {
+                    arrayConversions.Insert(index, new ParamConversion(index, implicitCall));
+                }
+            }
+            node.ArrayConversions = arrayConversions;
             return node;
         }
 
@@ -552,7 +580,7 @@ namespace FluidScript.Compiler.Emit
             if (methods.Length == 0)
                 throw new Exception(string.Concat("method ", name, " not found"));
             //todo type conversion
-            var method = TypeUtils.BindToMethod(methods,types, out ArgumenConversions binders);
+            var method = TypeUtils.BindToMethod(methods, types, out ArgumentConversions binders);
             if (method is IMethodBaseGenerator baseGenerator)
                 method = (System.Reflection.MethodInfo)baseGenerator.MethodBase;
             node.Convertions = binders;
@@ -687,7 +715,7 @@ namespace FluidScript.Compiler.Emit
                 var types = node.Arguments.Map(arg => arg.Accept(this).Type);
                 var indexers = type
                     .FindMembers(System.Reflection.MemberTypes.Method, TypeUtils.Any, FindExactMethod, "get_Item");
-                var indexer = TypeUtils.BindToMethod(indexers, types, out ArgumenConversions bindings);
+                var indexer = TypeUtils.BindToMethod(indexers, types, out ArgumentConversions bindings);
                 //todo binding in array
                 node.Getter = indexer ?? throw new Exception("Indexer not found");
                 type = indexer.ReturnType;

@@ -1,26 +1,32 @@
-﻿using System.Collections;
+﻿using FluidScript.Runtime;
+using System.Collections;
 using System.Collections.Generic;
 
-namespace FluidScript.Runtime
+namespace FluidScript.Compiler
 {
-    internal sealed class DynamicLocals : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>, System.Runtime.CompilerServices.IRuntimeVariables
+    public interface IRuntimeVariables : IDictionary<string, object>, System.Runtime.CompilerServices.IRuntimeVariables
+    {
+        System.IDisposable EnterScope();
+    }
+
+    internal sealed class RuntimeVariables : Collections.DictionaryBase<LocalVariable, object>, IRuntimeVariables
     {
         static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
 
         //keeps track of current locals
-        private VariableIndexList current;
+        VariableIndexList current;
 
-        internal DynamicLocals(int capacity) : base(capacity, DefaultComparer)
+        internal RuntimeVariables(int capacity) : base(capacity, DefaultComparer)
         {
             current = new VariableIndexList(null, capacity);
         }
 
-        internal DynamicLocals() : base(0, DefaultComparer)
+        internal RuntimeVariables() : base(0, DefaultComparer)
         {
             current = new VariableIndexList(null, 0);
         }
 
-        public DynamicLocals(IDictionary<string, object> locals) : base(locals.Count, DefaultComparer)
+        public RuntimeVariables(IDictionary<string, object> locals) : base(locals.Count, DefaultComparer)
         {
             current = new VariableIndexList(null, locals.Count);
             if (locals == null)
@@ -178,7 +184,7 @@ namespace FluidScript.Runtime
         /// <summary>
         /// create's a scope for variables inside a block
         /// </summary>
-        internal System.IDisposable EnterScope()
+        public System.IDisposable EnterScope()
         {
             return new LocalScope(this);
         }
@@ -239,7 +245,12 @@ namespace FluidScript.Runtime
 
         bool ICollection<KeyValuePair<string, object>>.Contains(KeyValuePair<string, object> item)
         {
-            throw new System.NotImplementedException();
+            int i = FindEntry(item.Key);
+            if (i >= 0 && EqualityComparer<object>.Default.Equals(entries[i].Value, item.Value))
+            {
+                return true;
+            }
+            return false;
         }
 
         void ICollection<KeyValuePair<string, object>>.CopyTo(KeyValuePair<string, object>[] array, int index)
@@ -275,6 +286,11 @@ namespace FluidScript.Runtime
             throw new System.NotSupportedException("Remove not supported");
         }
 
+        void ICollection<KeyValuePair<string, object>>.Clear()
+        {
+            throw new System.NotSupportedException("Clear not supported");
+        }
+
         public Enumerator GetEnumerator()
         {
             return new Enumerator(this, Enumerator.KeyValuePair);
@@ -293,9 +309,9 @@ namespace FluidScript.Runtime
 #endif
             struct LocalScope : System.IDisposable
         {
-            private readonly DynamicLocals locals;
+            private readonly RuntimeVariables locals;
 
-            public LocalScope(DynamicLocals locals) : this()
+            public LocalScope(RuntimeVariables locals) : this()
             {
                 this.locals = locals;
                 locals.current = new VariableIndexList(locals.current, 0);
@@ -318,7 +334,7 @@ namespace FluidScript.Runtime
         public struct Enumerator : IEnumerator<KeyValuePair<string, object>>,
             IDictionaryEnumerator
         {
-            private readonly DynamicLocals dictionary;
+            private readonly RuntimeVariables dictionary;
             private readonly int version;
             private int index;
             private KeyValuePair<string, object> current;
@@ -327,7 +343,7 @@ namespace FluidScript.Runtime
             public const int DictEntry = 1;
             public const int KeyValuePair = 2;
 
-            public Enumerator(DynamicLocals dictionary, int getEnumeratorRetType)
+            public Enumerator(RuntimeVariables dictionary, int getEnumeratorRetType)
             {
                 this.dictionary = dictionary;
                 version = dictionary.version;

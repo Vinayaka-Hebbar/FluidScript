@@ -5,9 +5,9 @@ namespace FluidScript.Utils
 {
     internal static class TypeHelpers
     {
-        internal static MethodInfo BindToMethod(MethodInfo[] methods, object[] args, out ArgumenConversions conversions)
+        internal static TMethod BindToMethod<TMethod>(TMethod[] methods, object[] args, out ArgumentConversions conversions) where TMethod : MethodBase
         {
-            conversions = new ArgumenConversions(args.Length);
+            conversions = new ArgumentConversions(args.Length);
             foreach (var m in methods)
             {
                 if (MatchesTypes(m, args, conversions))
@@ -16,9 +16,9 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Collections.IList args, out ArgumenConversions conversions)
+        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Collections.IList args, out ArgumentConversions conversions)
         {
-            conversions = new ArgumenConversions(args.Count);
+            conversions = new ArgumentConversions(args.Count);
             foreach (var m in members)
             {
                 if (m.MemberType == MemberTypes.Method)
@@ -30,7 +30,7 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static bool MatchesTypes(MethodInfo method, System.Collections.IList args, ArgumenConversions conversions)
+        internal static bool MatchesTypes(MethodBase method, System.Collections.IList args, ArgumentConversions conversions)
         {
             var parameters = method.GetParameters();
             // arg length
@@ -79,9 +79,9 @@ namespace FluidScript.Utils
             return i == length;
         }
 
-        private static bool ParamArrayMatchs(System.Collections.IList args, int index, System.Type dest, ArgumenConversions conversions)
+        private static bool ParamArrayMatchs(System.Collections.IList args, int index, System.Type dest, ArgumentConversions conversions)
         {
-            var binder = new ArgumenConversions();
+            var binder = new ArgumentConversions();
             // check first parameter type matches
             for (var i = index; i < args.Count; i++)
             {
@@ -106,7 +106,7 @@ namespace FluidScript.Utils
             return true;
         }
 
-        internal static bool MatchesTypes(System.Type[] types, System.Collections.IList args, ArgumenConversions conversions)
+        internal static bool MatchesTypes(System.Type[] types, System.Collections.IList args, ArgumentConversions conversions)
         {
             var length = args.Count;
             if (types.Length == 0 && length > 0)
@@ -203,9 +203,9 @@ namespace FluidScript.Utils
             throw new System.MemberAccessException(string.Concat("cannot read to member", m.Name));
         }
 
-        internal static MethodInfo GetDelegateMethod(System.Delegate del, object[] args, out ArgumenConversions conversions)
+        internal static MethodInfo GetDelegateMethod(System.Delegate del, object[] args, out ArgumentConversions conversions)
         {
-            conversions = new ArgumenConversions();
+            conversions = new ArgumentConversions();
             MethodInfo m = del.Method;
             // only static method can allowed
             if (MatchesTypes(m, args, conversions))

@@ -4,42 +4,27 @@
         <name>FluidScript</name>
     </assembly>
     <members>
-        <member name="T:FluidScript.Compiler.Binders.ArgumentConversion">
-            <summary>
-            Operator overload conversion
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Binders.ArgumentConversion.#ctor(System.Int32)">
-            <summary>
-            Initializes new <see cref="T:FluidScript.Compiler.Binders.ArgumentConversion"/>
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Binders.ParamConversion.Method">
-            <summary>
-            Conversion method
-            </summary>
-        </member>
-        <member name="T:FluidScript.Compiler.Binders.ArgumenConversions">
+        <member name="T:FluidScript.Compiler.Binders.ArgumentConversions">
             <summary>
             Argument convert list
             </summary>
         </member>
-        <member name="T:FluidScript.Compiler.Binders.ArgumenConversions.Enumerator">
+        <member name="T:FluidScript.Compiler.Binders.ArgumentConversions.Enumerator">
             <summary>
-            Enumerates the elements of a <see cref="T:FluidScript.Compiler.Binders.ArgumenConversions"/>.
+            Enumerates the elements of a <see cref="T:FluidScript.Compiler.Binders.ArgumentConversions"/>.
             </summary>
         </member>
-        <member name="P:FluidScript.Compiler.Binders.ArgumenConversions.Enumerator.Current">
+        <member name="P:FluidScript.Compiler.Binders.ArgumentConversions.Enumerator.Current">
             <summary>
             Gets the element at the current position of the enumerator.
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.Binders.ArgumenConversions.Enumerator.Dispose">
+        <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Enumerator.Dispose">
             <summary>
             Releases all resources used by the <see cref="T:System.Collections.Generic.List`1"/>.Enumerator.
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.Binders.ArgumenConversions.Enumerator.MoveNext">
+        <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Enumerator.MoveNext">
             <summary>
             Advances the enumerator to the next element of the <see cref="T:System.Collections.Generic.List`1"/>.
             </summary>
@@ -47,6 +32,21 @@
             true if the enumerator was successfully advanced to the next element; false if
             the enumerator has passed the end of the collection.
             </returns>
+        </member>
+        <member name="T:FluidScript.Compiler.Binders.Conversion">
+            <summary>
+            Operator overload conversion
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Binders.Conversion.#ctor(System.Int32)">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Compiler.Binders.Conversion"/>
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Binders.ParamConversion.Method">
+            <summary>
+            Conversion method
+            </summary>
         </member>
         <member name="M:FluidScript.Compiler.Debugging.TextPosition.#ctor(System.Int32,System.Int32)">
             <summary>
@@ -107,7 +107,7 @@
         </member>
         <member name="T:FluidScript.Compiler.DynamicCompiler">
             <summary>
-            Runtime evaluation of Syntax tree 
+            Runtime evaluation of Syntax tree with <see cref="P:FluidScript.Compiler.DynamicCompiler.Locals"/>
             <list type="bullet">it will be not same as compiled </list>
             </summary>
         </member>
@@ -149,16 +149,7 @@
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.MissingMethodException"/>
         </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitAssignment(FluidScript.Compiler.SyntaxTree.AssignmentExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitBinary(FluidScript.Compiler.SyntaxTree.BinaryExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitCall(FluidScript.Compiler.SyntaxTree.InvocationExpression)">
+        <member name="M:FluidScript.Compiler.DynamicCompiler.VisitAssignment(FluidScript.Compiler.SyntaxTree.AssignmentExpression)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.DynamicCompiler.ResolveCall(FluidScript.Compiler.SyntaxTree.InvocationExpression,System.Object[])">
@@ -167,49 +158,22 @@
             </summary>
             <returns>target to invoke</returns>
         </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitIndex(FluidScript.Compiler.SyntaxTree.IndexExpression)">
+        <member name="M:FluidScript.Compiler.DynamicCompiler.VisitMember(FluidScript.Compiler.SyntaxTree.MemberExpression)">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitLiteral(FluidScript.Compiler.SyntaxTree.LiteralExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitMember(FluidScript.Compiler.SyntaxTree.MemberExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitMember(FluidScript.Compiler.SyntaxTree.NameExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitTernary(FluidScript.Compiler.SyntaxTree.TernaryExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitThis(FluidScript.Compiler.SyntaxTree.ThisExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitUnary(FluidScript.Compiler.SyntaxTree.UnaryExpression)">
+        <member name="M:FluidScript.Compiler.DynamicCompiler.VisitMember(FluidScript.Compiler.SyntaxTree.NameExpression)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IStatementVisitor#VisitExpression(FluidScript.Compiler.SyntaxTree.ExpressionStatement)">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitDeclaration(FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression)">
+        <member name="M:FluidScript.Compiler.DynamicCompiler.VisitDeclaration(FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IStatementVisitor#VisitReturn(FluidScript.Compiler.SyntaxTree.ReturnOrThrowStatement)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IStatementVisitor#VisitBlock(FluidScript.Compiler.SyntaxTree.BlockStatement)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitNull(FluidScript.Compiler.SyntaxTree.NullExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitNullPropegator(FluidScript.Compiler.SyntaxTree.NullPropegatorExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitAnonymousObject(FluidScript.Compiler.SyntaxTree.AnonymousObjectExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#VisitSizeOf(FluidScript.Compiler.SyntaxTree.SizeOfExpression)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.DynamicCompiler.FluidScript#Compiler#IStatementVisitor#VisitDeclaration(FluidScript.Compiler.SyntaxTree.LocalDeclarationStatement)">
@@ -1695,7 +1659,7 @@
             Parse settings
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.Parser.#ctor(FluidScript.Library.IScriptSource,FluidScript.Compiler.ParserSettings)">
+        <member name="M:FluidScript.Compiler.Parser.#ctor(FluidScript.Compiler.IScriptSource,FluidScript.Compiler.ParserSettings)">
             <summary>
             Initializes new <see cref="T:FluidScript.Compiler.Parser"/>
             </summary>
@@ -1813,7 +1777,7 @@
         </member>
         <member name="M:FluidScript.Compiler.Parser.VisitArrayLiteral">
             <summary>
-            format &lt;int&gt;(size)[1,2]
+            format &lt;int&gt;[1,2](size)
             </summary>
             <returns></returns>
         </member>
@@ -1876,11 +1840,6 @@
             expression visitor for instance does not support statements
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IExpressionVisitor{System#Object}#Visit(FluidScript.Compiler.SyntaxTree.Expression)">
-            <summary>
-            invoke the expression
-            </summary>
-        </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.Expression">
             <summary>
             Base Expression
@@ -1915,7 +1874,7 @@
             List of array items
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.Size">
+        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.Arguments">
             <summary>
             Array Size
             </summary>
@@ -1925,7 +1884,7 @@
             Array type
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.#ctor(FluidScript.Compiler.SyntaxTree.NodeList{FluidScript.Compiler.SyntaxTree.Expression},FluidScript.Compiler.SyntaxTree.TypeSyntax,FluidScript.Compiler.SyntaxTree.Expression)">
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.#ctor(FluidScript.Compiler.SyntaxTree.INodeList{FluidScript.Compiler.SyntaxTree.Expression},FluidScript.Compiler.SyntaxTree.TypeSyntax,FluidScript.Compiler.SyntaxTree.INodeList{FluidScript.Compiler.SyntaxTree.Expression})">
             <summary>
             Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression"/>
             </summary>
@@ -2570,25 +2529,35 @@
             Get resolved <see cref="T:System.Type"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Library.IScriptSource.ReadChar">
+        <member name="M:FluidScript.Compiler.IScriptSource.ReadChar">
             <summary>
             Read next char
             </summary>
         </member>
-        <member name="M:FluidScript.Library.IScriptSource.PeekChar">
+        <member name="M:FluidScript.Compiler.IScriptSource.PeekChar">
             <summary>
             Peek next char
             </summary>
         </member>
-        <member name="M:FluidScript.Library.IScriptSource.FallBack">
+        <member name="M:FluidScript.Compiler.IScriptSource.FallBack">
             <summary>
             Revert to pos-1
             </summary>
             <returns>Current Char in the position</returns>
         </member>
+        <member name="T:FluidScript.GlobalObject">
+            <summary>
+            Global object for runtime
+            </summary>
+        </member>
         <member name="P:FluidScript.GlobalObject.Instance">
             <summary>
             Global target for compilation
+            </summary>
+        </member>
+        <member name="P:FluidScript.GlobalObject.Runtime">
+            <summary>
+            Runtime Values
             </summary>
         </member>
         <member name="T:FluidScript.ScriptParser">
@@ -2630,18 +2599,6 @@
             Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/> for <paramref name="text"/>
             </summary>
             <param name="text">Text to parse</param>
-            <param name="settings">Parser options if null will be default options</param>
-            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/></returns>
-        </member>
-        <member name="M:FluidScript.ScriptParser.GetExpression(System.String,FluidScript.Compiler.ParserSettings)">
-            <summary>
-            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/> for <paramref name="text"/>
-            </summary>
-            <param name="text">Text to parse</param>
-            <param name="settings">Parser options if null will be default options</param>
-            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/></returns>
-        </member>
-        <member name="M:FluidScript.ScriptParser.ParseText(Sysse</param>
             <param name="settings">Parser options if null will be default options</param>
             <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/></returns>
         </member>
@@ -2712,6 +2669,14 @@
             returns a method with two double parameters, which doesn't match the provided
             argument types.
             </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Utils.TypeUtils.HasMethod(System.Reflection.MethodInfo,System.Object)">
+            <summary>
+            Find only registered methods
+            </summary>
+            <param name="m"></param>
+            <param name="filter"></param>
             <returns></returns>
         </member>
         <member name="M:FluidScript.Utils.TypeUtils.GetMember(System.Type,System.String)">

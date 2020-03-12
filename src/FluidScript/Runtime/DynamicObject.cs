@@ -7,7 +7,7 @@ namespace FluidScript.Runtime
 {
     // todo create Object.Keys
     [System.Serializable]
-    public class DynamicObject : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>, ISerializable, IDynamicMetaObjectProvider, IRuntimeMetaObjectProvider
+    public class DynamicObject : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>, ISerializable, IDynamicMetaObjectProvider, IMetaObjectProvider
     {
         static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
 
@@ -400,11 +400,11 @@ namespace FluidScript.Runtime
             return new MetaObject(parameter, this);
         }
 
-        private RuntimeMetaObject _runtime;
-        RuntimeMetaObject IRuntimeMetaObjectProvider.GetMetaObject()
+        private MetaObjectProvider _runtime;
+        MetaObjectProvider IMetaObjectProvider.GetMetaObject()
         {
             if (_runtime == null)
-                _runtime = new RuntimeMetaObject(this);
+                _runtime = new MetaObjectProvider(this);
             return _runtime;
         }
 

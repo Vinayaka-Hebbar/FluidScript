@@ -1,10 +1,12 @@
-﻿namespace FluidScript.Compiler.Binders
+﻿using FluidScript.Compiler.SyntaxTree;
+namespace FluidScript.Compiler.Binders
 {
     /// <summary>
     /// Operator overload conversion
     /// </summary>
-    public abstract class ArgumentConversion
+    public abstract class Conversion
     {
+        public static readonly Conversion None = new NoConversion();
         public readonly int Index;
 
         public abstract ConversionType ConversionType { get; }
@@ -12,25 +14,47 @@
         public abstract System.Type Type { get; }
 
         /// <summary>
-        /// Initializes new <see cref="ArgumentConversion"/>
+        /// Initializes new <see cref="Conversion"/>
         /// </summary>
-        public ArgumentConversion(int index)
+        public Conversion(int index)
         {
             Index = index;
         }
 
         internal abstract void Generate(Emit.MethodBodyGenerator generator, params SyntaxTree.Expression[] expression);
 
-        internal abstract object Invoke(object[] args);
+        internal abstract object Invoke(params object[] args);
     }
 
     public enum ConversionType
     {
+        None,
         Convert,
         ParamArray
     }
 
-    internal sealed class ParamConversion : ArgumentConversion
+    internal sealed class NoConversion : Conversion
+    {
+        internal NoConversion() : base(-1)
+        {
+        }
+
+        public override ConversionType ConversionType => ConversionType.None;
+
+        public override System.Type Type => null;
+
+        internal override void Generate(Emit.MethodBodyGenerator generator, params Expression[] expression)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        internal override object Invoke(params object[] args)
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+
+    internal sealed class ParamConversion : Conversion
     {
         /// <summary>
         /// Conversion method
@@ -52,24 +76,24 @@
             generator.CallStatic(Method);
         }
 
-        internal override object Invoke(object[] args)
+        internal override object Invoke(params object[] args)
         {
-            return Method.Invoke(null, new object[1] { args[Index] });
+            return Method.Invoke(null, new object[1] { args[0] });
         }
     }
 
-    internal sealed class ParamArrayConversion : ArgumentConversion
+    internal sealed class ParamArrayConversion : Conversion
     {
         public override System.Type Type { get; }
 
-        public ArgumenConversions ParamBinders { get; }
+        public ArgumentConversions ParamBinders { get; }
 
         public ParamArrayConversion(int index, System.Type type) : base(index)
         {
             Type = type;
         }
 
-        public ParamArrayConversion(int index, System.Type type, ArgumenConversions paramBinders) : base(index)
+        public ParamArrayConversion(int index, System.Type type, ArgumentConversions paramBinders) : base(index)
         {
             Type = type;
             ParamBinders = paramBinders;
@@ -98,7 +122,7 @@
             }
         }
 
-        internal override object Invoke(object[] args)
+        internal override object Invoke(params object[] args)
         {
             var count = args.Length;
             // Remaining size

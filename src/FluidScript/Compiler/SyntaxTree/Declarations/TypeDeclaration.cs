@@ -19,7 +19,7 @@ namespace FluidScript.Compiler.SyntaxTree
             Members = members;
         }
 
-        public Library.IScriptSource Source
+        public IScriptSource Source
         {
             get;
             set;

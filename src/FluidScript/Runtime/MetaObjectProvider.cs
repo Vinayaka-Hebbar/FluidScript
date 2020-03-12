@@ -1,10 +1,10 @@
 ﻿namespace FluidScript.Runtime
 {
-    public class RuntimeMetaObject
+    public class MetaObjectProvider
     {
         private readonly DynamicObject m_value;
 
-        internal RuntimeMetaObject(DynamicObject value)
+        internal MetaObjectProvider(DynamicObject value)
         {
             m_value = value;
         }
@@ -57,11 +57,11 @@
             }
         }
 
-        internal System.Delegate GetDelegate(string name, object[] args, out Compiler.Binders.ArgumenConversions binders)
+        internal System.Delegate GetDelegate(string name, object[] args, out Compiler.Binders.ArgumentConversions binders)
         {
             System.Reflection.MethodInfo method = null;
             object obj = null;
-            binders = new Compiler.Binders.ArgumenConversions();
+            binders = new Compiler.Binders.ArgumentConversions();
             if (m_value.TryGetMember(name, out LocalVariable variable))
             {
                 if (m_value[variable.Index] is System.Delegate refer)

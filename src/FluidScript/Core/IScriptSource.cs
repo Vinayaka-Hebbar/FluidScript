@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FluidScript.Library
+namespace FluidScript.Compiler
 {
     public interface IScriptSource : IDisposable
     {

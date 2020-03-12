@@ -1,4 +1,4 @@
-﻿namespace FluidScript.Runtime
+﻿namespace FluidScript.Compiler
 {
     internal sealed class VariableIndexList
     {

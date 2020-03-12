@@ -4,7 +4,7 @@ namespace FluidScipt.ConsoleTest
 {
     public class Class1
     {
-        const string text = @"{global.log = func (message):void=>this.print(message);global.log(`working`);}";
+        const string text = @"func (item:int)=>item";
 
         // todo import static class
         static void Main(string[] args)
@@ -16,47 +16,22 @@ namespace FluidScipt.ConsoleTest
         private void Test()
         {
             var compiler = new FluidScript.Compiler.DynamicCompiler();
-            compiler["r"] = new FluidScript.Integer(2);
-            compiler["s"] = new FluidScript.Double(2);
-            var statement = FluidScript.ScriptParser.GetStatement(text);
-            var result = compiler.Invoke(statement);
-            Console.WriteLine(result);
+            compiler.Locals["r"] = 1;
+            using (compiler.Locals.EnterScope())
+            {
+                compiler.Locals["r"] = 10;
+                compiler.Locals["s"] = 10;
+                var statement = FluidScript.ScriptParser.GetExpression(text);
+                var result = compiler.Invoke(statement);
+                result = compiler.Invoke(statement);
+                Console.WriteLine(result);
+            }
+            Console.WriteLine();
         }
 
         public int Test(FluidScript.Integer value)
         {
             return value;
-        }
-    }
-
-
-    public class Test : FluidScript.Runtime.DynamicObject
-    {
-        public Test()
-        {
-        }
-
-        public FluidScript.Math Math { get; }
-
-        [FluidScript.Runtime.Register("name")]
-        public string Name { get; set; } = "Vinayaka";
-
-        [FluidScript.Runtime.Register("datetime")]
-        public static FluidScript.String GetDataTime(FluidScript.String format)
-        {
-            return System.DateTime.Now.ToString(format.ToString());
-        }
-
-        [FluidScript.Runtime.Register("datetime")]
-        public static FluidScript.String GetDataTime()
-        {
-            return System.DateTime.Now.ToString();
-        }
-
-        [FluidScript.Runtime.Register("add")]
-        public int Add(int a, int b)
-        {
-            return a + b;
         }
     }
 

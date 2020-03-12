@@ -34,19 +34,19 @@
         }
 
         [Runtime.Register("hashCode")]
-        Integer IFSObject.__HashCode()
+        Integer IFSObject.GetHashCode()
         {
             return GetHashCode();
         }
 
         [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(IFSObject obj)
+        Boolean IFSObject.Equals(object obj)
         {
             return Equals(obj);
         }
 
         [Runtime.Register("toString")]
-        String IFSObject.__ToString()
+        String IFSObject.ToString()
         {
             return
                 new String(string.Concat("[", key != null ? key.ToString() : string.Empty, ", ", value != null ? value.ToString() : string.Empty, "]"));

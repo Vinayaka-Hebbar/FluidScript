@@ -13,7 +13,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Argument convert list
         /// </summary>
-        public Binders.ArgumenConversions Conversions { get; internal set; }
+        public Binders.ArgumentConversions Conversions { get; internal set; }
 
         public BinaryExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
         {
@@ -106,6 +106,9 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 case ExpressionType.StarStar:
                     operation = "**";
+                    break;
+                case ExpressionType.Comma:
+                    operation = ",";
                     break;
             }
             return string.Concat(Left.ToString(), operation, Right.ToString());

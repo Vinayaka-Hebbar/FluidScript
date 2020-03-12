@@ -4,7 +4,7 @@
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0;</TargetFrameworks>
     <DefineConstants>TRACE;</DefineConstants>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.14-mr1</Version>
+    <Version>1.0.14-mr2</Version>
     <Title>FluidScript</Title>
     <PackageId>FluidScript</PackageId>
     <Product>FluidScript</Product>
@@ -50,12 +50,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Compiler\RuntimeCompiler.cs" />
     <Compile Remove="Runtime\DynamicData.cs" />
     <Compile Remove="Runtime\Function.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.9-beta" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.9" />
   </ItemGroup>
 
 </Project>

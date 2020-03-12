@@ -11,6 +11,7 @@ namespace FluidScript.Compiler
         const int MissingIndexer = 6;
         const int ArgumentMisMatch = 7;
         const int NotSupported = 8;
+        const int InvalidCast = 9;
 
 
         public readonly Node[] NodeTree;
@@ -55,6 +56,8 @@ namespace FluidScript.Compiler
                         return "Argument mismatch";
                     case NotSupported:
                         return "Not suppored";
+                    case InvalidCast:
+                        return string.Concat("Invalid cast to ", Type);
                 }
                 return base.Message;
             }
@@ -75,5 +78,7 @@ namespace FluidScript.Compiler
         internal static void ThrowInvalidOp(params Node[] tree) => throw new ExecutionException(null, null, InvalidOp, tree);
 
         internal static void ThrowArgumentMisMatch(params Node[] tree) => throw new ExecutionException(null, null, ArgumentMisMatch, tree);
+
+        internal static void ThrowInvalidCast(System.Type type, params Node[] tree) => throw new ExecutionException(null, null, InvalidCast, tree);
     }
 }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace FluidScript.Library
+namespace FluidScript.Compiler
 {
     internal static class StringHelpers
     {

@@ -5,9 +5,9 @@ namespace FluidScript.Runtime
 {
     internal sealed class MetaObject : DynamicMetaObject
     {
-        private readonly RuntimeMetaObject m_value;
+        private readonly MetaObjectProvider m_value;
 
-        public MetaObject(Expression expression, IRuntimeMetaObjectProvider runtime) : base(expression, BindingRestrictions.Empty, runtime)
+        public MetaObject(Expression expression, IMetaObjectProvider runtime) : base(expression, BindingRestrictions.Empty, runtime)
         {
             m_value = runtime.GetMetaObject();
         }
@@ -40,7 +40,7 @@ namespace FluidScript.Runtime
         {
             var name = binder.Name;
             var arguments = Utils.CollectionExtensions.Map(args, arg => arg.Value);
-            var del = m_value.GetDelegate(name, arguments, out Compiler.Binders.ArgumenConversions conversions);
+            var del = m_value.GetDelegate(name, arguments, out Compiler.Binders.ArgumentConversions conversions);
             var method = del.Method;
             // todo check whether target is correct
             foreach (var conversion in conversions)

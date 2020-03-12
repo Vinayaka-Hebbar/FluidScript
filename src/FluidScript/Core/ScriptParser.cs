@@ -1,5 +1,4 @@
 ﻿using FluidScript.Compiler;
-using FluidScript.Library;
 
 namespace FluidScript
 {

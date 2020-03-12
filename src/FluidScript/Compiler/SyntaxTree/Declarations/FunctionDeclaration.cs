@@ -86,6 +86,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         private void CreateFunction(Generators.TypeGenerator generator, System.Type returnType, ParameterInfo[] parameters, System.Type[] parameterTypes)
         {
+            //todo override toString and others
             var name = string.Concat(char.ToUpper(Name.First()), Name.Substring(1));
             System.Reflection.MethodAttributes attributes = GetAttributes();
             if ((attributes & System.Reflection.MethodAttributes.Virtual) == System.Reflection.MethodAttributes.Virtual)

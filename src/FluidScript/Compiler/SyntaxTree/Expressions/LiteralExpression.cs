@@ -5,7 +5,7 @@ namespace FluidScript.Compiler.SyntaxTree
     /// <summary>
     /// Literal expression
     /// </summary>
-    public sealed class LiteralExpression : Expression
+    public class LiteralExpression : Expression
     {
         /// <summary>
         /// Literal valie
@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Reflected Value of <see cref="Value"/>
         /// </summary>
-        public object ReflectedValue
+        public virtual object ReflectedValue
         {
             get
             {

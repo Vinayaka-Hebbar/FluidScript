@@ -15,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Argument convert list
         /// </summary>
-        public ArgumenConversions Convertions { get; set; }
+        public ArgumentConversions Convertions { get; set; }
 
         public InvocationExpression(Expression target, NodeList<Expression> arguments) : base(ExpressionType.Invocation)
         {

@@ -12,12 +12,12 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// List of array items
         /// </summary>
-        public readonly NodeList<Expression> Expressions;
+        public readonly INodeList<Expression> Expressions;
 
         /// <summary>
         /// Array Size
         /// </summary>
-        public readonly Expression Size;
+        public readonly INodeList<Expression> Arguments;
 
 
         /// <summary>
@@ -28,12 +28,22 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Initializes new <see cref="ArrayLiteralExpression"/>
         /// </summary>
-        public ArrayLiteralExpression(NodeList<Expression> expressions, TypeSyntax type, Expression size) : base(ExpressionType.Array)
+        public ArrayLiteralExpression(INodeList<Expression> expressions, TypeSyntax type, INodeList<Expression> arguments) : base(ExpressionType.Array)
         {
             Expressions = expressions;
             ArrayType = type;
-            Size = size;
+            Arguments = arguments;
         }
+
+        public System.Reflection.ConstructorInfo Constructor
+        {
+            get;
+            set;
+        }
+
+        public Binders.ArgumentConversions ArgumentConversions { get; set; }
+
+        public Binders.ArgumentConversions ArrayConversions { get; set; }
 
         /// <inheritdoc/>
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
@@ -44,29 +54,36 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <inheritdoc/>
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            if (Size != null)
+            if (Arguments != null)
             {
-                Size.GenerateCode(generator);
-                generator.CallStatic(Utils.ReflectionHelpers.IntegerToInt32);
-            }
-            else
-                generator.LoadInt32(Expressions.Length);
-            Type type = Type.GetElementType();
-            generator.NewArray(type);
-            for (int i = 0; i < Expressions.Length; i++)
-            {
-                generator.Duplicate();
-                generator.LoadInt32(i);
-                var expression = Expressions[i];
-                if (expression == null)
-                    generator.LoadNull();
-                else
+                for (int i = 0; i < Arguments.Length; i++)
                 {
-                    expression.GenerateCode(generator);
-                    //todo box
-                    //EmitConvertion.ToAny(generator, type);
+                    var arg = Arguments[i];
+                    arg.GenerateCode(generator);
+                    var binder = ArgumentConversions.At(i);
+                    if (binder != null)
+                        binder.Generate(generator, arg);
                 }
-                generator.StoreArrayElement(type);
+            }
+            generator.Call(Constructor);
+
+            int length = Expressions.Length;
+            if (length > 0)
+            {
+                generator.LoadInt32(length);
+                Type type = Type.GetElementType();
+                generator.NewArray(type);
+                for (int i = 0; i < Expressions.Length; i++)
+                {
+                    generator.Duplicate();
+                    generator.LoadInt32(i);
+                    var expression = Expressions[i];
+                    expression.GenerateCode(generator);
+                    var conversion = ArrayConversions.At(i);
+                    if (conversion != null)
+                        conversion.Generate(generator, expression);
+                    generator.StoreArrayElement(type);
+                }
             }
         }
 

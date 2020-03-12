@@ -3,45 +3,36 @@
     /// <inheritdoc/>
     public class FSObject : IFSObject
     {
-        /// <inheritdoc/>
-        public override bool Equals(object obj)
-        {
-            if (obj is IFSObject)
-                return Equals((IFSObject)obj).m_value;
-            return base.Equals(obj);
-        }
-
-        /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            return ((IFSObject)this).__HashCode().m_value;
-        }
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        public virtual Integer __HashCode()
+        Integer IFSObject.GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override int GetHashCode()
         {
             return base.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        public virtual String __ToString()
+        String IFSObject.ToString()
         {
-            return base.ToString();
+            return ToString();
+        }
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
         }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        public virtual Boolean Equals(IFSObject obj)
+        Boolean IFSObject.Equals(object obj)
         {
-            return ReferenceEquals(this, obj);
-        }
-
-        /// <inheritdoc/>
-        public override string ToString()
-        {
-            return __ToString().m_value;
+            return Equals(obj);
         }
 
         /// <summary>
@@ -49,7 +40,7 @@
         /// </summary>
         public static Boolean operator ==(FSObject left, FSObject right)
         {
-            return left.Equals(right);
+            return ((IFSObject)left).Equals(right);
         }
 
         /// <summary>
@@ -57,7 +48,7 @@
         /// </summary>
         public static Boolean operator !=(FSObject left, FSObject right)
         {
-            return left.Equals(right).m_value ? Boolean.False : Boolean.True;
+            return ((IFSObject)left).Equals(right);
         }
 
         [Runtime.Register("isEquals")]
