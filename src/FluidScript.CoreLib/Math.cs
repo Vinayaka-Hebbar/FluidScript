@@ -4,6 +4,7 @@
     /// Provides constants and static methods for trigonometric, logarithmic, and other
     /// common mathematical functions.
     /// </summary>
+    [Runtime.Register(nameof(Math))]
     public sealed class Math : FSObject
     {
         public static readonly Double PI = new Double(System.Math.PI);

@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Collections
+﻿using System.Runtime.CompilerServices;
+
+namespace FluidScript.Collections
 {
     /// <summary>
     /// Represents a strongly typed list of objects that can be accessed by index. Provides
@@ -6,7 +8,8 @@
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     [System.Serializable]
-    public class List<T> : FSObject, System.Collections.IList, ICollection<T>
+    [Runtime.Register(nameof(System.Array))]
+    public class List<T> : FSObject, System.Collections.IList, System.Collections.Generic.ICollection<T>
         , System.Collections.IEnumerable, System.Collections.Generic.IEnumerable<T>
     {
         private const int _defaultCapacity = 4;
@@ -34,7 +37,8 @@
         /// <param name="capacity">
         /// The object to be added to the end of the System.Collections.Generic.List`1. The
         /// value can be null for reference types.
-        /// </param>        
+        /// </param>
+        [MethodImpl(MethodImplOptions.NoOptimization)]
         public List(Integer capacity)
         {
             var c = capacity.m_value;
@@ -58,7 +62,7 @@
             if (collection == null)
                 throw new System.ArgumentNullException(nameof(collection));
 
-            if (collection is ICollection<T> c)
+            if (collection is System.Collections.Generic.ICollection<T> c)
             {
                 int count = c.Count;
                 if (count == 0)
@@ -130,7 +134,7 @@
             }
         }
 
-        bool ICollection<T>.IsReadOnly => false;
+        bool System.Collections.Generic.ICollection<T>.IsReadOnly => false;
 
         private void EnsureCapacity(int min)
         {
@@ -165,14 +169,26 @@
                 // Following trick can reduce the range check by one
                 if ((uint)i >= (uint)_size)
                 {
-                    throw new System.ArgumentOutOfRangeException(nameof(index));
+                    // handle execption by returning default
+                    return default(T);
                 }
                 return _items[i];
             }
             set
             {
+                var i = index.m_value;
+                // if capacity is more it will fit
+                if ((uint)i >= (uint)_size)
+                {
+                    // is array has enough capacity
+                    if (_items.Length <= i)
+                        EnsureCapacity(i + 1);
+                    _size = i;
+                    _size++;
+                }
+                _items[i] = value;
+                _version++;
                 //fault
-                Add(value);
             }
         }
 
@@ -240,12 +256,12 @@
         /// </param>
         /// <exception cref="System.ArgumentNullException">collection is null.</exception>
         [Runtime.Register("addRange")]
-        public void AddRange(IEnumerable<T> collection)
+        public void AddRange(System.Collections.Generic.IEnumerable<T> collection)
         {
             if (collection == null)
                 throw new System.ArgumentNullException(nameof(collection));
 
-            if (collection is ICollection<T> c)
+            if (collection is System.Collections.Generic.ICollection<T> c)
             {
                 int count = c.Count;
                 if (count > 0)
@@ -526,34 +542,29 @@
 
         public override string ToString()
         {
-            return string.Join(",", System.Linq.Enumerable.Select(this, (item) => item.ToString()));
+            return string.Join(",", System.Linq.Enumerable.Select(this, (item) => item?.ToString()));
         }
 
         /// <summary>
         /// Returns an enumerator that iterates through the <see cref="List{T}"/>.
         /// </summary>
         /// <returns>
-        ///  A <see cref="List{T}.Enumerator"/> for the <see cref="List{T}"/>.
+        ///  A <see cref="List{T}.Iterator"/> for the <see cref="List{T}"/>.
         /// </returns>
-        [Runtime.Register("enumerator")]
-        public Enumerator GetEnumerator()
+        [Runtime.Register("iterator")]
+        public Iterator GetEnumerator()
         {
-            return new Enumerator(this);
+            return new Iterator(this);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return new Enumerator(this);
+            return new Iterator(this);
         }
 
         System.Collections.Generic.IEnumerator<T> System.Collections.Generic.IEnumerable<T>.GetEnumerator()
         {
-            return new Enumerator(this);
-        }
-
-        IEnumerator IEnumerable<T>.Enumerator()
-        {
-            return new Enumerator(this);
+            return new Iterator(this);
         }
 
         #region Runtime
@@ -570,14 +581,15 @@
         /// <summary>
         /// Enumerates the elements of a <see cref="List{T}"/>.
         /// </summary>
-        public struct Enumerator : IEnumerator, IEnumerator<T>
+        [Runtime.Register(nameof(Iterator))]
+        public struct Iterator : IFSObject, System.Collections.IEnumerator, System.Collections.Generic.IEnumerator<T>
         {
             private readonly List<T> list;
             private int index;
             private readonly int version;
             private T current;
 
-            internal Enumerator(List<T> list)
+            internal Iterator(List<T> list)
             {
                 this.list = list;
                 index = 0;

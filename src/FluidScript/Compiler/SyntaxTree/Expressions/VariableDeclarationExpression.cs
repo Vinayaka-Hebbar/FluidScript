@@ -20,15 +20,22 @@
         /// <inheritdoc/>
         public override void GenerateCode(Emit.MethodBodyGenerator generator)
         {
-            //initialize
+            Type = VariableType != null ? VariableType.GetType(generator.TypeProvider) : TypeProvider.ObjectType;
             if (Value != null)
             {
                 var defValue = Value.Accept(generator);
-                System.Type type = VariableType == null ? defValue.Type : VariableType.GetType(generator.TypeProvider);
                 defValue.GenerateCode(generator);
-                var variable = generator.DeclareVariable(type, Name);
-                generator.StoreVariable(variable);
+                if (VariableType == null)
+                    Type = defValue.Type;
+                else if (!Utils.TypeUtils.AreReferenceAssignable(Type, defValue.Type) && Utils.TypeUtils.TryImplicitConvert(defValue.Type, Type, out System.Reflection.MethodInfo opConvert))
+                    generator.CallStatic(opConvert);
+                else if (defValue.Type.IsValueType && !Type.IsValueType)
+                    generator.Box(defValue.Type);
             }
+            //initialize
+            var variable = generator.DeclareVariable(Type, Name);
+            generator.StoreVariable(variable);
+            return;
         }
 
         /// <inheritdoc/>

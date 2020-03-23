@@ -4,7 +4,7 @@ namespace Old.Test
 {
     class Program
     {
-        const string text = "pow(2,5)";
+        const string text = "2+2.0";
         static void Main(string[] args)
         {
             try
@@ -14,7 +14,7 @@ namespace Old.Test
                 compiler["s"] = new FluidScript.Double(1.3426);
                 var sw = new System.Diagnostics.Stopwatch();
                 sw.Start();
-                for (int i = 0; i < 10000; i++)
+                for (int i = 0; i < 100000; i++)
                 {
                     var statement = FluidScript.ScriptParser.GetStatement(text);
                     var result = compiler.Invoke(statement);

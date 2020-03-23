@@ -1,17 +1,12 @@
 ﻿namespace FluidScript
 {
     /// <inheritdoc/>
+    [Runtime.Register(nameof(System.Object))]
     public class FSObject : IFSObject
     {
-
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
         Integer IFSObject.GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public override int GetHashCode()
         {
             return base.GetHashCode();
         }
@@ -22,17 +17,22 @@
         {
             return ToString();
         }
-        /// <inheritdoc/>
-        public override bool Equals(object obj)
-        {
-            return base.Equals(obj);
-        }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
         Boolean IFSObject.Equals(object obj)
         {
             return Equals(obj);
+        }
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
 
         /// <summary>

@@ -4,6 +4,7 @@
     /// Represents text as a series of Unicode characters.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(String))]
     [System.Runtime.InteropServices.ComVisible(true)]
     public sealed class String : FSObject, System.IConvertible
     {

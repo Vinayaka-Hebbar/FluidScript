@@ -50,9 +50,14 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="generator"></param>
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            if (Binder.IsMember && Binder.IsStatic == false)
-                generator.LoadArgument(0);
-            Binder.GenerateGet(generator);
+            var c = generator.Method.CallingConvention;
+            /// static
+            if (Binder != null)
+            {
+                if (Binder.IsMember && Binder.IsStatic == false)
+                    generator.LoadArgument(0);
+                Binder.GenerateGet(generator);
+            }
         }
 
     }

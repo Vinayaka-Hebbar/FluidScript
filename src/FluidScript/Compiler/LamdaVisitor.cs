@@ -6,13 +6,16 @@ namespace FluidScript.Compiler
     {
         private readonly System.Collections.Generic.HashSet<string> Parameters;
 
+        private readonly System.Collections.Generic.HashSet<string> LocalVariables;
+
         public LamdaVisitor(string[] parameters)
         {
             Parameters = new System.Collections.Generic.HashSet<string>(parameters);
+            LocalVariables = new System.Collections.Generic.HashSet<string>();
             HoistedLocals = new System.Collections.Generic.Dictionary<string, Expression>();
         }
 
-        public System.Collections.Generic.Dictionary<string, Expression> HoistedLocals { get; }
+        internal System.Collections.Generic.Dictionary<string, Expression> HoistedLocals { get; }
 
         public Expression Visit(Expression node)
         {
@@ -67,21 +70,21 @@ namespace FluidScript.Compiler
 
         public void VisitBreak(BreakStatement node)
         {
-           
+
         }
 
         public Expression VisitCall(InvocationExpression node)
         {
             node.Arguments.ForEach(arg => arg.Accept(this));
             var exp = node.Target.Accept(this);
-            if(exp.NodeType == ExpressionType.Identifier)
+            if (exp.NodeType == ExpressionType.Identifier)
             {
                 var identifier = (NameExpression)exp;
                 var name = identifier.Name;
-                if (Parameters.Contains(name) == false && HoistedLocals.ContainsKey(name) == false)
+                if (Parameters.Contains(name) == false && LocalVariables.Contains(name) == false && HoistedLocals.ContainsKey(name) == false)
                     HoistedLocals.Add(name, exp);
             }
-            else if(node.NodeType == ExpressionType.MemberAccess)
+            else if (node.NodeType == ExpressionType.MemberAccess)
             {
                 var member = (MemberExpression)exp;
                 member.Target.Accept(this);
@@ -91,11 +94,18 @@ namespace FluidScript.Compiler
 
         public void VisitContinue(ContinueStatement node)
         {
-           
+
+        }
+
+        public Expression VisitConvert(ConvertExpression node)
+        {
+            node.Target.Accept(this);
+            return node;
         }
 
         public Expression VisitDeclaration(VariableDeclarationExpression node)
         {
+            LocalVariables.Add(node.Name);
             node.Value.Accept(this);
             return node;
         }
@@ -149,7 +159,7 @@ namespace FluidScript.Compiler
         public Expression VisitMember(NameExpression node)
         {
             var name = node.Name;
-            if (Parameters.Contains(name) == false && HoistedLocals.ContainsKey(name) == false)
+            if (Parameters.Contains(name) == false && LocalVariables.Contains(name) == false && HoistedLocals.ContainsKey(name) == false)
                 HoistedLocals.Add(name, node);
             return node;
         }
@@ -187,7 +197,7 @@ namespace FluidScript.Compiler
 
         public Expression VisitThis(ThisExpression node)
         {
-            var name = node.ToString();
+            var name = "__value";
             if (HoistedLocals.ContainsKey(name) == false)
                 HoistedLocals.Add(name, node);
             return node;

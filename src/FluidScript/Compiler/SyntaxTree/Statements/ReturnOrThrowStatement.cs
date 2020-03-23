@@ -37,8 +37,8 @@ namespace FluidScript.Compiler.SyntaxTree
                 bool lastStatement = true;
                 if (Expression != null)
                 {
-                    var epression = Expression.Accept(generator);
-                    epression.GenerateCode(generator);
+                    var exp = Expression.Accept(generator);
+                    exp.GenerateCode(generator);
                     if (generator.SyntaxTree is BlockStatement block)
                     {
                         if (block.Statements.Length > 0)
@@ -56,7 +56,7 @@ namespace FluidScript.Compiler.SyntaxTree
                         //todo variable name not used
                         if (generator.ReturnVariable == null)
                             generator.ReturnVariable = generator.DeclareVariable(dest);
-                        System.Type src = epression.Type;
+                        System.Type src = exp.Type;
                         if (!dest.IsAssignableFrom(src))
                         {
                             //todo box value type
@@ -80,6 +80,10 @@ namespace FluidScript.Compiler.SyntaxTree
                         {
                             generator.ReturnTarget = generator.CreateLabel();
                         }
+                    }else if(Expression.NodeType == ExpressionType.Invocation && Expression.Type != TypeProvider.VoidType)
+                    {
+                        // discard the return result
+                        generator.Pop();
                     }
                 }
                 //last statement is not a return

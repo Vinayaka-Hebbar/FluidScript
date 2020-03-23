@@ -15,10 +15,7 @@
             {
                 return new Compiler.Binders.DynamicVariableBinder(variable, m_value);
             }
-            else
-            {
-                return new Compiler.Binders.EmptyBinder();
-            }
+            return null;
         }
 
         public virtual TypedValue? BindSetMember(string name, System.Type type, object value)
@@ -61,7 +58,7 @@
         {
             System.Reflection.MethodInfo method = null;
             object obj = null;
-            binders = new Compiler.Binders.ArgumentConversions();
+            binders = new Compiler.Binders.ArgumentConversions(args.Length);
             if (m_value.TryGetMember(name, out LocalVariable variable))
             {
                 if (m_value[variable.Index] is System.Delegate refer)

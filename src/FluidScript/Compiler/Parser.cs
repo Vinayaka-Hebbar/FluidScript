@@ -998,6 +998,12 @@ namespace FluidScript.Compiler
                     MoveNext();
                     exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.Minus);
                     break;
+                case TokenType.Less:
+                    MoveNext();
+                    var type = VisitType();
+                    MoveNextIf(TokenType.Greater);
+                    exp = new ConvertExpression(type, VisitLeftHandSideExpression());
+                    break;
                 default:
                     exp = VisitPostfixExpression();
                     break;
@@ -1057,7 +1063,6 @@ namespace FluidScript.Compiler
                     CheckSyntaxExpected(TokenType.RightParenthesis);
                     break;
                 case TokenType.LeftBracket:
-                case TokenType.Less:
                     //Might be array
                     exp = VisitArrayLiteral();
                     return VisitRightExpression(exp);
@@ -1163,7 +1168,7 @@ namespace FluidScript.Compiler
         }
 
         /// <summary>
-        /// format &lt;int&gt;[1,2](size)
+        /// format [1,2]&lt;int&gt;(size) or [1,2]&lt;int&gt;
         /// </summary>
         /// <returns></returns>
         private Expression VisitArrayLiteral()
@@ -1171,14 +1176,6 @@ namespace FluidScript.Compiler
             TypeSyntax type = null;
             var list = new NodeList<Expression>();
             NodeList<Expression> arguments = null;
-            if (TokenType == TokenType.Less)
-            {
-                //Next <
-                MoveNext();
-                type = VisitType();
-                //>
-                MoveNextIf(TokenType.Greater);
-            }
             //[
             if (TokenType == TokenType.LeftBracket)
             {
@@ -1186,6 +1183,14 @@ namespace FluidScript.Compiler
                 list = VisitArgumentList(TokenType.Comma, TokenType.RightBracket);
                 MoveNextIf(TokenType.RightBracket);
                 // next will go when enters right side
+            }
+            if (TokenType == TokenType.Less)
+            {
+                //Next <
+                MoveNext();
+                type = VisitType();
+                //>
+                MoveNextIf(TokenType.Greater);
             }
             //(
             if (TokenType == TokenType.LeftParenthesis)
@@ -1431,7 +1436,7 @@ namespace FluidScript.Compiler
         {
             if (TokenType == type)
                 return;
-            throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.Position));
+            throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.Position, " expected ", type));
         }
 
         internal void CheckSyntaxExpected(TokenType type1, TokenType type2)

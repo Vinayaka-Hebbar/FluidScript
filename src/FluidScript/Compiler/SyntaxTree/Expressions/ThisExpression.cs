@@ -22,7 +22,8 @@ namespace FluidScript.Compiler.SyntaxTree
             }
             else
             {
-                var variable = generator.GetLocalVariable("this");
+                // for annonymous type
+                var variable = generator.GetLocalVariable("__value");
                 generator.LoadVariable(variable);
             }
         }

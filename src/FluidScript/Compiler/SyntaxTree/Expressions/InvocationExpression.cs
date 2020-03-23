@@ -31,37 +31,44 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            Target.GenerateCode(generator);
-            for (int i = 0; i < Arguments.Length; i++)
+            // if method is static instance is not required
+            if (Method.IsStatic == false)
+                Target.GenerateCode(generator);
+            if (Arguments.Length > 0)
             {
-                var item = Arguments[i];
-                var conversion = Convertions.At(i);
-                if (conversion != null)
+                var conversions = Convertions;
+                for (int i = 0; i < Arguments.Length; i++)
                 {
-                    if (conversion.ConversionType == ConversionType.Convert)
+                    var arg = Arguments[i];
+                    var item = conversions[i];
+                    if (item != null)
                     {
-                        conversion.Generate(generator, item);
+                        if (item.ConversionType == ConversionType.Convert)
+                        {
+                            arg.GenerateCode(generator);
+                            item.GenerateCode(generator);
+                        }
+                        else if (item.ConversionType == ConversionType.ParamArray)
+                        {
+                            var arguments = new Expression[Arguments.Length - i];
+                            Arguments.CopyTo(arguments, item.Index);
+                            item.GenerateCode(generator, arguments);
+                            break;
+                        }
                     }
-                    else if (conversion.ConversionType == ConversionType.ParamArray)
+                    else
                     {
-                        var arguments = new Expression[Arguments.Length - i];
-                        Arguments.CopyTo(arguments, conversion.Index);
-                        conversion.Generate(generator, arguments);
-                        break;
+                        arg.GenerateCode(generator);
                     }
-                }
-                else
-                {
-                    item.GenerateCode(generator);
                 }
             }
             // remaing binding
             if (Arguments.Length < Convertions.Count)
             {
-                foreach (var binder in Convertions.Skip(Arguments.Length))
+                for (var i = Arguments.Length; i < Convertions.Count; i++)
                 {
-                    binder.Generate(generator);
-                } 
+                    Convertions[i].GenerateCode(generator);
+                }
             }
             generator.Call(Method);
         }

@@ -5,7 +5,8 @@ namespace FluidScript
     /// <summary>
     /// Global object for runtime
     /// </summary>
-    public class GlobalObject
+    [Register("Lib")]
+    public class GlobalObject : FSObject
     {
         protected GlobalObject()
         {
@@ -13,16 +14,19 @@ namespace FluidScript
 
         #region Static Objects
 
-        [Register("Object")]
+        [Register(nameof(Object), RegisterImplOption.Activator)]
         public static FSObject Object { get; }
 
-        [Register("Math")]
+        [Register(nameof(Math), RegisterImplOption.Activator)]
         public static Math Math { get; }
+
+        [Register(nameof(Date), RegisterImplOption.Activator)]
+        public static Date Date { get; }
 
         /// <summary>
         /// Global target for compilation
         /// </summary>
-        [Register("lib")]
+        [Register("lib", RegisterImplOption.Library)]
         public static GlobalObject Instance { get; } = new GlobalObject();
 
         DynamicObject m_runtime;
@@ -84,18 +88,6 @@ namespace FluidScript
             if (!(s is null) && double.TryParse(s.ToString(), out double value))
                 return new Double(value);
             return new Double(0);
-        }
-
-        [Register("toString")]
-        public override string ToString()
-        {
-            return base.ToString();
-        }
-
-        [Register("isEquals")]
-        public static bool IsEquals(object objA, object objB)
-        {
-            return objA == objB;
         }
     }
 }

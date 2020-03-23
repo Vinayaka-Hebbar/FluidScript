@@ -1,90 +1,151 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 
 namespace FluidScript.Compiler.Binders
 {
-    /// <summary>
-    /// Argument convert list
-    /// </summary>
-    public sealed class ArgumentConversions : IEnumerable<Conversion>
+    public sealed class ArgumentConversions : IEnumerable
     {
-        private const int _defaultCapacity = 4;
-        internal const int MaxArrayLength = 0X7FEFFFFF;
-        static readonly Conversion[] _emptyArray = new Conversion[0];
-        private Conversion[] _items;
-        private int size;
+        private struct Entry
+        {
+            public int Index;
+            public Conversion Conversion;
+            public int Next;
+        }
+
+        Entry[] entries;
+        int[] buckets;
+        int count;
+        int start;
 
         public ArgumentConversions(int capacity)
         {
-            if (capacity < 0)
-                throw new System.ArgumentOutOfRangeException(nameof(capacity));
             if (capacity == 0)
-                _items = _emptyArray;
+                Initialize(3);
             else
-                _items = new Conversion[capacity];
+                Initialize(capacity);
         }
 
-        public ArgumentConversions()
+        public int Count => count;
+
+        public void Add(Conversion conversion)
         {
-            _items = _emptyArray;
+            Insert(conversion.Index, conversion);
         }
 
-        public void Add(Conversion item)
+        internal void Insert(int index, Conversion conversion)
         {
-            if (size == _items.Length) EnsureCapacity(size + 1);
-            _items[size++] = item;
-        }
-
-        public void Insert(int index, Conversion item)
-        {
-            if ((uint)index > (uint)size)
+            if (buckets == null) Initialize(3);
+            int hashCode = index & 0x7FFFFFFF;
+            int targetBucket = hashCode % buckets.Length;
+            for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
             {
-                throw new ArgumentOutOfRangeException(nameof(index));
+                if (entries[i].Index == hashCode)
+                {
+                    // replace
+                    entries[i].Conversion = conversion;
+                    return;
+                }
             }
-            if (size == _items.Length) EnsureCapacity(size + 1);
-            if (index < size)
+            var target = count;
+            if (count == entries.Length)
             {
-                Array.Copy(_items, index, _items, index + 1, size - index);
+                Resize(2 * count);
+                targetBucket = hashCode % buckets.Length;
             }
-            _items[index] = item;
-            size++;
+            entries[target].Index = hashCode;
+            entries[target].Conversion = conversion;
+            entries[target].Next = buckets[targetBucket];
+            buckets[targetBucket] = target;
+            count++;
         }
 
-        private void EnsureCapacity(int min)
+        internal Conversion this[int index]
         {
-            if (_items.Length < min)
+            get
             {
-                int newCapacity = _items.Length == 0 ? _defaultCapacity : _items.Length * 2;
-                // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
-                // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
-                if ((uint)newCapacity > MaxArrayLength) newCapacity = MaxArrayLength;
-                if (newCapacity < min) newCapacity = min;
-                Conversion[] newItems = new Conversion[newCapacity];
-                if (size > 0)
-                    System.Array.Copy(_items, 0, newItems, 0, size);
-                _items = newItems;
+                if (buckets != null)
+                {
+                    int hashCode = index & 0x7FFFFFFF;
+                    for (int i = buckets[hashCode % buckets.Length]; i >= 0; i = entries[i].Next)
+                    {
+                        if (entries[i].Index == hashCode)
+                        {
+                            var entry = entries[i];
+                            return entry.Conversion;
+                        }
+                    }
+                }
+                return null;
             }
         }
 
-        public Conversion At(int index)
+        /// <summary>
+        /// Save the position
+        /// </summary>
+        internal void Backup()
         {
-            if (index < size)
-            {
-                return _items[index];
-            }
-            return null;
+            start = count;
         }
 
-        public void Clear()
+        /// <summary>
+        /// Revert back to last backup position <see cref="Backup"/>
+        /// </summary>
+        /// <returns></returns>
+        public bool Recycle()
         {
             // Retail the array values ok
-            size = 0;
+            count = start;
+            return false;
         }
 
-        IEnumerator<Conversion> IEnumerable<Conversion>.GetEnumerator()
+        private void Initialize(int size)
         {
-            return new Enumerator(this);
+            buckets = new int[size];
+            for (int i = 0; i < buckets.Length; i++) buckets[i] = -1;
+            entries = new Entry[size];
+        }
+
+        private void Resize(int newSize)
+        {
+            //Contract.Assert(newSize >= entries.Length);
+            int[] newBuckets = new int[newSize];
+            for (int i = 0; i < newBuckets.Length; i++) newBuckets[i] = -1;
+            var newEntries = new Entry[newSize];
+            System.Array.Copy(entries, 0, newEntries, 0, count);
+            for (int i = 0; i < count; i++)
+            {
+                if (newEntries[i].Index >= 0)
+                {
+                    int bucket = newEntries[i].Index % newSize;
+                    newEntries[i].Next = newBuckets[bucket];
+                    newBuckets[bucket] = i;
+                }
+            }
+            buckets = newBuckets;
+            entries = newEntries;
+        }
+
+        public void Invoke(ref object[] values)
+        {
+            if (count > 0)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    var entry = entries[i];
+                    int index = entry.Index;
+                    var convertion = entry.Conversion;
+                    switch (convertion.ConversionType)
+                    {
+                        case ConversionType.Convert:
+                            var arg = values[index];
+                            values[index] = convertion.Invoke(arg);
+                            break;
+                        case ConversionType.ParamArray:
+                            values = (object[])convertion.Invoke(values);
+                            return;
+                    }
+                }
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -92,115 +153,174 @@ namespace FluidScript.Compiler.Binders
             return new Enumerator(this);
         }
 
-        public TList Invoke<TList>(TList values) where TList : IList
+        [System.Serializable]
+        public struct Enumerator : IEnumerator
         {
-            if (size > 0)
-            {
-                for (int i = 0; i < size; i++)
-                {
-                    var conversion = _items[i];
-                    if (conversion != null)
-                    {
-                        int index = conversion.Index;
-                        switch (conversion.ConversionType)
-                        {
-                            case ConversionType.Convert:
-                                var arg = values[index];
-                                values[index] = conversion.Invoke(arg);
-                                break;
-                            case ConversionType.ParamArray:
-                                values[index] = conversion.Invoke(values);
-                                return values;
-                        }
-                    }
-                }
-            }
-            return values;
-        }
-
-        public int Count { get => size; }
-
-        /// <summary>
-        /// Enumerates the elements of a <see cref="ArgumentConversions"/>.
-        /// </summary>
-        internal struct Enumerator : IEnumerator<Conversion>
-        {
-            private readonly ArgumentConversions list;
+            private readonly ArgumentConversions obj;
             private int index;
             private Conversion current;
 
-            internal Enumerator(ArgumentConversions list)
+            internal Enumerator(ArgumentConversions value)
             {
-                this.list = list;
+                obj = value;
                 index = 0;
                 current = null;
             }
 
-            /// <summary>
-            /// Gets the element at the current position of the enumerator.
-            /// </summary>
-            public Conversion Current
+            public bool MoveNext()
             {
-                get
+
+                // Use unsigned comparison since we set index to dictionary.count+1 when the enumeration ends.
+                // dictionary.count+1 could be negative if dictionary.count is Int32.MaxValue
+                while ((uint)index < (uint)obj.count)
                 {
-                    return current;
+                    if (obj.entries[index].Index >= 0)
+                    {
+                        current = obj.entries[index].Conversion;
+                        index++;
+                        return true;
+                    }
+                    index++;
                 }
+
+                index = obj.count + 1;
+                current = null;
+                return false;
+            }
+
+            public void Dispose()
+            {
             }
 
             object IEnumerator.Current
             {
                 get
                 {
-                    if (index == 0 || index == list.size + 1)
+                    if (index == 0 || (index == obj.count + 1))
                     {
-                        throw new System.InvalidOperationException(nameof(index));
+                        throw new System.InvalidOperationException("Operation can't happen");
                     }
-                    return Current;
+
+                    return current;
                 }
             }
 
-            /// <summary>
-            /// Releases all resources used by the <see cref="List{T}"/>.Enumerator.
-            /// </summary>
-            public void Dispose()
-            {
-
-            }
-
-            /// <summary>
-            /// Advances the enumerator to the next element of the <see cref="List{T}"/>.
-            /// </summary>
-            /// <returns>
-            /// true if the enumerator was successfully advanced to the next element; false if
-            /// the enumerator has passed the end of the collection.
-            /// </returns>
-            public bool MoveNext()
-            {
-                ArgumentConversions localList = list;
-
-                if ((uint)index < (uint)localList.size)
-                {
-                    current = localList._items[index++];
-                    // skip if null
-                    if (current == null)
-                        return MoveNext();
-                    return true;
-                }
-                return MoveNextRare();
-            }
-
-            private bool MoveNextRare()
-            {
-                index = list.size + 1;
-                current = null;
-                return false;
-            }
-
-            void System.Collections.IEnumerator.Reset()
+            void IEnumerator.Reset()
             {
                 index = 0;
                 current = null;
             }
         }
     }
+
+    //public class ConversionGroup : System.Linq.IGrouping<int, Conversion>
+    //{
+    //    private int Size;
+
+    //    private Conversion[] Conversions;
+    //    public int Key { get; }
+
+
+    //    public ConversionGroup(int index, Conversion[] conversions, int size)
+    //    {
+    //        Key = index;
+    //        Conversions = conversions;
+    //        Size = size;
+    //    }
+
+    //    internal void Add(Conversion conversion)
+    //    {
+    //        if (Size == Conversions.Length)
+    //        {
+    //            Conversion[] newItems = new Conversion[checked(Size * 2)];
+    //            System.Array.Copy(Conversions, 0, newItems, 0, Size);
+    //            Conversions = newItems;
+    //        }
+    //        Conversions[Size] = conversion;
+    //        Size++;
+    //    }
+
+    //    internal void GenerateCode(Emit.MethodBodyGenerator generator)
+    //    {
+    //        for (int i = 0; i < Conversions.Length; i++)
+    //        {
+    //            Conversions[i].GenerateCode(generator);
+    //        }
+    //    }
+
+    //    public void ForEach(System.Action<Conversion> predicate)
+    //    {
+    //        for (int i = 0; i < Conversions.Length; i++)
+    //        {
+    //            predicate(Conversions[i]);
+    //        }
+    //    }
+
+    //    public IEnumerator<Conversion> GetEnumerator()
+    //    {
+    //        return new Enumerator(this);
+    //    }
+
+    //    IEnumerator IEnumerable.GetEnumerator()
+    //    {
+    //        return new Enumerator(this);
+    //    }
+
+    //    [System.Serializable]
+    //    public struct Enumerator : IEnumerator<Conversion>
+    //    {
+    //        private readonly ConversionGroup obj;
+    //        private int index;
+    //        private Conversion current;
+
+    //        internal Enumerator(ConversionGroup value)
+    //        {
+    //            obj = value;
+    //            index = 0;
+    //            current = null;
+    //        }
+
+    //        public bool MoveNext()
+    //        {
+    //            // Use unsigned comparison since we set index to dictionary.count+1 when the enumeration ends.
+    //            // dictionary.count+1 could be negative if dictionary.count is Int32.MaxValue
+    //            while ((uint)index < (uint)obj.Size)
+    //            {
+    //                current = obj.Conversions[index++];
+    //                return true;
+    //            }
+    //            index = obj.Size + 1;
+    //            current = null;
+    //            return false;
+    //        }
+
+    //        public Conversion Current
+    //        {
+    //            get { return current; }
+    //        }
+
+    //        public void Dispose()
+    //        {
+    //        }
+
+    //        object IEnumerator.Current
+    //        {
+    //            get
+    //            {
+    //                if (index == 0 || (index == obj.Size + 1))
+    //                {
+    //                    throw new System.InvalidOperationException("Operation can't happen");
+    //                }
+
+    //                return obj.Conversions[index];
+    //            }
+    //        }
+
+    //        void IEnumerator.Reset()
+    //        {
+    //            index = 0;
+    //            current = null;
+    //        }
+    //    }
+    //}
 }

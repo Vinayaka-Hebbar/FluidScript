@@ -1,9 +1,9 @@
 ﻿namespace FluidScript.Runtime
 {
     /// <summary>
-    /// Runtime name of a property or method
+    /// Runtime name of a field, property, method, interface or type
     /// </summary>
-    [System.AttributeUsage(System.AttributeTargets.Property | System.AttributeTargets.Method)]
+    [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct | System.AttributeTargets.Interface | System.AttributeTargets.Property | System.AttributeTargets.Method | System.AttributeTargets.Field, AllowMultiple = false)]
     public sealed class RegisterAttribute : System.Attribute
     {
         /// <summary>
@@ -12,18 +12,31 @@
         public readonly string Name;
 
         /// <summary>
-        /// 
+        /// Register type with specified name
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="name">Name used in runtime</param>
         public RegisterAttribute(string name)
         {
             Name = name;
         }
 
         /// <summary>
-        /// Should Method name is same as <see cref="Name"/>
+        /// Register type with specified name and implementation
         /// </summary>
-        public bool DoGenerate { get; set; }
+        /// <param name="name">Name used in runtime</param>
+        /// <param name="implOption">Implement Type</param>
+        public RegisterAttribute(string name, RegisterImplOption implOption)
+        {
+            Name = name;
+            ImplOption = implOption;
+        }
+
+        public RegisterImplOption ImplOption { get;}
+
+        /// <summary>
+        /// Should Method can be used
+        /// </summary>
+        public bool Deprecated { get; set; }
 
         ///<inheritdoc/>
         public override bool Match(object obj)

@@ -4,12 +4,13 @@
     /// Represents a Boolean value.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(Boolean))]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Boolean : IFSObject, System.IConvertible
+        struct Boolean : IFSObject, System.IConvertible, Runtime.IValueBox<bool>
     {
         /// <summary>
         /// True

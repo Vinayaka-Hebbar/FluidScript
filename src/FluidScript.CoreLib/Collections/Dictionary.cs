@@ -3,501 +3,395 @@ using System.Collections.Generic;
 
 namespace FluidScript.Collections
 {
-    public class Dictionary<TKey, TValue> : FSObject, IDictionary<TKey, TValue>
+    [System.Serializable]
+    [Runtime.Register("Dictionary")]
+    public class Dictionary<TKey, TValue> : DictionaryBase<TKey, TValue>, IFSObject, IDictionary<TKey, TValue>
     {
-        private struct Entry
+        public Dictionary() : base(0, EqualityComparer<TKey>.Default)
         {
-            public int hashCode;    // Lower 31 bits of hash code, -1 if unused
-            public int next;        // Index of next entry, -1 if last
-            public TKey key;           // Key of entry
-            public TValue value;         // Value of entry
         }
 
-        private int[] buckets;
-        private Entry[] entries;
-        private int count;
-        private int version;
-        private int freeList;
-        private int freeCount;
-        private IEqualityComparer<TKey> comparer;
-        private KeyCollection keys;
-        private ValueCollection values;
-        private object _syncRoot;
+        public Dictionary(int capacity) : base(capacity, EqualityComparer<TKey>.Default) { }
 
-        public int Count { get; }
+        public Dictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary != null ? dictionary.Count : 0, EqualityComparer<TKey>.Default)
+        {
+            if (dictionary == null)
+            {
+                throw new System.ArgumentNullException(nameof(dictionary));
+            }
+
+            foreach (var pair in dictionary)
+            {
+                Add(pair.Key, pair.Value);
+            }
+        }
+
+        public Dictionary(int capacity, IEqualityComparer<TKey> comparer) : base(capacity, comparer)
+        {
+        }
+
+        [Runtime.Register("keys")]
+        public ICollection<TKey> Keys
+        {
+            get
+            {
+                var size = Count;
+                var keys = new List<TKey>(size);
+                for (int index = 0; index < size; index++)
+                {
+                    keys.Add(entries[index].Key);
+                }
+                return keys;
+            }
+        }
+
+        [Runtime.Register("values")]
+        public ICollection<TValue> Values
+        {
+            get
+            {
+                var size = Count;
+                var values = new List<TValue>(size);
+                for (int index = 0; index < size; index++)
+                {
+                    values.Add(entries[index].Value);
+                }
+                return values;
+            }
+        }
+
+        public TValue this[TKey key]
+        {
+            get
+            {
+                int i = FindEntry(key);
+                if (i >= 0) return entries[i].Value;
+                throw new KeyNotFoundException(key.ToString());
+            }
+            set
+            {
+                Insert(key, value, false);
+            }
+        }
+
+        public void Add(TKey key, TValue value)
+        {
+            Insert(key, value, true);
+        }
+
+        [Runtime.Register("contains")]
+        public bool ContainsKey(TKey key)
+        {
+            return FindEntry(key) >= 0;
+        }
+
+        private void Insert(TKey key, TValue value, bool add)
+        {
+            if (key == null)
+            {
+                throw new KeyNotFoundException(nameof(key));
+            }
+
+            if (buckets == null) Initialize(0);
+            int hashCode = Comparer.GetHashCode(key) & 0x7FFFFFFF;
+            int targetBucket = hashCode % buckets.Length;
+
+            for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
+            {
+                if (entries[i].HashCode == hashCode && Comparer.Equals(entries[i].Key, key))
+                {
+                    if (add)
+                    {
+                        throw new System.ArgumentException("Adding Duplicate");
+                    }
+                    entries[i].Value = value;
+                    version++;
+                    return;
+                }
+            }
+            int index;
+            if (freeCount > 0)
+            {
+                index = freeList;
+                freeList = entries[index].Next;
+                freeCount--;
+            }
+            else
+            {
+                if (count == entries.Length)
+                {
+                    Resize(Helpers.ExpandPrime(count), false);
+                    targetBucket = hashCode % buckets.Length;
+                }
+                index = count;
+                count++;
+            }
+
+            entries[index].HashCode = hashCode;
+            entries[index].Next = buckets[targetBucket];
+            entries[index].Key = key;
+            entries[index].Value = value;
+            buckets[targetBucket] = index;
+            version++;
+
+#if FEATURE_RANDOMIZED_STRING_HASHING
+
+#if FEATURE_CORECLR
+            // In case we hit the collision threshold we'll need to switch to the comparer which is using randomized string hashing
+            // in this case will be EqualityComparer<string>.Default.
+            // Note, randomized string hashing is turned on by default on coreclr so EqualityComparer<string>.Default will 
+            // be using randomized string hashing
+
+            if (collisionCount > HashHelpers.HashCollisionThreshold && comparer == NonRandomizedStringEqualityComparer.Default) 
+            {
+                comparer = (IEqualityComparer<TKey>) EqualityComparer<string>.Default;
+                Resize(entries.Length, true);
+            }
+#else
+            if(collisionCount > HashHelpers.HashCollisionThreshold && HashHelpers.IsWellKnownEqualityComparer(comparer)) 
+            {
+                comparer = (IEqualityComparer<TKey>) HashHelpers.GetRandomizedEqualityComparer(comparer);
+                Resize(entries.Length, true);
+            }
+#endif // FEATURE_CORECLR
+
+#endif
+
+        }
+
+        /// <inheritdoc/>
+        [Runtime.Register("hashCode")]
+        Integer IFSObject.GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        /// <inheritdoc/>
+        [Runtime.Register("toString")]
+        String IFSObject.ToString()
+        {
+            return ToString();
+        }
+
+        /// <inheritdoc/>
+        [Runtime.Register("equals")]
+        Boolean IFSObject.Equals(object obj)
+        {
+            return Equals(obj);
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            int i = FindEntry(key);
+            if (i >= 0)
+            {
+                value = entries[i].Value;
+                return true;
+            }
+            value = default(TValue);
+            return false;
+        }
+
+        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
+
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int index)
+        {
+            if (array == null)
+            {
+                throw new System.ArgumentNullException(nameof(array));
+            }
+
+            if (index < 0 || index > array.Length)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(array));
+            }
+
+            if (array.Length - index < Count)
+            {
+                throw new System.ArgumentException("array too small");
+            }
+
+            int count = this.count;
+            Entry[] entries = this.entries;
+            for (int i = 0; i < count; i++)
+            {
+                if (entries[i].HashCode >= 0)
+                {
+                    array[index++] = new KeyValuePair<TKey, TValue>(entries[i].Key, entries[i].Value);
+                }
+            }
+        }
+
+        #region IDicitionary
+        void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int index)
+        {
+            CopyTo(array, index);
+        }
+
+        void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> keyValuePair)
+        {
+            Add(keyValuePair.Key, keyValuePair.Value);
+        }
+
+        bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> keyValuePair)
+        {
+            int i = FindEntry(keyValuePair.Key);
+            if (i >= 0 && EqualityComparer<TValue>.Default.Equals(entries[i].Value, keyValuePair.Value))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> keyValuePair)
+        {
+            int i = FindEntry(keyValuePair.Key);
+            if (i >= 0 && EqualityComparer<TValue>.Default.Equals(entries[i].Value, keyValuePair.Value))
+            {
+                Remove(keyValuePair.Key);
+                return true;
+            }
+            return false;
+        }
+
+        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
+        {
+            return new Enumerator(this, Enumerator.KeyValuePair);
+        }
+
+        #endregion
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return new Enumerator(this, Enumerator.KeyValuePair);
+        }
+
 
         [System.Serializable]
-        public sealed class KeyCollection : ICollection<TKey>
+        public struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>,
+            IDictionaryEnumerator
         {
             private Dictionary<TKey, TValue> dictionary;
+            private int version;
+            private int index;
+            private KeyValuePair<TKey, TValue> current;
+            private int getEnumeratorRetType;  // What should Enumerator.Current return?
 
-            public KeyCollection(Dictionary<TKey, TValue> dictionary)
+            internal const int DictEntry = 1;
+            internal const int KeyValuePair = 2;
+
+            internal Enumerator(Dictionary<TKey, TValue> dictionary, int getEnumeratorRetType)
             {
-                if (dictionary == null)
-                {
-                    throw new System.ArgumentNullException(nameof(dictionary));
-                }
                 this.dictionary = dictionary;
+                version = dictionary.version;
+                index = 0;
+                this.getEnumeratorRetType = getEnumeratorRetType;
+                current = new KeyValuePair<TKey, TValue>();
             }
 
-            public Enumerator GetEnumerator()
+            public bool MoveNext()
             {
-                return new Enumerator(dictionary);
-            }
-
-            public void CopyTo(TKey[] array, int index)
-            {
-                if (array == null)
+                if (version != dictionary.version)
                 {
-                    throw new System.ArgumentNullException(nameof(array));
+                    throw new System.InvalidOperationException(nameof(version));
                 }
 
-                if (index < 0 || index > array.Length)
+                // Use unsigned comparison since we set index to dictionary.count+1 when the enumeration ends.
+                // dictionary.count+1 could be negative if dictionary.count is Int32.MaxValue
+                while ((uint)index < (uint)dictionary.count)
                 {
-                    throw new System.IndexOutOfRangeException(nameof(index));
+                    if (dictionary.entries[index].HashCode >= 0)
+                    {
+                        current = new KeyValuePair<TKey, TValue>(dictionary.entries[index].Key, dictionary.entries[index].Value);
+                        index++;
+                        return true;
+                    }
+                    index++;
                 }
 
-                if (array.Length - index < dictionary.Count)
-                {
-                    throw new System.ArgumentException(nameof(array));
-                }
-
-                int count = dictionary.count;
-                Entry[] entries = dictionary.entries;
-                for (int i = 0; i < count; i++)
-                {
-                    if (entries[i].hashCode >= 0) array[index++] = entries[i].key;
-                }
-            }
-
-            public int Count
-            {
-                get { return dictionary.Count; }
-            }
-
-            bool ICollection<TKey>.IsReadOnly
-            {
-                get { return true; }
-            }
-
-            void ICollection<TKey>.Add(TKey item)
-            {
-                throw new System.NotSupportedException();
-            }
-
-            void ICollection<TKey>.Clear()
-            {
-                throw new System.NotSupportedException();
-            }
-
-            bool ICollection<TKey>.Contains(TKey item)
-            {
-                return dictionary.ContainsKey(item);
-            }
-
-            bool ICollection<TKey>.Remove(TKey item)
-            {
-                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_KeyCollectionSet);
+                index = dictionary.count + 1;
+                current = new KeyValuePair<TKey, TValue>();
                 return false;
             }
 
-            IEnumerator<TKey> IEnumerable<TKey>.GetEnumerator()
+            public KeyValuePair<TKey, TValue> Current
             {
-                return new Enumerator(dictionary);
+                get { return current; }
             }
 
-            IEnumerator IEnumerable.GetEnumerator()
+            public void Dispose()
             {
-                return new Enumerator(dictionary);
             }
 
-            void ICollection.CopyTo(Array array, int index)
+            object IEnumerator.Current
             {
-                if (array == null)
+                get
                 {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.array);
-                }
-
-                if (array.Rank != 1)
-                {
-                    ThrowHelper.ThrowArgumentException(ExceptionResource.Arg_RankMultiDimNotSupported);
-                }
-
-                if (array.GetLowerBound(0) != 0)
-                {
-                    ThrowHelper.ThrowArgumentException(ExceptionResource.Arg_NonZeroLowerBound);
-                }
-
-                if (index < 0 || index > array.Length)
-                {
-                    ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.index, ExceptionResource.ArgumentOutOfRange_NeedNonNegNum);
-                }
-
-                if (array.Length - index < dictionary.Count)
-                {
-                    ThrowHelper.ThrowArgumentException(ExceptionResource.Arg_ArrayPlusOffTooSmall);
-                }
-
-                TKey[] keys = array as TKey[];
-                if (keys != null)
-                {
-                    CopyTo(keys, index);
-                }
-                else
-                {
-                    object[] objects = array as object[];
-                    if (objects == null)
+                    if (index == 0 || (index == dictionary.count + 1))
                     {
-                        ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_InvalidArrayType);
+                        throw new System.InvalidOperationException("Operation can't happen");
                     }
 
-                    int count = dictionary.count;
-                    Entry[] entries = dictionary.entries;
-                    try
+                    if (getEnumeratorRetType == DictEntry)
                     {
-                        for (int i = 0; i < count; i++)
-                        {
-                            if (entries[i].hashCode >= 0) objects[index++] = entries[i].key;
-                        }
+                        return new DictionaryEntry(current.Key, current.Value);
                     }
-                    catch (ArrayTypeMismatchException)
+                    else
                     {
-                        ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_InvalidArrayType);
+                        return new KeyValuePair<TKey, TValue>(current.Key, current.Value);
                     }
                 }
             }
 
-            bool ICollection.IsSynchronized
+            void IEnumerator.Reset()
             {
-                get { return false; }
+                if (version != dictionary.version)
+                {
+                    throw new System.InvalidOperationException(nameof(version));
+                }
+
+                index = 0;
+                current = new KeyValuePair<TKey, TValue>();
             }
 
-            Object ICollection.SyncRoot
+            DictionaryEntry IDictionaryEnumerator.Entry
             {
-                get { return ((ICollection)dictionary).SyncRoot; }
+                get
+                {
+                    if (index == 0 || (index == dictionary.count + 1))
+                    {
+                        throw new System.InvalidOperationException("Operation can't happen");
+                    }
+
+                    return new DictionaryEntry(current.Key, current.Value);
+                }
             }
 
-            [System.Serializable]
-            public struct Enumerator : IEnumerator<TKey>, System.Collections.IEnumerator
+            object IDictionaryEnumerator.Key
             {
-                private Dictionary<TKey, TValue> dictionary;
-                private int index;
-                private int version;
-                private TKey currentKey;
-
-                internal Enumerator(Dictionary<TKey, TValue> dictionary)
+                get
                 {
-                    this.dictionary = dictionary;
-                    version = dictionary.version;
-                    index = 0;
-                    currentKey = default(TKey);
-                }
-
-                public void Dispose()
-                {
-                }
-
-                public bool MoveNext()
-                {
-                    if (version != dictionary.version)
+                    if (index == 0 || (index == dictionary.count + 1))
                     {
-                        ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EnumFailedVersion);
+                        throw new System.InvalidOperationException("Operation can't happen");
                     }
 
-                    while ((uint)index < (uint)dictionary.count)
+                    return current.Key;
+                }
+            }
+
+            object IDictionaryEnumerator.Value
+            {
+                get
+                {
+                    if (index == 0 || (index == dictionary.count + 1))
                     {
-                        if (dictionary.entries[index].hashCode >= 0)
-                        {
-                            currentKey = dictionary.entries[index].key;
-                            index++;
-                            return true;
-                        }
-                        index++;
+                        throw new System.InvalidOperationException("Operation can't happen");
                     }
 
-                    index = dictionary.count + 1;
-                    currentKey = default(TKey);
-                    return false;
-                }
-
-                public TKey Current
-                {
-                    get
-                    {
-                        return currentKey;
-                    }
-                }
-
-                Object System.Collections.IEnumerator.Current
-                {
-                    get
-                    {
-                        if (index == 0 || (index == dictionary.count + 1))
-                        {
-                            ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EnumOpCantHappen);
-                        }
-
-                        return currentKey;
-                    }
-                }
-
-                object System.Collections.IEnumerator.Current => throw new System.NotImplementedException();
-
-                void System.Collections.IEnumerator.Reset()
-                {
-                    if (version != dictionary.version)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EnumFailedVersion);
-                    }
-
-                    index = 0;
-                    currentKey = default(TKey);
-                }
-
-                public String __ToString()
-                {
-                    throw new System.NotImplementedException();
-                }
-
-                public Boolean __Equals(IFSObject obj)
-                {
-                    throw new System.NotImplementedException();
-                }
-
-                public Integer HashCode()
-                {
-                    throw new System.NotImplementedException();
+                    return current.Value;
                 }
             }
         }
-
-        [DebuggerTypeProxy(typeof(Mscorlib_DictionaryValueCollectionDebugView<,>))]
-        [DebuggerDisplay("Count = {Count}")]
-        [Serializable]
-        public sealed class ValueCollection : ICollection<TValue>, ICollection, IReadOnlyCollection<TValue>
-        {
-            private Dictionary<TKey, TValue> dictionary;
-
-            public ValueCollection(Dictionary<TKey, TValue> dictionary)
-            {
-                if (dictionary == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.dictionary);
-                }
-                this.dictionary = dictionary;
-            }
-
-            public Enumerator GetEnumerator()
-            {
-                return new Enumerator(dictionary);
-            }
-
-            public void CopyTo(TValue[] array, int index)
-            {
-                if (array == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.array);
-                }
-
-                if (index < 0 || index > array.Length)
-                {
-                    ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.index, ExceptionResource.ArgumentOutOfRange_NeedNonNegNum);
-                }
-
-                if (array.Length - index < dictionary.Count)
-                {
-                    ThrowHelper.ThrowArgumentException(ExceptionResource.Arg_ArrayPlusOffTooSmall);
-                }
-
-                int count = dictionary.count;
-                Entry[] entries = dictionary.entries;
-                for (int i = 0; i < count; i++)
-                {
-                    if (entries[i].hashCode >= 0) array[index++] = entries[i].value;
-                }
-            }
-
-            public int Count
-            {
-                get { return dictionary.Count; }
-            }
-
-            bool ICollection<TValue>.IsReadOnly
-            {
-                get { return true; }
-            }
-
-            void ICollection<TValue>.Add(TValue item)
-            {
-                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ValueCollectionSet);
-            }
-
-            bool ICollection<TValue>.Remove(TValue item)
-            {
-                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ValueCollectionSet);
-                return false;
-            }
-
-            void ICollection<TValue>.Clear()
-            {
-                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ValueCollectionSet);
-            }
-
-            bool ICollection<TValue>.Contains(TValue item)
-            {
-                return dictionary.ContainsValue(item);
-            }
-
-            IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
-            {
-                return new Enumerator(dictionary);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return new Enumerator(dictionary);
-            }
-
-            void ICollection.CopyTo(Array array, int index)
-            {
-                if (array == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.array);
-                }
-
-                if (array.Rank != 1)
-                {
-                    ThrowHelper.ThrowArgumentException(ExceptionResource.Arg_RankMultiDimNotSupported);
-                }
-
-                if (array.GetLowerBound(0) != 0)
-                {
-                    ThrowHelper.ThrowArgumentException(ExceptionResource.Arg_NonZeroLowerBound);
-                }
-
-                if (index < 0 || index > array.Length)
-                {
-                    ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.index, ExceptionResource.ArgumentOutOfRange_NeedNonNegNum);
-                }
-
-                if (array.Length - index < dictionary.Count)
-                    ThrowHelper.ThrowArgumentException(ExceptionResource.Arg_ArrayPlusOffTooSmall);
-
-                TValue[] values = array as TValue[];
-                if (values != null)
-                {
-                    CopyTo(values, index);
-                }
-                else
-                {
-                    object[] objects = array as object[];
-                    if (objects == null)
-                    {
-                        ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_InvalidArrayType);
-                    }
-
-                    int count = dictionary.count;
-                    Entry[] entries = dictionary.entries;
-                    try
-                    {
-                        for (int i = 0; i < count; i++)
-                        {
-                            if (entries[i].hashCode >= 0) objects[index++] = entries[i].value;
-                        }
-                    }
-                    catch (ArrayTypeMismatchException)
-                    {
-                        ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_InvalidArrayType);
-                    }
-                }
-            }
-
-            bool ICollection.IsSynchronized
-            {
-                get { return false; }
-            }
-
-            Object ICollection.SyncRoot
-            {
-                get { return ((ICollection)dictionary).SyncRoot; }
-            }
-
-            [Serializable]
-            public struct Enumerator : IEnumerator<TValue>, System.Collections.IEnumerator
-            {
-                private Dictionary<TKey, TValue> dictionary;
-                private int index;
-                private int version;
-                private TValue currentValue;
-
-                internal Enumerator(Dictionary<TKey, TValue> dictionary)
-                {
-                    this.dictionary = dictionary;
-                    version = dictionary.version;
-                    index = 0;
-                    currentValue = default(TValue);
-                }
-
-                public void Dispose()
-                {
-                }
-
-                public bool MoveNext()
-                {
-                    if (version != dictionary.version)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EnumFailedVersion);
-                    }
-
-                    while ((uint)index < (uint)dictionary.count)
-                    {
-                        if (dictionary.entries[index].hashCode >= 0)
-                        {
-                            currentValue = dictionary.entries[index].value;
-                            index++;
-                            return true;
-                        }
-                        index++;
-                    }
-                    index = dictionary.count + 1;
-                    currentValue = default(TValue);
-                    return false;
-                }
-
-                public TValue Current
-                {
-                    get
-                    {
-                        return currentValue;
-                    }
-                }
-
-                Object System.Collections.IEnumerator.Current
-                {
-                    get
-                    {
-                        if (index == 0 || (index == dictionary.count + 1))
-                        {
-                            ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EnumOpCantHappen);
-                        }
-
-                        return currentValue;
-                    }
-                }
-
-                void System.Collections.IEnumerator.Reset()
-                {
-                    if (version != dictionary.version)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EnumFailedVersion);
-                    }
-                    index = 0;
-                    currentValue = default(TValue);
-                }
-            }
-        }
-
-
     }
 
 }

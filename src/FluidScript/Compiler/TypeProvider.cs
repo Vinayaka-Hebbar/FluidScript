@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using System;
 
 namespace FluidScript.Compiler
 {
@@ -86,6 +87,36 @@ namespace FluidScript.Compiler
         {
             string fullName = name.FullName;
             return GetType(fullName);
+        }
+
+        /// <summary>
+        /// UnderlyingSystemType for <paramref name="typeCode"/>
+        /// </summary>
+        public static Type Find(TypeCode typeCode)
+        {
+            switch (typeCode)
+            {
+                case TypeCode.Boolean:
+                    return BooleanType;
+                case TypeCode.Char:
+                    return CharType;
+                case TypeCode.SByte:
+                    return ByteType;
+                case TypeCode.Int16:
+                    return ShortType;
+                case TypeCode.Int32:
+                    return IntType;
+                case TypeCode.Int64:
+                    return LongType;
+                case TypeCode.Single:
+                    return FloatType;
+                case TypeCode.Double:
+                    return DoubleType;
+                case TypeCode.String:
+                    return StringType;
+                default:
+                    return ObjectType;
+            }
         }
     }
 }

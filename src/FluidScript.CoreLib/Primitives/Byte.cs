@@ -4,13 +4,14 @@
     ///  Represents an 8-bit signed integer.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(Byte))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Byte : IFSObject, System.IConvertible
+        struct Byte : IFSObject, System.IConvertible, Runtime.IValueBox<sbyte>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly sbyte m_value;
@@ -73,6 +74,14 @@
         public override string ToString()
         {
             return m_value.ToString();
+        }
+
+        [Runtime.Register("parse")]
+        public static Byte Parse(object value)
+        {
+            if (!(value is System.IConvertible c))
+                throw new System.InvalidCastException(nameof(value));
+            return new Byte(c.ToSByte(null));
         }
 
         #region Convertible

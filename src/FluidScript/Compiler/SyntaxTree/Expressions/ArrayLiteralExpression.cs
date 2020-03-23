@@ -1,6 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
 using System;
-using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -56,13 +55,13 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             if (Arguments != null)
             {
+                var conversions = ArgumentConversions;
                 for (int i = 0; i < Arguments.Length; i++)
                 {
-                    var arg = Arguments[i];
-                    arg.GenerateCode(generator);
-                    var binder = ArgumentConversions.At(i);
-                    if (binder != null)
-                        binder.Generate(generator, arg);
+                    Arguments[i].GenerateCode(generator);
+                    var conversion = conversions[i];
+                    if (conversion != null)
+                        conversion.GenerateCode(generator);
                 }
             }
             generator.Call(Constructor);
@@ -70,6 +69,7 @@ namespace FluidScript.Compiler.SyntaxTree
             int length = Expressions.Length;
             if (length > 0)
             {
+                var conversions = ArrayConversions;
                 generator.LoadInt32(length);
                 Type type = Type.GetElementType();
                 generator.NewArray(type);
@@ -79,9 +79,9 @@ namespace FluidScript.Compiler.SyntaxTree
                     generator.LoadInt32(i);
                     var expression = Expressions[i];
                     expression.GenerateCode(generator);
-                    var conversion = ArrayConversions.At(i);
-                    if (conversion != null)
-                        conversion.Generate(generator, expression);
+                    var group = conversions[i];
+                    if (group != null)
+                        group.GenerateCode(generator);
                     generator.StoreArrayElement(type);
                 }
             }
@@ -90,7 +90,9 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <inheritdoc/>
         public override string ToString()
         {
-            return string.Concat("[", string.Join(",", Expressions.Select(exp => exp.ToString())), "]");
+            if (ArrayType == null)
+                return string.Concat("[", string.Join(",", Expressions.Map(exp => exp.ToString())), "]<any>(", string.Join(",", Arguments.Map(arg => arg.ToString())), ")");
+            return string.Concat("[", string.Join(",", Expressions.Map(exp => exp.ToString())), "]<", ArrayType, ">(", string.Join(",", Arguments.Map(arg => arg.ToString())), ")");
         }
     }
 }

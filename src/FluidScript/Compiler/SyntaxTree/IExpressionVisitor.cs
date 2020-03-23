@@ -17,6 +17,13 @@ namespace FluidScript.Compiler
         /// </summary>
         TResult VisitUnary(UnaryExpression node);
         /// <summary>
+        /// Convert Expression &lt;int&gt;
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        TResult VisitConvert(ConvertExpression node);
+
+        /// <summary>
         /// Size of expression
         /// </summary>
         TResult VisitSizeOf(SizeOfExpression node);

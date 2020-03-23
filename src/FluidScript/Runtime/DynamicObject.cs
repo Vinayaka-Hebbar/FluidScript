@@ -6,6 +6,10 @@ using System.Runtime.Serialization;
 namespace FluidScript.Runtime
 {
     // todo create Object.Keys
+    /// <summary>
+    /// Dynamic Runtime Object
+    /// </summary>
+    [Register(nameof(DynamicObject))]
     [System.Serializable]
     public class DynamicObject : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>, ISerializable, IDynamicMetaObjectProvider, IMetaObjectProvider
     {
@@ -20,7 +24,7 @@ namespace FluidScript.Runtime
         {
         }
 
-        public DynamicObject(IDictionary<string, object> values) : base(3, DefaultComparer)
+        public DynamicObject(IDictionary<string, object> values) : base(values.Count, DefaultComparer)
         {
             if (values == null)
             {
@@ -64,29 +68,39 @@ namespace FluidScript.Runtime
         /// <summary>
         /// Getter and Setter of variables
         /// </summary>
-        public object this[string name]
+        public object this[String name]
         {
             get
             {
-                var i = FindEntry(name);
-                if (i >= 0)
-                {
-                    return entries[i].Value;
-                }
-                return null;
+                return GetValue(name);
             }
             set
             {
-                var i = FindEntry(name);
-                if (i >= 0)
-                {
-                    entries[i].Value = value;
-                }
-                else
-                {
-                    Add(name, value);
-                }
+                SetValue(name, value);
             }
+        }
+
+        public void SetValue(string name, object value)
+        {
+            var i = FindEntry(name);
+            if (i >= 0)
+            {
+                entries[i].Value = value;
+            }
+            else
+            {
+                Add(name, value);
+            }
+        }
+
+        public object GetValue(string name)
+        {
+            var i = FindEntry(name);
+            if (i >= 0)
+            {
+                return entries[i].Value;
+            }
+            return null;
         }
 
         private int FindEntry(string key)
@@ -101,7 +115,7 @@ namespace FluidScript.Runtime
                 int hashCode = key.GetHashCode() & 0x7FFFFFFF;
                 for (int i = buckets[hashCode % buckets.Length]; i >= 0; i = items[i].Next)
                 {
-                    if (items[i].HashCode == hashCode && Equals(items[i].Key.Name, key)) return i;
+                    if (items[i].HashCode == hashCode && string.Equals(items[i].Key.Name, key)) return i;
                 }
             }
             return -1;
@@ -133,8 +147,7 @@ namespace FluidScript.Runtime
         /// </summary>
         public void Add(string key, object value)
         {
-            var type = value == null ? Compiler.TypeProvider.ObjectType : value.GetType();
-            Add(key, type, value);
+            Add(key, value == null ? Compiler.TypeProvider.ObjectType : value.GetType(), value);
         }
 
         internal LocalVariable Add(string key, System.Type type, object value)
@@ -150,7 +163,7 @@ namespace FluidScript.Runtime
             int targetBucket = hashCode % buckets.Length;
             for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
             {
-                if (entries[i].HashCode == hashCode && Equals(entries[i].Key.Name, local.Name))
+                if (entries[i].HashCode == hashCode && Comparer.Equals(entries[i].Key, local))
                 {
                     entries[i].Value = value;
                     version++;
@@ -167,7 +180,7 @@ namespace FluidScript.Runtime
             int targetBucket = hashCode % buckets.Length;
             for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
             {
-                if (entries[i].HashCode == hashCode && Equals(entries[i].Key.Name, name))
+                if (entries[i].HashCode == hashCode && string.Equals(entries[i].Key.Name, name))
                 {
                     throw new System.ArgumentException(string.Format("shadow variable name '{0}'", name));
                 }
@@ -416,6 +429,18 @@ namespace FluidScript.Runtime
         IEnumerator IEnumerable.GetEnumerator()
         {
             return new Enumerator(this, Enumerator.KeyValuePair);
+        }
+
+        public object this[string key]
+        {
+            get
+            {
+                return GetValue(key);
+            }
+            set
+            {
+                SetValue(key, value);
+            }
         }
 
         bool IDictionary<string, object>.TryGetValue(string key, out object value)

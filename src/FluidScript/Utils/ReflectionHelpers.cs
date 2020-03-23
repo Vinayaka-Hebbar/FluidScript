@@ -11,7 +11,7 @@ namespace FluidScript.Utils
         private const BindingFlags DeclaredPublic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.ExactBinding;
 
 
-        #region Object
+        #region Members
 
         internal static readonly ConstructorInfo Double_New;
         internal static readonly ConstructorInfo Float_New;
@@ -25,8 +25,19 @@ namespace FluidScript.Utils
         internal static readonly FieldInfo Bool_True;
         internal static readonly FieldInfo Bool_False;
 
+        #region Constructors
 
-        internal static readonly ConstructorInfo Register_Attr_Ctor;
+        static ConstructorInfo m_register_ctor;
+        internal static ConstructorInfo Register_Attr_Ctor
+        {
+            get
+            {
+                if (m_register_ctor == null)
+                    m_register_ctor = GetInstanceCtor(typeof(Runtime.RegisterAttribute), typeof(string));
+                return m_register_ctor;
+            }
+        }
+        #endregion
 
         #region Implicit Calls
 
@@ -134,6 +145,17 @@ namespace FluidScript.Utils
             }
         }
 
+        static MethodInfo m_toAny;
+        internal static MethodInfo ToAny
+        {
+            get
+            {
+                if (m_toAny == null)
+                    m_toAny = GetStaticMethod(typeof(FSConvert), nameof(FSConvert.ToAny), TypeProvider.ObjectType);
+                return m_toAny;
+            }
+        }
+
         #endregion
 
         #endregion
@@ -149,7 +171,6 @@ namespace FluidScript.Utils
             Byte_New = GetInstanceCtor(TypeProvider.ByteType, typeof(sbyte));
             Char_New = GetInstanceCtor(TypeProvider.CharType, typeof(char));
             String_New = GetInstanceCtor(TypeProvider.StringType, typeof(string));
-            Register_Attr_Ctor = GetInstanceCtor(typeof(Runtime.RegisterAttribute), typeof(string));
 
             Bool_True = GetField(TypeProvider.BooleanType, nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
             Bool_False = GetField(TypeProvider.BooleanType, nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);

@@ -25,10 +25,6 @@
             Comparer = comparer;
         }
 
-        protected DictionaryBase()
-        {
-        }
-
         public bool IsReadOnly => false;
 
         public System.Collections.Generic.IEqualityComparer<TKey> Comparer { get; }

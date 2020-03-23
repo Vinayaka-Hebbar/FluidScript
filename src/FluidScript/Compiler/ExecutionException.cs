@@ -63,22 +63,27 @@ namespace FluidScript.Compiler
             }
         }
 
-        internal static void ThrowNotSupported(params Node[] tree) => throw new ExecutionException(null, null, NotSupported, tree);
-
         public override string StackTrace => string.Join("\nin ", System.Linq.Enumerable.Select(NodeTree, node => node.ToString()));
 
-        internal static void ThrowMissingMethod(System.Type target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMethod, tree);
+        public override string ToString()
+        {
+            return Message;
+        }
 
-        internal static void ThrowMissingMember(System.Type target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMember, tree);
+        internal static void ThrowNotSupported(params Node[] tree) => throw new ExecutionException(null, null, NotSupported, tree);
 
-        internal static void ThrowMissingIndexer(System.Type target, string type, params Node[] tree) => throw new ExecutionException(target, type, MissingIndexer, tree);
+        internal static System.Exception ThrowMissingMethod(System.Type target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMethod, tree);
 
-        internal static void ThrowNullError(params Node[] tree) => throw new ExecutionException(null, null, NullReference, tree);
+        internal static System.Exception ThrowMissingMember(System.Type target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMember, tree);
 
-        internal static void ThrowInvalidOp(params Node[] tree) => throw new ExecutionException(null, null, InvalidOp, tree);
+        internal static System.Exception ThrowMissingIndexer(System.Type target, string type, params Node[] tree) => throw new ExecutionException(target, type, MissingIndexer, tree);
 
-        internal static void ThrowArgumentMisMatch(params Node[] tree) => throw new ExecutionException(null, null, ArgumentMisMatch, tree);
+        internal static System.Exception ThrowNullError(params Node[] tree) => throw new ExecutionException(null, null, NullReference, tree);
 
-        internal static void ThrowInvalidCast(System.Type type, params Node[] tree) => throw new ExecutionException(null, null, InvalidCast, tree);
+        internal static System.Exception ThrowInvalidOp(params Node[] tree) => throw new ExecutionException(null, null, InvalidOp, tree);
+
+        internal static System.Exception ThrowArgumentMisMatch(params Node[] tree) => throw new ExecutionException(null, null, ArgumentMisMatch, tree);
+
+        internal static System.Exception ThrowInvalidCast(System.Type type, params Node[] tree) => throw new ExecutionException(null, null, InvalidCast, tree);
     }
 }

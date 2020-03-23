@@ -4,44 +4,34 @@ using System.Collections.Generic;
 
 namespace FluidScript.Utils
 {
-    public class ArrayFilterIterator<TSource> : IEnumerable<TSource>, IEnumerator<TSource>
+    public struct ArrayFilterIterator<TSource, TFilter> : IEnumerable<TSource>, IEnumerator<TSource>
     {
         TSource[] source;
-        Func<TSource, object, bool> predicate;
+        Func<TSource, TFilter, bool> predicate;
         int index;
-        readonly object filter;
-        readonly int threadId;
-        private int state;
+        readonly TFilter filter;
         private TSource current;
 
-        public ArrayFilterIterator(TSource[] source, Func<TSource, object, bool> predicate, object filter)
+        public ArrayFilterIterator(TSource[] source, Func<TSource, TFilter, bool> predicate, TFilter filter)
         {
             this.source = source;
             this.filter = filter;
             this.predicate = predicate;
-            threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-        }
-
-        public ArrayFilterIterator<TSource> Clone()
-        {
-            return new ArrayFilterIterator<TSource>(source, predicate, filter);
+            current = default(TSource);
+            index = 0;
         }
 
         public bool MoveNext()
         {
-            if (state == 1)
+            while (index < source.Length)
             {
-                while (index < source.Length)
+                TSource item = source[index];
+                index++;
+                if (predicate(item, filter))
                 {
-                    TSource item = source[index];
-                    index++;
-                    if (predicate(item, filter))
-                    {
-                        current = item;
-                        return true;
-                    }
+                    current = item;
+                    return true;
                 }
-                Dispose();
             }
             return false;
         }
@@ -49,19 +39,11 @@ namespace FluidScript.Utils
         public void Dispose()
         {
             current = default(TSource);
-            state = -1;
         }
 
         public IEnumerator<TSource> GetEnumerator()
         {
-            if (threadId == System.Threading.Thread.CurrentThread.ManagedThreadId && state == 0)
-            {
-                state = 1;
-                return this;
-            }
-            var duplicate = Clone();
-            duplicate.state = 1;
-            return duplicate;
+            return this;
         }
 
         object IEnumerator.Current
@@ -78,7 +60,7 @@ namespace FluidScript.Utils
 
         void IEnumerator.Reset()
         {
-            throw new NotImplementedException();
+            index = 0;
         }
 
         public TSource[] ToArray()

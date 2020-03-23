@@ -4,21 +4,14 @@
         <name>FluidScript.CoreLib</name>
     </assembly>
     <members>
-        <member name="T:FluidScript.Collections.IEnumerator">
-            <summary>
-            Supports a simple iteration over a nongeneric collection.
-            </summary>
+        <member name="M:FluidScript.Collections.Dictionary`2.FluidScript#IFSObject#GetHashCode">
+            <inheritdoc/>
         </member>
-        <member name="T:FluidScript.Collections.IEnumerator`1">
-            <summary>
-            Supports a simple iteration over a generic collection.
-            </summary>
-            <typeparam name="T">
-            The type of objects to enumerate.This type parameter is covariant. That is, you
-            can use either the type you specified or any type that is more derived. For more
-            information about covariance and contravariance, see Covariance and Contravariance
-            in Generics.
-            </typeparam>
+        <member name="M:FluidScript.Collections.Dictionary`2.FluidScript#IFSObject#ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Collections.Dictionary`2.FluidScript#IFSObject#Equals(System.Object)">
+            <inheritdoc/>
         </member>
         <member name="T:FluidScript.Collections.List`1">
             <summary>
@@ -40,7 +33,7 @@
             <param name="capacity">
             The object to be added to the end of the System.Collections.Generic.List`1. The
             value can be null for reference types.
-            </param>        
+            </param>
         </member>
         <member name="M:FluidScript.Collections.List`1.#ctor(System.Collections.Generic.IEnumerable{`0})">
             <summary>
@@ -74,7 +67,7 @@
             before adding the new element.
             </summary>
         </member>
-        <member name="M:FluidScript.Collections.List`1.AddRange(FluidScript.Collections.IEnumerable{`0})">
+        <member name="M:FluidScript.Collections.List`1.AddRange(System.Collections.Generic.IEnumerable{`0})">
             <summary>
             Adds the elements of the given collection to the end of this list. If
             required, the capacity of the list is increased to twice the previous
@@ -173,25 +166,25 @@
             Returns an enumerator that iterates through the <see cref="T:FluidScript.Collections.List`1"/>.
             </summary>
             <returns>
-             A <see cref="T:FluidScript.Collections.List`1.Enumerator"/> for the <see cref="T:FluidScript.Collections.List`1"/>.
+             A <see cref="T:FluidScript.Collections.List`1.Iterator"/> for the <see cref="T:FluidScript.Collections.List`1"/>.
             </returns>
         </member>
-        <member name="T:FluidScript.Collections.List`1.Enumerator">
+        <member name="T:FluidScript.Collections.List`1.Iterator">
             <summary>
             Enumerates the elements of a <see cref="T:FluidScript.Collections.List`1"/>.
             </summary>
         </member>
-        <member name="P:FluidScript.Collections.List`1.Enumerator.Current">
+        <member name="P:FluidScript.Collections.List`1.Iterator.Current">
             <summary>
             Gets the element at the current position of the enumerator.
             </summary>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Enumerator.Dispose">
+        <member name="M:FluidScript.Collections.List`1.Iterator.Dispose">
             <summary>
             Releases all resources used by the <see cref="T:FluidScript.Collections.List`1"/>.Enumerator.
             </summary>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Enumerator.MoveNext">
+        <member name="M:FluidScript.Collections.List`1.Iterator.MoveNext">
             <summary>
             Advances the enumerator to the next element of the <see cref="T:FluidScript.Collections.List`1"/>.
             </summary>
@@ -200,7 +193,7 @@
             the enumerator has passed the end of the collection.
             </returns>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Enumerator.FluidScript#IFSObject#GetHashCode">
+        <member name="M:FluidScript.Collections.List`1.Iterator.FluidScript#IFSObject#GetHashCode">
             <summary>
             Returns the hash code for this instance.
             </summary>
@@ -208,7 +201,7 @@
             A 32-bit signed integer that is the hash code for this instance.
             </returns>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Enumerator.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.Collections.List`1.Iterator.FluidScript#IFSObject#ToString">
             <summary>
             Returns the fully qualified type name of this instance.
             </summary>
@@ -216,7 +209,7 @@
             A System.String containing a fully qualified type name.
             </returns>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Enumerator.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Collections.List`1.Iterator.FluidScript#IFSObject#Equals(System.Object)">
             <summary>
             Determines whether the specified System.Object is equal to the current System.Object.
             </summary>
@@ -235,10 +228,10 @@
         <member name="M:FluidScript.FSObject.FluidScript#IFSObject#ToString">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.FSObject.Equals(System.Object)">
+        <member name="M:FluidScript.FSObject.FluidScript#IFSObject#Equals(System.Object)">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.FSObject.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.FSObject.Equals(System.Object)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.FSObject.op_Equality(FluidScript.FSObject,FluidScript.FSObject)">
@@ -1294,9 +1287,15 @@
         <member name="M:FluidScript.Short.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
         </member>
+        <member name="T:FluidScript.Runtime.IValueBox`1">
+            <summary>
+            Primitive Value will be wrapped
+            </summary>
+            <typeparam name="T">Type</typeparam>
+        </member>
         <member name="T:FluidScript.Runtime.RegisterAttribute">
             <summary>
-            Runtime name of a property or method
+            Runtime name of a field, property, method, interface or type
             </summary>
         </member>
         <member name="F:FluidScript.Runtime.RegisterAttribute.Name">
@@ -1306,13 +1305,20 @@
         </member>
         <member name="M:FluidScript.Runtime.RegisterAttribute.#ctor(System.String)">
             <summary>
-            
+            Register type with specified name
             </summary>
-            <param name="name"></param>
+            <param name="name">Name used in runtime</param>
         </member>
-        <member name="P:FluidScript.Runtime.RegisterAttribute.DoGenerate">
+        <member name="M:FluidScript.Runtime.RegisterAttribute.#ctor(System.String,FluidScript.Runtime.RegisterImplOption)">
             <summary>
-            Should Method name is same as <see cref="F:FluidScript.Runtime.RegisterAttribute.Name"/>
+            Register type with specified name and implementation
+            </summary>
+            <param name="name">Name used in runtime</param>
+            <param name="implOption">Implement Type</param>
+        </member>
+        <member name="P:FluidScript.Runtime.RegisterAttribute.Deprecated">
+            <summary>
+            Should Method can be used
             </summary>
         </member>
         <member name="M:FluidScript.Runtime.RegisterAttribute.Match(System.Object)">
@@ -1326,6 +1332,21 @@
         </member>
         <member name="M:FluidScript.Runtime.RegisterAttribute.ToString">
             <inheritdoc/>
+        </member>
+        <member name="F:FluidScript.Runtime.RegisterImplOption.Default">
+            <summary>
+            No Implementation
+            </summary>
+        </member>
+        <member name="F:FluidScript.Runtime.RegisterImplOption.Activator">
+            <summary>
+            can be user to create object
+            </summary>
+        </member>
+        <member name="F:FluidScript.Runtime.RegisterImplOption.Library">
+            <summary>
+            Library type of implementation
+            </summary>
         </member>
         <member name="T:FluidScript.Runtime.Serialization">
             <summary>

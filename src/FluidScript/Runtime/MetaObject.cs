@@ -43,18 +43,7 @@ namespace FluidScript.Runtime
             var del = m_value.GetDelegate(name, arguments, out Compiler.Binders.ArgumentConversions conversions);
             var method = del.Method;
             // todo check whether target is correct
-            foreach (var conversion in conversions)
-            {
-                if (conversion.ConversionType == Compiler.Binders.ConversionType.Convert)
-                {
-                    arguments[conversion.Index] = conversion.Invoke(arguments);
-                }
-                else if (conversion.ConversionType == Compiler.Binders.ConversionType.ParamArray)
-                {
-                    arguments = (object[])conversion.Invoke(arguments);
-                    break;
-                }
-            }
+            conversions.Invoke(ref arguments);
             var result = method.Invoke(del.Target, arguments);
             var expression = Expression.Convert(Expression.Constant(result, method.ReturnType), binder.ReturnType);
             return new DynamicMetaObject(expression, GetTypeRestriction(this));

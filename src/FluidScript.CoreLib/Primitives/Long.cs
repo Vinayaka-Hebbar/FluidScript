@@ -4,13 +4,14 @@
     /// Represents a 64-bit signed integer.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(Long))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Long : IFSObject, System.IConvertible
+        struct Long : IFSObject, System.IConvertible, Runtime.IValueBox<long>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly long m_value;
@@ -73,6 +74,14 @@
         public override string ToString()
         {
             return m_value.ToString();
+        }
+
+        [Runtime.Register("parse")]
+        public static Long Parse(object value)
+        {
+            if (!(value is System.IConvertible c))
+                throw new System.InvalidCastException(nameof(value));
+            return new Long(c.ToInt64(null));
         }
 
         #region Convertible
@@ -190,10 +199,6 @@
         public static implicit operator Long(Integer value) => new Long(value.m_value);
 
         public static implicit operator long(Long value) => value.m_value;
-
-        public static implicit operator double(Long integer) => integer.m_value;
-
-        public static implicit operator float(Long integer) => integer.m_value;
 
         public static Long operator +(Long left, Long right)
         {

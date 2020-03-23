@@ -33,15 +33,19 @@ namespace FluidScript.Compiler.SyntaxTree
             //todo conversion 
             if (Method == null)
                 throw new System.NullReferenceException(nameof(Method));
-            var binders = Conversions;
+            var conversions = Conversions;
             Left.GenerateCode(generator);
-            var first = binders.At(0);
+            var first = conversions[0];
             if (first != null)
-                first.Generate(generator);
+            {
+                first.GenerateCode(generator);
+            }
             Right.GenerateCode(generator);
-            var second = binders.At(1);
+            var second = conversions[1];
             if (second != null)
-                second.Generate(generator);
+            {
+                second.GenerateCode(generator);
+            }
             generator.Call(Method);
         }
 

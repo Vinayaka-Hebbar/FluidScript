@@ -5,7 +5,7 @@
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0;</TargetFrameworks>
     <RootNamespace>FluidScript</RootNamespace>
     <AssemblyName>FluidScript.CoreLib</AssemblyName>
-    <Version>1.0.9</Version>
+    <Version>1.0.10-mr1</Version>
     <Authors>Vinayaka Hebbar</Authors>
   </PropertyGroup>
 
@@ -21,9 +21,16 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Compile Remove="Collections\Dictionary.cs" />
+    <Compile Remove="Collections\ICollection.cs" />
     <Compile Remove="Collections\IDictionary.cs" />
+    <Compile Remove="Collections\IEnumerable.cs" />
+    <Compile Remove="Collections\IEnumerator.cs" />
+    <Compile Remove="Collections\KeyValuePair.cs" />
   </ItemGroup>
 
   <ItemGroup>

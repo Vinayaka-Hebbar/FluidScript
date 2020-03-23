@@ -4,12 +4,7 @@ using System.Collections.Generic;
 
 namespace FluidScript.Compiler
 {
-    public interface IRuntimeVariables : IDictionary<string, object>, System.Runtime.CompilerServices.IRuntimeVariables
-    {
-        System.IDisposable EnterScope();
-    }
-
-    internal sealed class RuntimeVariables : Collections.DictionaryBase<LocalVariable, object>, IRuntimeVariables
+    internal sealed class RuntimeVariables : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>, System.Runtime.CompilerServices.IRuntimeVariables
     {
         static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
 
@@ -175,18 +170,10 @@ namespace FluidScript.Compiler
                 int hashCode = key.GetHashCode() & 0x7FFFFFFF;
                 for (int i = buckets[hashCode % buckets.Length]; i >= 0; i = entries[i].Next)
                 {
-                    if (entries[i].HashCode == hashCode && Equals(entries[i].Key.Name, key)) return i;
+                    if (entries[i].HashCode == hashCode && string.Equals(entries[i].Key.Name, key)) return i;
                 }
             }
             return -1;
-        }
-
-        /// <summary>
-        /// create's a scope for variables inside a block
-        /// </summary>
-        public System.IDisposable EnterScope()
-        {
-            return new LocalScope(this);
         }
 
         /// <summary>
@@ -207,6 +194,32 @@ namespace FluidScript.Compiler
         IEnumerator IEnumerable.GetEnumerator()
         {
             return new Enumerator(this, Enumerator.KeyValuePair);
+        }
+
+        internal
+#if LATEST_VS
+            readonly
+#endif
+            struct RuntimeScope : System.IDisposable
+        {
+            private readonly RuntimeVariables locals;
+
+            public RuntimeScope(RuntimeVariables locals) : this()
+            {
+                this.locals = locals;
+                locals.current = new VariableIndexList(locals.current, 0);
+            }
+
+            public void Dispose()
+            {
+                var current = locals.current;
+                var entires = locals.entries;
+                foreach (var index in current.Entries)
+                {
+                    locals.Remove(entires[index].Key);
+                }
+                locals.current = current.parent;
+            }
         }
 
         #region IDictionary
@@ -302,32 +315,6 @@ namespace FluidScript.Compiler
         }
 
         #endregion
-
-        private
-#if LATEST_VS
-            readonly
-#endif
-            struct LocalScope : System.IDisposable
-        {
-            private readonly RuntimeVariables locals;
-
-            public LocalScope(RuntimeVariables locals) : this()
-            {
-                this.locals = locals;
-                locals.current = new VariableIndexList(locals.current, 0);
-            }
-
-            public void Dispose()
-            {
-                var current = locals.current;
-                var entires = locals.entries;
-                foreach (var index in current.Entries)
-                {
-                    locals.Remove(entires[index].Key);
-                }
-                locals.current = current.parent;
-            }
-        }
 
         #region Enumerator
         [System.Serializable]
@@ -457,6 +444,5 @@ namespace FluidScript.Compiler
             }
         }
         #endregion
-
     }
 }

@@ -93,7 +93,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             return new Enumerator(this);
         }
-
+        
         /// <summary>
         /// Enumerates the elements of a <see cref="NodeList{T}"/>.
         /// </summary>

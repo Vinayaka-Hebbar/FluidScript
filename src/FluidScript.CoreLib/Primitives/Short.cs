@@ -4,13 +4,14 @@
     /// Represents a 16-bit signed integer.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(Short))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Short : IFSObject, System.IConvertible
+        struct Short : IFSObject, System.IConvertible, Runtime.IValueBox<short>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly short m_value;
@@ -73,6 +74,14 @@
         public override string ToString()
         {
             return m_value.ToString();
+        }
+
+        [Runtime.Register("parse")]
+        public static Short Parse(object value)
+        {
+            if (!(value is System.IConvertible c))
+                throw new System.InvalidCastException(nameof(value));
+            return new Short(c.ToInt16(null));
         }
 
         #region Convertible

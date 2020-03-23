@@ -4,16 +4,20 @@
     /// Represents a double-precision floating-point number.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(Double))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Double : IFSObject, System.IConvertible
+        struct Double : IFSObject, System.IConvertible, Runtime.IValueBox<double>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly double m_value;
+
+        [Runtime.Register(nameof(NaN))]
+        public static readonly Double NaN = new Double(double.NaN);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Double"/>
@@ -73,6 +77,14 @@
         public override string ToString()
         {
             return m_value.ToString();
+        }
+
+        [Runtime.Register("parse")]
+        public static Double Parse(object value)
+        {
+            if (!(value is System.IConvertible c))
+                throw new System.InvalidCastException(nameof(value));
+            return new Double(c.ToDouble(null));
         }
 
         #region Convertible
@@ -180,8 +192,6 @@
 
         public static implicit operator Double(double value) => new Double(value);
 
-        public static implicit operator double(Double integer) => integer.m_value;
-
         public static implicit operator Double(Byte value) => new Double(value.m_value);
 
         public static implicit operator Double(Short value) => new Double(value.m_value);
@@ -193,6 +203,8 @@
         public static implicit operator Double(Long value) => new Double(value.m_value);
 
         public static implicit operator Double(Float value) => new Double(value.m_value);
+
+        public static implicit operator double(Double integer) => integer.m_value;
 
         public static Double operator +(Double left, Double right)
         {

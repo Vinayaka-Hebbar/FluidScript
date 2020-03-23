@@ -4,16 +4,20 @@
     /// Represents a single-precision floating-point number.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(Float))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Float : IFSObject, System.IConvertible
+        struct Float : IFSObject, System.IConvertible, Runtime.IValueBox<float>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly float m_value;
+
+        [Runtime.Register(nameof(NaN))]
+        public static readonly Float NaN = new Float(float.NaN);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Float"/>
@@ -73,6 +77,14 @@
         public override string ToString()
         {
             return m_value.ToString();
+        }
+
+        [Runtime.Register("parse")]
+        public static Float Parse(object value)
+        {
+            if (!(value is System.IConvertible c))
+                throw new System.InvalidCastException(nameof(value));
+            return new Float(c.ToSingle(null));
         }
 
         #region Convertible
@@ -191,8 +203,6 @@
         public static implicit operator Float(Long value) => new Float(value.m_value);
 
         public static implicit operator float(Float value) => value.m_value;
-
-        public static implicit operator double(Float value) => value.m_value;
 
         public static Float operator +(Float left, Float right)
         {

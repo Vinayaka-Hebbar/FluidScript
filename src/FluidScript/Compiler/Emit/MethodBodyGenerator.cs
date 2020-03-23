@@ -386,8 +386,9 @@ namespace FluidScript.Compiler.Emit
                     name = "op_BitwiseAnd";
                     break;
             }
-            var method = TypeUtils.GetOperatorOverload(name, out ArgumentConversions bindings, operand.Type);
-            node.Conversions = bindings;
+            ArgumentConversions conversions = new ArgumentConversions(2);
+            var method = TypeUtils.GetOperatorOverload(name, conversions, operand.Type);
+            node.Conversions = conversions;
             node.Method = method;
             node.Type = method.ReturnType;
             return node;
@@ -443,27 +444,34 @@ namespace FluidScript.Compiler.Emit
                     opName = "op_ExclusiveOr";
                     break;
             }
+            //todo like rutime compiler
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
             System.Reflection.MethodInfo method = null;
-            ArgumentConversions bindings = null;
+            ArgumentConversions conversions = null;
             if (opName != null)
             {
+                var types = new Type[2] { left.Type, right.Type };
+                conversions = new ArgumentConversions(2);
+                if (left.Type.IsPrimitive || right.Type.IsPrimitive)
+                {
+                    TypeUtils.FromSystemType(conversions, ref types);
+                }
                 method = TypeUtils.
-                   GetOperatorOverload(opName, out bindings, left.Type, right.Type);
+                   GetOperatorOverload(opName, conversions, types);
             }
             else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
             {
-                bindings = new ArgumentConversions(2);
+                conversions = new ArgumentConversions(2);
                 System.Reflection.MethodInfo convertLeft = TypeUtils.GetBooleanOveraload(left.Type);
                 if (convertLeft != null)
-                    bindings.Add(new ParamConversion(0, convertLeft));
+                    conversions.Add(new ParamConversion(0, convertLeft));
                 var convertRight = TypeUtils.GetBooleanOveraload(right.Type);
                 if (convertRight != null)
-                    bindings.Add(new ParamConversion(1, convertRight));
+                    conversions.Add(new ParamConversion(1, convertRight));
                 method = nodeType == ExpressionType.AndAnd ? ReflectionHelpers.LogicalAnd : ReflectionHelpers.LogicalOr;
             }
-            node.Conversions = bindings;
+            node.Conversions = conversions;
             node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
             node.Type = method.ReturnType;
             return node;
@@ -492,7 +500,7 @@ namespace FluidScript.Compiler.Emit
                 node.Constructor = node.Type.GetConstructor(TypeUtils.PublicInstance, null, new Type[0], null);
             }
             var items = node.Expressions;
-            var arrayConversions = node.ArrayConversions ?? new ArgumentConversions(items.Length);
+            var arrayConversions = new ArgumentConversions(items.Length);
             for (int index = 0; index < items.Length; index++)
             {
                 Expression expression = items[index];
@@ -550,7 +558,7 @@ namespace FluidScript.Compiler.Emit
             return node;
         }
 
-        bool HasMethod(System.Reflection.MethodInfo m, object filter)
+        bool HasMethod(System.Reflection.MethodInfo m, string filter)
         {
             var data = (Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
             return data != null ? data.Match(filter) : m.Name.Equals(filter);
@@ -575,16 +583,12 @@ namespace FluidScript.Compiler.Emit
                 resultType = exp.Type;
                 name = member.Name;
             }
-            var methods = new ArrayFilterIterator<System.Reflection.MethodInfo>(resultType.GetMethods(TypeUtils.Any), HasMethod, name).ToArray();
-            //todo ignore case
-            if (methods.Length == 0)
-                throw new Exception(string.Concat("method ", name, " not found"));
-            //todo type conversion
-            var method = TypeUtils.BindToMethod(methods, types, out ArgumentConversions binders);
+            //todo parameterised expression invoke (expression)()
+            var method = TypeUtils.FindMethod(name, resultType, types, out ArgumentConversions binders);
             if (method is IMethodBaseGenerator baseGenerator)
                 method = (System.Reflection.MethodInfo)baseGenerator.MethodBase;
             node.Convertions = binders;
-            node.Method = method;
+            node.Method = method ?? throw ExecutionException.ThrowMissingMethod(resultType, name, node);
             node.Type = method.ReturnType;
             return node;
         }
@@ -773,6 +777,24 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitSizeOf(SizeOfExpression node)
         {
             throw new NotImplementedException();
+        }
+
+        Expression IExpressionVisitor<Expression>.VisitConvert(ConvertExpression node)
+        {
+            var value = node.Target.Accept(this);
+            if (node.Type == null)
+            {
+                var type = node.TypeName.GetType(TypeProvider);
+
+                //todo explict convert
+                if (!TypeUtils.AreReferenceAssignable(type, node.Type) &&
+                    TypeUtils.TryImplicitConvert(value.Type, type, out System.Reflection.MethodInfo implicitConvert))
+                {
+                    node.Method = implicitConvert;
+                }
+                node.Type = type;
+            }
+            return node;
         }
         #endregion
     }

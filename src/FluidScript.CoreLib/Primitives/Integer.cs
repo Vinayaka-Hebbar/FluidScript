@@ -4,13 +4,14 @@
     /// Represents a 32-bit signed integer.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(Integer))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Integer : IFSObject, System.IConvertible
+        struct Integer : IFSObject, System.IConvertible, Runtime.IValueBox<int>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly int m_value;
@@ -73,6 +74,14 @@
         public override string ToString()
         {
             return m_value.ToString();
+        }
+
+        [Runtime.Register("parse")]
+        public static Integer Parse(object value)
+        {
+            if (!(value is System.IConvertible c))
+                throw new System.InvalidCastException(nameof(value));
+            return new Integer(c.ToInt32(null));
         }
 
         #region Convertible
@@ -186,13 +195,15 @@
 
         public static implicit operator Integer(Char value) => new Integer(value.m_value);
 
-        public static implicit operator int(Integer integer) => integer.m_value;
+        #region System Implicit
+        public static implicit operator int(Integer value) => value.m_value;
 
-        public static implicit operator long(Integer integer) => integer.m_value;
+        public static implicit operator long(Integer value) => value.m_value;
 
-        public static implicit operator double(Integer integer) => integer.m_value;
+        public static implicit operator float(Integer value) => value.m_value;
 
-        public static implicit operator float(Integer integer) => integer.m_value;
+        public static implicit operator double(Integer value) => value.m_value;
+        #endregion
 
         public static Integer operator +(Integer left, Integer right)
         {

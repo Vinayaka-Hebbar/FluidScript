@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.Generators
             MemberType = System.Reflection.MemberTypes.Method;
         }
 
-        public BaseMethodGenerator(System.Reflection.MethodInfo method, Emit.ParameterInfo[] parameters, Generators.TypeGenerator declaring)
+        public BaseMethodGenerator(System.Reflection.MethodInfo method, Emit.ParameterInfo[] parameters, TypeGenerator declaring)
         {
             Name = method.Name;
             methodInfo = method;
@@ -61,11 +61,11 @@ namespace FluidScript.Compiler.Generators
 
         public override Type ReturnType { get; }
 
-        public Emit.ParameterInfo[] Parameters { get; }
+        public ParameterInfo[] Parameters { get; }
 
         public override System.Reflection.MemberTypes MemberType { get; }
 
-        public Compiler.SyntaxTree.Statement SyntaxBody { get; set; }
+        public SyntaxTree.Statement SyntaxBody { get; set; }
 
         public System.Reflection.MethodBase MethodBase => methodInfo;
 

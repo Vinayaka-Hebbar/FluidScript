@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
         public override string ToString()
         {
             //todo return type
-            return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):any");
+            return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnType);
         }
 
 

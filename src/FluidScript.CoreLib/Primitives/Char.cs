@@ -4,21 +4,24 @@
     /// Represents a character as a UTF-16 code unit.
     /// </summary>
     [System.Serializable]
+    [Runtime.Register(nameof(Char))]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Char : IFSObject, System.IConvertible
+        struct Char : IFSObject, System.IConvertible, Runtime.IValueBox<char>
     {
         /// <summary>
         /// Min char Value
         /// </summary>
+        [Runtime.Register(nameof(MinValue))]
         public static readonly Char MinValue = new Char(char.MinValue);
 
         /// <summary>
         /// Max char Value
         /// </summary>
+        [Runtime.Register(nameof(MinValue))]
         public static readonly Char MaxValue = new Char(char.MaxValue);
 
         [System.Diagnostics.DebuggerBrowsable(0)]
@@ -88,6 +91,14 @@
         public override string ToString()
         {
             return m_value.ToString();
+        }
+
+        [Runtime.Register("parse")]
+        public static Char Parse(object value)
+        {
+            if (!(value is System.IConvertible c))
+                throw new System.InvalidCastException(nameof(value));
+            return new Char(c.ToChar(null));
         }
 
         #region Convertible

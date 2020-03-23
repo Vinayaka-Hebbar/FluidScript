@@ -3,6 +3,7 @@
     /// <summary>
     /// Supports all classes in the FluidScipt
     /// </summary>
+    [Runtime.Register("any")]
     public interface IFSObject
     {
         /// <summary>

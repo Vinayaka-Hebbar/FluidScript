@@ -2,6 +2,7 @@
 
 namespace FluidScript
 {
+    [Runtime.Register(nameof(Convert))]
     public class FSConvert
     {
         [Runtime.Register("toBoolean")]

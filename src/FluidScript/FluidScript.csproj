@@ -1,10 +1,10 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0;</TargetFrameworks>
+    <TargetFrameworks>net40;netstandard2.0;netcoreapp2.0;</TargetFrameworks>
     <DefineConstants>TRACE;</DefineConstants>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.14-mr2</Version>
+    <Version>1.0.15-mr1</Version>
     <Title>FluidScript</Title>
     <PackageId>FluidScript</PackageId>
     <Product>FluidScript</Product>
@@ -55,7 +55,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.9" />
+    <None Remove="Compiler\SyntaxTree\Expressions\AnonymousFunctionExpression.cs~RFdecd6c1.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.10-mr1" />
   </ItemGroup>
 
 </Project>

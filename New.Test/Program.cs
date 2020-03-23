@@ -4,7 +4,7 @@ namespace New.Test
 {
     class Program
     {
-        const string text = "Math.pow(3,3)";
+        const string text = "2+2.0";
         static void Main(string[] args)
         {
             try

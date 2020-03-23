@@ -16,9 +16,9 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static MethodInfo BindToMethod(MemberInfo[] members, System.Collections.IList args, out ArgumentConversions conversions)
+        internal static MethodInfo BindToMethod(MemberInfo[] members, object[] args, out ArgumentConversions conversions)
         {
-            conversions = new ArgumentConversions(args.Count);
+            conversions = new ArgumentConversions(args.Length);
             foreach (var m in members)
             {
                 if (m.MemberType == MemberTypes.Method)
@@ -30,15 +30,14 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static bool MatchesTypes(MethodBase method, System.Collections.IList args, ArgumentConversions conversions)
+        internal static bool MatchesTypes(MethodBase method, object[] args, ArgumentConversions conversions)
         {
             var parameters = method.GetParameters();
             // arg length
-            var length = args.Count;
+            var length = args.Length;
             // no arg
             if (parameters.Length == 0 && length > 0)
                 return false;
-            conversions.Clear();
             int i;
             for (i = 0; i < parameters.Length; i++)
             {
@@ -76,12 +75,14 @@ namespace FluidScript.Utils
                     }
                 }
             }
-            return i == length;
+            if (i == length)
+                return true;
+            return conversions.Recycle();
         }
 
         private static bool ParamArrayMatchs(System.Collections.IList args, int index, System.Type dest, ArgumentConversions conversions)
         {
-            var binder = new ArgumentConversions();
+            var binder = new ArgumentConversions(args.Count);
             // check first parameter type matches
             for (var i = index; i < args.Count; i++)
             {
@@ -98,7 +99,7 @@ namespace FluidScript.Utils
                     {
                         if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
                             return false;
-                        conversions.Add(new ParamConversion(i, opImplict));
+                        binder.Add(new ParamConversion(i, opImplict));
                     }
                 }
             }
@@ -106,106 +107,37 @@ namespace FluidScript.Utils
             return true;
         }
 
-        internal static bool MatchesTypes(System.Type[] types, System.Collections.IList args, ArgumentConversions conversions)
+        internal static MethodInfo FindMethod(string name, System.Type type, object[] args, out ArgumentConversions conversions)
         {
-            var length = args.Count;
-            if (types.Length == 0 && length > 0)
-                return false;
-            conversions.Clear();
-            // arg length
-            for (int i = 0; i < types.Length; i++)
+            conversions = new ArgumentConversions(args.Length);
+            bool isRuntime = type.IsDefined(typeof(Runtime.RegisterAttribute), false);
+            if (!isRuntime)
+                return FindSystemMethod(name, type, args, conversions);
+            var methods = type.GetMethods(TypeUtils.AnyPublic);
+            for (int i = 0; i < methods.Length; i++)
             {
-                // matches current index
-                if (i >= length)
-                    return false;
-                var dest = types[i];
-                var arg = args[i];
-                if (arg == null)
-                {
-                    //for value type if nullable
-                    if (dest.IsValueType && !TypeUtils.IsNullableType(dest))
-                        return false;
-                    else
-                        continue;
-                }
-                var src = arg.GetType();
-                if (!TypeUtils.AreReferenceAssignable(dest, src))
-                {
-                    if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
-                        return false;
-                    conversions.Add(new ParamConversion(i, opImplict));
-                }
+                var m = methods[i];
+                var attrs = (Runtime.RegisterAttribute[])m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
+                if (attrs.Length > 0 && attrs[0].Match(name)
+                    && MatchesTypes(m, args, conversions))
+                    return m;
             }
-            return true;
+            return null;
         }
 
-        internal static MethodInfo[] GetPublicMethods(object obj, string name)
+        private static MethodInfo FindSystemMethod(string name, System.Type type, object[] args, ArgumentConversions conversions)
         {
-            if (obj == null)
-                return new MethodInfo[0];
-            return TypeUtils.GetPublicMethods(obj.GetType(), name);
-        }
-
-        internal static object InvokeSet(MemberInfo m, object obj, object value, out System.Type type)
-        {
-            if (m.MemberType == MemberTypes.Field)
+            foreach (MethodInfo m in type.GetMember(name, MemberTypes.Method, TypeUtils.AnyPublic))
             {
-                var f = (FieldInfo)m;
-                if (f.IsInitOnly)
-                    throw new System.MemberAccessException(string.Concat("cannot write to readonly field ", f.Name));
-                type = f.FieldType;
-                f.SetValue(obj, value);
+                if (MatchesTypes(m, args, conversions))
+                    return m;
             }
-            else if (m.MemberType == MemberTypes.Property)
-            {
-                var p = (PropertyInfo)m;
-                if (!p.CanWrite)
-                    throw new System.MemberAccessException(string.Concat("cannot write to readonly property ", p.Name));
-                if (value != null && p.PropertyType != value.GetType())
-                {
-                    if (TypeUtils.TryImplicitConvert(value.GetType(), p.PropertyType, out MethodInfo implictCast))
-                    {
-                        value = implictCast.Invoke(null, new object[1] { value });
-                    }
-                }
-                type = p.PropertyType;
-                p.SetValue(obj, value, new object[0]);
-            }
-            else
-            {
-                throw new System.MemberAccessException(string.Concat("cannot write to member", m.Name));
-            }
-            return value;
-        }
-
-        internal static object InvokeGet(MemberInfo m, object obj, out System.Type type)
-        {
-            if (m.MemberType == MemberTypes.Field)
-            {
-                var f = (FieldInfo)m;
-                type = f.FieldType;
-                return f.GetValue(obj);
-            }
-            else if (m.MemberType == MemberTypes.Property)
-            {
-                var p = (PropertyInfo)m;
-                if (!p.CanRead)
-                    throw new System.MemberAccessException(string.Concat("cannot read to property", m.Name));
-                type = p.PropertyType;
-                return p.GetValue(obj, new object[0]);
-            }
-            else if (m.MemberType == MemberTypes.Method)
-            {
-                var method = (MethodInfo)m;
-                type = method.ReturnType;
-                return method.Invoke(obj, new object[0]);
-            }
-            throw new System.MemberAccessException(string.Concat("cannot read to member", m.Name));
+            return null;
         }
 
         internal static MethodInfo GetDelegateMethod(System.Delegate del, object[] args, out ArgumentConversions conversions)
         {
-            conversions = new ArgumentConversions();
+            conversions = new ArgumentConversions(args.Length);
             MethodInfo m = del.Method;
             // only static method can allowed
             if (MatchesTypes(m, args, conversions))
