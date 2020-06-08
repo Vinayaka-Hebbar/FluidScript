@@ -3,7 +3,11 @@ using System.Collections.Generic;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public sealed class NodeList<T> : INodeList<T> where T : Node
+    public sealed class NodeList<T> : INodeList<T>
+#if NETSTANDARD || NETCOREAPP
+        , IReadOnlyList<T>
+#endif
+        where T : Node
     {
         static readonly T[] EmptyNodeList = new T[0];
         int size;
@@ -12,6 +16,11 @@ namespace FluidScript.Compiler.SyntaxTree
         public NodeList()
         {
             items = EmptyNodeList;
+        }
+
+        public NodeList(int capacity)
+        {
+            items = new T[capacity];
         }
 
         public NodeList(T[] items)
@@ -31,7 +40,7 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        public int Length => size;
+        public int Count => size;
 
         public void Add(T expression)
         {

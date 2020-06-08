@@ -1,11 +1,12 @@
-﻿using System;
+﻿using FluidScript.Compiler;
+using FluidScript.Compiler.SyntaxTree;
+using System;
 
 namespace FluidScipt.ConsoleTest
 {
     public class Class1
     {
-        const string text = @"Math.pow(2.2,2)";
-
+        const string text = "Console.WriteLine";
         // todo import static class
         static void Main(string[] args)
         {
@@ -15,24 +16,21 @@ namespace FluidScipt.ConsoleTest
 
         private void Test()
         {
-            var compiler = new FluidScript.Compiler.RuntimeCompiler();
-            compiler.Locals["pi"] = new FluidScript.Double(3.14);
-            compiler.Locals["uLu"] = new FluidScript.Double(3.14);
-            compiler.Locals["uppsetForgingId"] = new FluidScript.Double(47);
-            compiler.Locals["dc"] = new FluidScript.Double(12);
-            compiler.Locals["d"] = new FluidScript.Double(11);
-            compiler.Locals["t"] = new FluidScript.Double(20);
-            compiler.Locals["lnt"] = new FluidScript.Double(21);
-            var statement = FluidScript.ScriptParser.GetStatement(text);
-            var result = compiler.Invoke(statement);
-            Console.WriteLine(result);
-
+            Console.WriteLine(default(DateTime));
+            Console.WriteLine(default(DateTime));
+            NodeList<TypeParameter> types = new NodeList<TypeParameter>();
+            NodeList<Statement> statements = new NodeList<Statement>();
+            BlockStatement body = new BlockStatement(statements);
+            FunctionDeclaration declaration = new FunctionDeclaration("Test", types, TypeSyntax.Create(typeof(bool)), body);
+            statements.Add(Statement.Return(Expression.False));
+            var del = declaration.Compile();
+            Console.WriteLine(del.DynamicInvoke());
         }
 
-        public void Test(FluidScript.Integer value)
+        public void Compile()
         {
-            FluidScript.Math.Pow(2, 2);
+            Console.WriteLine("OK");
         }
-    }
 
+    }
 }

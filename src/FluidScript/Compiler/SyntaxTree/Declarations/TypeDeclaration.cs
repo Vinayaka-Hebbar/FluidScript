@@ -19,13 +19,13 @@ namespace FluidScript.Compiler.SyntaxTree
             Members = members;
         }
 
-        public IScriptSource Source
+        public ITextSource Source
         {
             get;
             set;
         }
 
-        public override void Create(Generators.TypeGenerator generator)
+        public override void Compile(Generators.TypeGenerator generator)
         {
             throw new System.NotImplementedException();
         }
@@ -41,7 +41,7 @@ namespace FluidScript.Compiler.SyntaxTree
             generator.Source = Source;
             foreach (var member in Members)
             {
-                member.Create(generator);
+                member.Compile(generator);
             }
             return generator.Create();
         }

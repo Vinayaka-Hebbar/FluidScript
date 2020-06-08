@@ -1,9 +1,11 @@
-﻿namespace FluidScript
+﻿using System;
+
+namespace FluidScript
 {
     /// <summary>
     /// Represents a 16-bit signed integer.
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     [Runtime.Register(nameof(Short))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
@@ -11,9 +13,9 @@
 #if LATEST_VS
         readonly
 #endif
-        struct Short : IFSObject, System.IConvertible, Runtime.IValueBox<short>
+        struct Short : IFSObject, IConvertible,IFormattable, Runtime.IValueBox<short>
     {
-        [System.Diagnostics.DebuggerBrowsable(0)]
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         internal readonly short m_value;
 
         /// <summary>
@@ -76,112 +78,117 @@
             return m_value.ToString();
         }
 
+        string IFormattable.ToString(string format, IFormatProvider provider)
+        {
+            return m_value.ToString(format, provider);
+        }
+
         [Runtime.Register("parse")]
         public static Short Parse(object value)
         {
-            if (!(value is System.IConvertible c))
-                throw new System.InvalidCastException(nameof(value));
+            if (!(value is IConvertible c))
+                throw new InvalidCastException(nameof(value));
             return new Short(c.ToInt16(null));
         }
 
         #region Convertible
         ///<inheritdoc/>
-        public System.TypeCode GetTypeCode()
+        public TypeCode GetTypeCode()
         {
-            return System.TypeCode.Int16;
+            return TypeCode.Int16;
         }
 
-        string System.IConvertible.ToString(System.IFormatProvider provider)
+        string IConvertible.ToString(IFormatProvider provider)
         {
-            return System.Convert.ToString(provider);
-        }
-
-        /// <internalonly/>
-        bool System.IConvertible.ToBoolean(System.IFormatProvider provider)
-        {
-            return System.Convert.ToBoolean(m_value);
+            return Convert.ToString(provider);
         }
 
         /// <internalonly/>
-        char System.IConvertible.ToChar(System.IFormatProvider provider)
+        bool IConvertible.ToBoolean(IFormatProvider provider)
         {
-            return System.Convert.ToChar(m_value);
+            return Convert.ToBoolean(m_value);
         }
 
         /// <internalonly/>
-        sbyte System.IConvertible.ToSByte(System.IFormatProvider provider)
+        char IConvertible.ToChar(IFormatProvider provider)
         {
-            return System.Convert.ToSByte(m_value);
+            return Convert.ToChar(m_value);
         }
 
         /// <internalonly/>
-        byte System.IConvertible.ToByte(System.IFormatProvider provider)
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
         {
-            return System.Convert.ToByte(m_value);
+            return Convert.ToSByte(m_value);
         }
 
         /// <internalonly/>
-        short System.IConvertible.ToInt16(System.IFormatProvider provider)
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(m_value);
+        }
+
+        /// <internalonly/>
+        short IConvertible.ToInt16(IFormatProvider provider)
         {
             return m_value;
         }
 
         /// <internalonly/>
-        ushort System.IConvertible.ToUInt16(System.IFormatProvider provider)
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
         {
-            return System.Convert.ToUInt16(m_value);
+            return Convert.ToUInt16(m_value);
         }
 
         /// <internalonly/>
-        int System.IConvertible.ToInt32(System.IFormatProvider provider)
+        int IConvertible.ToInt32(IFormatProvider provider)
         {
-            return System.Convert.ToInt32(m_value);
+            return Convert.ToInt32(m_value);
         }
 
         /// <internalonly/>
-        uint System.IConvertible.ToUInt32(System.IFormatProvider provider)
+        uint IConvertible.ToUInt32(IFormatProvider provider)
         {
-            return System.Convert.ToUInt32(m_value);
+            return Convert.ToUInt32(m_value);
         }
 
         /// <internalonly/>
-        long System.IConvertible.ToInt64(System.IFormatProvider provider)
+        long IConvertible.ToInt64(IFormatProvider provider)
         {
-            return System.Convert.ToInt64(m_value);
+            return Convert.ToInt64(m_value);
         }
 
         /// <internalonly/>
-        ulong System.IConvertible.ToUInt64(System.IFormatProvider provider)
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
         {
-            return System.Convert.ToUInt64(m_value);
+            return Convert.ToUInt64(m_value);
         }
 
         /// <internalonly/>
-        float System.IConvertible.ToSingle(System.IFormatProvider provider)
+        float IConvertible.ToSingle(IFormatProvider provider)
         {
-            return System.Convert.ToSingle(m_value);
+            return Convert.ToSingle(m_value);
         }
 
         /// <internalonly/>
-        double System.IConvertible.ToDouble(System.IFormatProvider provider)
+        double IConvertible.ToDouble(IFormatProvider provider)
         {
-            return System.Convert.ToDouble(m_value);
+            return Convert.ToDouble(m_value);
         }
 
         /// <internalonly/>
-        decimal System.IConvertible.ToDecimal(System.IFormatProvider provider)
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
         {
-            return System.Convert.ToDecimal(m_value);
+            return Convert.ToDecimal(m_value);
         }
 
         /// <internalonly/>
-        System.DateTime System.IConvertible.ToDateTime(System.IFormatProvider provider)
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
         {
-            throw new System.InvalidCastException("Invalid Cast From Integer To DateTime");
+            throw new InvalidCastException("Invalid Cast From Integer To DateTime");
         }
 
         /// <internalonly/>
-        object System.IConvertible.ToType(System.Type type, System.IFormatProvider provider)
+        object IConvertible.ToType(Type type, IFormatProvider provider)
         {
             return m_value;
         }

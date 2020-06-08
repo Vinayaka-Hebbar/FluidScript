@@ -267,9 +267,8 @@ namespace FluidScript.Collections
                 if (count > 0)
                 {
                     var index = _size;
-                    var newItems = new T[count];
-                    c.CopyTo(newItems, 0);
-                    newItems.CopyTo(_items, index);
+                    EnsureCapacity(count + index);
+                    c.CopyTo(_items, index);
                     _size += count;
                 }
             }

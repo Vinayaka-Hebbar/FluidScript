@@ -11,6 +11,11 @@ namespace FluidScript.Compiler.Binders
 
         public abstract ConversionType ConversionType { get; }
 
+        /// <summary>
+        /// case when Int32 -> FluidScript.Integer and FluidScript.Double to double ex: int32 * FluidScript.Double
+        /// </summary>
+        internal Conversion next;
+
         public abstract System.Type Type { get; }
 
         /// <summary>

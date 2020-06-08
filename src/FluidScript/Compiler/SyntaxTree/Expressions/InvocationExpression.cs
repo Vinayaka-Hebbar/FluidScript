@@ -34,10 +34,10 @@ namespace FluidScript.Compiler.SyntaxTree
             // if method is static instance is not required
             if (Method.IsStatic == false)
                 Target.GenerateCode(generator);
-            if (Arguments.Length > 0)
+            if (Arguments.Count > 0)
             {
                 var conversions = Convertions;
-                for (int i = 0; i < Arguments.Length; i++)
+                for (int i = 0; i < Arguments.Count; i++)
                 {
                     var arg = Arguments[i];
                     var item = conversions[i];
@@ -50,7 +50,7 @@ namespace FluidScript.Compiler.SyntaxTree
                         }
                         else if (item.ConversionType == ConversionType.ParamArray)
                         {
-                            var arguments = new Expression[Arguments.Length - i];
+                            var arguments = new Expression[Arguments.Count - i];
                             Arguments.CopyTo(arguments, item.Index);
                             item.GenerateCode(generator, arguments);
                             break;
@@ -63,9 +63,9 @@ namespace FluidScript.Compiler.SyntaxTree
                 }
             }
             // remaing binding
-            if (Arguments.Length < Convertions.Count)
+            if (Arguments.Count < Convertions.Count)
             {
-                for (var i = Arguments.Length; i < Convertions.Count; i++)
+                for (var i = Arguments.Count; i < Convertions.Count; i++)
                 {
                     Convertions[i].GenerateCode(generator);
                 }

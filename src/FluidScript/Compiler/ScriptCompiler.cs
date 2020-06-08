@@ -7,10 +7,10 @@ namespace FluidScript.Compiler
     /// <summary>
     /// Evaluates an <see cref="Expression"/> using reflection
     /// </summary>
-    public class ScriptCompiler : CompilerBase
+    public class ScriptCompiler : CompilerBase, Runtime.ICompileProvider
     {
-        private readonly object target;
-        private object locals;
+        readonly object target;
+        object locals;
 
         public ScriptCompiler() : this(GlobalObject.Instance)
         {
@@ -21,14 +21,32 @@ namespace FluidScript.Compiler
             this.target = target;
         }
 
-        public override object Target => target;
-
-        public object Invoke(Expression expression)
+        static ScriptCompiler _default;
+        public static ScriptCompiler Default
         {
-            return expression.Accept(this);
+            get
+            {
+                if (_default == null)
+                    System.Threading.Interlocked.CompareExchange(ref _default, new ScriptCompiler(GlobalObject.Instance), null);
+                return _default;
+            }
         }
 
-        public object Invoke(object target, Expression expression)
+        public override object Target => target;
+
+        Type targetType;
+        public Type TargetType
+        {
+            get
+            {
+                if (targetType == null)
+                    targetType = target.GetType();
+                return targetType;
+            }
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)]
+        public object Invoke(Expression expression, object target = null)
         {
             locals = target;
             return expression.Accept(this);
@@ -36,7 +54,7 @@ namespace FluidScript.Compiler
 
         protected override object FindTarget(InvocationExpression node, object[] args)
         {
-            //Resolve call again
+            // Resolve call again
             return ResolveCall(node, args);
         }
 
@@ -48,24 +66,23 @@ namespace FluidScript.Compiler
             var obj = locals;
             ExpressionType nodeType = left.NodeType;
             Binders.IBinder binder = null;
-            Type type = null;
             if (nodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)left;
                 name = exp.Name;
-                if (obj == null)
-                    ExecutionException.ThrowNullError(node.Left, node);
-                if (TypeUtils.TryFindMember(obj.GetType(), name, out binder) == false && obj is Runtime.IMetaObjectProvider runtime)
+                if (obj == null || TypeUtils.TryFindMember(obj.GetType(), name, TypeUtils.AnyPublic, out binder) == false)
                 {
-                    var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
-                    value = result.Value;
-                    node.Type = result.Type;
-                    return value;
-                }
-                else
-                {
-                    obj = Target;
-                    TypeUtils.TryFindMember(obj.GetType(), name, out binder);
+                    if (obj is Runtime.IMetaObjectProvider runtime)
+                    {
+                        var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
+                        value = result.Value;
+                        node.Type = result.Type;
+                        return value;
+                    }
+                    else if (TypeUtils.TryFindMember(TargetType, name, TypeUtils.AnyPublic, out binder))
+                    {
+                        obj = Target;
+                    }
                 }
                 exp.Binder = binder;
             }
@@ -74,37 +91,9 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)left;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                if (exp.Binder is null && TypeUtils.TryFindMember(exp.Target.Type, name, out binder))
+                if (exp.Binder is null && TypeUtils.TryFindMember(exp.Target.Type, name, TypeUtils.AnyPublic, out binder))
                     exp.Binder = binder;
-            }
-            else if (nodeType == ExpressionType.Indexer)
-            {
-                var exp = (IndexExpression)left;
-                obj = exp.Target.Accept(this);
-                if (obj == null)
-                    ExecutionException.ThrowNullError(exp.Target, node);
-                var args = exp.Arguments.Map(arg => arg.Accept(this)).AddLast(value);
-                if (exp.Setter == null)
-                {
-                    var indexers = exp.Target.Type
-                    .GetMember("set_Item", System.Reflection.MemberTypes.Method, TypeUtils.Any);
-                    var indexer = TypeHelpers.BindToMethod(indexers, args, out Binders.ArgumentConversions conversions);
-                    if (indexer == null)
-                        ExecutionException.ThrowMissingIndexer(exp.Target.Type, "set", exp.Target, node);
-
-                    exp.Conversions = conversions;
-                    exp.Setter = indexer;
-                    // ok to be node.Right.Type instead of indexer.GetParameters().Last().ParameterType
-                    Binders.Conversion valueBind = conversions[args.Length - 1];
-                    node.Type = (valueBind == null) ? node.Right.Type : valueBind.Type;
-                }
-                exp.Conversions.Invoke(ref args);
-                exp.Setter.Invoke(obj, args);
-                return value;
-            }
-            if (binder == null)
-            {
-                if (obj is Runtime.IMetaObjectProvider runtime)
+                else if (obj is Runtime.IMetaObjectProvider runtime)
                 {
                     //todo binder for dynamic
                     var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
@@ -112,22 +101,28 @@ namespace FluidScript.Compiler
                     node.Type = result.Type;
                     return value;
                 }
+            }
+            else if (nodeType == ExpressionType.Indexer)
+            {
+                return AssignIndexer(node, value);
+            }
+            if (binder == null)
+            {
+                ExecutionException.ThrowMissingMember(obj.GetType(), name, node.Left, node);
+            }
+            Type type = node.Right.Type;
+            if (!TypeUtils.AreReferenceAssignable(binder.Type, type))
+            {
+                if (TypeUtils.TryImplicitConvert(type, binder.Type, out System.Reflection.MethodInfo method))
+                    // implicit casting
+                    value = method.Invoke(null, new object[] { value });
                 else
                 {
-                    ExecutionException.ThrowMissingMember(obj.GetType(), name, node.Left, node);
+                    ExecutionException.ThrowInvalidCast(binder.Type, node);
                 }
             }
-            if (!TypeUtils.AreReferenceAssignable(binder.Type, type) && TypeUtils.TryImplicitConvert(type, binder.Type, out System.Reflection.MethodInfo method))
-            {
-                // implicit casting
-                value = method.Invoke(null, new object[] { value });
-            }
-            else
-            {
-                ExecutionException.ThrowInvalidCast(binder.Type, node);
-            }
             binder.Set(obj, value);
-            node.Type = type;
+            node.Type = binder.Type;
             return value;
         }
 
@@ -144,14 +139,12 @@ namespace FluidScript.Compiler
                 var exp = (NameExpression)target;
                 name = exp.Name;
                 obj = locals;
-                method = TypeHelpers.FindMethod(name, obj.GetType(), args, out conversions);
-                if (method == null)
+                if (obj == null || TypeHelpers.TryFindMethod(name, obj.GetType(), args, out method, out conversions) == false)
                 {
                     // find in target
                     obj = Target;
-                    method = TypeHelpers.FindMethod(name, obj.GetType(), args, out conversions);
                     // if not methods
-                    if (method == null)
+                    if (TypeHelpers.TryFindMethod(name, obj.GetType(), args, out method, out conversions) == false)
                         ExecutionException.ThrowMissingMethod(obj.GetType(), name, node);
                 }
             }
@@ -160,8 +153,7 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)target;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                var methods = TypeHelpers.FindMethod(name, exp.Target.Type, args, out conversions);
-                if (method == null)
+                if (TypeHelpers.TryFindMethod(name, exp.Target.Type, args, out method, out conversions) == false)
                 {
                     if (obj is Runtime.IMetaObjectProvider runtime)
                     {
@@ -216,7 +208,7 @@ namespace FluidScript.Compiler
         public override object VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            if (TypeUtils.TryFindMember(node.Target.Type, node.Name, out Binders.IBinder binder) == false)
+            if (TypeUtils.TryFindMember(node.Target.Type, node.Name, TypeUtils.AnyPublic, out Binders.IBinder binder) == false)
             {
                 if (target is Runtime.IMetaObjectProvider runtime)
                 {
@@ -242,26 +234,30 @@ namespace FluidScript.Compiler
         {
             string name = node.Name;
             object obj = locals;
-            if (TypeUtils.TryFindMember(obj.GetType(), name, out Binders.IBinder binder) == false && obj is Runtime.IMetaObjectProvider)
+            if (obj == null || TypeUtils.TryFindMember(obj.GetType(), name, TypeUtils.AnyPublic, out Binders.IBinder binder) == false)
             {
-                Runtime.IMetaObjectProvider dynamic = (Runtime.IMetaObjectProvider)obj;
-                binder = dynamic.GetMetaObject().BindGetMember(name);
-                if (binder != null)
-                    goto done;
-                obj = Target;
-                //find in the class level
-                if (TypeUtils.TryFindMember(obj.GetType(), name, out binder) == false && obj is Runtime.IMetaObjectProvider)
+                Runtime.IMetaObjectProvider dynamic;
+                if (obj is Runtime.IMetaObjectProvider)
                 {
                     dynamic = (Runtime.IMetaObjectProvider)obj;
                     binder = dynamic.GetMetaObject().BindGetMember(name);
                 }
-                if (binder is null)
+                else if (TypeUtils.TryFindMember(TargetType, name, TypeUtils.AnyPublic, out binder) == false)
                 {
-                    ExecutionException.ThrowMissingMember(obj.GetType(), name, node);
+                    // find in the class level
+                    obj = Target;
+                    if (obj is Runtime.IMetaObjectProvider)
+                    {
+                        dynamic = (Runtime.IMetaObjectProvider)obj;
+                        binder = dynamic.GetMetaObject().BindGetMember(name);
+                    }
+                    else if (TypeUtils.TryFindMember(typeof(GlobalObject), name, TypeUtils.AnyPublic, out binder))
+                    {
+                        obj = GlobalObject.Instance;
+                    }
                 }
             }
-        done:
-            node.Binder = binder;
+            node.Binder = binder ?? throw ExecutionException.ThrowMissingMember(obj.GetType(), name, node);
             node.Type = binder.Type;
             return binder.Get(obj);
         }

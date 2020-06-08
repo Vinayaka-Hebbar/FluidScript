@@ -22,6 +22,11 @@ namespace FluidScript.Compiler.SyntaxTree
             Statements = statements;
         }
 
+        public BlockStatement(NodeList<Statement> statements) : base(StatementType.Block)
+        {
+            Statements = statements;
+        }
+
         ///<inheritdoc/>
         public override IEnumerable<Node> ChildNodes() => Statements;
 
@@ -36,9 +41,9 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             var statementLocals = new StatementLocals() { NonDefaultSourceSpanBehavior = true };
             GenerateStartOfStatement(generator, statementLocals);
-            if (Statements.Length == 0)
+            if (Statements.Count == 0)
                 generator.NoOperation();
-            for (int index = 0; index < Statements.Length; index++)
+            for (int index = 0; index < Statements.Count; index++)
             {
                 Statements[index].GenerateCode(generator);
             }

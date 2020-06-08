@@ -9,23 +9,27 @@
         Hex = 4,
         Unicode = 5,
         String = 6,
-        Bool = 7,
+        StringQuoted = 8,
+        Bool = 9,
         // empty slot
-        Variable = 8,
-        SpecialVariable = 9,
-        Identifier = 10,
-        Parenthesized = 11,
-        Invocation = 12,
-        Indexer = 13,
+        Variable = 10,
+        SpecialVariable = 11,
+        Identifier = 12,
+        /// <summary>
+        /// ()
+        /// </summary>
+        Parenthesized = 13,
+        Invocation = 14,
+        Indexer = 15,
         /// <summary>
         /// =>
         /// </summary>
-        AnonymousMethod = 14,
+        AnonymousMethod = 16,
         //15 skip
         //Reserved
         // Other
 
-        NewLine = 16,
+        NewLine = 17,
         /// <summary>
         /// [
         /// </summary>
@@ -109,6 +113,16 @@
         #region PostFix Prefix
         PlusPlus = 141,
         MinusMinus = 142,
+        #endregion
+        #region Other
+        /// <summary>
+        /// /
+        /// </summary>
+        BackSlash = 180,
+        /// <summary>
+        /// \
+        /// </summary>
+        ForwardSlash = 181,
         #endregion
         End = 255,
         Bad = 254

@@ -2,7 +2,7 @@
 {
     internal sealed class VariableIndexList
     {
-        private int[] indexes;
+        int[] indexes;
         internal int size;
 
         internal VariableIndexList parent;
@@ -38,13 +38,10 @@
             indexes[size++] = index;
         }
 
-        public System.Collections.Generic.IEnumerable<int> Entries
+        public System.Collections.Generic.IEnumerable<int> Entries()
         {
-            get
-            {
-                for (int i = size - 1; i > -1; i--)
-                    yield return indexes[i];
-            }
+            for (int i = size - 1; i > -1; i--)
+                yield return indexes[i];
         }
     }
 }

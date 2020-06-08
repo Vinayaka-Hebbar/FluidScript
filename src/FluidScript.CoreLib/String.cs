@@ -30,6 +30,7 @@
             }
         }
 
+        [Runtime.Register("length")]
         public Integer Length
         {
             get

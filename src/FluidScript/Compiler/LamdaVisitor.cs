@@ -30,7 +30,7 @@ namespace FluidScript.Compiler
 
         public Expression VisitAnonymousObject(AnonymousObjectExpression node)
         {
-            for (int i = 0; i < node.Members.Length; i++)
+            for (int i = 0; i < node.Members.Count; i++)
             {
                 node.Members[i].Expression.Accept(this);
             }
@@ -39,7 +39,7 @@ namespace FluidScript.Compiler
 
         public Expression VisitArrayLiteral(ArrayLiteralExpression node)
         {
-            for (int i = 0; i < node.Expressions.Length; i++)
+            for (int i = 0; i < node.Expressions.Count; i++)
             {
                 node.Expressions[i].Accept(this);
             }
@@ -62,7 +62,7 @@ namespace FluidScript.Compiler
 
         public void VisitBlock(BlockStatement node)
         {
-            for (int i = 0; i < node.Statements.Length; i++)
+            for (int i = 0; i < node.Statements.Count; i++)
             {
                 node.Statements[i].Accept(this);
             }
@@ -112,7 +112,7 @@ namespace FluidScript.Compiler
 
         public void VisitDeclaration(LocalDeclarationStatement node)
         {
-            for (int i = 0; i < node.DeclarationExpressions.Length; i++)
+            for (int i = 0; i < node.DeclarationExpressions.Count; i++)
             {
                 node.DeclarationExpressions[i].Accept(this);
             }

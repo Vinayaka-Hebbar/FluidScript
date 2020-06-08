@@ -11,7 +11,12 @@ namespace FluidScript.Runtime
     /// </summary>
     [Register(nameof(DynamicObject))]
     [System.Serializable]
-    public class DynamicObject : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>, ISerializable, IDynamicMetaObjectProvider, IMetaObjectProvider
+    public class DynamicObject : Collections.DictionaryBase<LocalVariable, object>,
+        IDictionary<string, object>,
+        ISerializable,
+        IDynamicMetaObjectProvider,
+        IMetaObjectProvider,
+        System.Runtime.CompilerServices.IRuntimeVariables
     {
         static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
 
@@ -77,6 +82,20 @@ namespace FluidScript.Runtime
             set
             {
                 SetValue(name, value);
+            }
+        }
+
+        object System.Runtime.CompilerServices.IRuntimeVariables.this[int index]
+        {
+            get
+            {
+                if (index >= 0) return entries[index].Value;
+                throw new System.IndexOutOfRangeException(index.ToString());
+            }
+            set
+            {
+                entries[index].Value = value;
+                version++;
             }
         }
 

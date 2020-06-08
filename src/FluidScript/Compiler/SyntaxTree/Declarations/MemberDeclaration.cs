@@ -8,6 +8,6 @@
         {
         }
 
-        public abstract void Create(Generators.TypeGenerator generator);
+        public abstract void Compile(Generators.TypeGenerator generator);
     }
 }

@@ -133,18 +133,6 @@ namespace FluidScript.Utils
             }
         }
 
-        private static MethodInfo m_list_getItem;
-
-        internal static MethodInfo List_GetItem
-        {
-            get
-            {
-                if (m_list_getItem == null)
-                    m_list_getItem = GetInstanceMethod(typeof(System.Collections.IList), "get_Item", typeof(int));
-                return m_list_getItem;
-            }
-        }
-
         static MethodInfo m_toAny;
         internal static MethodInfo ToAny
         {

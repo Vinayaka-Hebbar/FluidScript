@@ -334,7 +334,7 @@ namespace FluidScript.Compiler.Emit
         public override ILLocalVariable DeclareVariable(Type type, string name = null)
         {
             var localBuilder = Generator.DeclareLocal(type);
-#if NET40
+#if NETFRAMEWORK
             if (EmitDebugInfo && name != null)
             {
                 localBuilder.SetLocalSymInfo(name);
@@ -673,7 +673,7 @@ namespace FluidScript.Compiler.Emit
         ///<inheritdoc/>
         public override void MarkSequencePoint(System.Diagnostics.SymbolStore.ISymbolDocumentWriter document, int startLine, int startColumn, int endLine, int endColumn)
         {
-#if NET40
+#if NETFRAMEWORK
             Generator.MarkSequencePoint(document, startLine, startColumn, endLine, endColumn);
 #endif
         }

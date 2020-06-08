@@ -24,6 +24,7 @@
         {
             return Equals(obj);
         }
+
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {

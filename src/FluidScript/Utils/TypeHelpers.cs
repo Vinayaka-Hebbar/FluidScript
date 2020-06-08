@@ -3,9 +3,9 @@ using System.Reflection;
 
 namespace FluidScript.Utils
 {
-    internal static class TypeHelpers
+    public static class TypeHelpers
     {
-        internal static TMethod BindToMethod<TMethod>(TMethod[] methods, object[] args, out ArgumentConversions conversions) where TMethod : MethodBase
+        public static TMethod BindToMethod<TMethod>(TMethod[] methods, object[] args, out ArgumentConversions conversions) where TMethod : MethodBase
         {
             conversions = new ArgumentConversions(args.Length);
             foreach (var m in methods)
@@ -107,32 +107,68 @@ namespace FluidScript.Utils
             return true;
         }
 
-        internal static MethodInfo FindMethod(string name, System.Type type, object[] args, out ArgumentConversions conversions)
+        public static bool TryFindMethod(string name, System.Type type, object[] args, out MethodInfo method, out ArgumentConversions conversions)
         {
             conversions = new ArgumentConversions(args.Length);
-            bool isRuntime = type.IsDefined(typeof(Runtime.RegisterAttribute), false);
-            if (!isRuntime)
-                return FindSystemMethod(name, type, args, conversions);
-            var methods = type.GetMethods(TypeUtils.AnyPublic);
-            for (int i = 0; i < methods.Length; i++)
-            {
-                var m = methods[i];
-                var attrs = (Runtime.RegisterAttribute[])m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
-                if (attrs.Length > 0 && attrs[0].Match(name)
-                    && MatchesTypes(m, args, conversions))
-                    return m;
-            }
-            return null;
+            return type.IsInterface
+                ? TryFindInterfaceMethod(name, type, args, out method, conversions)
+                : type.IsDefined(typeof(Runtime.RegisterAttribute), false)
+                ? FindMethods(name, type, TypeUtils.AnyPublic, args, out method, conversions)
+                : TryFindSystemMethod(name, type, TypeUtils.AnyPublic, args, out method, conversions);
         }
 
-        private static MethodInfo FindSystemMethod(string name, System.Type type, object[] args, ArgumentConversions conversions)
+        private static bool FindMethods(string name, System.Type type, BindingFlags flags, object[] args, out MethodInfo method, ArgumentConversions conversions)
         {
-            foreach (MethodInfo m in type.GetMember(name, MemberTypes.Method, TypeUtils.AnyPublic))
+            if (type != null)
             {
-                if (MatchesTypes(m, args, conversions))
-                    return m;
+                var methods = type.GetMethods(flags);
+                for (int i = 0; i < methods.Length; i++)
+                {
+                    var m = methods[i];
+                    var attrs = (Runtime.RegisterAttribute[])m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
+                    if (attrs.Length > 0 && attrs[0].Match(name)
+                        && MatchesTypes(m, args, conversions))
+                    {
+                        method = m;
+                        return true;
+                    }
+                }
+                return FindMethods(name, type.BaseType, TypeUtils.PublicStatic, args, out method, conversions);
             }
-            return null;
+            method = null;
+            return false;
+        }
+
+        static bool TryFindInterfaceMethod(string name, System.Type type, object[] args, out MethodInfo method, ArgumentConversions conversions)
+        {
+            if (TryFindSystemMethod(name, type, TypeUtils.PublicInstance, args, out method, conversions))
+                return true;
+            var types = type.GetInterfaces();
+            for (int i = 0; i < types.Length; i++)
+            {
+                type = types[i];
+                if (TryFindSystemMethod(name, type, TypeUtils.PublicInstance, args, out method, conversions))
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool TryFindSystemMethod(string name, System.Type type, BindingFlags flags, object[] args, out MethodInfo method, ArgumentConversions conversions)
+        {
+            if (type != null)
+            {
+                foreach (MethodInfo m in type.GetMethods(flags))
+                {
+                    if (m.Name.Equals(name, System.StringComparison.OrdinalIgnoreCase) && MatchesTypes(m, args, conversions))
+                    {
+                        method = m;
+                        return true;
+                    }
+                }
+            }
+
+            method = null;
+            return false;
         }
 
         internal static MethodInfo GetDelegateMethod(System.Delegate del, object[] args, out ArgumentConversions conversions)
@@ -143,6 +179,68 @@ namespace FluidScript.Utils
             if (MatchesTypes(m, args, conversions))
             {
                 return m;
+            }
+            return null;
+        }
+
+        /// Current Declared Indexer can get
+        public static MethodInfo FindGetIndexer(this System.Type type, object[] args, out ArgumentConversions conversions)
+        {
+            conversions = new ArgumentConversions(args.Length);
+            if (type.IsArray)
+            {
+                //for array no indexer
+                var m = type.GetMethod("Get", TypeUtils.PublicInstance);
+                if (MatchesTypes(m, args, conversions))
+                {
+                    return m;
+                }
+            }
+            foreach (var item in type.GetDefaultMembers())
+            {
+                if (item.MemberType == MemberTypes.Property)
+                {
+                    var p = (PropertyInfo)item;
+                    if (p.CanRead)
+                    {
+                        var m = p.GetGetMethod(true);
+                        if (MatchesTypes(m, args, conversions))
+                        {
+                            return m;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// Current Declared Indexer can get
+        public static MethodInfo FindSetIndexer(this System.Type type, object[] args, out ArgumentConversions conversions)
+        {
+            conversions = new ArgumentConversions(args.Length);
+            if (type.IsArray)
+            {
+                //for array no indexer
+                var m = type.GetMethod("Set", TypeUtils.PublicInstance);
+                if (MatchesTypes(m, args, conversions))
+                {
+                    return m;
+                }
+            }
+            foreach (var item in type.GetDefaultMembers())
+            {
+                if (item.MemberType == MemberTypes.Property)
+                {
+                    var p = (PropertyInfo)item;
+                    if (p.CanWrite)
+                    {
+                        var m = p.GetSetMethod(true);
+                        if (MatchesTypes(m, args, conversions))
+                        {
+                            return m;
+                        }
+                    }
+                }
             }
             return null;
         }

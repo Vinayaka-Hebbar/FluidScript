@@ -108,7 +108,7 @@ namespace FluidScript.Utils
             conversions.Backup();
         }
 
-        internal static MethodInfo GetOperatorOverload(string name, ArgumentConversions conversions, params System.Type[] types)
+        public static MethodInfo GetOperatorOverload(string name, ArgumentConversions conversions, params System.Type[] types)
         {
             for (int i = 0; i < types.Length; i++)
             {
@@ -122,7 +122,7 @@ namespace FluidScript.Utils
             return null;
         }
 
-        internal static bool MatchesTypes(MethodBase method, System.Type[] types, ArgumentConversions conversions)
+        public static bool MatchesTypes(MethodBase method, System.Type[] types, ArgumentConversions conversions)
         {
             var paramters = method.GetParameters();
             var length = types.Length;
@@ -165,7 +165,7 @@ namespace FluidScript.Utils
         /// argument types.
         /// </summary>
         /// <returns></returns>
-        internal static bool MatchesArgumentTypes(MethodInfo m, params System.Type[] argTypes)
+        public static bool MatchesArgumentTypes(MethodInfo m, params System.Type[] argTypes)
         {
             if (m == null || argTypes == null)
             {
@@ -188,8 +188,7 @@ namespace FluidScript.Utils
             return true;
         }
 
-
-        internal static bool AreReferenceAssignable(System.Type dest, System.Type src)
+        public static bool AreReferenceAssignable(System.Type dest, System.Type src)
         {
             // WARNING: This actually implements "Is this identity assignable and/or reference assignable?"
             if (dest.IsAssignableFrom(src))
@@ -203,7 +202,7 @@ namespace FluidScript.Utils
             return false;
         }
 
-        internal static bool IsNullAssignable(System.Type type)
+        public static bool IsNullAssignable(System.Type type)
         {
             return type.IsValueType == false || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>));
         }
@@ -213,7 +212,7 @@ namespace FluidScript.Utils
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>);
         }
 
-        internal static bool TryImplicitConvert(System.Type src, System.Type dest, out MethodInfo method)
+        public static bool TryImplicitConvert(System.Type src, System.Type dest, out MethodInfo method)
         {
             //if (src.IsPrimitive && dest.IsPrimitive == false && dest.IsValueType)
             //{
@@ -233,6 +232,39 @@ namespace FluidScript.Utils
                 }
             }
             methods = (MethodInfo[])dest.GetMember(ImplicitConversionName, MemberTypes.Method, PublicStatic);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo m = methods[i];
+                if (MatchesArgumentTypes(m, src) && AreReferenceAssignable(m.ReturnType, dest))
+                {
+                    method = m;
+                    return true;
+                }
+            }
+            method = null;
+            return false;
+        }
+
+        public static bool TryExplicitConvert(System.Type src, System.Type dest, out MethodInfo method)
+        {
+            //if (src.IsPrimitive && dest.IsPrimitive == false && dest.IsValueType)
+            //{
+            //    method = ValueConvert(src, dest);
+            //    if (method != null)
+            //        return true;
+            //}
+            // todo base class convert check
+            var methods = (MethodInfo[])src.GetMember(ExplicitConviersionName, MemberTypes.Method, PublicStatic);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo m = methods[i];
+                if (MatchesArgumentTypes(m, src) && AreReferenceAssignable(m.ReturnType, dest))
+                {
+                    method = m;
+                    return true;
+                }
+            }
+            methods = (MethodInfo[])dest.GetMember(ExplicitConviersionName, MemberTypes.Method, PublicStatic);
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo m = methods[i];
@@ -277,37 +309,64 @@ namespace FluidScript.Utils
         }
 
         #region Member
-        /// <summary>
-        /// Get property and fields of <paramref name="type"/> with name <paramref name="name"/>
-        /// </summary>
-        internal static bool TryFindMember(System.Type type, string name, out IBinder binder)
+
+        public static bool TryFindMember(System.Type type, string name, BindingFlags flags, out IBinder binder)
         {
-            if (type == null)
-                throw new System.ArgumentNullException(nameof(type));
-            var properties = type.GetProperties(AnyPublic);
-            for (int i = 0; i < properties.Length; i++)
+            bool isRuntime = type.IsDefined(typeof(Runtime.RegisterAttribute), false);
+            if (isRuntime)
             {
-                var p = properties[i];
-                var data = (System.Attribute[])p.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
-                if ((data.Length > 0 && data[0].Match(name)) || p.Name.Equals(name))
-                {
-                    binder = new PropertyBinder(p);
-                    return true;
-                }
+                return FindMember(type, name, flags, out binder);
             }
-            var fields = type.GetFields(AnyPublic);
-            for (int i = 0; i < fields.Length; i++)
+            binder = FindSystemMember(type, name, flags);
+            return binder != null;
+        }
+
+        public static bool FindMember(System.Type type, string name, BindingFlags flags, out IBinder binder)
+        {
+            if (type != null)
             {
-                var f = fields[i];
-                var data = (System.Attribute[])f.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
-                if ((data.Length > 0 && data[0].Match(name)) || f.Name.Equals(name))
+                var properties = type.GetProperties(flags);
+                for (int i = 0; i < properties.Length; i++)
                 {
-                    binder = new FieldBinder(f);
-                    return true;
+                    var p = properties[i];
+                    var data = (System.Attribute[])p.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
+                    if (data.Length > 0 && data[0].Match(name))
+                    {
+                        binder = new PropertyBinder(p);
+                        return true;
+                    }
                 }
+
+                var fields = type.GetFields(AnyPublic);
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var f = fields[i];
+                    var data = (System.Attribute[])f.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
+                    if (data.Length > 0 && data[0].Match(name))
+                    {
+                        binder = new FieldBinder(f);
+                        return true;
+                    }
+                }
+                return FindMember(type.BaseType, name, PublicStatic, out binder);
             }
             binder = null;
             return false;
+        }
+
+        public static IBinder FindSystemMember(System.Type type, string name, BindingFlags flags)
+        {
+            if (type != null)
+            {
+                var p = type.GetProperty(name, flags | BindingFlags.IgnoreCase);
+                if (p != null)
+                    return new PropertyBinder(p);
+                var f = type.GetField(name, flags);
+                if (f != null)
+                    return new FieldBinder(f);
+                return FindSystemMember(type.BaseType, name, PublicStatic);
+            }
+            return null;
         }
         #endregion
     }

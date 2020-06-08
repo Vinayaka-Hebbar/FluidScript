@@ -36,12 +36,12 @@ namespace FluidScript.Compiler.Binders
 
         public void GenerateGet(MethodBodyGenerator generator)
         {
-            throw new NotImplementedException();
+            
         }
 
         public void GenerateSet(MethodBodyGenerator generator)
         {
-            throw new NotImplementedException();
+            
         }
 
         public object Get(object obj)
@@ -62,9 +62,9 @@ namespace FluidScript.Compiler.Binders
         struct DynamicVariableBinder : IBinder
     {
         readonly ILocalVariable variable;
-        readonly Runtime.DynamicObject target;
+        readonly System.Runtime.CompilerServices.IRuntimeVariables target;
 
-        public DynamicVariableBinder(ILocalVariable variable, Runtime.DynamicObject target)
+        public DynamicVariableBinder(ILocalVariable variable, System.Runtime.CompilerServices.IRuntimeVariables target)
         {
             this.variable = variable;
             this.target = target;
@@ -78,12 +78,14 @@ namespace FluidScript.Compiler.Binders
 
         public void GenerateGet(MethodBodyGenerator generator)
         {
-            throw new NotImplementedException();
+            generator.DeclareVariable(variable.Type, variable.Name);
         }
 
         public void GenerateSet(MethodBodyGenerator generator)
         {
-            throw new NotImplementedException();
+            var iLVariable = generator.GetLocalVariable(variable.Name);
+            if (iLVariable != null)
+                generator.LoadVariable(iLVariable);
         }
 
         public object Get(object obj)
@@ -99,6 +101,9 @@ namespace FluidScript.Compiler.Binders
     #endregion
 
     #region RuntimeVariable
+    /// <summary>
+    /// IL generator for <see cref="RuntimeVariables"/>
+    /// </summary>
     public
 #if LATEST_VS
         readonly
@@ -197,7 +202,7 @@ namespace FluidScript.Compiler.Binders
 
         public bool IsMember => false;
 
-        public Type Type => parameter.Type;
+        public  Type Type => parameter.Type;
 
         public bool IsStatic => false;
 

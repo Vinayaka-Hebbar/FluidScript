@@ -14,6 +14,8 @@
 
         protected int[] buckets;
         protected int count;
+        
+        // todo is it required?
         protected int version;
         protected int freeList;
         protected int freeCount;
@@ -36,20 +38,6 @@
             for (int i = 0; i < buckets.Length; i++) buckets[i] = -1;
             entries = new Entry[size];
             freeList = -1;
-        }
-
-        public TValue this[int index]
-        {
-            get
-            {
-                if (index >= 0) return entries[index].Value;
-                throw new System.IndexOutOfRangeException(index.ToString());
-            }
-            set
-            {
-                entries[index].Value = value;
-                version++;
-            }
         }
 
         public int Count

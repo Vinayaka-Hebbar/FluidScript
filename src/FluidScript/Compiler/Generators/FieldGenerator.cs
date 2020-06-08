@@ -23,11 +23,11 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Reflection.FieldAttributes Attributes { get; }
 
-        public Compiler.SyntaxTree.Expression DefaultValue { get; }
+        public SyntaxTree.Expression DefaultValue { get; }
 
         public override string Name { get; }
 
-        public Compiler.SyntaxTree.VariableDeclarationExpression DeclarationExpression { get; }
+        public SyntaxTree.VariableDeclarationExpression DeclarationExpression { get; }
 
         public System.Reflection.MemberInfo MemberInfo => this;
 

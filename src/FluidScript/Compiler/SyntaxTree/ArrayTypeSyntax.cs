@@ -4,22 +4,27 @@
     {
         public readonly TypeSyntax ElementType;
 
-        public readonly NodeList<Expression> Ranks;
+        public readonly int Rank;
 
-        public ArrayTypeSyntax(TypeSyntax elementType, NodeList<Expression> sizes)
+        public ArrayTypeSyntax(TypeSyntax elementType, int rank)
         {
             ElementType = elementType;
-            Ranks = sizes;
+            Rank = rank;
         }
 
         public override System.Type GetType(ITypeProvider provider)
         {
-            return ElementType.GetType(provider).MakeArrayType();
+            return ElementType.GetType(provider).MakeArrayType(Rank);
         }
 
         public override string ToString()
         {
-            return string.Concat(ElementType.ToString(), "[", string.Join(",", System.Linq.Enumerable.Select(Ranks, size => size.ToString())), "]");
+            System.Text.StringBuilder sb = new System.Text.StringBuilder(ElementType.ToString());
+            for (int i = 0; i < Rank; i++)
+            {
+                sb.Append("[]");
+            }
+            return sb.ToString();
         }
     }
 }

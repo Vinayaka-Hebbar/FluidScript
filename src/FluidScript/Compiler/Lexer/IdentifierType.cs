@@ -12,6 +12,7 @@
         This,
         True,
         False,
+        NaN,
         Null,
         Undefined,
         Return,

@@ -89,7 +89,7 @@
         public override string ToString()
         {
             var elseCondition = Else == null ? string.Empty : string.Concat("else ", Else);
-            return string.Concat("if (", Condition, ")\n", Then, '\n', elseCondition);
+            return string.Concat("if (", Condition, ")\n", Then, "\n", elseCondition);
         }
     }
 }

@@ -4,20 +4,19 @@ namespace New.Test
 {
     class Program
     {
-        const string text = "2+2.0";
+        const string text = "vinayakahebbar*vinayakahebbar";
         static void Main(string[] args)
         {
             try
             {
-                var compiler = new FluidScript.Compiler.DynamicCompiler();
-                compiler["r"] = new FluidScript.Integer(2);
-                compiler["s"] = new FluidScript.Double(1.3426);
-                var statement = FluidScript.ScriptParser.GetStatement(text);
+                var compiler = new FluidScript.Compiler.RuntimeCompiler();
+                compiler.Locals["vinayakahebbar"] = 1;
                 var sw = new System.Diagnostics.Stopwatch();
                 sw.Start();
                 for (int i = 0; i < 100000; i++)
                 {
-                    var result = compiler.Invoke(statement);
+                    var statement = FluidScript.ScriptParser.GetStatement(text);
+                    _ = compiler.Invoke(statement);
                 }
                 sw.Stop();
                 Console.WriteLine(sw.ElapsedMilliseconds);

@@ -2,9 +2,9 @@
 
 namespace FluidScript.Compiler.Lexer
 {
-    internal static class Keywords
+    public static class Keywords
     {
-        internal static readonly IDictionary<string, IdentifierType> keywords;
+        static readonly IDictionary<string, IdentifierType> keywords;
 
         static Keywords()
         {
@@ -20,6 +20,7 @@ namespace FluidScript.Compiler.Lexer
                 {"this", IdentifierType.This },
                 {"true",IdentifierType.True },
                 {"false",IdentifierType.False },
+                {"NaN",IdentifierType.NaN },
                 {"null", IdentifierType.Null },
                 {"undefined", IdentifierType.Undefined },
                 {"return", IdentifierType.Return },
@@ -47,7 +48,7 @@ namespace FluidScript.Compiler.Lexer
             return keywords.TryGetValue(name, out type);
         }
 
-        internal static bool Match(string name, IdentifierType expected)
+        public static bool Match(string name, IdentifierType expected)
         {
             return keywords.TryGetValue(name, out IdentifierType type) ? type == expected : false;
         }

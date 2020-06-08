@@ -41,9 +41,9 @@ namespace FluidScript.Compiler.SyntaxTree
                     exp.GenerateCode(generator);
                     if (generator.SyntaxTree is BlockStatement block)
                     {
-                        if (block.Statements.Length > 0)
+                        if (block.Statements.Count > 0)
                         {
-                            lastStatement = block.Statements[block.Statements.Length - 1] == this;
+                            lastStatement = block.Statements[block.Statements.Count - 1] == this;
                         }
                     }
                     var dest = generator.Method.ReturnType;
@@ -80,7 +80,8 @@ namespace FluidScript.Compiler.SyntaxTree
                         {
                             generator.ReturnTarget = generator.CreateLabel();
                         }
-                    }else if(Expression.NodeType == ExpressionType.Invocation && Expression.Type != TypeProvider.VoidType)
+                    }
+                    else if (Expression.NodeType == ExpressionType.Invocation && Expression.Type != TypeProvider.VoidType)
                     {
                         // discard the return result
                         generator.Pop();
@@ -101,9 +102,9 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             if (NodeType == StatementType.Return)
             {
-                return string.Concat("return ", Expression.ToString());
+                return string.Concat("return ", Expression, ';');
             }
-            return string.Concat("throw ", Expression.ToString());
+            return string.Concat("throw ", Expression, ';');
         }
     }
 }

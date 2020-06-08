@@ -2,7 +2,6 @@
 using FluidScript.Runtime;
 using FluidScript.Utils;
 using System;
-using System.Collections.Generic;
 
 namespace FluidScript.Compiler
 {
@@ -10,46 +9,40 @@ namespace FluidScript.Compiler
     /// Runtime evaluation of Syntax tree with <see cref="Locals"/>
     /// <list type="bullet">it will be not same as compiled </list>
     /// </summary>
-    public sealed class RuntimeCompiler : CompilerBase, IStatementVisitor
+    public sealed class RuntimeCompiler : CompilerBase, IStatementVisitor, ICompileProvider
     {
-        private readonly BranchContext context = new BranchContext();
+        readonly BranchContext context = new BranchContext();
+        readonly RuntimeVariables locals;
 
-        private readonly RuntimeVariables locals;
-
-        private readonly object target;
+        readonly object m_global;
+        object m_target;
         /// <summary>
         /// New runtime evaluation with <see cref="GlobalObject"/> target
         /// </summary>
         public RuntimeCompiler() : this(GlobalObject.Instance)
         {
-            locals = new RuntimeVariables();
         }
 
         /// <summary>
         /// New runtime evaluation 
         /// </summary>
+        /// <param name="target">Global target for execution</param>
         public RuntimeCompiler(object target)
         {
-            this.target = target;
+            m_global = target;
             locals = new RuntimeVariables();
         }
 
         /// <summary>
         /// New runtime evaluation with local values
         /// </summary>
-        public RuntimeCompiler(object target, IDictionary<string, object> locals) : this(target)
+        public RuntimeCompiler(object target, RuntimeVariables locals)
         {
-            this.locals = new RuntimeVariables(locals);
+            m_global = target;
+            this.locals = locals;
         }
 
-        /// <summary>
-        /// New runtime evaluation 
-        /// </summary>
-        public RuntimeCompiler(RuntimeCompiler other) : this(other.Target, other.Locals)
-        {
-        }
-
-        public IDictionary<string, object> Locals
+        public ILocalVariables Locals
         {
             get
             {
@@ -57,18 +50,48 @@ namespace FluidScript.Compiler
             }
         }
 
-        static System.Reflection.FieldInfo m_targetField;
-        static System.Reflection.FieldInfo TargetField
+        static System.Reflection.FieldInfo gField;
+        static System.Reflection.FieldInfo GlobalTargetField
         {
             get
             {
-                if (m_targetField == null)
-                    m_targetField = typeof(RuntimeCompiler).GetField(nameof(target), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                return m_targetField;
+                if (gField == null)
+                    gField = typeof(RuntimeCompiler).GetField(nameof(m_global), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                return gField;
             }
         }
 
-        public override object Target => target;
+        static System.Reflection.FieldInfo cField;
+        static System.Reflection.FieldInfo ClassTargetField
+        {
+            get
+            {
+                if (cField == null)
+                    cField = typeof(RuntimeCompiler).GetField(nameof(m_target), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                return cField;
+            }
+        }
+
+
+
+        Type globalType;
+        public Type GlobalType
+        {
+            get
+            {
+                if (globalType == null)
+                    globalType = m_global.GetType();
+                return globalType;
+            }
+        }
+
+        public override object Target
+        {
+            get
+            {
+                return m_target;
+            }
+        }
 
         /// <summary>
         /// Gets or Sets value for execution
@@ -87,8 +110,9 @@ namespace FluidScript.Compiler
         /// <exception cref="IndexOutOfRangeException"/>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="MissingMethodException"/>
-        public object Invoke(Statement statement)
+        public object Invoke(Statement statement, object target = null)
         {
+            m_target = target;
             context.Reset();
             // if invoking expression statement result should be returned
             if (statement.NodeType == StatementType.Expression)
@@ -105,8 +129,9 @@ namespace FluidScript.Compiler
         /// <exception cref="IndexOutOfRangeException"/>
         /// <exception cref="NullReferenceException"/>
         /// <exception cref="MissingMethodException"/>
-        public object Invoke(Expression expression)
+        public object Invoke(Expression expression, object target = null)
         {
+            m_target = target;
             return expression.Accept(this);
         }
 
@@ -126,69 +151,52 @@ namespace FluidScript.Compiler
             var value = node.Right.Accept(this);
             var left = node.Left;
             string name = null;
-            object obj = Target;
-            Binders.IBinder binder = null;
+            object obj = null;
             ExpressionType nodeType = left.NodeType;
             Type type = node.Right.Type;
+            Binders.IBinder binder = null;
             if (nodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)left;
                 name = exp.Name;
-                if (locals.TryLookVariable(name, out LocalVariable variable))
+                if (locals.TryFindVariable(name, out LocalVariable variable))
                 {
-                    locals.Update(variable, value);
+                    locals[variable.Index] = value;
                     node.Type = variable.Type;
                     return value;
                 }
-                else if (exp.Binder is null && TypeUtils.TryFindMember(Target.GetType(), name, out binder))
+                binder = exp.Binder;
+                if (binder is null)
                 {
+                    if (m_target != null && TypeUtils.TryFindMember(m_target.GetType(), name, TypeUtils.AnyPublic, out binder))
+                    {
+                        exp.Target = m_target;
+                    }
+                    else if (TypeUtils.TryFindMember(GlobalType, name, TypeUtils.AnyPublic, out binder))
+                    {
+                        exp.Target = m_global;
+                    }
+                    else
+                    {
+                        //not found, add to global
+                        locals.InsertAtRoot(name, node.Right.Type, value);
+                        node.Type = type;
+                        return value;
+                    }
                     exp.Binder = binder;
                 }
-                else
-                {
-                    //not found, add to global
-                    locals.InsertAtRoot(name, node.Right.Type, value);
-                    node.Type = type;
-                    return value;
-                }
+                obj = exp.Target;
             }
             else if (nodeType == ExpressionType.MemberAccess)
             {
                 var exp = (MemberExpression)left;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                if (exp.Binder is null && TypeUtils.TryFindMember(exp.Target.Type, name, out binder))
-                    exp.Binder = binder;
-            }
-            else if (nodeType == ExpressionType.Indexer)
-            {
-                var exp = (IndexExpression)left;
-                obj = exp.Target.Accept(this);
-                if (obj == null)
-                    ExecutionException.ThrowNullError(exp.Target, node);
-                var args = exp.Arguments.Map(arg => arg.Accept(this)).AddLast(value);
-                if (exp.Setter == null)
+                if (binder is null && TypeUtils.TryFindMember(exp.Target.Type, name, TypeUtils.AnyPublic, out binder))
                 {
-                    var indexers = exp.Target.Type
-                    .GetMember("set_Item", System.Reflection.MemberTypes.Method, TypeUtils.Any);
-                    var indexer = TypeHelpers.BindToMethod(indexers, args, out Binders.ArgumentConversions conversions);
-                    if (indexer == null)
-                        ExecutionException.ThrowMissingIndexer(exp.Target.Type, "set", exp.Target, node);
-
-                    exp.Conversions = conversions;
-                    exp.Setter = indexer;
-                    // ok to be node.Right.Type instead of indexer.GetParameters().Last().ParameterType
-                    // return type with be last argument
-                    Binders.Conversion valueBind = conversions[args.Length - 1];
-                    node.Type = (valueBind == null) ? node.Right.Type : valueBind.Type;
+                    exp.Binder = binder;
                 }
-                exp.Conversions.Invoke(ref args);
-                exp.Setter.Invoke(obj, args);
-                return value;
-            }
-            if (binder == null)
-            {
-                if (obj is IMetaObjectProvider runtime)
+                else if (obj is IMetaObjectProvider runtime)
                 {
                     //todo binder for dynamic
                     var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
@@ -196,19 +204,25 @@ namespace FluidScript.Compiler
                     node.Type = result.Type;
                     return value;
                 }
+                binder = exp.Binder;
+
+            }
+            else if (nodeType == ExpressionType.Indexer)
+            {
+                return AssignIndexer(node, value);
+            }
+            if (binder == null)
+            {
+                // obj type will be only for member expression so no problem
+                ExecutionException.ThrowMissingMember(obj.GetType(), name, node.Left, node);
+            }
+            if (!TypeUtils.AreReferenceAssignable(binder.Type, type))
+            {
+                if (TypeUtils.TryImplicitConvert(type, binder.Type, out System.Reflection.MethodInfo method))
+                    // implicit casting
+                    value = method.Invoke(null, new object[] { value });
                 else
-                {
-                    ExecutionException.ThrowMissingMember(obj.GetType(), name, node.Left, node);
-                }
-            }
-            if (!TypeUtils.AreReferenceAssignable(binder.Type, type) && TypeUtils.TryImplicitConvert(type, binder.Type, out System.Reflection.MethodInfo method))
-            {
-                // implicit casting
-                value = method.Invoke(null, new object[] { value });
-            }
-            else
-            {
-                ExecutionException.ThrowInvalidCast(binder.Type, node);
+                    ExecutionException.ThrowInvalidCast(binder.Type, node);
             }
             binder.Set(obj, value);
             node.Type = binder.Type;
@@ -235,7 +249,7 @@ namespace FluidScript.Compiler
             {
                 var exp = (NameExpression)target;
                 name = exp.Name;
-                if (locals.TryLookVariable(name, out LocalVariable variable))
+                if (locals.TryFindVariable(name, out LocalVariable variable))
                 {
                     var refer = locals[variable.Index] as Delegate;
                     if (refer is null)
@@ -251,11 +265,13 @@ namespace FluidScript.Compiler
                 else
                 {
                     obj = Target;
-                    var type = obj.GetType();
-                    method = TypeHelpers.FindMethod(name, type, args, out conversions);
-                    if (method == null)
+                    var type = GlobalType;
+                    if (m_target != null && TypeHelpers.TryFindMethod(name, m_target.GetType(), args, out method, out conversions))
+                        exp.Binder = new Binders.FieldBinder(ClassTargetField);
+                    else if (TypeHelpers.TryFindMethod(name, type, args, out method, out conversions))
+                        exp.Binder = new Binders.FieldBinder(GlobalTargetField);
+                    else
                         ExecutionException.ThrowMissingMethod(type, name, node);
-                    exp.Binder = new Binders.FieldBinder(TargetField);
                     // exp.Type not resolved
                 }
             }
@@ -264,8 +280,7 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)target;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                method = TypeHelpers.FindMethod(name, exp.Target.Type, args, out conversions);
-                if (method == null)
+                if (TypeHelpers.TryFindMethod(name, exp.Target.Type, args, out method, out conversions) == false)
                 {
                     if (obj is IMetaObjectProvider runtime)
                     {
@@ -316,14 +331,14 @@ namespace FluidScript.Compiler
         }
         #endregion
 
-
         /// <inheritdoc/>
         public override object VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
             if (node.Binder == null)
             {
-                if (TypeUtils.TryFindMember(node.Target.Type, node.Name, out Binders.IBinder binder) == false && target is IMetaObjectProvider runtime)
+                if (TypeUtils.TryFindMember(node.Target.Type, node.Name, TypeUtils.AnyPublic, out Binders.IBinder binder) == false
+                    && target is IMetaObjectProvider runtime)
                 {
                     binder = runtime.GetMetaObject().BindGetMember(node.Name);
                     if (binder is null)
@@ -332,7 +347,7 @@ namespace FluidScript.Compiler
                         return null;
                     }
                 }
-                if (binder is null && target is null)
+                if (binder is null)
                     // target null member cannot be invoked
                     ExecutionException.ThrowNullError(node);
                 node.Binder = binder;
@@ -345,29 +360,39 @@ namespace FluidScript.Compiler
         public override object VisitMember(NameExpression node)
         {
             string name = node.Name;
-            object obj = Target;
-            Binders.IBinder binder;
             if (node.Binder == null)
             {
-                if (locals.TryLookVariable(name, out LocalVariable variable))
+                Binders.IBinder binder;
+                if (locals.TryFindVariable(name, out LocalVariable variable))
                 {
                     if (variable.Type == null)
                         throw new Exception("value not initalized");
                     binder = new Binders.RuntimeVariableBinder(variable, locals);
+                    goto done;
                 }
-                else if(TypeUtils.TryFindMember(obj.GetType(), name, out binder) == false && obj is IMetaObjectProvider provider)
+                else if (m_target != null)
                 {
-                    // If class level not fount find in runtime
-                    binder = provider.GetMetaObject().BindGetMember(name);
+                    var target = m_target;
+                    if (TypeUtils.TryFindMember(target.GetType(), name, TypeUtils.AnyPublic, out binder))
+                    {
+                        node.Target = target;
+                        goto done;
+                    }
                 }
-                if (binder is null)
+                if (TypeUtils.TryFindMember(GlobalType, name, TypeUtils.AnyPublic, out binder))
+                {
+                    node.Target = m_global;
+                }
+                else
                 {
                     node.Type = TypeProvider.ObjectType;
                     return null;
                 }
+            done:
                 node.Binder = binder;
                 node.Type = binder.Type;
             }
+            var obj = node.Target;
             return node.Binder.Get(obj);
         }
 
@@ -382,7 +407,7 @@ namespace FluidScript.Compiler
         {
             object value = node.Value?.Accept(this);
             Type varType = value is null ? node.VariableType?.GetType(TypeProvider.Default) ?? TypeProvider.ObjectType : value.GetType();
-            locals.Create(node.Name, varType, value);
+            locals.DeclareVariable(node.Name, varType, value);
             return value;
         }
 
@@ -488,7 +513,6 @@ namespace FluidScript.Compiler
                     }
                 }
             }
-
         }
 
         ///<inheritdoc/>

@@ -55,7 +55,7 @@ namespace FluidScript.Compiler.Emit
         }
 
 
-#if NET40
+#if NETFRAMEWORK
         /// <summary>
         /// Debug Document writter
         /// </summary>
@@ -77,7 +77,7 @@ namespace FluidScript.Compiler.Emit
         /// <param name="span"> The start and end positions which define the sequence point. </param>
         public void MarkSequencePoint(Debugging.TextSpan span)
         {
-#if NET40
+#if NETFRAMEWORK
             MarkSequencePoint(DebugDoument, span);
 #endif
         }
@@ -110,7 +110,7 @@ namespace FluidScript.Compiler.Emit
         public void PushBreakOrContinueInfo(string[] labels, Emit.ILLabel breakTarget, Emit.ILLabel continueTarget, bool labelledOnly)
         {
             if (breakTarget == null)
-                throw new System.ArgumentNullException(nameof(breakTarget));
+                throw new ArgumentNullException(nameof(breakTarget));
             if (labels != null && labels.Length > 0)
             {
                 foreach (var label in labels)
@@ -318,6 +318,7 @@ namespace FluidScript.Compiler.Emit
         /// <summary>
         /// Get Declared local variable
         /// </summary>
+        /// Problem when scope
         public ILLocalVariable GetLocalVariable(string name)
         {
             if (LocalVariables != null)
@@ -481,7 +482,8 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitArrayLiteral(ArrayLiteralExpression node)
         {
             var type = node.ArrayType != null ? node.ArrayType.GetType(TypeProvider) : typeof(object);
-            node.Type = type.MakeArrayType();
+            node.Type = typeof(Collections.List<>).MakeGenericType(type);
+            node.ElementType = type;
             if (node.Arguments != null)
             {
                 var types = node.Arguments.Map(arg => arg.Accept(this).Type);
@@ -500,17 +502,20 @@ namespace FluidScript.Compiler.Emit
                 node.Constructor = node.Type.GetConstructor(TypeUtils.PublicInstance, null, new Type[0], null);
             }
             var items = node.Expressions;
-            var arrayConversions = new ArgumentConversions(items.Length);
-            for (int index = 0; index < items.Length; index++)
+            if (items.Count > 0)
             {
-                Expression expression = items[index];
-                var value = expression.Accept(this);
-                if (!TypeUtils.AreReferenceAssignable(type, expression.Type) && TypeUtils.TryImplicitConvert(expression.Type, type, out System.Reflection.MethodInfo implicitCall))
+                var arrayConversions = new ArgumentConversions(items.Count);
+                for (int index = 0; index < items.Count; index++)
                 {
-                    arrayConversions.Insert(index, new ParamConversion(index, implicitCall));
+                    Expression expression = items[index];
+                    var value = expression.Accept(this);
+                    if (!TypeUtils.AreReferenceAssignable(type, expression.Type) && TypeUtils.TryImplicitConvert(expression.Type, type, out System.Reflection.MethodInfo implicitCall))
+                    {
+                        arrayConversions.Insert(index, new ParamConversion(index, implicitCall));
+                    }
                 }
+                node.ArrayConversions = arrayConversions;
             }
-            node.ArrayConversions = arrayConversions;
             return node;
         }
 
@@ -556,12 +561,6 @@ namespace FluidScript.Compiler.Emit
             node.Binder = binder;
             node.Type = binder.Type;
             return node;
-        }
-
-        bool HasMethod(System.Reflection.MethodInfo m, string filter)
-        {
-            var data = (Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
-            return data != null ? data.Match(filter) : m.Name.Equals(filter);
         }
 
         /// <inheritdoc/>

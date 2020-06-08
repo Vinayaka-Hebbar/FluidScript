@@ -219,6 +219,18 @@
             false.
             </returns>
         </member>
+        <member name="M:FluidScript.Date.AddTicks(FluidScript.Long)">
+            <summary>
+            Returns a new System.DateTime that adds the specified number of ticks to the
+            value of this instance.
+            </summary>
+            <param name="value">A number of 100-nanosecond ticks. The value parameter can be positive or negative.</param>
+            <returns>An object whose value is the sum of the date and time represented by this instance
+             and the time represented by value.</returns>
+             <exception cref="T:System.ArgumentOutOfRangeException">
+             The resulting System.DateTime is less than System.DateTime.MinValue or greater
+             than System.DateTime.MaxValue.</exception>
+        </member>
         <member name="T:FluidScript.FSObject">
             <inheritdoc/>
         </member>

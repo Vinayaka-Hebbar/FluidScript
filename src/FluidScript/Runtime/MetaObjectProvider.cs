@@ -4,7 +4,7 @@
     {
         private readonly DynamicObject m_value;
 
-        internal MetaObjectProvider(DynamicObject value)
+        public MetaObjectProvider(DynamicObject value)
         {
             m_value = value;
         }
@@ -61,7 +61,8 @@
             binders = new Compiler.Binders.ArgumentConversions(args.Length);
             if (m_value.TryGetMember(name, out LocalVariable variable))
             {
-                if (m_value[variable.Index] is System.Delegate refer)
+                System.Runtime.CompilerServices.IRuntimeVariables runtime = m_value;
+                if (runtime[variable.Index] is System.Delegate refer)
                 {
                     System.Reflection.MethodInfo m = refer.Method;
                     // only static method can allowed

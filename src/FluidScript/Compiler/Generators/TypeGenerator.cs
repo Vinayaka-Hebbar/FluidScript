@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Type BaseType { get; }
 
-        public IScriptSource Source
+        public ITextSource Source
         {
             get;
             set;
@@ -106,7 +106,7 @@ namespace FluidScript.Compiler.Generators
             return _builder.CreateType();
 #endif
         }
-#if NET40
+#if NETFRAMEWORK
         public System.Diagnostics.SymbolStore.ISymbolDocumentWriter CreateDocumentWriter()
         {
             return assemblyGen.DefineDocument(Source.Path);

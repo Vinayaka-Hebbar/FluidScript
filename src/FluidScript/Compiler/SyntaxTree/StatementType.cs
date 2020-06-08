@@ -3,9 +3,7 @@
     public enum StatementType
     {
         Empty = 0,
-        Declaration = 15,
-        Block = 16,
-        Function = 17,
+        Declaration = 18,
         Expression = 36,
         Return = 37,
         Throw = 38,
@@ -19,6 +17,9 @@
         Class = 45,
         Labeled = 50,
         Break = 51,
-        Continue = 52
+        Continue = 52,
+
+        Block = 53,
+        Function = 54,
     }
 }

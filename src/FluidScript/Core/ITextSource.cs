@@ -2,7 +2,7 @@
 
 namespace FluidScript.Compiler
 {
-    public interface IScriptSource : IDisposable
+    public interface ITextSource : IDisposable
     {
         string Path { get; }
 
@@ -12,7 +12,7 @@ namespace FluidScript.Compiler
 
         bool CanAdvance { get; }
 
-        Compiler.Debugging.TextPosition CurrentPosition { get; }
+        Debugging.TextPosition LineInfo { get; }
 
         /// <summary>
         /// Read next char
@@ -29,6 +29,17 @@ namespace FluidScript.Compiler
         void NextLine();
 
         void SeekTo(long pos);
+
+        /// <summary>
+        /// Skip current pos to char <paramref name="c"/>
+        /// </summary>
+        /// <param name="c">character to move pos</param>
+        void SkipTo(char c);
+        /// <summary>
+        /// Skip the specified <paramref name="c"/> values
+        /// </summary>
+        /// <param name="c">the charecters to skip</param>
+        void Skip(char[] c);
 
         /// <summary>
         /// Revert to pos-1

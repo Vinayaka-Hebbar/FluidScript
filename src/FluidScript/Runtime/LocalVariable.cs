@@ -7,7 +7,7 @@ namespace FluidScript.Runtime
 #endif
         struct LocalVariable : Compiler.Emit.ILocalVariable, System.IEquatable<LocalVariable>
     {
-        internal static readonly LocalVariable Empty = new LocalVariable(string.Empty, null, -1, 0);
+        internal static readonly LocalVariable Empty = new LocalVariable(string.Empty, null, -1, -1);
 
         public string Name { get; }
 
@@ -15,14 +15,14 @@ namespace FluidScript.Runtime
 
         public System.Type Type { get; }
 
-        readonly int HashCode;
+        readonly int hashCode;
 
         internal LocalVariable(string name, System.Type type, int index, int hashCode)
         {
             Name = name;
             Type = type;
-            HashCode = hashCode;
             Index = index;
+            this.hashCode = hashCode;
         }
 
         public override bool Equals(object obj)
@@ -43,7 +43,12 @@ namespace FluidScript.Runtime
 
         public override int GetHashCode()
         {
-            return HashCode;
+            return hashCode;
+        }
+
+        public override string ToString()
+        {
+            return $"{Name}:{Type}";
         }
 
         public bool Equals(LocalVariable other)

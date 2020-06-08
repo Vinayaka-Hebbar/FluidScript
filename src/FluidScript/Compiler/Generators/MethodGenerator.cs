@@ -12,9 +12,9 @@ namespace FluidScript.Compiler.Generators
         protected IList<AttributeGenerator> _CustomAttributes;
 
         private readonly System.Reflection.MethodInfo methodInfo;
-        internal readonly System.Type Declaring;
+        internal readonly Type Declaring;
 
-        public BaseMethodGenerator(System.Reflection.MethodInfo method, Emit.ParameterInfo[] parameters, Type declaring)
+        public BaseMethodGenerator(System.Reflection.MethodInfo method, ParameterInfo[] parameters, Type declaring)
         {
             Name = method.Name;
             methodInfo = method;
@@ -92,7 +92,6 @@ namespace FluidScript.Compiler.Generators
                 return Provider.GetType(typeName);
             return TypeProvider.Default.GetType(typeName.FullName);
         }
-
 
         public override object[] GetCustomAttributes(bool inherit)
         {
@@ -207,8 +206,7 @@ namespace FluidScript.Compiler.Generators
 
         internal void EmitParameterInfo()
         {
-
-#if NET40 || NETSTANDARD
+#if NETFRAMEWORK || NETSTANDARD
             foreach (var para in Parameters)
             {
                 _builder.DefineParameter(para.Index, System.Reflection.ParameterAttributes.In, para.Name);

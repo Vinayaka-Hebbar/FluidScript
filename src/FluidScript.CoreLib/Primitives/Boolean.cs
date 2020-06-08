@@ -3,8 +3,8 @@
     /// <summary>
     /// Represents a Boolean value.
     /// </summary>
-    [System.Serializable]
     [Runtime.Register(nameof(Boolean))]
+    [System.Serializable]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
@@ -22,7 +22,7 @@
         /// </summary>
         public static readonly Boolean False = new Boolean(false);
 
-        [System.Diagnostics.DebuggerBrowsable(0)]
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         internal readonly bool m_value;
 
         /// <summary>

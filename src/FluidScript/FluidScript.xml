@@ -4,9 +4,9 @@
         <name>FluidScript</name>
     </assembly>
     <members>
-        <member name="T:FluidScript.Compiler.Binders.ArgumentConversions">
+        <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Backup">
             <summary>
-            Argument convert list
+            Save the position
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Recycle">
@@ -15,38 +15,19 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Backup">
+        <member name="T:FluidScript.Compiler.Binders.RuntimeVariableBinder">
             <summary>
-            Save the position
+            IL generator for <see cref="T:FluidScript.Compiler.RuntimeVariables"/>
             </summary>
-        </member>
-        <member name="T:FluidScript.Compiler.Binders.ArgumentConversions.Enumerator">
-            <summary>
-            Enumerates the elements of a <see cref="T:FluidScript.Compiler.Binders.ArgumentConversions"/>.
-            </summary>
-        </member>
-        <member name="P:FluidScript.Compiler.Binders.ArgumentConversions.Enumerator.Current">
-            <summary>
-            Gets the element at the current position of the enumerator.
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Enumerator.Dispose">
-            <summary>
-            Releases all resources used by the <see cref="T:System.Collections.Generic.List`1"/>.Enumerator.
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Enumerator.MoveNext">
-            <summary>
-            Advances the enumerator to the next element of the <see cref="T:System.Collections.Generic.List`1"/>.
-            </summary>
-            <returns>
-            true if the enumerator was successfully advanced to the next element; false if
-            the enumerator has passed the end of the collection.
-            </returns>
         </member>
         <member name="T:FluidScript.Compiler.Binders.Conversion">
             <summary>
             Operator overload conversion
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Binders.Conversion.next">
+            <summary>
+            case when Int32 -> FluidScript.Integer and FluidScript.Double to double ex: int32 * FluidScript.Double
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.Binders.Conversion.#ctor(System.Int32)">
@@ -124,21 +105,6 @@
             Gets the ending column number of this range.
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.LanguageType">
-            <summary>
-            Gets the language type GUID for the symbol store.
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.LanguageVendor">
-            <summary>
-            Gets the language vendor GUID for the symbol store.
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.DocumentType">
-            <summary>
-            Gets the document type GUID for the symbol store.
-            </summary>
-        </member>
         <member name="T:FluidScript.Compiler.Emit.ILGenerator">
             <summary>
             Represents a generator of CIL bytes.
@@ -180,7 +146,18 @@
         </member>
         <member name="M:FluidScript.Compiler.Emit.ILGenerator.Branch(FluidScript.Compiler.Emit.ILLabel)">
             <summary>
-  .Emit.ILLabel)">
+            Unconditionally branches to the given label.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfZero(FluidScript.Compiler.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the value on the top of the stack is zero, false or
+            null.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfNotZero(FluidScript.Compiler.Emit.ILLabel)">
             <summary>
             Branches to the given label if the value on the top of the stack is non-zero, true or
             non-null.
@@ -253,16 +230,6 @@
         <member name="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfGreaterThanOrEqualUnsigned(FluidScript.Compiler.Emit.ILLabel)">
             <summary>
             Branches to the given label if the first value on the stack is greater than or equal to
-            the second value on the stacknOrEqual(FluidScript.Compiler.Emit.ILLabel)">
-            <summary>
-            Branches to the given label if the first value on the stack is greater than or equal to
-            the second value on the stack.
-            </summary>
-            <param name="label"> The label to branch to. </param>
-        </member>
-        <member name="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfGreaterThanOrEqualUnsigned(FluidScript.Compiler.Emit.ILLabel)">
-            <summary>
-            Branches to the given label if the first value on the stack is greater than or equal to
             the second value on the stack.  If the operands are integers then they are treated as
             if they are unsigned.  If the operands are floating point numbers then a NaN value will
             trigger a branch.
@@ -270,6 +237,16 @@
             <param name="label"> The label to branch to. </param>
         </member>
         <member name="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfLessThan(FluidScript.Compiler.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is less than the second
+            value on the stack.
+            </summary>
+            <param name="label"> The label to branch to. </param>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfLessThanUnsigned(FluidScript.Compiler.Emit.ILLabel)">
+            <summary>
+            Branches to the given label if the first value on the stack is less than the second
+            value me="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfLessThan(FluidScript.Compiler.Emit.ILLabel)">
             <summary>
             Branches to the given label if the first value on the stack is less than the second
             value on the stack.
@@ -322,7 +299,19 @@
             <param name="name"> The name of the local variable. Can be <c>null</c>. </param>
             <returns> A new local variable. </returns>
         </member>
-        <member name="M:FluidScript.Compiler.Emit.ILGenerator.LoadVariable(FluidScript.Compiler.Emit.ILript.Compiler.Emit.ILGenerator.StoreVariable(FluidScript.Compiler.Emit.ILLocalVariable)">
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.LoadVariable(FluidScript.Compiler.Emit.ILLocalVariable)">
+            <summary>
+            Pushes the value of the given variable onto the stack.
+            </summary>
+            <param name="variable"> The variable whose value will be pushed. </param>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.LoadAddressOfVariable(FluidScript.Compiler.Emit.ILLocalVariable)">
+            <summary>
+            Pushes the address of the given variable onto the stack.
+            </summary>
+            <param name="variable"> The variable whose address will be pushed. </param>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.StoreVariable(FluidScript.Compiler.Emit.ILLocalVariable)">
             <summary>
             Pops the value from the top of the stack and stores it in the given local variable.
             </summary>
@@ -389,18 +378,6 @@
         <member name="M:FluidScript.Compiler.Emit.ILGenerator.LoadInt32(System.Int32)">
             <summary>
             Pushes a int constant value onto the stack.
-            </summary>
-            <param name="value"> The 32 bit integer to push onto the stack. </param>
-        </member>
-        <member name="M:FluidScript.Compiler.Emit.ILGenerator.LoadInt32(System.UInt32)">
-            <summary>
-            Pushes a unsigned int constant value onto the stack.
-            </summary>
-            <param name="value"> The 32 bit unsigned integer to push onto the stack. </param>
-        </member>
-        <member name="M:FluidScript.Compiler.Emit.ILGenerator.LoadInt64(System.Int64)">
-            <summary>
-            Pushes a long constant value onto lue onto the stack.
             </summary>
             <param name="value"> The 32 bit integer to push onto the stack. </param>
         </member>
@@ -793,7 +770,20 @@
         <member name="M:FluidScript.Compiler.Emit.ILGenerator.ReThrow">
             <summary>
             Re-throws the current exception.
-    tem.Type)">
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.BegineExceptionBlock">
+            <summary>
+            Begins a try-catch-finally block.  After issuing this instruction any following
+            instructions are conceptually within the try block.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.EndExceptionBlock">
+            <summary>
+            Ends a try-catch-finally block.
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.BegineCatchBlock(System.Type)">
             <summary>
             Begins a catch block.  BeginExceptionBlock() must have already been called.
             </summary>
@@ -870,22 +860,6 @@
             <summary>
             Represents a local variable in CIL code.
             </summary>
-        </memname="endColumn"> The column in the line where the sequence point ends. </param>
-        </member>
-        <member name="M:FluidScript.Compiler.Emit.ILGenerator.NoOperation">
-            <summary>
-            Does nothing.
-            </summary>
-        </member>
-        <member name="T:FluidScript.Compiler.Emit.ILLabel">
-            <summary>
-            Represents a label in IL code.
-            </summary>
-        </member>
-        <member name="T:FluidScript.Compiler.Emit.ILLocalVariable">
-            <summary>
-            Represents a local variable in CIL code.
-            </summary>
         </member>
         <member name="P:FluidScript.Compiler.Emit.ILLocalVariable.Index">
             <summary>
@@ -893,23 +867,7 @@
             </summary>
         </member>
         <member name="P:FluidScript.Compiler.Emit.ILLocalVariable.Type">
-            <summary>
-            Gets the type of the local variable.
-            </summary>
-        </member>
-        <member name="P:FluidScript.Compiler.Emit.ILLocalVariable.Name">
-            <summary>
-            Gets the local variable name, or <c>null</c> if a name was not provided.
-            </summary>
-        </member>
-        <member name="T:FluidScript.Compiler.Emit.IMemberGenerator">
-            <summary>
-            Member Generate
-            </summary>
-        </member>
-        <member name="T:FluidScript.Compiler.Emit.MethodBodyGenerator">
-            <summary>
-            Method body IL Generator
+            or
             </summary>
         </member>
         <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.SyntaxTree">
@@ -920,11 +878,6 @@
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.#ctor(FluidScript.Compiler.Emit.IMethodBaseGenerator,System.Reflection.Emit.ILGenerator,System.Boolean)">
             <summary>
             Initializes new instance of <see cref="T:FluidScript.Compiler.Emit.MethodBodyGenerator"/>
-            </summary>
-        </member>
-        <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.DebugDoument">
-            <summary>
-            Debug Document writter
             </summary>
         </member>
         <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.Source">
@@ -975,6 +928,18 @@
             <returns> The break target for the statement with the given label. </returns>
         </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.GetContinueTarget(System.String)">
+            <summary>
+            Returns the continue target for the statement with the given label, if one is provided, or
+            the top-most continue target otherwise.
+            </summary>
+            <param name="labelName"> The label associated with the continue target.  Can be
+            <c>null</c>. </param>
+            <returns> The continue target for the statement with the given label. </returns>
+        </member>
+        <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.BreakOrContinueStackSize">
+            <summary>
+            Gets the number of available break or continue targets.  Used to support break or
+            continue statements within finally b      <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.GetContinueTarget(System.String)">
             <summary>
             Returns the continue target for the statement with the given label, if one is provided, or
             the top-most continue target otherwise.
@@ -1037,6 +1002,7 @@
             <summary>
             Get Declared local variable
             </summary>
+            Problem when scope
         </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.EmitBody">
             <summary>Creates IL Code</summary>
@@ -1491,7 +1457,22 @@
         <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetMethodImpl(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[])">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetMethods(System.ReflpeGenerator.GetPropertyImpl(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type,System.Type[],System.Reflection.ParameterModifier[])">
+        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetMethods(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetMember(System.String,System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetNestedType(System.String,System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetNestedTypes(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetProperties(System.Reflection.BindingFlags)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetPropertyImpl(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type,System.Type[],System.Reflection.ParameterModifier[])">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.Generators.TypeGenerator.HasElementTypeImpl">
@@ -1523,6 +1504,11 @@
         </member>
         <member name="M:FluidScript.Compiler.Generators.TypeGenerator.IsDefined(System.Type,System.Boolean)">
             <inheritdoc/>
+        </member>
+        <member name="F:FluidScript.Compiler.Lexer.TokenType.Parenthesized">
+            <summary>
+            ()
+            </summary>
         </member>
         <member name="F:FluidScript.Compiler.Lexer.TokenType.AnonymousMethod">
             <summary>
@@ -1569,9 +1555,14 @@
             !
             </summary>
         </member>
-        <member name="T:FluidScript.Compiler.Parser">
+        <member name="F:FluidScript.Compiler.Lexer.TokenType.BackSlash">
             <summary>
-            Syntax Visiitor which will tokenizes the text
+            /
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Lexer.TokenType.ForwardSlash">
+            <summary>
+            \
             </summary>
         </member>
         <member name="F:FluidScript.Compiler.Parser.Source">
@@ -1584,44 +1575,14 @@
             Token type
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.Parser.modifiers">
-            <summary>
-            current modifiers
-            </summary>
-        </member>
         <member name="F:FluidScript.Compiler.Parser.Settings">
             <summary>
             Parse settings
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.ParseParser">
+        <member name="M:FluidScript.Compiler.Parser.#ctor(FluidScript.Compiler.ITextSource,FluidScript.Compiler.ParserSettings)">
             <summary>
-            Syntax Visiitor which will tokenizes the text
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Parser.Source">
-            <summary>
-            Source text
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Parser.TokenType">
-            <summary>
-            Token type
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Parser.modifiers">
-            <summary>
-            current modifiers
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Parser.Settings">
-            <summary>
-            Parse settings
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Parser.#ctor(FluidScript.Compiler.IScriptSource,FluidScript.Compiler.ParserSettings)">
-            <summary>
-            Initializes new <see cref="T:FluidScript.Compiler.Parser"/>
+            Initializes new <see cref="T:FluidScript.Compiler.ScriptParser"/>
             </summary>
             <param name="source"></param>
             <param name="settings"></param>
@@ -1652,30 +1613,17 @@
             Token type
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.Parser.VisitMembers">
+        <member name="M:FluidScript.Compiler.Parser.GetStatement">
             <summary>
-            Visit members declaration
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/> for <see cref="F:FluidScript.Compiler.Parser.Source"/>
             </summary>
+            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/></returns>
         </member>
-        <member name="M:FluidScript.Compiler.Parser.VisitMember">
+        <member name="M:FluidScript.Compiler.Parser.GetExpression">
             <summary>
-            Visit member declaration
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/> for <see cref="F:FluidScript.Compiler.Parser.Source"/>
             </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Parser.VisitTypeDeclaration">
-            <summary>
-            Type declaration
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Parser.VisitFieldDeclaration">
-            <summary>
-            Field declaration
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Parser.VisitFunctionDeclaration">
-            <summary>
-            Function Declartion
-            </summary>
+            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/></returns>
         </member>
         <member name="M:FluidScript.Compiler.Parser.VisitStatement">
             <summary>
@@ -1741,11 +1689,6 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:FluidScript.Compiler.Parser.CheckExpectedIdentifier(FluidScript.Compiler.Lexer.IdentifierType)">
-            <summary>
-            Indicates <see cref="F:FluidScript.Compiler.Parser.TokenType"/> matches the <paramref name="expected"/>
-            </summary>
-        </member>
         <member name="M:FluidScript.Compiler.Parser.VisitLamdaExpression">
             <summary>
             Visit lamda expression ex:lamda()=>1;
@@ -1784,6 +1727,11 @@
             Skip tokens
             </summary>
         </member>
+        <member name="M:FluidScript.Compiler.Parser.Take(System.Int32)">
+            <summary>
+            Take specified chars
+            </summary>
+        </member>
         <member name="M:FluidScript.Compiler.Parser.VisitAnonymousObjectMembers">
             <summary>
             {x:1, add()=> {}}
@@ -1794,6 +1742,22 @@
             <summary>
             Visit local variable declaration
             </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Parser.GetStatement(System.String,FluidScript.Compiler.ParserSettings)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/> for <paramref name="text"/>
+            </summary>
+            <param name="text">Text to parse</param>
+            <param name="settings">Parser options if null will be default options</param>
+            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.Parser.GetExpression(System.String,FluidScript.Compiler.ParserSettings)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/> for <paramref name="text"/>
+            </summary>
+            <param name="text">Text to parse</param>
+            <param name="settings">Parser options if null will be default options</param>
+            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/></returns>
         </member>
         <member name="T:FluidScript.Compiler.RuntimeCompiler">
             <summary>
@@ -1807,10 +1771,7 @@
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.RuntimeCompiler.#ctor(System.Object)">
-            <summary>
-    alue stored in it</returns>
-        </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.Invoke(FluidScript.Compiler.SyntaxTree.Statement)">
+   .Statement,System.Object)">
             <summary>
             Evaluate the <paramref name="statement"/>
             </summary>
@@ -1818,7 +1779,7 @@
             <exception cref="T:System.NullReferenceException"/>
             <exception cref="T:System.MissingMethodException"/>
         </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.Invoke(FluidScript.Compiler.SyntaxTree.Expression)">
+        <member name="M:FluidScript.Compiler.RuntimeCompiler.Invoke(FluidScript.Compiler.SyntaxTree.Expression,System.Object)">
             <summary>
             Evaluate the <paramref name="expression"/>
             </summary>
@@ -1878,10 +1839,12 @@
             for long jump or break and continue
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.RuntimeVariables.TryLookVariable(System.String,Flr#VisitIf(FluidScript.Compiler.SyntaxTree.IfStatement)">
-            <inheritdoc/>
+        <member name="T:FluidScript.Compiler.RuntimeVariables">
+            <summary>
+            Provides local variables for runtime
+            </summary>
         </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitBreak(FluidScript.Compiler.SyntaxTree.BreakStatement)">
+        <member name="M:FluidScr name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitBreak(FluidScript.Compiler.SyntaxTree.BreakStatement)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitContinue(FluidScript.Compiler.SyntaxTree.ContinueStatement)">
@@ -1892,9 +1855,14 @@
             for long jump or break and continue
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.RuntimeVariables.TryLookVariable(System.String,FluidScript.Runtime.LocalVariable@)">
+        <member name="T:FluidScript.Compiler.RuntimeVariables">
             <summary>
-            Get Member of current context and parent context
+            Provides local variables for runtime
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.RuntimeVariables.TryFindVariable(System.String,FluidScript.Runtime.LocalVariable@)">
+            <summary>
+            Get variable in the scope
             </summary>
         </member>
         <member name="T:FluidScript.Compiler.ScriptCompiler">
@@ -1904,6 +1872,57 @@
         </member>
         <member name="M:FluidScript.Compiler.ScriptCompiler.VisitMember(FluidScript.Compiler.SyntaxTree.MemberExpression)">
             Member Visit
+        </member>
+        <member name="T:FluidScript.Compiler.ScriptParser">
+            <summary>
+            Syntax Visiitor which will tokenizes the text
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.ScriptParser.modifiers">
+            <summary>
+            current modifiers
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitMember">
+            <summary>
+            Visit member declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitMembers">
+            <summary>
+            Visit members declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitTypeDeclaration">
+            <summary>
+            Type declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitFieldDeclaration">
+            <summary>
+            Field declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitFunctionDeclaration">
+            <summary>
+            Function Declartion
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.ParseText(System.String,FluidScript.Compiler.ParserSettings)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/> for <paramref name="text"/>
+            </summary>
+            <param name="text">Text to parse</param>
+            <param name="settings">Parser options if null will be default options</param>
+            <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.ParseFile(System.String,FluidScript.Compiler.ParserSettings)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/> for file <paramref name="path"/>
+            </summary>
+            <param name="path">Text to parse</param>
+            <param name="settings">Parser options if null will be default options</param>
+            <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
         </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.Expression">
             <summary>
@@ -1915,23 +1934,7 @@
             Empty Expression
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.Expression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
-            <summary>
-            Optimizes expression for emit or others
-            </summary>
-            <typeparam name="TResult"></typeparam>
-            <param name="visitor"></param>
-            <returns></returns>
-        </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.Expression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator)">
-            <summary>
-            Generates IL code for <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/>
-            </summary>
-            <param name="generator"></param>
-        </member>
-        <member name="T:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression">
-            <summary>
-            Array literal &lt;<see cref="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ArrayType"/>&gt;[1,2]
+        <member name="M:Fluidlt;<see cref="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ArrayType"/>&gt;[1,2]
             </summary>
         </member>
         <member name="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.Expressions">
@@ -2053,7 +2056,7 @@
             Creates Identifier Expression
             </summary>
             <param name="name">Name of the Identifier</param>
-            <param name="opCode">Expression type</param>
+            <param name="expType">Expression type</param>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.ToString">
             <summary>
@@ -2101,14 +2104,14 @@
             method call
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.Block">
-            <summary>
-            array block initailization
-            </summary>
-        </member>
         <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.MemberAccess">
             <summary>
             .
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.Block">
+            <summary>
+            array block initailization
             </summary>
         </member>
         <member name="F:FluidScript.Compiler.SyntaxTree.ExpressionType.Circumflex">
@@ -2616,105 +2619,39 @@
             UnderlyingSystemType for <paramref name="typeCode"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.IScriptSource.ReadChar">
+        <member name="M:FluidScript.Compiler.ITextSource.ReadChar">
             <summary>
             Read next char
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.IScriptSource.PeekChar">
+        <member name="M:FluidScript.Compiler.ITextSource.PeekChar">
             <summary>
             Peek next char
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.IScriptSource.FallBack">
+        <member name="M:FluidScript.Compiler.ITextSource.SkipTo(System.Char)">
+            <summary>
+            Skip current pos to char <paramref name="c"/>
+            </summary>
+            <param name="c">character to move pos</param>
+        </member>
+        <member name="M:FluidScript.Compiler.ITextSource.Skip(System.Char[])">
+            <summary>
+            Skip the specified <paramref name="c"/> values
+            </summary>
+            <param name="c">the charecters to skip</param>
+        </member>
+        <member name="M:FluidScript.Compiler.ITextSource.FallBack">
             <summary>
             Revert to pos-1
             </summary>
             <returns>Current Char in the position</returns>
         </member>
-        <member name="T:FluidScript.GlobalObject">
-            <summary>
-            Global object for runtime
-            </summary>
+        <member name="M:FluidScript.Compiler.StreamSource.Skip(System.Char[])">
+            <inheritdoc/>
         </member>
-        <member name="P:FluidScript.GlobalObject.Instance">
-            <summary>
-            Global target for compilation
-            </summary>
-        </member>
-        <member name="P:FluidScript.GlobalObject.Runtime">
-            <summary>
-            Runtime Values
-            </summary>
-        </member>
-        <member name="T:FluidScript.ScriptParser">
-            <summary>
-            Generates SyntaxTree for text or file
-            </summary>
-        </member>
-        <member name="F:FluidScript.ScriptParser.Settings">
-            <summary>
-            Parse settings
-            </summary>
-        </member>
-        <member name="M:FluidScript.ScriptParser.#ctor">
-            <summary>
-            New <see cref="T:FluidScript.ScriptParser"/> instance
-            </summary>
-        </member>
-        <member name="M:FluidScript.ScriptParser.#ctor(FluidScript.Compiler.ParserSettings)">
-            <summary>
-            Initializes a new <see cref="T:FluidScript.ScriptParser"/>
-            </summary>
-        </member>
-        <member name="M:FluidScript.ScriptParser.GetStatement(System.String)">
-            <summary>
-            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/> for <paramref name="text"/>
-            </summary>
-            <param name="text">Text to parse</param>
-            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/></returns>
-        </member>
-        <member name="M:FluidScript.ScriptParser.GetExpression(System.String)">
-            <summary>
-            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/> for <paramref name="text"/>
-            </summary>
-            <param name="text">Text to parse</param>
-            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/></returns>
-        </member>
-        <member name="M:FluidScript.ScriptParser.GetStatement(System.String,FluidScript.Compiler.ParserSettings)">
-            <summary>
-            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/> for <paramref name="text"/>
-            </summary>
-            <param name="text">Text to parse</param>
-            <param name="settings">Parser options if null will be default options</param>
-            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Statement"/></returns>
-        </member>
-        <member name="M:FluidScript.ScriptParser.GetExpression(System.String,FluidScript.Compiler.ParserSettings)">
-            <summary>
-            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/> for <paramref name="text"/>
-            </summary>
-            <param name="text">Text to parse</param>
-            <param name="settings">Parser options if null will be default options</param>
-            <returns>Parse <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/></returns>
-        </member>
-        <member name="M:FluidScript.ScriptParser.ParseText(System.String)">
-            <summary>
-            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/> for <paramref name="text"/>
-            </summary>
-            <param name="text">Text to parse</param>
-            <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
-        </member>
-        <member name="M:FluidScript.ScriptParser.ParseFile(System.String)">
-            <summary>
-            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/> for file <paramref name="path"/>
-            </summary>
-            <param name="path">Text to parse</param>
-            <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
-        </member>
-        <member name="M:FluidScript.ScriptParser.Invoke(System.String)">
-            <summary>
-            Invoke text expression or statement
-            </summary>
+        <member name="M:FluidScript.Compiler.TextSource.Skip(System.Char[])">
+            <inheritdoc/>
         </member>
         <member name="T:FluidScript.Runtime.Closure">
             <summary>
@@ -2741,6 +2678,69 @@
             Replaces specific value if key exist
             </summary>
         </member>
+        <member name="T:FluidScript.Runtime.ICompileProvider">
+            <summary>
+            Compile provider for Expression
+            </summary>
+        </member>
+        <member name="T:FluidScript.GlobalObject">
+            <summary>
+            Global object for runtime
+            </summary>
+        </member>
+        <member name="P:FluidScript.GlobalObject.Instance">
+            <summary>
+            Global target for compilation
+            </summary>
+        </member>
+        <member name="M:FluidScript.GlobalObject.Print(System.Object)">
+            <summary>
+            Print specified object <paramref name="value"/>
+            </summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:FluidScript.GlobalObject.Length(System.Collections.IEnumerable)">
+            <summary>
+            Get the length of <paramref name="value"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.GlobalObject.Range(FluidScript.Integer,FluidScript.Integer)">
+            <summary>
+             Generates a sequence of integral numbers within a specified range.
+            </summary>
+            <param name="start">The value of the first integer in the sequence.</param>
+            <param name="count"> The number of sequential integers to generate.</param>
+            <returns>An <see cref="T:System.Collections.Generic.IEnumerable`1"/> in C# or IEnumerable(Of Int32) in Visual Basic that contains
+             a range of sequential integral numbers.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">count is less than 0.-or-start + count -1 is larger than System.Int32.MaxValue.</exception>
+        </member>
+        <member name="M:FluidScript.GlobalObject.Range(FluidScript.Integer,FluidScript.Integer,FluidScript.Integer)">
+            <summary>
+             Generates a sequence of integral numbers within a specified range.
+            </summary>
+            <param name="start">The value of the first integer in the sequence.</param>
+            <param name="count"> The number of sequential integers to generate.</param>
+            <param name="increment">The value of increment </param>
+            <returns>An <see cref="T:System.Collections.Generic.IEnumerable`1"/> in C# or IEnumerable (Of Int32) in Visual Basic that contains
+             a range of sequential integral numbers.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">count is less than 0.-or-start + count -1 is larger than System.Int32.MaxValue.</exception>
+        </member>
+        <member name="M:FluidScript.GlobalObject.ParseInt(FluidScript.String)">
+            <summary>
+            Converts String to <see cref="T:FluidScript.Integer"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.GlobalObject.ParseNumber(FluidScript.String)">
+            <summary>
+            Converts String to <see cref="T:FluidScript.Double"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Utils.TypeHelpers.FindGetIndexer(System.Type,System.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
+            Current Declared Indexer can get
+        </member>
+        <member name="M:FluidScript.Utils.TypeHelpers.FindSetIndexer(System.Type,System.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
+            Current Declared Indexer can get
+        </member>
         <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
             <summary>
             Returns true if the method's parameter types are reference assignable from
@@ -2753,10 +2753,22 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:FluidScript.Utils.TypeUtils.TryFindMember(System.Type,System.String,FluidScript.Compiler.Binders.IBinder@)">
+    </members>
+</doc>
+m.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
+            Current Declared Indexer can get
+        </member>
+        <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
             <summary>
-            Get property and fields of <paramref name="type"/> with name <paramref name="name"/>
+            Returns true if the method's parameter types are reference assignable from
+            the argument types, otherwise false.
+            
+            An example that can make the method return false is that 
+            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
+            returns a method with two double parameters, which doesn't match the provided
+            argument types.
             </summary>
+            <returns></returns>
         </member>
     </members>
 </doc>

@@ -9,7 +9,7 @@
             Declarations = declarations;
         }
 
-        public override void Create(Generators.TypeGenerator generator)
+        public override void Compile(Generators.TypeGenerator generator)
         {
             System.Reflection.FieldAttributes attrs = GetAttribute();
             foreach (var field in Declarations)

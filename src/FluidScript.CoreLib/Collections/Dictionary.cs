@@ -156,7 +156,6 @@ namespace FluidScript.Collections
 #endif // FEATURE_CORECLR
 
 #endif
-
         }
 
         /// <inheritdoc/>
@@ -191,8 +190,6 @@ namespace FluidScript.Collections
             value = default(TValue);
             return false;
         }
-
-        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int index)
         {

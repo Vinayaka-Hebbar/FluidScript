@@ -41,10 +41,10 @@ namespace FluidScript.Compiler.SyntaxTree
             else
                 returnType = typeof(object);
             var names = Parameters.Map(para => para.Name).AddFirst("closure");
-            int length = Parameters.Length;
+            int length = Parameters.Count;
             System.Type[] types = new System.Type[length];
             var parameters = new Emit.ParameterInfo[length];
-            for (int i = 0; i < Parameters.Length; i++)
+            for (int i = 0; i < Parameters.Count; i++)
             {
                 var para = Parameters[i];
                 System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.GetType(provider);

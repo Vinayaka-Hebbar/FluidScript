@@ -4,35 +4,15 @@ using System.Collections.Generic;
 
 namespace FluidScript.Compiler
 {
-    internal sealed class RuntimeVariables : Collections.DictionaryBase<LocalVariable, object>, IDictionary<string, object>, System.Runtime.CompilerServices.IRuntimeVariables
+    /// <summary>
+    /// Provides local variables for runtime
+    /// </summary>
+    public class RuntimeVariables : Collections.DictionaryBase<LocalVariable, object>, ILocalVariables
     {
         static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
 
         //keeps track of current locals
         VariableIndexList current;
-
-        internal RuntimeVariables(int capacity) : base(capacity, DefaultComparer)
-        {
-            current = new VariableIndexList(null, capacity);
-        }
-
-        internal RuntimeVariables() : base(0, DefaultComparer)
-        {
-            current = new VariableIndexList(null, 0);
-        }
-
-        public RuntimeVariables(IDictionary<string, object> locals) : base(locals.Count, DefaultComparer)
-        {
-            current = new VariableIndexList(null, locals.Count);
-            if (locals == null)
-            {
-                throw new System.ArgumentNullException(nameof(locals));
-            }
-            foreach (var item in locals)
-            {
-                Add(item.Key, item.Value);
-            }
-        }
 
         ICollection<string> IDictionary<string, object>.Keys
         {
@@ -62,16 +42,54 @@ namespace FluidScript.Compiler
             }
         }
 
+        internal RuntimeVariables(int capacity) : base(capacity, DefaultComparer)
+        {
+            current = new VariableIndexList(null, capacity);
+        }
+
+        internal RuntimeVariables() : base(0, DefaultComparer)
+        {
+            current = new VariableIndexList(null, 0);
+        }
+
+        public RuntimeVariables(IDictionary<string, object> locals) : base(locals.Count, DefaultComparer)
+        {
+            current = new VariableIndexList(null, locals.Count);
+            if (locals == null)
+            {
+                throw new System.ArgumentNullException(nameof(locals));
+            }
+            foreach (var item in locals)
+            {
+                Add(item.Key, item.Value);
+            }
+        }
+
+        public object this[int index]
+        {
+            get
+            {
+                if (index >= 0 && index < count) return entries[index].Value;
+                throw new System.IndexOutOfRangeException(index.ToString());
+            }
+            set
+            {
+                if (index >= 0 && index < count)
+                {
+                    entries[index].Value = value;
+                    version++;
+                    return;
+                }
+                throw new System.IndexOutOfRangeException(index.ToString());
+            }
+        }
+
         public object this[string key]
         {
             get
             {
                 var i = FindEntry(key);
-                if (i >= 0)
-                {
-                    return entries[i].Value;
-                }
-                return null;
+                return i >= 0 ? entries[i].Value : null;
             }
             set
             {
@@ -87,27 +105,33 @@ namespace FluidScript.Compiler
             }
         }
 
-        internal void Create(string name, System.Type type, object value)
+        public LocalVariable DeclareVariable(string name, System.Type type, object value)
         {
             if (name == null)
-            {
                 throw new System.NullReferenceException(nameof(name));
-            }
-            var key = Insert(name, type, value);
+            var key = Create(name, type, value);
             current.Store(key.Index);
+            return key;
         }
 
-        internal void InsertAtRoot(string name, System.Type type, object value)
+        public LocalVariable DeclareVariable<T>(string name, T value = default(T))
         {
             if (name == null)
-            {
                 throw new System.NullReferenceException(nameof(name));
-            }
-            var key = Insert(name, type, value);
+            var key = Create(name, typeof(T), value);
+            current.Store(key.Index);
+            return key;
+        }
+
+        protected internal void InsertAtRoot(string name, System.Type type, object value)
+        {
+            if (name == null)
+                throw new System.NullReferenceException(nameof(name));
+            var key = Create(name, type, value);
             current.StoreAtRoot(key.Index);
         }
 
-        internal LocalVariable Insert(string name, System.Type type, object value)
+        internal LocalVariable Create(string name, System.Type type, object value)
         {
             if (buckets == null) Initialize(0);
             int hashCode = name.GetHashCode() & 0x7FFFFFFF;
@@ -116,7 +140,7 @@ namespace FluidScript.Compiler
             {
                 if (entries[i].HashCode == hashCode && string.Equals(entries[i].Key.Name, name))
                 {
-                    throw new System.ArgumentException(string.Concat("Adding shadow variable ", name));
+                    throw new System.ArgumentException(string.Concat("Adding shadow variable '", name, '\''));
                 }
             }
             int index;
@@ -146,24 +170,7 @@ namespace FluidScript.Compiler
             return variable;
         }
 
-        internal void Update(LocalVariable key, object value)
-        {
-            int hashCode = key.GetHashCode();
-            int targetBucket = hashCode % buckets.Length;
-
-            for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
-            {
-                if (entries[i].HashCode == hashCode && Comparer.Equals(entries[i].Key, key))
-                {
-                    entries[i].Value = value;
-                    version++;
-                    return;
-                }
-            }
-            throw new System.Exception(string.Concat(key.Name, " not found in data"));
-        }
-
-        private int FindEntry(string key)
+        protected int FindEntry(string key)
         {
             if (buckets != null)
             {
@@ -177,9 +184,9 @@ namespace FluidScript.Compiler
         }
 
         /// <summary>
-        /// Get Member of current context and parent context
+        /// Get variable in the scope
         /// </summary>
-        internal bool TryLookVariable(string name, out LocalVariable variable)
+        public virtual bool TryFindVariable(string name, out LocalVariable variable)
         {
             var i = FindEntry(name);
             if (i >= 0)
@@ -191,20 +198,15 @@ namespace FluidScript.Compiler
             return false;
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return new Enumerator(this, Enumerator.KeyValuePair);
-        }
-
         internal
 #if LATEST_VS
             readonly
 #endif
             struct RuntimeScope : System.IDisposable
         {
-            private readonly RuntimeVariables locals;
+            readonly RuntimeVariables locals;
 
-            public RuntimeScope(RuntimeVariables locals) : this()
+            public RuntimeScope(RuntimeVariables locals)
             {
                 this.locals = locals;
                 locals.current = new VariableIndexList(locals.current, 0);
@@ -214,7 +216,7 @@ namespace FluidScript.Compiler
             {
                 var current = locals.current;
                 var entires = locals.entries;
-                foreach (var index in current.Entries)
+                foreach (var index in current.Entries())
                 {
                     locals.Remove(entires[index].Key);
                 }
@@ -223,15 +225,16 @@ namespace FluidScript.Compiler
         }
 
         #region IDictionary
+        
+        public void Add(string key, object value)
+        {
+            var type = value == null ? TypeProvider.ObjectType : value.GetType();
+            DeclareVariable(key, type, value);
+        }
+
         bool IDictionary<string, object>.ContainsKey(string key)
         {
             return FindEntry(key) >= 0;
-        }
-
-        public void Add(string key, object value)
-        {
-            var type = value == null ? Compiler.TypeProvider.ObjectType : value.GetType();
-            Create(key, type, value);
         }
 
         bool IDictionary<string, object>.Remove(string key)
@@ -305,6 +308,11 @@ namespace FluidScript.Compiler
         }
 
         public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this, Enumerator.KeyValuePair);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return new Enumerator(this, Enumerator.KeyValuePair);
         }

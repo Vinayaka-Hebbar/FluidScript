@@ -84,6 +84,6 @@ namespace FluidScript.Compiler
 
         internal static System.Exception ThrowArgumentMisMatch(params Node[] tree) => throw new ExecutionException(null, null, ArgumentMisMatch, tree);
 
-        internal static System.Exception ThrowInvalidCast(System.Type type, params Node[] tree) => throw new ExecutionException(null, null, InvalidCast, tree);
+        internal static System.Exception ThrowInvalidCast(System.Type type, params Node[] tree) => throw new ExecutionException(type, null, InvalidCast, tree);
     }
 }

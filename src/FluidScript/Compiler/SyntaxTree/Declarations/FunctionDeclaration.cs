@@ -25,13 +25,13 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public bool IsSetter => (Modifiers & Modifiers.Setter) == Modifiers.Setter;
 
-        public override void Create(Generators.TypeGenerator generator)
+        public override void Compile(Generators.TypeGenerator generator)
         {
             System.Type returnType;
             if (ReturnType != null)
                 returnType = ReturnType.GetType(generator);
             else
-                returnType = typeof(void);
+                returnType = TypeProvider.ObjectType;
             var parameters = Parameters.Map(para => para.GetParameterInfo(generator));
             var parameterTypes = parameters.Map(para => para.Type);
             if (IsGetter || IsSetter)
@@ -101,14 +101,14 @@ namespace FluidScript.Compiler.SyntaxTree
             generator.Add(methodGen);
         }
 
-        public System.Reflection.MethodInfo Create()
+        public System.Reflection.MethodInfo CreateMethod()
         {
             var provider = TypeProvider.Default;
             System.Type returnType;
             if (ReturnType != null)
                 returnType = ReturnType.GetType(provider);
             else
-                returnType = typeof(object);
+                returnType = TypeProvider.ObjectType;
             var parameters = Parameters.Map(para => para.GetParameterInfo(provider));
             var parameterTypes = parameters.Map(para => para.Type);
             var method = new System.Reflection.Emit.DynamicMethod(Name, returnType, parameterTypes);
@@ -133,6 +133,64 @@ namespace FluidScript.Compiler.SyntaxTree
             if ((Modifiers & Modifiers.Abstract) == Modifiers.Abstract)
                 attributes |= System.Reflection.MethodAttributes.Abstract;
             return attributes;
+        }
+
+        public System.Delegate Compile()
+        {
+            var visitor = ScriptCompiler.Default;
+            //pass scoped arguments // refer System.Linq.Expression.Compiler folder
+            var provider = TypeProvider.Default;
+            System.Type returnType;
+            if (ReturnType != null)
+                returnType = ReturnType.GetType(provider);
+            else
+                returnType = typeof(object);
+            var names = Parameters.Map(para => para.Name).AddFirst("closure");
+            int length = Parameters.Count;
+            System.Type[] types = new System.Type[length];
+            var parameters = new Emit.ParameterInfo[length];
+            for (int i = 0; i < Parameters.Count; i++)
+            {
+                var para = Parameters[i];
+                System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.GetType(provider);
+                parameters[i] = new Emit.ParameterInfo(para.Name, i + 1, type, para.IsVar);
+                types[i] = type;
+            }
+            // Emit First Argument
+            var lamdaVisit = new LamdaVisitor(names);
+            Body.Accept(lamdaVisit);
+            var parameterTypes = types.AddFirst(typeof(Runtime.Closure));
+            var method = new System.Reflection.Emit.DynamicMethod(Name, returnType, parameterTypes, true);
+
+            var methodGen = new Generators.DynamicMethodGenerator(method, parameters, null)
+            {
+                SyntaxBody = Body,
+                Provider = provider
+            };
+            methodGen.EmitParameterInfo();
+            var bodyGen = new Emit.MethodBodyGenerator(methodGen, method.GetILGenerator());
+            object[] values = new object[lamdaVisit.HoistedLocals.Count];
+            if (values.Length > 0)
+            {
+                int index = 0;
+                var field = typeof(Runtime.Closure).GetField("Values");
+                foreach (var item in lamdaVisit.HoistedLocals)
+                {
+                    var value = item.Value;
+                    values[index] = visitor.Visit(value);
+                    var variable = bodyGen.DeclareVariable(value.Type, item.Key);
+                    bodyGen.LoadArgument(0);
+                    bodyGen.LoadField(field);
+                    bodyGen.LoadInt32(index);
+                    bodyGen.LoadArrayElement(typeof(object));
+                    bodyGen.UnboxObject(value.Type);
+                    bodyGen.StoreVariable(variable);
+                    index++;
+                }
+            }
+            bodyGen.EmitBody();
+            var delgateType = DelegateGen.MakeNewDelegate(types, returnType);
+            return method.CreateDelegate(delgateType, new Runtime.Closure(values));
         }
 
         public override string ToString()

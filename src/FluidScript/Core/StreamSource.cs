@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace FluidScript.Compiler
 {
-    public class FileSource : IScriptSource
+    public class StreamSource : ITextSource
     {
         private int column = 1;
         private int line = 1;
@@ -37,10 +38,28 @@ namespace FluidScript.Compiler
         private readonly byte[] byteBuffer;
 
         private readonly int bufferSize;
-        public FileSource(FileInfo info)
+
+        internal StreamSource(FileInfo info)
         {
             Path = info.FullName;
             _stream = info.Open(FileMode.Open);
+            bufferSize = 1024;
+            encoding = Encoding.UTF8;
+            decoder = encoding.GetDecoder();
+            byteBuffer = new byte[bufferSize];
+            _maxCharsPerBuffer = encoding.GetMaxCharCount(bufferSize);
+            charBuffer = new char[_maxCharsPerBuffer];
+            byteLen = 0;
+            bytePos = 0;
+            _detectEncoding = true;
+            _preamble = encoding.GetPreamble();
+            _checkPreamble = (_preamble.Length > 0);
+            _isBlocked = false;
+        }
+
+        public StreamSource(Stream stream)
+        {
+            _stream = stream;
             bufferSize = 1024;
             encoding = Encoding.UTF8;
             decoder = encoding.GetDecoder();
@@ -74,7 +93,7 @@ namespace FluidScript.Compiler
             }
         }
 
-        public Compiler.Debugging.TextPosition CurrentPosition => new Compiler.Debugging.TextPosition(line, column);
+        public Debugging.TextPosition LineInfo => new Debugging.TextPosition(line, column);
 
         public void Dispose()
         {
@@ -262,6 +281,7 @@ namespace FluidScript.Compiler
         {
             if (charPos == 0)
             {
+                // whether fallback discard ok?
                 Discard();
                 return charBuffer[charPos];
             }
@@ -297,6 +317,56 @@ namespace FluidScript.Compiler
                 decoder = encoding.GetDecoder();
             }
             _isBlocked = false;
+        }
+
+        public void SkipTo(char c)
+        {
+            for (; ; )
+            {
+                if (charPos == charLen)
+                {
+                    if (ReadBuffer() == 0)
+                    {
+                        return;
+                    }
+                }
+                char n = charBuffer[charPos++];
+                if (n == c)
+                    break;
+                if (n == '\r' && PeekChar() == '\n')
+                {
+                    charPos++;
+                    NextLine();
+                    continue;
+                }
+                column++;
+            }
+        }
+
+        /// <inheritdoc/>
+        public void Skip(char[] c)
+        {
+            for (; ; )
+            {
+                if (charPos == charLen)
+                {
+                    if (ReadBuffer() == 0)
+                    {
+                        return;
+                    }
+                }
+                char n = charBuffer[charPos++];
+                if (!c.Any(value => value == n))
+                    break;
+                charPos++;
+                if (n == '\r' && PeekChar() == '\n')
+                {
+                    charPos++;
+                    NextLine();
+                    continue;
+                }
+                column++;
+            }
         }
     }
 }

@@ -1,42 +1,40 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Compiler.Lexer;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public enum ExpressionType
     {
-        Unknown = 0,
+        Unknown = TokenType.None,
         Literal = 1,
-        Numeric = 2,
+        Numeric = TokenType.Numeric,
         Octal = 3,
         Hex = 4,
-        Unicode = 5,
-        String = 6,
-        Bool = 7,
-        Identifier = 10,
+        Unicode = TokenType.Unicode,
+        String = TokenType.String,
+        Bool = TokenType.Bool,
+        Identifier = TokenType.Identifier,
         Parenthesized = 11,
+
+        Argument = TokenType.Parenthesized,
         /// <summary>
         /// method call
         /// </summary>
-        Invocation = 12,
-        Indexer = 13,
-        AnonymousMethod = 14,
-        AnonymousObject = 15,
+        Invocation = TokenType.Invocation,
+        Indexer = TokenType.Indexer,
+        AnonymousMethod = TokenType.AnonymousMethod,
+        AnonymousObject = 17,
         //either 0->x or x = 0
-        Declaration = 16,
+        Declaration = 18,
         //Known types
-        /// <summary>
-        /// array block initailization
-        /// </summary>
-        Block = 17,
-        Function = 18,
-        Argument = 19,
         //Stop
-        Comma = 25,
+        Comma = TokenType.Comma,
         //?
-        Question = 28,
+        Question = TokenType.Question,
         /// <summary>
         /// .
         /// </summary>
-        MemberAccess = 30,
-        QualifiedNamespace = 31,
+        MemberAccess = TokenType.Dot,
+        QualifiedNamespace = TokenType.Qualified,
         New = 32,
         Array = 33,
         Out = 34,
@@ -45,22 +43,30 @@
         Convert = 37,
         Labeled = 50,
 
+
+        /// <summary>
+        /// array block initailization
+        /// </summary>
+        Block = 53,
+        Function = 54,
+
         #region Math
-        Plus = 66,
-        Minus = 67,
-        Multiply = 68,
-        Divide = 69,
-        Percent = 70,
+        Plus = TokenType.Plus,
+        Minus = TokenType.Minus,
+        Multiply = TokenType.Multiply,
+        Divide = TokenType.Divide,
+        Percent = TokenType.Percent,
         /// <summary>
         /// ^
         /// </summary>
-        Circumflex = 71,
+        Circumflex = TokenType.Circumflex,
         /// <summary>
         /// <code>**</code>
         /// <see cref="Lexer.TokenType.StarStar"/>
         /// </summary>
-        StarStar = 72,
+        StarStar = TokenType.StarStar,
         #endregion
+
         #region Logical & Shift
         Equal = 127,
         // <
@@ -90,6 +96,7 @@
         //&&
         AndAnd = 140,
         #endregion
+
         #region PostFix Prefix
         PostfixPlusPlus = 143,
         PostfixMinusMinus = 144,

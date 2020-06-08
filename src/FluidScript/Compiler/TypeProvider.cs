@@ -9,27 +9,27 @@ namespace FluidScript.Compiler
     public interface ITypeProvider
     {
         /// <summary>
-        /// Get resolved <see cref="System.Type"/>
+        /// Get resolved <see cref="Type"/>
         /// </summary>
-        System.Type GetType(TypeName name);
+        Type GetType(TypeName name);
     }
 
     public sealed class TypeProvider : ITypeProvider
     {
-        internal static readonly System.Type FSType;
-        internal static readonly System.Type ObjectType;
+        internal static readonly Type FSType;
+        internal static readonly Type ObjectType;
 
-        internal static readonly System.Type DoubleType;
-        internal static readonly System.Type FloatType;
-        internal static readonly System.Type LongType;
-        internal static readonly System.Type IntType;
-        internal static readonly System.Type ShortType;
-        internal static readonly System.Type ByteType;
+        internal static readonly Type DoubleType;
+        internal static readonly Type FloatType;
+        internal static readonly Type LongType;
+        internal static readonly Type IntType;
+        internal static readonly Type ShortType;
+        internal static readonly Type ByteType;
 
-        internal static readonly System.Type StringType;
-        internal static readonly System.Type CharType;
-        internal static readonly System.Type BooleanType;
-        internal static readonly System.Type VoidType;
+        internal static readonly Type StringType;
+        internal static readonly Type CharType;
+        internal static readonly Type BooleanType;
+        internal static readonly Type VoidType;
 
         internal static readonly Primitive[] Inbuilts;
         private static readonly System.Collections.Generic.IDictionary<string, Primitive> InbuiltMap;
@@ -65,17 +65,26 @@ namespace FluidScript.Compiler
                 new Primitive("bool", BooleanType),
                 new Primitive("char", CharType),
                 new Primitive("string", StringType),
-                new Primitive("any", typeof(IFSObject)),
+                new Primitive("any", ObjectType),
                 new Primitive("void", VoidType)
             };
             InbuiltMap = System.Linq.Enumerable.ToDictionary(Inbuilts, item => item.Name);
         }
 
-        public static System.Type GetType(string typeName)
+        public static Type GetType(string typeName)
         {
             if (InbuiltMap.ContainsKey(typeName))
                 return InbuiltMap[typeName].Type;
-            return System.Type.GetType(typeName);
+            var type = Type.GetType(typeName, false);
+            if (type != null)
+                return type;
+            foreach (var item in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                 type = item.GetType(typeName, false);
+                if (type != null)
+                    return type;
+            }
+            return null;
         }
 
         internal static bool IsInbuiltType(string typeName)
@@ -83,10 +92,9 @@ namespace FluidScript.Compiler
             return InbuiltMap.ContainsKey(typeName);
         }
 
-        public System.Type GetType(TypeName name)
+        public Type GetType(TypeName name)
         {
-            string fullName = name.FullName;
-            return GetType(fullName);
+            return GetType(name.FullName);
         }
 
         /// <summary>

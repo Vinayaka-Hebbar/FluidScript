@@ -151,6 +151,12 @@
 #endif
         }
 
+        #region Static
+        public static ReturnOrThrowStatement Return(Expression value = null)
+        {
+            return new ReturnOrThrowStatement(value, StatementType.Return);
+        }
+        #endregion
     }
 
     internal class EmptyStatement : Statement

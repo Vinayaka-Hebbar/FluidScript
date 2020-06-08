@@ -8,6 +8,7 @@ namespace FluidScript.Compiler.Generators
     {
         private readonly System.Reflection.Emit.ConstructorBuilder _builder;
         private readonly System.Type[] _baseParameterTypes;
+        private readonly TypeGenerator Declaring;
 
         public ConstructorGenerator(System.Reflection.Emit.ConstructorBuilder builder, ParameterInfo[] parameters, System.Type[] baseParameterTypes, TypeGenerator generator, SyntaxTree.Statement statement)
         {
@@ -15,13 +16,12 @@ namespace FluidScript.Compiler.Generators
             _baseParameterTypes = baseParameterTypes;
             Name = builder.Name;
             Parameters = parameters;
-            TypeGenerator = generator;
+            Declaring = generator;
+            Provider = generator;
             SyntaxBody = statement;
             Attributes = builder.Attributes;
             MemberType = System.Reflection.MemberTypes.Method;
         }
-
-        public TypeGenerator TypeGenerator { get; }
 
         public override System.Reflection.MemberTypes MemberType { get; }
 
@@ -37,15 +37,15 @@ namespace FluidScript.Compiler.Generators
 
         public override string Name { get; }
 
-        public override System.Type DeclaringType => TypeGenerator;
+        public override System.Type DeclaringType => Declaring;
 
-        public override System.Type ReflectedType => TypeGenerator;
+        public override System.Type ReflectedType => Declaring;
 
         public ParameterInfo[] Parameters { get; }
 
         public System.Type ReturnType => null;
 
-        public ITypeProvider Provider { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public ITypeProvider Provider { get; set; }
 
         public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
         {
@@ -91,16 +91,15 @@ namespace FluidScript.Compiler.Generators
 
         public System.Type GetType(TypeName typeName)
         {
-
-            if (TypeGenerator != null)
-                return TypeGenerator.GetType(typeName);
-            return TypeProvider.Default.GetType(typeName);
+            if (Provider != null)
+                return Provider.GetType(typeName);
+            return TypeProvider.Default.GetType(typeName.FullName);
         }
 
         public void Generate()
         {
             var body = new MethodBodyGenerator(this, _builder.GetILGenerator());
-            foreach (FieldGenerator generator in TypeGenerator.Members.Where(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic == IsStatic))
+            foreach (FieldGenerator generator in Declaring.Members.Where(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic == IsStatic))
             {
                 if (generator.DefaultValue != null)
                 {
@@ -114,7 +113,7 @@ namespace FluidScript.Compiler.Generators
             }
             if (IsStatic == false)
             {
-                var baseCtor = TypeGenerator.BaseType.GetConstructor(_baseParameterTypes);
+                var baseCtor = Declaring.BaseType.GetConstructor(_baseParameterTypes);
                 body.LoadArgument(0);
                 body.Call(baseCtor);
             }

@@ -17,12 +17,14 @@ namespace FluidScript.Compiler.SyntaxTree
         /// </summary>
         public Binders.IBinder Binder { get; internal set; }
 
+        public object Target { get; internal set; }
+
         /// <summary>
         /// Creates Identifier Expression
         /// </summary>
         /// <param name="name">Name of the Identifier</param>
-        /// <param name="opCode">Expression type</param>
-        public NameExpression(string name, ExpressionType opCode) : base(opCode)
+        /// <param name="expType">Expression type</param>
+        public NameExpression(string name, ExpressionType expType) : base(expType)
         {
             Name = name;
         }
@@ -50,8 +52,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <param name="generator"></param>
         public override void GenerateCode(MethodBodyGenerator generator)
         {
-            var c = generator.Method.CallingConvention;
-            /// static
+            // static
             if (Binder != null)
             {
                 if (Binder.IsMember && Binder.IsStatic == false)

@@ -3,6 +3,13 @@
     public class RefTypeSyntax : TypeSyntax
     {
         public readonly string Name;
+        public readonly INodeList<TypeSyntax> GenericPrameters;
+
+        public RefTypeSyntax(string name, INodeList<TypeSyntax> generic)
+        {
+            Name = name;
+            GenericPrameters = generic;
+        }
 
         public RefTypeSyntax(string name)
         {
@@ -11,12 +18,28 @@
 
         public override System.Type GetType(ITypeProvider provider)
         {
-            return provider.GetType(Name);
+            if (Type == null)
+            {
+                if (GenericPrameters == null)
+                {
+                    Type = provider.GetType(Name);
+                }
+                else
+                {
+                    Type = provider.GetType(string.Concat(Name, '`', GenericPrameters.Count));
+                    if (Type == null)
+                        Type = TypeProvider.ObjectType;
+                    Type = Type.MakeGenericType(GenericPrameters.Map(p => p.GetType(provider)));
+                }
+            }
+            return Type;
         }
 
         public override string ToString()
         {
-            return Name;
+            return GenericPrameters == null ?
+               Name
+               : string.Concat(Name, '<', string.Join(",", GenericPrameters.Map<string>(item => item.ToString())), '>');
         }
     }
 }

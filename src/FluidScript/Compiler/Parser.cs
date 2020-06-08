@@ -1,33 +1,35 @@
 ﻿using FluidScript.Compiler.Debugging;
 using FluidScript.Compiler.Lexer;
 using FluidScript.Compiler.SyntaxTree;
-using FluidScript.Compiler;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FluidScript.Compiler
 {
-    /// <summary>
-    /// Syntax Visiitor which will tokenizes the text
-    /// </summary>
     public class Parser : System.IDisposable
     {
-        private const char DotChar = '.';
+        static readonly string[] Empty = new string[0];
+
+        public const char OpenBrace = '{';
+        public const char CloseBrace = '}';
+
+        const char DotChar = '.';
+        const char EscapeChar = '\\';
+        const char QuoatedChar = '`';
+        const char QuoatedCharString = '\'';
+        readonly Utils.CharBuilder cb;
 
         /// <summary>
         /// Source text
         /// </summary>
-        public readonly IScriptSource Source;
-        private readonly IList<string> _currentLabels = new List<string>();
+        public readonly ITextSource Source;
+
+        private List<string> _currentLabels;
+
         /// <summary>
         /// Token type
         /// </summary>
-        protected internal TokenType TokenType;
+        protected TokenType TokenType;
         private char c;
-        /// <summary>
-        /// current modifiers
-        /// </summary>
-        private Modifiers modifiers;
 
         /// <summary>
         /// Parse settings
@@ -35,14 +37,15 @@ namespace FluidScript.Compiler
         public readonly ParserSettings Settings;
 
         /// <summary>
-        /// Initializes new <see cref="Parser"/>
+        /// Initializes new <see cref="ScriptParser"/>
         /// </summary>
         /// <param name="source"></param>
         /// <param name="settings"></param>
-        public Parser(IScriptSource source, ParserSettings settings)
+        public Parser(ITextSource source, ParserSettings settings)
         {
             Source = source;
             Settings = settings;
+            cb = new Utils.CharBuilder();
         }
 
         /// <summary>
@@ -51,10 +54,24 @@ namespace FluidScript.Compiler
         public string[] CurrentLabels
         {
             //todo for inner block and forgotted
-            get => _currentLabels.ToArray();
+            get
+            {
+                if (_currentLabels == null)
+                    return Empty;
+                return _currentLabels.ToArray();
+            }
         }
 
-        #region Iterator
+        public IList<string> Labels
+        {
+            get
+            {
+                if (_currentLabels == null)
+                    _currentLabels = new List<string>();
+                return _currentLabels;
+            }
+        }
+
         /// <summary>
         /// Current Token
         /// </summary>
@@ -74,15 +91,15 @@ namespace FluidScript.Compiler
         {
             c = Source.ReadChar();
             TokenType = GetTokenType(skipLine);
-            return c != char.MinValue;
+            return TokenType != TokenType.Bad;
         }
 
-        private bool MoveNextThenIf(TokenType token)
+        protected bool MoveNextThenIf(TokenType token)
         {
             return MoveNext() && TokenType == token;
         }
 
-        private bool MoveNextThenIfNot(TokenType token)
+        protected bool MoveNextThenIfNot(TokenType token)
         {
             return MoveNext() && TokenType != token;
         }
@@ -91,7 +108,7 @@ namespace FluidScript.Compiler
         {
             if (TokenType == token)
                 return MoveNext();
-            throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.Position));
+            return false;
         }
 
         /// <summary>
@@ -102,6 +119,7 @@ namespace FluidScript.Compiler
             Source.Reset();
         }
 
+        #region TokenType
         /// <summary>
         /// Token type
         /// </summary>
@@ -114,9 +132,9 @@ namespace FluidScript.Compiler
                     return TokenType.LeftParenthesis;
                 case ')':
                     return TokenType.RightParenthesis;
-                case '{':
+                case OpenBrace:
                     return TokenType.LeftBrace;
-                case '}':
+                case CloseBrace:
                     return TokenType.RightBrace;
                 case '[':
                     return TokenType.LeftBracket;
@@ -192,9 +210,12 @@ namespace FluidScript.Compiler
                         return TokenType.OrOr;
                     }
                     return TokenType.Or;
-                case '`':
+                case QuoatedChar:
                     c = Source.ReadChar();
                     return TokenType.String;
+                case QuoatedCharString:
+                    c = Source.ReadChar();
+                    return TokenType.StringQuoted;
                 case ',':
                     return TokenType.Comma;
                 case ';':
@@ -206,7 +227,7 @@ namespace FluidScript.Compiler
                         return TokenType.Qualified;
                     }
                     return TokenType.Colon;
-                case '.':
+                case DotChar:
                     return TokenType.Dot;
                 case '=':
                     if (n == '>')
@@ -260,9 +281,17 @@ namespace FluidScript.Compiler
                 case '\\':
                     if (n == 'u')
                     {
-                        //Unicode
+                        // unicode char
+                        Source.ReadChar();
+                        string esp = System.Text.RegularExpressions.Regex.Unescape("\\u" + new string(Take(4)));
+                        if (esp.Length == 1)
+                        {
+                            c = esp[0];
+                            return GetTokenType(skipLine);
+                        }
+                        throw new System.Exception("expected unicode at " + Source.LineInfo);
                     }
-                    break;
+                    return TokenType.BackSlash;
                 case '\t':
                 case ' ':
                     if (Source.CanAdvance)
@@ -282,9 +311,9 @@ namespace FluidScript.Compiler
                 case '\r':
                     if (n == '\n')
                     {
+                        c = Source.ReadChar();
                         if (skipLine)
                         {
-                            c = Source.ReadChar();
                             return GetTokenType(skipLine);
                         }
                     }
@@ -300,161 +329,38 @@ namespace FluidScript.Compiler
                 return TokenType.End;
             return TokenType.Bad;
         }
+
         #endregion
 
+        #region Statement
+
         /// <summary>
-        /// Visit members declaration
+        /// Creates <see cref="Statement"/> for <see cref="Source"/>
         /// </summary>
-        public NodeList<MemberDeclaration> VisitMembers()
+        /// <returns>Parse <see cref="Statement"/></returns>
+        public Statement GetStatement()
         {
-            var list = new NodeList<MemberDeclaration>();
-            while (MoveNext())
-            {
-                list.Add(VisitMember());
-                if (TokenType == TokenType.RightBrace)
-                    break;
-                CheckSyntaxExpected(TokenType.SemiColon);
-            }
-            return list;
+            if (MoveNext())
+                return VisitStatement();
+            return Statement.Empty;
         }
 
         /// <summary>
-        /// Visit member declaration
+        /// Creates <see cref="Expression"/> for <see cref="Source"/>
         /// </summary>
-        public MemberDeclaration VisitMember()
+        /// <returns>Parse <see cref="Expression"/></returns>
+        public Expression GetExpression()
         {
-            //reset modifier
-            modifiers = Compiler.Modifiers.None;
-            MemberDeclaration declaration;
-            switch (TokenType)
-            {
-                case TokenType.Identifier:
-                    declaration = VisitIdentifierMember();
-                    break;
-                default:
-                    throw new System.Exception(string.Format("Invalid Token type {0} at {1}", TokenType, Source.CurrentPosition));
-            }
-            declaration.Modifiers = modifiers;
-            return declaration;
+            if (MoveNext())
+                return VisitExpression();
+            return Expression.Empty;
         }
-
-        private MemberDeclaration VisitIdentifierMember()
-        {
-            var name = ReadVariableName();
-            if (Keywords.TryGetIdentifier(name, out IdentifierType type))
-            {
-                switch (type)
-                {
-                    case IdentifierType.Class:
-                        MoveNext();
-                        return VisitTypeDeclaration();
-                    case IdentifierType.Function:
-                        MoveNext();
-                        return VisitFunctionDeclaration();
-                    case IdentifierType.Var:
-                        MoveNext();
-                        return VisitFieldDeclaration();
-                    case IdentifierType.Val:
-                        MoveNext();
-                        modifiers |= Compiler.Modifiers.ReadOnly;
-                        return VisitFieldDeclaration();
-                    case IdentifierType.Implement:
-                        //todo has set
-                        modifiers |= Compiler.Modifiers.Implement;
-                        MoveNext();
-                        return VisitIdentifierMember();
-                    case IdentifierType.Static:
-                        modifiers |= Compiler.Modifiers.Static;
-                        MoveNext();
-                        return VisitIdentifierMember();
-                    case IdentifierType.Private:
-                        modifiers |= Compiler.Modifiers.Private;
-                        MoveNext();
-                        return VisitIdentifierMember();
-                    case IdentifierType.Get:
-                        MoveNext();
-                        modifiers |= Compiler.Modifiers.Getter;
-                        return VisitFunctionDeclaration();
-                    case IdentifierType.Set:
-                        MoveNext();
-                        modifiers |= Compiler.Modifiers.Setter;
-                        return VisitFunctionDeclaration();
-                }
-            }
-            //todo move next() common
-            throw new System.Exception(string.Concat("Unexpected Keyword ", name));
-        }
-
-        /// <summary>
-        /// Type declaration
-        /// </summary>
-        public TypeDeclaration VisitTypeDeclaration()
-        {
-            if (TokenType == TokenType.Identifier)
-            {
-                var name = ReadVariableName();
-                MoveNext();
-                //todo extends
-                if (TokenType == TokenType.LeftBrace)
-                {
-                    var members = VisitMembers();
-                    MoveNextIf(TokenType.RightBrace);
-                    return new TypeDeclaration(name, null, new NodeList<TypeSyntax>(), members)
-                    {
-                        Source = Source
-                    };
-                }
-            }
-            throw new System.Exception("Unexpected Keyword");
-        }
-
-        /// <summary>
-        /// Field declaration
-        /// </summary>
-        public FieldDelcaration VisitFieldDeclaration()
-        {
-            var declarations = VisitVarDeclarations();
-            return new FieldDelcaration(declarations);
-        }
-
-        /// <summary>
-        /// Function Declartion
-        /// </summary>
-        public FunctionDeclaration VisitFunctionDeclaration()
-        {
-            _currentLabels.Clear();
-            if (TokenType == TokenType.Identifier)
-            {
-                var name = ReadVariableName();
-                MoveNext();
-                NodeList<TypeParameter> parameterList;
-                //return type
-                TypeParameter[] parameters = new TypeParameter[0];
-                if (TokenType == TokenType.LeftParenthesis)
-                    parameters = VisitFunctionParameters().ToArray();
-                parameterList = new NodeList<TypeParameter>(parameters);
-                //todo throw if other
-                MoveNextIf(TokenType.RightParenthesis);
-                TypeSyntax returnType = null;
-                if (TokenType == TokenType.Colon)
-                {
-                    MoveNext();
-                    returnType = VisitType();
-                }
-                //todo abstract, virtual functions
-                //To avoid block function
-                BlockStatement body = VisitBlock();
-                return new FunctionDeclaration(name, parameterList, returnType, body);
-            }
-            throw new System.Exception("syntax error");
-        }
-
         /// <summary>
         /// Statement 
         /// </summary>
         public Statement VisitStatement()
         {
-            TextPosition start = Source.CurrentPosition;
+            TextPosition start = Source.LineInfo;
             Statement statement;
             switch (TokenType)
             {
@@ -476,14 +382,14 @@ namespace FluidScript.Compiler
                     statement = VisitExpressionStatement();
                     break;
             }
-            statement.Span = new TextSpan(start, Source.CurrentPosition);
+            statement.Span = new TextSpan(start, Source.LineInfo);
             return statement;
         }
 
         private Statement VisitIdentifierStatement()
         {
             long start = Source.Position;
-            var name = ReadVariableName();
+            ReadVariableName(out string name);
             if (Keywords.TryGetIdentifier(name, out IdentifierType type))
             {
                 MoveNext();
@@ -518,7 +424,7 @@ namespace FluidScript.Compiler
                         string target = null;
                         if (TokenType == TokenType.Identifier)
                         {
-                            target = ReadVariableName();
+                            ReadVariableName(out target);
                             MoveNext();
                         }
 
@@ -614,7 +520,7 @@ namespace FluidScript.Compiler
             }
             if (TokenType == TokenType.RightBrace)
                 MoveNext();
-            var name = ReadVariableName();
+            ReadVariableName(out string name);
             MoveNext();
             if (Keywords.Match(name, IdentifierType.While))
             {
@@ -649,7 +555,7 @@ namespace FluidScript.Compiler
         /// Visit if statement
         /// </summary>
         /// <returns></returns>
-        protected Statement VisitIfStatement()
+        protected IfStatement VisitIfStatement()
         {
             if (TokenType == TokenType.LeftParenthesis)
             {
@@ -660,12 +566,27 @@ namespace FluidScript.Compiler
                 if (TokenType == TokenType.RightParenthesis)
                     MoveNext();
                 Statement body = VisitStatement();
-                Statement other = null;
-                if (CheckExpectedIdentifier(IdentifierType.Else))
-                    other = VisitStatement();
-                return new IfStatement(expression, body, other);
+                // stop the position if else position not found restore to this positon
+                long start = Source.Position;
+                if (TokenType == TokenType.SemiColon)
+                    MoveNext();
+                if (TokenType == TokenType.Identifier)
+                {
+                    ReadVariableName(out string name);
+                    if (Keywords.Match(name, IdentifierType.Else))
+                    {
+                        MoveNext();
+                        return new IfStatement(expression, body, VisitStatement());
+                    }
+                }
+
+                //Restore
+                Source.SeekTo(start - 1);
+                //do not skip line info
+                MoveNext(false);
+                return new IfStatement(expression, body, null);
             }
-            throw new System.Exception($"Syntax Error at line {Source.CurrentPosition}");
+            throw new System.Exception($"Syntax Error at line {Source.LineInfo}");
         }
 
         /// <summary>
@@ -676,13 +597,13 @@ namespace FluidScript.Compiler
         {
             if (TokenType == TokenType.Identifier)
             {
-                string name = ReadVariableName();
+                ReadVariableName(out string name);
                 MoveNext();
                 TypeParameter[] parameterList;
-                IEnumerable<TypeParameter> parameters = Enumerable.Empty<TypeParameter>();
+                IEnumerable<TypeParameter> parameters = System.Linq.Enumerable.Empty<TypeParameter>();
                 if (TokenType == TokenType.LeftParenthesis)
                     parameters = VisitFunctionParameters();
-                parameterList = parameters.ToArray();
+                parameterList = System.Linq.Enumerable.ToArray(parameters);
                 if (TokenType == TokenType.RightParenthesis)
                     MoveNext();
                 TypeSyntax returnType = null;
@@ -699,40 +620,13 @@ namespace FluidScript.Compiler
 
         }
 
-        private Statement VisitExpressionStatement()
+        public Statement VisitExpressionStatement()
         {
             Expression expression = VisitExpression();
             return new ExpressionStatement(expression);
         }
 
-        /// <summary>
-        /// Visit block {}
-        /// </summary>
-        public BlockStatement VisitBlock()
-        {
-            //clear labels
-            var start = Source.CurrentPosition;
-            BlockStatement statement;
-            if (TokenType == TokenType.LeftBrace)
-            {
-                var statements = VisitStatementList();
-                // don't skip new line
-                if (TokenType == TokenType.RightBrace)
-                    MoveNext(false);
-                statement = new BlockStatement(statements, CurrentLabels);
-            }
-            else if (TokenType == TokenType.AnonymousMethod)
-            {
-                MoveNext();
-                statement = VisitAnonymousBlock();
-            }
-            else
-                throw new System.Exception("Invalid Function declaration");
-            statement.Span = new TextSpan(start, Source.CurrentPosition);
-            return statement;
-        }
-
-        private BlockStatement VisitAnonymousBlock()
+        public BlockStatement VisitAnonymousBlock()
         {
             if (TokenType == TokenType.LeftBrace)
             {
@@ -774,6 +668,34 @@ namespace FluidScript.Compiler
             } while (MoveNext());
             return list;
         }
+
+        /// <summary>
+        /// Visit block {}
+        /// </summary>
+        public BlockStatement VisitBlock()
+        {
+            //clear labels
+            var start = Source.LineInfo;
+            BlockStatement statement;
+            if (TokenType == TokenType.LeftBrace)
+            {
+                var statements = VisitStatementList();
+                // don't skip new line
+                if (TokenType == TokenType.RightBrace)
+                    MoveNext(false);
+                statement = new BlockStatement(statements, CurrentLabels);
+            }
+            else if (TokenType == TokenType.AnonymousMethod)
+            {
+                MoveNext();
+                statement = VisitAnonymousBlock();
+            }
+            else
+                throw new System.Exception("Invalid Function declaration");
+            statement.Span = new TextSpan(start, Source.LineInfo);
+            return statement;
+        }
+        #endregion
 
         #region Visitor
         public Expression VisitExpression()
@@ -1001,7 +923,8 @@ namespace FluidScript.Compiler
                 case TokenType.Less:
                     MoveNext();
                     var type = VisitType();
-                    MoveNextIf(TokenType.Greater);
+                    if (TokenType == TokenType.Greater || TokenType == TokenType.GreaterGreater)
+                        MoveNext();
                     exp = new ConvertExpression(type, VisitLeftHandSideExpression());
                     break;
                 default:
@@ -1044,13 +967,20 @@ namespace FluidScript.Compiler
                     exp = new LiteralExpression(GetNumeric());
                     break;
                 case TokenType.String:
-                    exp = new LiteralExpression(ReadString());
+                    ReadString(out string s);
+                    exp = new LiteralExpression(s);
+                    break;
+                case TokenType.StringQuoted:
+                    ReadStringQuoted(out s);
+                    exp = new LiteralExpression(s);
                     break;
                 case TokenType.Identifier:
                     exp = VisitIdentifier();
                     break;
                 case TokenType.SpecialVariable:
-                    exp = new NameExpression(string.Concat("@", ReadVariableName()), ExpressionType.Identifier);
+                    // char is string
+                    ReadVariableName(out s);
+                    exp = new NameExpression(string.Concat("@", s), ExpressionType.Identifier);
                     break;
                 case TokenType.LeftBrace:
                     var list = VisitAnonymousObjectMembers();
@@ -1097,7 +1027,9 @@ namespace FluidScript.Compiler
                     case TokenType.Qualified:
                     case TokenType.Dot:
                         MoveNext();
-                        exp = new MemberExpression(exp, ReadVariableName(), (ExpressionType)type);
+                        // after . identifier
+                        ReadVariableName(out string s);
+                        exp = new MemberExpression(exp, s, (ExpressionType)type);
                         break;
                     case TokenType.LeftBracket:
                         args = VisitArgumentList(TokenType.Comma, TokenType.RightBracket);
@@ -1117,7 +1049,7 @@ namespace FluidScript.Compiler
         /// <returns><see cref="NameExpression"/></returns>
         public Expression VisitIdentifier()
         {
-            var name = ReadVariableName();
+            ReadVariableName(out string name);
             if (Keywords.TryGetIdentifier(name, out IdentifierType type))
             {
                 switch (type)
@@ -1136,11 +1068,13 @@ namespace FluidScript.Compiler
                         }
                         return new NewExpression(name, new NodeList<Expression>(arguments));
                     case IdentifierType.True:
-                        return new LiteralExpression(true);
+                        return Expression.True;
                     case IdentifierType.False:
-                        return new LiteralExpression(false);
+                        return Expression.False;
                     case IdentifierType.Null:
                         return Expression.Null;
+                    case IdentifierType.NaN:
+                        return Expression.NaN;
 #if Runtime
                 case IdentifierType.Undefined:
                     return Expression.Undefined;
@@ -1199,25 +1133,6 @@ namespace FluidScript.Compiler
                 MoveNextIf(TokenType.RightParenthesis);
             }
             return new ArrayLiteralExpression(list, type, arguments);
-        }
-
-        /// <summary>
-        /// Indicates <see cref="Parser.TokenType"/> matches the <paramref name="expected"/>
-        /// </summary>
-        protected bool CheckExpectedIdentifier(IdentifierType expected)
-        {
-            long start = Source.Position;
-            var name = ReadVariableName();
-            MoveNext();
-            if (Keywords.Match(name, expected))
-            {
-                return true;
-            }
-            //Restore
-            Source.SeekTo(start - 1);
-            //do not skip line info
-            MoveNext(false);
-            return false;
         }
 
         /// <summary>
@@ -1286,7 +1201,7 @@ namespace FluidScript.Compiler
             {
                 if (TokenType == TokenType.Identifier)
                 {
-                    var name = ReadVariableName();
+                    ReadVariableName(out string name);
                     TypeSyntax type = null;
                     //var args
                     bool isVar = false;
@@ -1330,10 +1245,10 @@ namespace FluidScript.Compiler
             TypeSyntax type = null;
             if (TokenType == TokenType.Identifier)
             {
-                var typeName = ReadTypeName();
+                ReadTypeName(out string typeName);
                 //after type name next
                 MoveNext();
-                type = new RefTypeSyntax(typeName);
+                type = new RefTypeSyntax(typeName, TokenType == TokenType.Less ? VisitGenericTypes() : null);
                 //array
                 if (TokenType == TokenType.LeftBracket)
                 {
@@ -1344,20 +1259,32 @@ namespace FluidScript.Compiler
             return type;
         }
 
+        private INodeList<TypeSyntax> VisitGenericTypes()
+        {
+            var list = new NodeList<TypeSyntax>();
+            while (MoveNext())
+            {
+                list.Add(VisitType());
+                if (TokenType == TokenType.GreaterGreater)
+                    break;
+            }
+            return list;
+        }
+
         /// <summary>
         /// Visit Array indexes
         /// </summary>
-        public NodeList<Expression> VisitArrayRanks()
+        public int VisitArrayRanks()
         {
-            var list = new NodeList<Expression>();
+            int rank = 0;
             while (TokenType == TokenType.LeftBracket)
             {
                 MoveNext();
-                list.Add(VisitExpression());
+                rank++;
                 if (TokenType == TokenType.RightBracket)
                     MoveNext();
             }
-            return list;
+            return rank;
 
         }
 
@@ -1373,18 +1300,30 @@ namespace FluidScript.Compiler
         }
 
         /// <summary>
+        /// Take specified chars
+        /// </summary>
+        private char[] Take(int count)
+        {
+            char[] res = new char[count];
+            for (int i = 0; i < count; i++)
+            {
+                res[i] = Source.ReadChar();
+            }
+            return res;
+        }
+
+        /// <summary>
         /// {x:1, add()=> {}}
         /// </summary>
         /// <returns></returns>
         public NodeList<AnonymousObjectMember> VisitAnonymousObjectMembers()
         {
             var list = new NodeList<AnonymousObjectMember>();
-            CheckSyntaxExpected(TokenType.LeftBrace);
             while (MoveNext())
             {
                 if (TokenType == TokenType.Identifier)
                 {
-                    var name = ReadVariableName();
+                    ReadVariableName(out string name);
                     MoveNext();
                     if (TokenType == TokenType.Colon)
                     {
@@ -1410,7 +1349,7 @@ namespace FluidScript.Compiler
             do
             {
                 CheckSyntaxExpected(TokenType.Identifier);
-                string name = ReadVariableName();
+                ReadVariableName(out string name);
                 MoveNext();
                 TypeSyntax type = null;
                 Expression expression = null;
@@ -1427,8 +1366,7 @@ namespace FluidScript.Compiler
                 list.Add(new VariableDeclarationExpression(name, type, expression));
                 if (TokenType == TokenType.SemiColon || TokenType == TokenType.NewLine)
                     break;
-                CheckSyntaxExpected(TokenType.Comma);
-            } while (MoveNext());
+            } while (MoveNextIf(TokenType.Comma));
             return list;
         }
 
@@ -1436,7 +1374,7 @@ namespace FluidScript.Compiler
         {
             if (TokenType == type)
                 return;
-            throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.Position, " expected ", type));
+            throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.LineInfo, " expected ", type));
         }
 
         internal void CheckSyntaxExpected(TokenType type1, TokenType type2)
@@ -1450,12 +1388,16 @@ namespace FluidScript.Compiler
         #region Interger
         private object GetNumeric()
         {
+            object value;
             char first = c;
             char next = Source.PeekChar();
             if (first == '0')
             {
                 if (next == 'x' || next == 'X')
-                    return CreateHexIntegerLiteral(first);
+                {
+                    CreateHexIntegerLiteral(first, out value);
+                    return value;
+                }
                 else
                 {
                     switch (next)
@@ -1468,16 +1410,17 @@ namespace FluidScript.Compiler
                         case '5':
                         case '6':
                         case '7':
-                            return CreateOctalIntegerLiteral(first);
+                            CreateOctalIntegerLiteral(first, out value);
+                            return value;
                     }//else continue to make a numerical literal token
                 }
             }
-            return ReadNumber(first);
+            ReadNumber(first, out value);
+            return value;
         }
 
-        private object CreateOctalIntegerLiteral(char first)
+        private void CreateOctalIntegerLiteral(char first, out object value)
         {
-            var cb = new Utils.CharBuilder();
             cb.Append(first);//0
             double val = 0;
 
@@ -1503,12 +1446,12 @@ namespace FluidScript.Compiler
                 }
                 break;
             }
-            return int.Parse(cb.ToString());
+            value = int.Parse(cb.ToString());
+            cb.Length = 0;
         }
 
-        private object CreateHexIntegerLiteral(char first)
+        private void CreateHexIntegerLiteral(char first, out object value)
         {
-            Utils.CharBuilder cb = new Utils.CharBuilder();
             cb.Append(first);
             cb.Append(Source.ReadChar());//x or X (ever tested before)
             double val = 0;
@@ -1560,13 +1503,13 @@ namespace FluidScript.Compiler
                 }
                 break;
             }
-            return int.Parse(cb.ToString());
+            value = int.Parse(cb.ToString());
+            cb.Length = 0;
         }
 
-        private object ReadNumber(char first)
+        private void ReadNumber(char first, out object value)
         {
-            Utils.CharBuilder builder = new Utils.CharBuilder();
-            builder.Append(first);
+            cb.Append(first);
             int dot = 0;
             int exp = 0;
             while (Source.CanAdvance)
@@ -1584,11 +1527,9 @@ namespace FluidScript.Compiler
                     case '7':
                     case '8':
                     case '9':
-                        {
-                            builder.Append(next);
-                            Source.ReadChar();
-                            continue;
-                        }
+                        cb.Append(next);
+                        Source.ReadChar();
+                        continue;
                     case DotChar:
                         //skip .
                         Source.ReadChar();
@@ -1597,8 +1538,65 @@ namespace FluidScript.Compiler
                         {
                             dot++;
                             //add .
-                            builder.Append(DotChar);
-                            builder.Append(next);
+                            cb.Append(DotChar);
+                            cb.Append(next);
+                            //skip digit
+                            if (dot > 1)
+                            {
+                                break;
+                            }
+                            Source.ReadChar();
+                            continue;
+                        }
+                        Source.FallBack();
+                        break;
+                    case 'e':
+                    case 'E':
+                        cb.Append(next);
+                        c = Source.ReadChar();
+                        exp++;
+                        if (exp > 1)
+                        {
+                            break;
+                        }
+                        next = Source.PeekChar();
+                        if (next == '+' || next == '-')
+                        {
+                            cb.Append(next);
+                            Source.ReadChar();
+                        }
+                        continue;
+                }
+                break;
+            }
+            while (Source.CanAdvance)
+            {
+                char next = Source.PeekChar();
+                switch (next)
+                {
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        cb.Append(next);
+                        Source.ReadChar();
+                        continue;
+                    case DotChar:
+                        //skip .
+                        Source.ReadChar();
+                        next = Source.PeekChar();
+                        if (char.IsDigit(next))
+                        {
+                            dot++;
+                            //add .
+                            cb.Append(DotChar);
+                            cb.Append(next);
                             //skip digit
                             Source.ReadChar();
                             if (dot > 1)
@@ -1611,71 +1609,139 @@ namespace FluidScript.Compiler
                         break;
                     case 'e':
                     case 'E':
+                        cb.Append(next);
+                        c = Source.ReadChar();
+                        exp++;
+                        if (exp > 1)
                         {
-                            builder.Append(next);
-                            c = Source.ReadChar();
-                            exp++;
-                            if (exp > 1)
-                            {
-                                break;
-                            }
-                            next = Source.PeekChar();
-                            if (next == '+' || next == '-')
-                            {
-                                builder.Append(next);
-                                Source.ReadChar();
-                            }
-                            continue;
+                            break;
                         }
+                        next = Source.PeekChar();
+                        if (next == '+' || next == '-')
+                        {
+                            cb.Append(next);
+                            Source.ReadChar();
+                        }
+                        continue;
                 }
                 break;
             }
             if (dot > 0)
             {
-                return double.Parse(builder.ToString(), Settings.NumberStyle, Settings.FormatProvider);
+                value = double.Parse(cb.ToString(), Settings.NumberStyle, Settings.FormatProvider);
             }
             else
             {
-                return int.Parse(builder.ToString(), System.Globalization.NumberStyles.Integer, Settings.FormatProvider);
+                if (cb.Length < 9)
+                    value = int.Parse(cb.ToString(), System.Globalization.NumberStyles.Integer, Settings.FormatProvider);
+                else
+                    value = long.Parse(cb.ToString(), System.Globalization.NumberStyles.Integer, Settings.FormatProvider);
             }
+            cb.Length = 0;
         }
         #endregion
 
         #region String
 
-        public string ReadTypeName()
+        public void ReadTypeName(out string name)
         {
-            Utils.CharBuilder cb = new Utils.CharBuilder();
+            //already know c is identifier
+            cb.Append(c);
             //todo use do while 
-            for (; char.IsLetterOrDigit(c) || c == '_' || c == '.'; c = Source.ReadChar())
+            for (; ; )
             {
-                cb.Append(c);
+                c = Source.PeekChar();
+                if (char.IsLetterOrDigit(c) || c == '_' || c == '.')
+                {
+                    cb.Append(c);
+                    c = Source.ReadChar();
+                    continue;
+                }
+                break;
             }
-            c = Source.FallBack();
-            return cb.ToString();
+            name = cb.ToString();
+            cb.Length = 0;
         }
 
-        public string ReadVariableName()
+        public void ReadVariableName(out string name)
         {
-            Utils.CharBuilder cb = new Utils.CharBuilder();
-            for (; char.IsLetterOrDigit(c) || c == '_'; c = Source.ReadChar())
+            // we already know c is identifier
+            cb.Append(c);
+            for (; ; )
             {
-                cb.Append(c);
+                // next char
+                c = Source.PeekChar();
+                if (char.IsLetterOrDigit(c) || c == '_')
+                {
+                    cb.Append(c);
+                    Source.ReadChar();
+                    continue;
+                }
+                break;
             }
-            c = Source.FallBack();
-            return cb.ToString();
+            name = cb.ToString();
+            cb.Length = 0;
         }
 
-        public string ReadString()
+        public void ReadString(out string s)
         {
-            Utils.CharBuilder cb = new Utils.CharBuilder();
-            for (; c != '`'; c = Source.ReadChar())
+            for (; c != QuoatedChar; c = Source.ReadChar())
             {
+                if (c == EscapeChar && Source.PeekChar() == QuoatedChar)
+                    c = Source.ReadChar();
                 cb.Append(c);
             }
-            return cb.ToString();
+            s = cb.ToString();
+            cb.Length = 0;
         }
 
+        public void ReadStringQuoted(out string s)
+        {
+            for (; c != QuoatedCharString; c = Source.ReadChar())
+            {
+                if (c == EscapeChar && Source.PeekChar() == QuoatedCharString)
+                    c = Source.ReadChar();
+                cb.Append(c);
+            }
+            s = cb.ToString();
+            cb.Length = 0;
+        }
+
+        #endregion
+
+        #region Static
+
+        /// <summary>
+        /// Creates <see cref="Statement"/> for <paramref name="text"/>
+        /// </summary>
+        /// <param name="text">Text to parse</param>
+        /// <param name="settings">Parser options if null will be default options</param>
+        /// <returns>Parse <see cref="Statement"/></returns>
+        public static Statement GetStatement(string text, ParserSettings settings = null)
+        {
+            using (Parser visitor = new Parser(new TextSource(text), settings ?? ParserSettings.Default))
+            {
+                if (visitor.MoveNext())
+                    return visitor.VisitStatement();
+            }
+            return Statement.Empty;
+        }
+
+        /// <summary>
+        /// Creates <see cref="Expression"/> for <paramref name="text"/>
+        /// </summary>
+        /// <param name="text">Text to parse</param>
+        /// <param name="settings">Parser options if null will be default options</param>
+        /// <returns>Parse <see cref="Expression"/></returns>
+        public static Expression GetExpression(string text, ParserSettings settings = null)
+        {
+            using (Parser visitor = new Parser(new TextSource(text), settings ?? ParserSettings.Default))
+            {
+                if (visitor.MoveNext())
+                    return visitor.VisitExpression();
+            }
+            return Expression.Empty;
+        }
         #endregion
     }
 }

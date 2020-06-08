@@ -28,8 +28,8 @@ namespace FluidScript.Compiler
         public virtual object VisitAnonymousObject(AnonymousObjectExpression node)
         {
             var members = node.Members;
-            var obj = new Runtime.DynamicObject(members.Length);
-            for (int index = 0; index < members.Length; index++)
+            var obj = new Runtime.DynamicObject(members.Count);
+            for (int index = 0; index < members.Count; index++)
             {
                 AnonymousObjectMember item = members[index];
                 var value = item.Expression.Accept(this);
@@ -44,8 +44,9 @@ namespace FluidScript.Compiler
         {
             Type type = node.ArrayType != null ? node.ArrayType.GetType(TypeProvider.Default) : TypeProvider.ObjectType;
             node.Type = typeof(Collections.List<>).MakeGenericType(type);
+            node.ElementType = type;
             var items = node.Expressions;
-            var length = items.Length;
+            var length = items.Count;
             object[] args;
             if (node.Arguments != null)
             {
@@ -71,21 +72,18 @@ namespace FluidScript.Compiler
             var array = (System.Collections.IList)node.Constructor.Invoke(System.Reflection.BindingFlags.Default, null, args, null);
             if (length > 0)
             {
-                var arrayConversions = node.ArrayConversions ?? new Binders.ArgumentConversions(items.Length);
+                var arrayConversions = node.ArrayConversions ?? new Binders.ArgumentConversions(items.Count);
                 for (int index = 0; index < length; index++)
                 {
                     Expression expression = items[index];
                     var value = expression.Accept(this);
                     var conversion = arrayConversions[index];
-                    if (conversion == null)
+                    if (conversion == null && !TypeUtils.AreReferenceAssignable(type, expression.Type) && TypeUtils.TryImplicitConvert(expression.Type, type, out System.Reflection.MethodInfo implicitCall))
                     {
-                        if (!TypeUtils.AreReferenceAssignable(type, expression.Type) && TypeUtils.TryImplicitConvert(expression.Type, type, out System.Reflection.MethodInfo implicitCall))
-                        {
-                            conversion = new Binders.ParamConversion(index, implicitCall);
-                        }
+                        conversion = new Binders.ParamConversion(index, implicitCall);
                         arrayConversions.Insert(index, conversion);
                     }
-                    if (conversion.ConversionType == Binders.ConversionType.Convert)
+                    if (conversion != null && conversion.ConversionType == Binders.ConversionType.Convert)
                     {
                         value = conversion.Invoke(value);
                     }
@@ -98,6 +96,35 @@ namespace FluidScript.Compiler
         #endregion
 
         public abstract object VisitAssignment(AssignmentExpression node);
+
+        #region Visit Indexer
+
+        protected object AssignIndexer(AssignmentExpression node, object value)
+        {
+            var exp = (IndexExpression)node.Left;
+            var obj = exp.Target.Accept(this);
+            if (obj == null)
+                ExecutionException.ThrowNullError(exp.Target, node);
+            var args = exp.Arguments.Map(arg => arg.Accept(this)).AddLast(value);
+            if (exp.Setter == null)
+            {
+                var indexer = exp.Target.Type
+                    .FindSetIndexer(args, out Binders.ArgumentConversions conversions);
+                if (indexer == null)
+                    ExecutionException.ThrowMissingIndexer(exp.Target.Type, "set", exp.Target, node);
+
+                exp.Conversions = conversions;
+                exp.Setter = indexer;
+                // ok to be node.Right.Type instead of indexer.GetParameters().Last().ParameterType
+                Binders.Conversion valueBind = conversions[args.Length - 1];
+                node.Type = (valueBind == null) ? node.Right.Type : valueBind.Type;
+            }
+            exp.Conversions.Invoke(ref args);
+            exp.Setter.Invoke(obj, args);
+            return value;
+        }
+
+        #endregion
 
         #region Binary Visitor
         public virtual object VisitBinary(BinaryExpression node)
@@ -257,12 +284,7 @@ namespace FluidScript.Compiler
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
             if (left is null || right is null)
-            {
-                object value = ReflectionHelpers.IsEquals.Invoke(null, new object[2] { left, right });
-                if (node.NodeType == ExpressionType.BangEqual)
-                    value = ReflectionHelpers.LogicalNot.Invoke(null, new object[1] { value });
-                return value;
-            }
+                return NullCompare(node, left, right);
             if (node.Method == null)
             {
                 var leftType = left.GetType();
@@ -275,6 +297,8 @@ namespace FluidScript.Compiler
                 }
                 System.Reflection.MethodInfo method = TypeUtils.
                     GetOperatorOverload(opName, conversions, types);
+                if (method == null)
+                    return NullCompare(node, left, right);
                 node.Method = method;
                 node.Conversions = conversions;
                 node.Type = method.ReturnType;
@@ -283,6 +307,16 @@ namespace FluidScript.Compiler
             object[] args = new object[2] { left, right };
             node.Conversions.Invoke(ref args);
             return node.Method.Invoke(null, args);
+        }
+
+        private static object NullCompare(BinaryExpression node, object left, object right)
+        {
+            System.Reflection.MethodInfo isEquals = ReflectionHelpers.IsEquals;
+            object value = isEquals.Invoke(null, new object[2] { left, right });
+            if (node.NodeType == ExpressionType.BangEqual)
+                value = ReflectionHelpers.LogicalNot.Invoke(null, new object[1] { value });
+            node.Type = isEquals.ReturnType;
+            return value;
         }
         #endregion
 
@@ -334,14 +368,12 @@ namespace FluidScript.Compiler
                 var type = node.TypeName.GetType(TypeProvider.Default);
                 if (!TypeUtils.AreReferenceAssignable(type, node.Target.Type))
                 {
-                    if (TypeUtils.TryImplicitConvert(node.Target.Type, type, out System.Reflection.MethodInfo implicitConvert))
+                    if (!TypeUtils.TryImplicitConvert(node.Target.Type, type, out System.Reflection.MethodInfo method) &&
+                        !TypeUtils.TryExplicitConvert(node.Target.Type, type, out method))
                     {
-                        node.Method = implicitConvert;
+                        ExecutionException.ThrowInvalidCast(type, node);
                     }
-                    else
-                    {
-                        ExecutionException.ThrowInvalidCast(node.Type, node);
-                    }
+                    node.Method = method;
                 }
 
                 node.Type = type;
@@ -367,24 +399,11 @@ namespace FluidScript.Compiler
         {
             System.Reflection.MethodInfo indexer;
             var type = node.Target.Type;
-            Binders.ArgumentConversions conversions;
-            if (type.IsArray)
-            {
-                indexer = ReflectionHelpers.List_GetItem;
-                conversions = new Binders.ArgumentConversions(args.Length);
-                if (!TypeHelpers.MatchesTypes(indexer, args, conversions))
-                    ExecutionException.ThrowMissingIndexer(type, "get", node);
-                node.Type = type.GetElementType();
-            }
-            else
-            {
-                var indexers = type
-                    .GetMember("get_Item", System.Reflection.MemberTypes.Method, TypeUtils.Any);
-                indexer = TypeHelpers.BindToMethod(indexers, args, out conversions);
-                if (indexer == null)
-                    ExecutionException.ThrowMissingIndexer(type, "get", node);
-                node.Type = indexer.ReturnType;
-            }
+            indexer = type
+                    .FindGetIndexer(args, out Binders.ArgumentConversions conversions);
+            if (indexer == null)
+                ExecutionException.ThrowMissingIndexer(type, "get", node);
+            node.Type = indexer.ReturnType;
             node.Conversions = conversions;
             node.Getter = indexer;
         }
