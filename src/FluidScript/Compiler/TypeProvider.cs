@@ -1,5 +1,6 @@
 ﻿using FluidScript.Compiler.Emit;
 using System;
+using System.Collections.Generic;
 
 namespace FluidScript.Compiler
 {
@@ -14,7 +15,7 @@ namespace FluidScript.Compiler
         Type GetType(TypeName name);
     }
 
-    public sealed class TypeProvider : ITypeProvider
+    public class TypeProvider : ITypeProvider
     {
         internal static readonly Type FSType;
         internal static readonly Type ObjectType;
@@ -31,8 +32,7 @@ namespace FluidScript.Compiler
         internal static readonly Type BooleanType;
         internal static readonly Type VoidType;
 
-        internal static readonly Primitive[] Inbuilts;
-        private static readonly System.Collections.Generic.IDictionary<string, Primitive> InbuiltMap;
+        internal static readonly Dictionary<string, Type> Inbuilts;
 
         internal static readonly ITypeProvider Default;
 
@@ -54,47 +54,36 @@ namespace FluidScript.Compiler
             BooleanType = typeof(Boolean);
             VoidType = typeof(void);
 
-            Inbuilts = new Primitive[]
+            Inbuilts = new Dictionary<string, Type>()
             {
-                new Primitive("byte", ByteType),
-                new Primitive("short", ShortType),
-                new Primitive("int", IntType),
-                new Primitive("long", LongType),
-                new Primitive("float", FloatType),
-                new Primitive("double", DoubleType),
-                new Primitive("bool", BooleanType),
-                new Primitive("char", CharType),
-                new Primitive("string", StringType),
-                new Primitive("any", ObjectType),
-                new Primitive("void", VoidType)
+                {"byte", ByteType },
+                {"short", ShortType },
+                {"int", IntType },
+                {"long", LongType },
+                {"float", FloatType },
+                {"double", DoubleType },
+                {"bool", BooleanType },
+                {"char", CharType },
+                {"string", StringType },
+                {"any", ObjectType },
+                {"void", VoidType }
             };
-            InbuiltMap = System.Linq.Enumerable.ToDictionary(Inbuilts, item => item.Name);
         }
 
-        public static Type GetType(string typeName)
+        public Type GetType(TypeName typeName)
         {
-            if (InbuiltMap.ContainsKey(typeName))
-                return InbuiltMap[typeName].Type;
-            var type = Type.GetType(typeName, false);
+            if (typeName.Namespace == null && Inbuilts.TryGetValue(typeName.Name, out Type t))
+                return t;
+            var type = Type.GetType(typeName.FullName, false);
             if (type != null)
                 return type;
             foreach (var item in AppDomain.CurrentDomain.GetAssemblies())
             {
-                 type = item.GetType(typeName, false);
+                type = item.GetType(typeName.FullName, false);
                 if (type != null)
                     return type;
             }
             return null;
-        }
-
-        internal static bool IsInbuiltType(string typeName)
-        {
-            return InbuiltMap.ContainsKey(typeName);
-        }
-
-        public Type GetType(TypeName name)
-        {
-            return GetType(name.FullName);
         }
 
         /// <summary>

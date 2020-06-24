@@ -285,7 +285,7 @@ namespace FluidScript
 
         public static Double operator --(Double value)
         {
-            return new Double(value.m_value + 1);
+            return new Double(value.m_value - 1);
         }
     }
 }

@@ -66,7 +66,7 @@ namespace FluidScript.Collections
             {
                 int i = FindEntry(key);
                 if (i >= 0) return entries[i].Value;
-                throw new KeyNotFoundException(key.ToString());
+                return default(TValue);
             }
             set
             {

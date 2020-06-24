@@ -3,6 +3,10 @@ using System;
 
 namespace FluidScript.Compiler.Binders
 {
+    #region Binder
+    /// <summary>
+    /// Binder for variable or member
+    /// </summary>
     public interface IBinder
     {
         void GenerateGet(MethodBodyGenerator generator);
@@ -11,14 +15,26 @@ namespace FluidScript.Compiler.Binders
 
         Type Type { get; }
 
-        bool IsMember { get; }
+        /// <summary>
+        /// From this you can identify whether Binder is a Variable or Static Member 
+        /// </summary>
+        bool CanEmitThis { get; }
 
-        bool IsStatic { get; }
+        /// <summary>
+        ///  From this you can identify whether Binder is a Variable or Member 
+        /// </summary>
+        bool IsMember { get; }
 
         object Get(object obj);
 
         void Set(object obj, object value);
     }
+
+    public interface IBinderProvider
+    {
+        IBinder Binder { get; }
+    }
+    #endregion
 
     #region Dynamic Variable
 
@@ -28,20 +44,25 @@ namespace FluidScript.Compiler.Binders
 #endif
         struct EmptyBinder : IBinder
     {
-        public bool IsStatic => false;
+        public EmptyBinder(Type type)
+        {
+            Type = type;
+        }
 
-        public Type Type => TypeProvider.ObjectType;
+        public Type Type { get; }
+
+        public bool CanEmitThis => false;
 
         public bool IsMember => false;
 
         public void GenerateGet(MethodBodyGenerator generator)
         {
-            
+
         }
 
         public void GenerateSet(MethodBodyGenerator generator)
         {
-            
+
         }
 
         public object Get(object obj)
@@ -70,9 +91,9 @@ namespace FluidScript.Compiler.Binders
             this.target = target;
         }
 
-        public bool IsStatic => false;
-
         public Type Type => variable.Type;
+
+        public bool CanEmitThis => false;
 
         public bool IsMember => false;
 
@@ -119,9 +140,9 @@ namespace FluidScript.Compiler.Binders
             this.variables = variables;
         }
 
-        public bool IsStatic => false;
-
         public Type Type => variable.Type;
+
+        public bool CanEmitThis => false;
 
         public bool IsMember => false;
 
@@ -147,6 +168,7 @@ namespace FluidScript.Compiler.Binders
     }
     #endregion
 
+    #region Variable Binder
     public
 #if LATEST_VS
         readonly
@@ -160,11 +182,11 @@ namespace FluidScript.Compiler.Binders
             this.variable = variable;
         }
 
-        public bool IsMember => false;
-
-        public bool IsStatic => false;
-
         public Type Type => variable.Type;
+
+        public bool CanEmitThis => false;
+
+        public bool IsMember => false;
 
         public void GenerateGet(MethodBodyGenerator generator)
         {
@@ -187,6 +209,9 @@ namespace FluidScript.Compiler.Binders
         }
     }
 
+    #endregion
+
+    #region Parameter Binder
     public
 #if LATEST_VS
         readonly
@@ -200,11 +225,11 @@ namespace FluidScript.Compiler.Binders
             this.parameter = parameter;
         }
 
+        public Type Type => parameter.Type;
+
+        public bool CanEmitThis => false;
+
         public bool IsMember => false;
-
-        public  Type Type => parameter.Type;
-
-        public bool IsStatic => false;
 
         public void GenerateGet(MethodBodyGenerator generator)
         {
@@ -232,7 +257,9 @@ namespace FluidScript.Compiler.Binders
             throw new NotSupportedException(nameof(Set));
         }
     }
+    #endregion
 
+    #region Field Binder
     public
 #if LATEST_VS
         readonly
@@ -246,17 +273,17 @@ namespace FluidScript.Compiler.Binders
             this.field = field;
         }
 
-        public bool IsMember => true;
-
-        public bool IsStatic => field.IsStatic;
-
         public Type Type => field.FieldType;
+
+        public bool CanEmitThis => field.IsStatic == false;
+
+        public bool IsMember => true;
 
         public void GenerateGet(MethodBodyGenerator generator)
         {
             var field = this.field;
             if (field.FieldType == null)
-                throw new Exception(string.Concat("Use of undeclared field ", field));
+                throw new InvalidOperationException(string.Concat("Use of undeclared field ", field));
             if (field is Generators.FieldGenerator)
                 field = ((Generators.FieldGenerator)field).FieldInfo;
             generator.LoadField(field);
@@ -265,7 +292,9 @@ namespace FluidScript.Compiler.Binders
         public void GenerateSet(MethodBodyGenerator generator)
         {
             var field = this.field;
-            if (field is Generators.FieldGenerator)
+            if (field.IsInitOnly && !(generator.Method is Generators.ConstructorGenerator))
+                throw new FieldAccessException("A readonly field cannot be assigned to (except in a constructor of the class in which the field is defined or a variable initializer))");
+                if (field is Generators.FieldGenerator)
                 field = ((Generators.FieldGenerator)field).FieldInfo;
             generator.StoreField(field);
         }
@@ -280,7 +309,9 @@ namespace FluidScript.Compiler.Binders
             field.SetValue(obj, value);
         }
     }
+    #endregion
 
+    #region Property Binder
     public struct PropertyBinder : IBinder
     {
         readonly System.Reflection.PropertyInfo property;
@@ -289,8 +320,6 @@ namespace FluidScript.Compiler.Binders
         {
             this.property = property;
         }
-
-        public bool IsMember => true;
 
         private System.Reflection.MethodInfo m_getter;
         public System.Reflection.MethodInfo Getter
@@ -314,18 +343,21 @@ namespace FluidScript.Compiler.Binders
             }
         }
 
-        public bool IsStatic
+        public Type Type => property.PropertyType;
+
+        public bool CanEmitThis
         {
             get
             {
                 if (Getter != null)
-                    return Getter.IsStatic;
+                    return Getter.IsStatic == false;
                 if (Setter != null)
-                    return Setter.IsStatic;
+                    return Setter.IsStatic == false;
                 return false;
             }
         }
-        public Type Type => property.PropertyType;
+
+        public bool IsMember => true;
 
         public void GenerateGet(MethodBodyGenerator generator)
         {
@@ -359,5 +391,6 @@ namespace FluidScript.Compiler.Binders
             p.SetValue(obj, value, new object[0]);
         }
     }
+    #endregion
 
 }

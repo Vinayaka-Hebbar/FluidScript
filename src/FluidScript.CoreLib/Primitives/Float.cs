@@ -283,7 +283,7 @@ namespace FluidScript
 
         public static Float operator --(Float value)
         {
-            return new Float(value.m_value + 1);
+            return new Float(value.m_value - 1);
         }
     }
 }

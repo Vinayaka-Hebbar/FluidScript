@@ -13,77 +13,50 @@ namespace FluidScript.Compiler
         const int NotSupported = 8;
         const int InvalidCast = 9;
 
-
         public readonly Node[] NodeTree;
-
-        public readonly System.Type Type;
-
-        public readonly string Value;
 
         public readonly int Reason;
 
-        private ExecutionException(System.Type type, string value, int reason, Node[] tree)
+        private ExecutionException(int reason, Node[] tree, string message) : base(message)
         {
             NodeTree = tree;
-            Type = type;
-            Value = value;
             Reason = reason;
-        }
-
-        public override string Message
-        {
-            get
-            {
-                switch (Reason)
-                {
-                    case MissingMethod:
-                        return Type == null
-                             ? string.Concat("cannot find method '", Value, "' from null")
-                             : string.Concat("method '", Value, "' not found in ", Type.Name);
-                    case MissingMember:
-                        return Type == null
-                           ? string.Concat("cannot find member '", Value, "' from null")
-                           : string.Concat("member '", Value, "' not found in ", Type.Name);
-                    case MissingIndexer:
-                        return Type == null
-                           ? string.Concat("cannot find '", Value, "' indexer from null")
-                           : string.Concat("indexer '", Value, "' not found in ", Type.Name);
-                    case InvalidOp:
-                        return "Invalid operation";
-                    case NullReference:
-                        return "Null reference error";
-                    case ArgumentMisMatch:
-                        return "Argument mismatch";
-                    case NotSupported:
-                        return "Not suppored";
-                    case InvalidCast:
-                        return string.Concat("Invalid cast to ", Type);
-                }
-                return base.Message;
-            }
         }
 
         public override string StackTrace => string.Join("\nin ", System.Linq.Enumerable.Select(NodeTree, node => node.ToString()));
 
-        public override string ToString()
+        internal static void ThrowNotSupported(params Node[] tree)
         {
-            return Message;
+            new ExecutionException(NotSupported, tree, "Not suppored");
         }
 
-        internal static void ThrowNotSupported(params Node[] tree) => throw new ExecutionException(null, null, NotSupported, tree);
+        internal static System.Exception ThrowMissingMethod(System.Type target, string name, params Node[] tree)
+        {
+            throw new ExecutionException(MissingMethod, tree, target == null
+                             ? string.Concat("cannot find method '", name, "' from null")
+                             : string.Concat("method '", name, "' not found in ", target.Name));
+        }
 
-        internal static System.Exception ThrowMissingMethod(System.Type target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMethod, tree);
+        internal static System.Exception ThrowMissingMember(System.Type target, string name, params Node[] tree)
+        {
+            throw new ExecutionException(MissingMember, tree, target == null
+                           ? string.Concat("cannot find member '", name, "' from null")
+                           : string.Concat("member '", name, "' not found in ", target.Name));
+        }
 
-        internal static System.Exception ThrowMissingMember(System.Type target, string name, params Node[] tree) => throw new ExecutionException(target, name, MissingMember, tree);
+        internal static System.Exception ThrowMissingIndexer(System.Type target, string type, params Node[] tree)
+        {
+            throw new ExecutionException( MissingIndexer, tree, target == null
+                           ? string.Concat("cannot find '", type, "' indexer from null")
+                           : string.Concat("indexer '", type, "' not found in ", target.Name));
+        }
 
-        internal static System.Exception ThrowMissingIndexer(System.Type target, string type, params Node[] tree) => throw new ExecutionException(target, type, MissingIndexer, tree);
+        internal static System.Exception ThrowNullError(params Node[] tree) => throw new ExecutionException(NullReference, tree, "Null reference error");
 
-        internal static System.Exception ThrowNullError(params Node[] tree) => throw new ExecutionException(null, null, NullReference, tree);
+        internal static System.Exception ThrowInvalidOp(params Node[] tree) => throw new ExecutionException(InvalidOp, tree, "Invalid operation");
 
-        internal static System.Exception ThrowInvalidOp(params Node[] tree) => throw new ExecutionException(null, null, InvalidOp, tree);
+        internal static System.Exception ThrowArgumentMisMatch(params Node[] tree) => throw new ExecutionException(ArgumentMisMatch, tree, "Argument mismatch");
 
-        internal static System.Exception ThrowArgumentMisMatch(params Node[] tree) => throw new ExecutionException(null, null, ArgumentMisMatch, tree);
-
-        internal static System.Exception ThrowInvalidCast(System.Type type, params Node[] tree) => throw new ExecutionException(type, null, InvalidCast, tree);
+        internal static System.Exception ThrowInvalidCast(System.Type type, params Node[] tree) => throw new ExecutionException(InvalidCast, tree, "Invalid cast to " + type);
     }
 }

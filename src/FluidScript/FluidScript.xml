@@ -246,16 +246,6 @@
         <member name="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfLessThanUnsigned(FluidScript.Compiler.Emit.ILLabel)">
             <summary>
             Branches to the given label if the first value on the stack is less than the second
-            value me="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfLessThan(FluidScript.Compiler.Emit.ILLabel)">
-            <summary>
-            Branches to the given label if the first value on the stack is less than the second
-            value on the stack.
-            </summary>
-            <param name="label"> The label to branch to. </param>
-        </member>
-        <member name="M:FluidScript.Compiler.Emit.ILGenerator.BranchIfLessThanUnsigned(FluidScript.Compiler.Emit.ILLabel)">
-            <summary>
-            Branches to the given label if the first value on the stack is less than the second
             value on the stack.  If the operands are integers then they are treated as if they are
             unsigned.  If the operands are floating point numbers then a NaN value will trigger a
             branch.
@@ -867,7 +857,31 @@
             </summary>
         </member>
         <member name="P:FluidScript.Compiler.Emit.ILLocalVariable.Type">
-            or
+            <summary>
+            Gets the type of the local variable.
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.Emit.ILLocalVariable.Name">
+            <summary>
+            Gets the local variable name, or <c>null</c> if a name was not provided.
+            </summary>
+        </member>
+        <member name="T:FluidScript.Compiler.Emit.IMemberGenerator">
+            <summary>
+            Member Generate
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.LamdaGen.DefineAnonymousMethod(System.Type[],System.Type)">
+            <summary>
+            Define Anonymous class
+            </summary>
+            <param name="types">Ctor types</param>
+            <param name="returnType">Return Type of Lamda</param>
+            <returns>Type builder</returns>
+        </member>
+        <member name="T:FluidScript.Compiler.Emit.MethodBodyGenerator">
+            <summary>
+            Method body IL Generator
             </summary>
         </member>
         <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.SyntaxTree">
@@ -928,18 +942,6 @@
             <returns> The break target for the statement with the given label. </returns>
         </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.GetContinueTarget(System.String)">
-            <summary>
-            Returns the continue target for the statement with the given label, if one is provided, or
-            the top-most continue target otherwise.
-            </summary>
-            <param name="labelName"> The label associated with the continue target.  Can be
-            <c>null</c>. </param>
-            <returns> The continue target for the statement with the given label. </returns>
-        </member>
-        <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.BreakOrContinueStackSize">
-            <summary>
-            Gets the number of available break or continue targets.  Used to support break or
-            continue statements within finally b      <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.GetContinueTarget(System.String)">
             <summary>
             Returns the continue target for the statement with the given label, if one is provided, or
             the top-most continue target otherwise.
@@ -1013,7 +1015,7 @@
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitBinary(FluidScript.Compiler.SyntaxTree.BinaryExpression)">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
+        <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayListExpression)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitAssignment(FluidScript.Compiler.SyntaxTree.AssignmentExpression)">
@@ -1048,6 +1050,16 @@
         </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitNullPropegator(FluidScript.Compiler.SyntaxTree.NullPropegatorExpression)">
             <inheritdoc/>
+        </member>
+        <member name="F:FluidScript.Compiler.Emit.MethodGenerateOption.Dupplicate">
+            <summary>
+            Need to duplicate the copy of the value to the stack
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Emit.MethodGenerateOption.Return">
+            <summary>
+            currently Returning the value
+            </summary>
         </member>
         <member name="T:FluidScript.Compiler.Emit.ParameterInfo">
             <summary>
@@ -1771,7 +1783,24 @@
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.RuntimeCompiler.#ctor(System.Object)">
-   .Statement,System.Object)">
+            <summary>
+            New runtime evaluation 
+            </summary>
+            <param name="target">Global target for execution</param>
+        </member>
+        <member name="M:FluidScript.Compiler.RuntimeCompiler.#ctor(System.Object,FluidScript.Compiler.RuntimeVariables)">
+            <summary>
+            New runtime evaluation with local values
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.RuntimeCompiler.Item(System.String)">
+            <summary>
+            Gets or Sets value for execution
+            </summary>
+            <param name="name">Name to store</param>
+            <returns>value stored in it</returns>
+        </member>
+        <member name="M:FluidScript.Compiler.RuntimeCompiler.Invoke(FluidScript.Compiler.SyntaxTree.Statement,System.Object)">
             <summary>
             Evaluate the <paramref name="statement"/>
             </summary>
@@ -1829,22 +1858,6 @@
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitBreak(FluidScript.Compiler.SyntaxTree.BreakStatement)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitContinue(FluidScript.Compiler.SyntaxTree.ContinueStatement)">
-            <inheritdoc/>
-        </member>
-        <member name="T:FluidScript.Compiler.RuntimeCompiler.BranchContext">
-            <summary>
-            for long jump or break and continue
-            </summary>
-        </member>
-        <member name="T:FluidScript.Compiler.RuntimeVariables">
-            <summary>
-            Provides local variables for runtime
-            </summary>
-        </member>
-        <member name="M:FluidScr name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitBreak(FluidScript.Compiler.SyntaxTree.BreakStatement)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitContinue(FluidScript.Compiler.SyntaxTree.ContinueStatement)">
@@ -1934,36 +1947,52 @@
             Empty Expression
             </summary>
         </member>
-        <member name="M:Fluidlt;<see cref="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ArrayType"/>&gt;[1,2]
+        <member name="M:FluidScript.Compiler.SyntaxTree.Expression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
+            <summary>
+            Optimizes expression for emit or others
+            </summary>
+            <typeparam name="TResult"></typeparam>
+            <param name="visitor"></param>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.Expression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator,FluidScript.Compiler.Emit.MethodGenerateOption)">
+            <summary>
+            Generates IL code for <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/>
+            </summary>
+            <param name="generator"></param>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.ArrayListExpression">
+            <summary>
+            Array literal &lt;<see cref="F:FluidScript.Compiler.SyntaxTree.ArrayListExpression.ArrayType"/>&gt;[1,2]
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.Expressions">
+        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayListExpression.Expressions">
             <summary>
             List of array items
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.Arguments">
+        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayListExpression.Arguments">
             <summary>
             Array Size
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ArrayType">
+        <member name="F:FluidScript.Compiler.SyntaxTree.ArrayListExpression.ArrayType">
             <summary>
             Array type
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.#ctor(FluidScript.Compiler.SyntaxTree.INodeList{FluidScript.Compiler.SyntaxTree.Expression},FluidScript.Compiler.SyntaxTree.TypeSyntax,FluidScript.Compiler.SyntaxTree.INodeList{FluidScript.Compiler.SyntaxTree.Expression})">
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayListExpression.#ctor(FluidScript.Compiler.SyntaxTree.INodeList{FluidScript.Compiler.SyntaxTree.Expression},FluidScript.Compiler.SyntaxTree.TypeSyntax,FluidScript.Compiler.SyntaxTree.INodeList{FluidScript.Compiler.SyntaxTree.Expression})">
             <summary>
-            Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression"/>
+            Initializes new <see cref="T:FluidScript.Compiler.SyntaxTree.ArrayListExpression"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayListExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator)">
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayListExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator,FluidScript.Compiler.Emit.MethodGenerateOption)">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression.ToString">
+        <member name="M:FluidScript.Compiler.SyntaxTree.ArrayListExpression.ToString">
             <inheritdoc/>
         </member>
         <member name="P:FluidScript.Compiler.SyntaxTree.BinaryExpression.Conversions">
@@ -2020,7 +2049,7 @@
         <member name="M:FluidScript.Compiler.SyntaxTree.LiteralExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.LiteralExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator)">
+        <member name="M:FluidScript.Compiler.SyntaxTree.LiteralExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator,FluidScript.Compiler.Emit.MethodGenerateOption)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.LiteralExpression.ToString">
@@ -2069,7 +2098,7 @@
             Optimizes or evaluate the expression
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator)">
+        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator,FluidScript.Compiler.Emit.MethodGenerateOption)">
             <summary>
             Generate Compiled code
             </summary>
@@ -2093,7 +2122,7 @@
         <member name="M:FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator)">
+        <member name="M:FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator,FluidScript.Compiler.Emit.MethodGenerateOption)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression.ToString">
@@ -2148,16 +2177,6 @@
         <member name="M:FluidScript.Compiler.SyntaxTree.Node.Childs(FluidScript.Compiler.SyntaxTree.Node[])">
             <summary>
             Makes child nodes
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.Node.Iterate``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0})">
-            <summary>
-            Iterate items
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.Node.Iterate``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0,System.Int32})">
-            <summary>
-            Iterate items
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.NodeList`1.CopyTo(System.Array,System.Int32)">
@@ -2498,7 +2517,7 @@
             AnonymousFunction Expression
             </summary>
         </member>
-        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayLiteralExpression)">
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitArrayLiteral(FluidScript.Compiler.SyntaxTree.ArrayListExpression)">
             <summary>
             Array Literal
             </summary>
@@ -2735,27 +2754,20 @@
             Converts String to <see cref="T:FluidScript.Double"/>
             </summary>
         </member>
+        <member name="M:FluidScript.Extensions.EnumerableExtensions.Iterate``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0})">
+            <summary>
+            Iterate items
+            </summary>
+        </member>
+        <member name="M:FluidScript.Extensions.EnumerableExtensions.Iterate``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0,System.Int32})">
+            <summary>
+            Iterate items
+            </summary>
+        </member>
         <member name="M:FluidScript.Utils.TypeHelpers.FindGetIndexer(System.Type,System.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
             Current Declared Indexer can get
         </member>
         <member name="M:FluidScript.Utils.TypeHelpers.FindSetIndexer(System.Type,System.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
-            Current Declared Indexer can get
-        </member>
-        <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
-            <summary>
-            Returns true if the method's parameter types are reference assignable from
-            the argument types, otherwise false.
-            
-            An example that can make the method return false is that 
-            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
-            returns a method with two double parameters, which doesn't match the provided
-            argument types.
-            </summary>
-            <returns></returns>
-        </member>
-    </members>
-</doc>
-m.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
             Current Declared Indexer can get
         </member>
         <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">

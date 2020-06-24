@@ -2,10 +2,11 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
+
     /// <summary>
     /// Identfier Expression
     /// </summary>
-    public sealed class NameExpression : Expression
+    public sealed class NameExpression : Expression, Binders.IBinderProvider
     {
         /// <summary>
         /// Name of the Identifier
@@ -50,12 +51,12 @@ namespace FluidScript.Compiler.SyntaxTree
         /// Generate Compiled code
         /// </summary>
         /// <param name="generator"></param>
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
         {
-            // static
+            // for static no binder
             if (Binder != null)
             {
-                if (Binder.IsMember && Binder.IsStatic == false)
+                if (Binder.CanEmitThis)
                     generator.LoadArgument(0);
                 Binder.GenerateGet(generator);
             }

@@ -15,6 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// </summary>
         public Binders.ArgumentConversions Conversions { get; internal set; }
 
+
         public BinaryExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
         {
             Left = left;
@@ -23,12 +24,72 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override IEnumerable<Node> ChildNodes() => Childs(Left, Right);
 
+        public string MethodName
+        {
+            get
+            {
+                string opName = null;
+                switch (NodeType)
+                {
+                    case ExpressionType.Plus:
+                        opName = "op_Addition";
+                        break;
+                    case ExpressionType.Minus:
+                        opName = "op_Subtraction";
+                        break;
+                    case ExpressionType.Multiply:
+                        opName = "op_Multiply";
+                        break;
+                    case ExpressionType.Divide:
+                        opName = "op_Division";
+                        break;
+                    case ExpressionType.Percent:
+                        opName = "op_Modulus";
+                        break;
+                    case ExpressionType.BangEqual:
+                        opName = "op_Inequality";
+                        break;
+                    case ExpressionType.EqualEqual:
+                        opName = "op_Equality";
+                        break;
+                    case ExpressionType.Greater:
+                        opName = "op_GreaterThan";
+                        break;
+                    case ExpressionType.GreaterGreater:
+                        opName = "op_RightShift";
+                        break;
+                    case ExpressionType.GreaterEqual:
+                        opName = "op_GreaterThanOrEqual";
+                        break;
+                    case ExpressionType.Less:
+                        opName = "op_LessThan";
+                        break;
+                    case ExpressionType.LessLess:
+                        opName = "op_LeftShift";
+                        break;
+                    case ExpressionType.LessEqual:
+                        opName = "op_LessThanOrEqual";
+                        break;
+                    case ExpressionType.And:
+                        opName = "op_BitwiseAnd";
+                        break;
+                    case ExpressionType.Or:
+                        opName = "op_BitwiseOr";
+                        break;
+                    case ExpressionType.Circumflex:
+                        opName = "op_ExclusiveOr";
+                        break;
+                }
+                return opName;
+            }
+        }
+
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
             return visitor.VisitBinary(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
         {
             //todo conversion 
             if (Method == null)

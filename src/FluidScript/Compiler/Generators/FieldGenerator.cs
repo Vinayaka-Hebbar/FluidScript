@@ -75,13 +75,6 @@ namespace FluidScript.Compiler.Generators
             return new object[0];
         }
 
-        public Type GetType(Emit.TypeName typeName)
-        {
-            if (TypeGenerator != null)
-                return TypeGenerator.GetType(typeName);
-            return TypeProvider.GetType(typeName.FullName);
-        }
-
         public override object GetValue(object obj)
         {
             throw new NotImplementedException();
@@ -113,7 +106,7 @@ namespace FluidScript.Compiler.Generators
 
                 }
                 else
-                    type = DeclarationExpression.VariableType.GetType(TypeGenerator);
+                    type = DeclarationExpression.VariableType.GetType(TypeGenerator.Context);
                 var fieldBul = TypeGenerator.Builder.DefineField(Name, type, Attributes);
                 if (_CustomAttributes != null)
                 {

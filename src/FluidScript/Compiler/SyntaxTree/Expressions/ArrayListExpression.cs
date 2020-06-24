@@ -1,12 +1,13 @@
 ﻿using FluidScript.Compiler.Emit;
 using System;
+using System.Collections.Generic;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
     /// <summary>
     /// Array literal &lt;<see cref="ArrayType"/>&gt;[1,2]
     /// </summary>
-    public sealed class ArrayLiteralExpression : Expression
+    public sealed class ArrayListExpression : Expression
     {
         /// <summary>
         /// List of array items
@@ -25,9 +26,9 @@ namespace FluidScript.Compiler.SyntaxTree
         public readonly TypeSyntax ArrayType;
 
         /// <summary>
-        /// Initializes new <see cref="ArrayLiteralExpression"/>
+        /// Initializes new <see cref="ArrayListExpression"/>
         /// </summary>
-        public ArrayLiteralExpression(INodeList<Expression> expressions, TypeSyntax type, INodeList<Expression> arguments) : base(ExpressionType.Array)
+        public ArrayListExpression(INodeList<Expression> expressions, TypeSyntax type, INodeList<Expression> arguments) : base(ExpressionType.Array)
         {
             Expressions = expressions;
             ArrayType = type;
@@ -40,7 +41,7 @@ namespace FluidScript.Compiler.SyntaxTree
             set;
         }
 
-        public System.Type ElementType { get; set; }
+        public Type ElementType { get; set; }
 
         public Binders.ArgumentConversions ArgumentConversions { get; set; }
 
@@ -53,7 +54,7 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
         {
             if (Arguments != null)
             {
@@ -108,6 +109,22 @@ namespace FluidScript.Compiler.SyntaxTree
             }
 
             return string.Concat("[", string.Join(",", Expressions.Map(exp => exp.ToString())), "]<", ArrayType, ">(", args, ")");
+        }
+
+        public static void MakeObjectArray(MethodBodyGenerator generator, ICollection<Expression> expressions)
+        {
+            int i = 0;
+            generator.LoadInt32(expressions.Count);
+            generator.NewArray(typeof(object));
+            foreach (var expression in expressions)
+            {
+                generator.Duplicate();
+                generator.LoadInt32(i++);
+                expression.Accept(generator).GenerateCode(generator);
+                if (expression.Type.IsValueType)
+                    generator.Box(expression.Type);
+                generator.StoreArrayElement(typeof(object));
+            }
         }
     }
 }

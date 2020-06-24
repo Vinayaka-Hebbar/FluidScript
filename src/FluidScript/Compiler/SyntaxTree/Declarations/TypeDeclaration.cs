@@ -25,23 +25,23 @@ namespace FluidScript.Compiler.SyntaxTree
             set;
         }
 
-        public override void Compile(Generators.TypeGenerator generator)
+        public override void Generate(Generators.TypeGenerator generator)
         {
             throw new System.NotImplementedException();
         }
 
-        public System.Type Generate(AssemblyGen module)
+        public System.Type Generate(AssemblyGen assembly)
         {
             System.Type baseType;
             if (BaseType != null)
-                baseType = module.GetType(BaseType.ToString());
+                baseType = assembly.GetType(BaseType.ToString());
             else
                 baseType = typeof(FSObject);
-            var generator = module.DefineType(Name, baseType, System.Reflection.TypeAttributes.Public);
+            var generator = assembly.DefineType(Name, baseType, System.Reflection.TypeAttributes.Public);
             generator.Source = Source;
             foreach (var member in Members)
             {
-                member.Compile(generator);
+                member.Generate(generator);
             }
             return generator.Create();
         }

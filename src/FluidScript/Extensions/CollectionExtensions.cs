@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FluidScript.Utils
+namespace FluidScript.Extensions
 {
     public static class CollectionExtensions
     {

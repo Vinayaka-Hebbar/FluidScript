@@ -2,21 +2,20 @@
 using System.Diagnostics.SymbolStore;
 #endif
 using FluidScript.Compiler.Generators;
-using System.Linq;
 using System.Reflection.Emit;
 
 namespace FluidScript.Compiler.Emit
 {
-    public sealed class AssemblyGen
+    public sealed class AssemblyGen 
     {
         public readonly AssemblyBuilder Assembly;
         public readonly ModuleBuilder Module;
         public int TypeCount;
-        private readonly System.Collections.Generic.IDictionary<string, System.Type> _types;
-
-        public string Name { get; }
 
         private int dynamicCount;
+
+        public string Namespace { get; }
+        public ProgramContext Context { get; }
 
 #if NETFRAMEWORK || MONOANDROID
 
@@ -57,8 +56,8 @@ namespace FluidScript.Compiler.Emit
         {
             System.Reflection.AssemblyName name = new System.Reflection.AssemblyName(string.Concat(assemblyName, ", Version=", version));
 #if NETFRAMEWORK || MONOANDROID
-            var assembly = System.AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
-            var module = assembly.DefineDynamicModule(name.Name, false);
+            var assembly = System.Threading.Thread.GetDomain().DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
+            var module = assembly.DefineDynamicModule(assemblyName, string.Concat(assemblyName, ".dll"), false);
 #else
             var assembly =
           AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndCollect);
@@ -67,15 +66,15 @@ namespace FluidScript.Compiler.Emit
 #endif
             Assembly = assembly;
             Module = module;
-            Name = module.ScopeName;
-            _types = TypeProvider.Inbuilts.ToDictionary(item => item.Name, item => item.Type);
+            Namespace = module.ScopeName;
+            Context = new ProgramContext(null);
         }
 
         public TypeGenerator DefineType(string name, System.Type parent, System.Reflection.TypeAttributes attr)
         {
-            TypeBuilder builder = Module.DefineType(string.Concat(Name, ".", name), attr, parent);
+            TypeBuilder builder = Module.DefineType(string.Concat(Namespace, ".", name), attr, parent);
             var generator = new TypeGenerator(builder, this);
-            _types.Add(builder.FullName, generator);
+            Context.Register(name, generator);
             return generator;
         }
 
@@ -87,7 +86,7 @@ namespace FluidScript.Compiler.Emit
 
         public System.Type GetType(string typeName)
         {
-            if (_types.TryGetValue(typeName, out System.Type type))
+            if (Context.TryGetType(typeName, out System.Type type))
             {
                 return type;
             }

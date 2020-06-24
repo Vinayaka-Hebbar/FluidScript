@@ -20,7 +20,7 @@
             Target = target;
         }
 
-        public override void GenerateCode(Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption options)
         {
             Target.GenerateCode(generator);
             if (Method != null)

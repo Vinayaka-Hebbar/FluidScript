@@ -62,7 +62,7 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
         {
             //todo unsigned to signed
             switch (Value)

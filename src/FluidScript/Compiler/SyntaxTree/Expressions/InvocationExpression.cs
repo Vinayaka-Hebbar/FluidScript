@@ -29,11 +29,9 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitCall(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
         {
-            // if method is static instance is not required
-            if (Method.IsStatic == false)
-                Target.GenerateCode(generator);
+            Target.GenerateCode(generator);
             if (Arguments.Count > 0)
             {
                 var conversions = Convertions;

@@ -7,6 +7,8 @@ namespace FluidScript.Compiler.SyntaxTree
     /// </summary>
     public sealed class ReturnOrThrowStatement : Statement
     {
+        const MethodGenerateOption GenerateOption = MethodGenerateOption.Return | MethodGenerateOption.Dupplicate;
+
         /// <summary>
         /// return expression
         /// </summary>
@@ -38,7 +40,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 if (Expression != null)
                 {
                     var exp = Expression.Accept(generator);
-                    exp.GenerateCode(generator);
+                    exp.GenerateCode(generator, GenerateOption);
                     if (generator.SyntaxTree is BlockStatement block)
                     {
                         if (block.Statements.Count > 0)
@@ -47,19 +49,18 @@ namespace FluidScript.Compiler.SyntaxTree
                         }
                     }
                     var dest = generator.Method.ReturnType;
-                    if (dest == null)
+                    if (dest is null)
                         throw new System.NullReferenceException(nameof(System.Reflection.MethodInfo.ReturnType));
                     // void type no return
                     if (dest != TypeProvider.VoidType)
                     {
 
-                        //todo variable name not used
+                        // todo variable name not used
                         if (generator.ReturnVariable == null)
                             generator.ReturnVariable = generator.DeclareVariable(dest);
                         System.Type src = exp.Type;
                         if (!dest.IsAssignableFrom(src))
                         {
-                            //todo box value type
                             if (Utils.TypeUtils.TryImplicitConvert(src, dest, out System.Reflection.MethodInfo method))
                             {
                                 generator.Call(method);
@@ -88,7 +89,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     }
                 }
                 //last statement is not a return
-                if (lastStatement == false)
+                if (!lastStatement)
                 {
                     //if iniside try finally block 
                     generator.EmitLongJump(generator, generator.ReturnTarget);

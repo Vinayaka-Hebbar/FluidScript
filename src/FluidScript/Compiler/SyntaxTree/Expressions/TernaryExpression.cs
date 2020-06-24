@@ -24,7 +24,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitTernary(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
         {
             // Find the result type.
             var resultType = Type;

@@ -7,7 +7,7 @@ namespace FluidScript.Compiler.SyntaxTree
     /// <summary>
     /// Member access expression
     /// </summary>
-    public class MemberExpression : Expression
+    public class MemberExpression : Expression, Binders.IBinderProvider
     {
         public readonly Expression Target;
         public readonly string Name;
@@ -43,7 +43,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitMember(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
         {
             Target.GenerateCode(generator);
             Binder?.GenerateGet(generator);

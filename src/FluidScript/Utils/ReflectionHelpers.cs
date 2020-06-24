@@ -1,15 +1,11 @@
 ﻿using FluidScript.Compiler;
+using FluidScript.Extensions;
 using System.Reflection;
 
 namespace FluidScript.Utils
 {
-    internal static class ReflectionHelpers
+    public static class ReflectionHelpers
     {
-        private const string Separator = ", ";
-        private const BindingFlags DeclaredStatic = DeclaredPublic | BindingFlags.Static;
-        private const BindingFlags DeclaredInstance = DeclaredPublic | BindingFlags.Instance;
-        private const BindingFlags DeclaredPublic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.ExactBinding;
-
 
         #region Members
 
@@ -33,7 +29,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_register_ctor == null)
-                    m_register_ctor = GetInstanceCtor(typeof(Runtime.RegisterAttribute), typeof(string));
+                    m_register_ctor = typeof(Runtime.RegisterAttribute).GetInstanceCtor(typeof(string));
                 return m_register_ctor;
             }
         }
@@ -47,7 +43,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_booleanToBool == null)
-                    m_booleanToBool = GetStaticMethod(TypeProvider.BooleanType, TypeUtils.ImplicitConversionName, TypeProvider.BooleanType);
+                    m_booleanToBool = TypeProvider.BooleanType.GetStaticMethod(TypeUtils.ImplicitConversionName, TypeProvider.BooleanType);
                 return m_booleanToBool;
             }
         }
@@ -58,7 +54,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_intergerToInt32 == null)
-                    m_intergerToInt32 = GetImplicitConversion(TypeProvider.IntType, TypeUtils.ImplicitConversionName, typeof(int), TypeProvider.IntType);
+                    m_intergerToInt32 = TypeProvider.IntType.GetImplicitConversion(TypeUtils.ImplicitConversionName, typeof(int), TypeProvider.IntType);
                 return m_intergerToInt32;
             }
         }
@@ -73,7 +69,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_logicalAnd == null)
-                    m_logicalAnd = GetStaticMethod(TypeProvider.BooleanType, "OpLogicalAnd", TypeProvider.BooleanType, TypeProvider.BooleanType);
+                    m_logicalAnd = TypeProvider.BooleanType.GetStaticMethod("OpLogicalAnd", TypeProvider.BooleanType, TypeProvider.BooleanType);
                 return m_logicalAnd;
             }
         }
@@ -84,7 +80,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_logicalOr == null)
-                    m_logicalOr = GetStaticMethod(TypeProvider.BooleanType, "OpLogicalOr", TypeProvider.BooleanType, TypeProvider.BooleanType);
+                    m_logicalOr = TypeProvider.BooleanType.GetStaticMethod( "OpLogicalOr", TypeProvider.BooleanType, TypeProvider.BooleanType);
                 return m_logicalOr;
             }
         }
@@ -95,7 +91,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_toBoolean == null)
-                    m_toBoolean = GetStaticMethod(typeof(FSConvert), nameof(FSConvert.ToBoolean), TypeProvider.ObjectType);
+                    m_toBoolean = typeof(FSConvert).GetStaticMethod(nameof(FSConvert.ToBoolean), TypeProvider.ObjectType);
                 return m_toBoolean;
             }
         }
@@ -106,7 +102,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_mathPow == null)
-                    m_mathPow = GetStaticMethod(typeof(Math), nameof(Math.Pow), TypeProvider.DoubleType, TypeProvider.DoubleType);
+                    m_mathPow = typeof(Math).GetStaticMethod(nameof(Math.Pow), TypeProvider.DoubleType, TypeProvider.DoubleType);
                 return m_mathPow;
             }
         }
@@ -117,7 +113,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_isEquals == null)
-                    m_isEquals = GetStaticMethod(TypeProvider.FSType, nameof(FSObject.IsEquals), TypeProvider.ObjectType, TypeProvider.ObjectType);
+                    m_isEquals = TypeProvider.FSType.GetStaticMethod(nameof(FSObject.IsEquals), TypeProvider.ObjectType, TypeProvider.ObjectType);
                 return m_isEquals;
             }
         }
@@ -128,7 +124,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_logicalNot == null)
-                    m_logicalNot = GetStaticMethod(TypeProvider.BooleanType, "op_LogicalNot", TypeProvider.BooleanType);
+                    m_logicalNot = TypeProvider.BooleanType.GetStaticMethod("op_LogicalNot", TypeProvider.BooleanType);
                 return m_logicalNot;
             }
         }
@@ -139,7 +135,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_toAny == null)
-                    m_toAny = GetStaticMethod(typeof(FSConvert), nameof(FSConvert.ToAny), TypeProvider.ObjectType);
+                    m_toAny = typeof(FSConvert).GetStaticMethod(nameof(FSConvert.ToAny), TypeProvider.ObjectType);
                 return m_toAny;
             }
         }
@@ -150,65 +146,20 @@ namespace FluidScript.Utils
 
         static ReflectionHelpers()
         {
+            Double_New = TypeProvider.DoubleType.GetInstanceCtor( typeof(double));
+            Float_New = TypeProvider.FloatType.GetInstanceCtor( typeof(float));
+            Long_New = TypeProvider.LongType.GetInstanceCtor(typeof(long));
+            Integer_New = TypeProvider.IntType.GetInstanceCtor( typeof(int));
+            Short_New = TypeProvider.ShortType.GetInstanceCtor( typeof(short));
+            Byte_New = TypeProvider.ByteType.GetInstanceCtor(typeof(sbyte));
+            Char_New = TypeProvider.CharType.GetInstanceCtor( typeof(char));
+            String_New = TypeProvider.StringType.GetInstanceCtor( typeof(string));
 
-            Double_New = GetInstanceCtor(TypeProvider.DoubleType, typeof(double));
-            Float_New = GetInstanceCtor(TypeProvider.FloatType, typeof(float));
-            Long_New = GetInstanceCtor(TypeProvider.LongType, typeof(long));
-            Integer_New = GetInstanceCtor(TypeProvider.IntType, typeof(int));
-            Short_New = GetInstanceCtor(TypeProvider.ShortType, typeof(short));
-            Byte_New = GetInstanceCtor(TypeProvider.ByteType, typeof(sbyte));
-            Char_New = GetInstanceCtor(TypeProvider.CharType, typeof(char));
-            String_New = GetInstanceCtor(TypeProvider.StringType, typeof(string));
-
-            Bool_True = GetField(TypeProvider.BooleanType, nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
-            Bool_False = GetField(TypeProvider.BooleanType, nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
-
-        }
-
-        private static ConstructorInfo GetInstanceCtor(System.Type type, params System.Type[] parameterTypes)
-        {
-            var result = type.GetConstructor(DeclaredInstance, null, parameterTypes, null);
-            if (result == null)
-                throw new System.InvalidOperationException(string.Format("the ctor {0}.ctor({1})", type.FullName, StringHelpers.Join(Separator, parameterTypes)));
-            return result;
-        }
-
-        internal static MethodInfo GetStaticMethod(System.Type type, string name, params System.Type[] parameterTypes)
-        {
-            MethodInfo result = type.GetMethod(name, DeclaredStatic, null, parameterTypes, null);
-            if (result == null)
-                throw new System.InvalidOperationException(string.Format("the static method {0}.{1}({2})", type.FullName, name, StringHelpers.Join(Separator, parameterTypes)));
-            return result;
-        }
-
-        internal static MethodInfo GetImplicitConversion(System.Type type, string name, System.Type returnType, params System.Type[] parameterTypes)
-        {
-            var results = type.GetMember(name, MemberTypes.Method, DeclaredStatic);
-            foreach (MethodInfo method in results)
-            {
-                if (TypeUtils.MatchesArgumentTypes(method, parameterTypes) && TypeUtils.AreReferenceAssignable(method.ReturnType, returnType))
-                {
-                    return method;
-                }
-            }
-            throw new System.InvalidOperationException(string.Format("the convertion method {0}.{1}({2})", type.FullName, name, StringHelpers.Join(Separator, parameterTypes)));
-        }
-
-        internal static FieldInfo GetField(System.Type type, string name, BindingFlags binding)
-        {
-            FieldInfo result = type.GetField(name, binding);
-            if (result == null)
-                throw new System.InvalidOperationException(string.Format("the field {0}.{1}", type.FullName, name));
-            return result;
+            Bool_True = TypeProvider.BooleanType.GetField(nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
+            Bool_False = TypeProvider.BooleanType.GetField(nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
 
         }
 
-        internal static MethodInfo GetInstanceMethod(System.Type type, string name, params System.Type[] parameterTypes)
-        {
-            MethodInfo result = type.GetMethod(name, DeclaredInstance, null, parameterTypes, null);
-            if (result == null)
-                throw new System.InvalidOperationException(string.Format("The instance method {0}.{1}({2}) does not exist.", type.FullName, name, StringHelpers.Join(", ", parameterTypes)));
-            return result;
-        }
+        
     }
 }

@@ -294,7 +294,7 @@ namespace FluidScript
 
         public static Integer operator --(Integer value)
         {
-            return new Integer(value.m_value + 1);
+            return new Integer(value.m_value - 1);
         }
 
         public static Integer operator &(Integer left, Integer right)

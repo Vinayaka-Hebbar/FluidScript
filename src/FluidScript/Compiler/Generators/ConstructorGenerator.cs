@@ -10,22 +10,21 @@ namespace FluidScript.Compiler.Generators
         private readonly System.Type[] _baseParameterTypes;
         private readonly TypeGenerator Declaring;
 
-        public ConstructorGenerator(System.Reflection.Emit.ConstructorBuilder builder, ParameterInfo[] parameters, System.Type[] baseParameterTypes, TypeGenerator generator, SyntaxTree.Statement statement)
+        public ConstructorGenerator(System.Reflection.Emit.ConstructorBuilder builder, ParameterInfo[] parameters, System.Type[] baseParameterTypes, TypeGenerator generator)
         {
             _builder = builder;
             _baseParameterTypes = baseParameterTypes;
             Name = builder.Name;
             Parameters = parameters;
             Declaring = generator;
-            Provider = generator;
-            SyntaxBody = statement;
+            Context = generator.Context;
             Attributes = builder.Attributes;
             MemberType = System.Reflection.MemberTypes.Method;
         }
 
         public override System.Reflection.MemberTypes MemberType { get; }
 
-        public SyntaxTree.Statement SyntaxBody { get; }
+        public SyntaxTree.Statement SyntaxBody { get; set; }
 
         public System.Reflection.MemberInfo MemberInfo => this;
 
@@ -45,7 +44,7 @@ namespace FluidScript.Compiler.Generators
 
         public System.Type ReturnType => null;
 
-        public ITypeProvider Provider { get; set; }
+        public IProgramContext Context { get; set; }
 
         public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
         {
@@ -91,8 +90,8 @@ namespace FluidScript.Compiler.Generators
 
         public System.Type GetType(TypeName typeName)
         {
-            if (Provider != null)
-                return Provider.GetType(typeName);
+            if (Context != null)
+                return Context.GetType(typeName);
             return TypeProvider.Default.GetType(typeName.FullName);
         }
 

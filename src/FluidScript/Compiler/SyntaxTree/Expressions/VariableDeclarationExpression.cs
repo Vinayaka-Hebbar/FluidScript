@@ -18,9 +18,9 @@
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption options)
         {
-            Type = VariableType != null ? VariableType.GetType(generator.TypeProvider) : TypeProvider.ObjectType;
+            Type = VariableType != null ? VariableType.GetType(generator.Context) : TypeProvider.ObjectType;
             if (Value != null)
             {
                 var defValue = Value.Accept(generator);

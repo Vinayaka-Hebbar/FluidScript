@@ -1,5 +1,6 @@
 ﻿using FluidScript.Compiler.Binders;
 using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Extensions;
 using FluidScript.Utils;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,7 @@ namespace FluidScript.Compiler.Emit
 
         internal readonly IMethodBaseGenerator Method;
 
-        internal readonly ITypeProvider TypeProvider;
+        internal readonly IProgramContext Context;
 
         internal readonly Type ReturnType;
 
@@ -50,7 +51,7 @@ namespace FluidScript.Compiler.Emit
         {
             Method = method;
             ReturnType = method.ReturnType;
-            TypeProvider = method.Provider;
+            Context = method.Context;
             SyntaxTree = method.SyntaxBody;
         }
 
@@ -351,44 +352,13 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitUnary(UnaryExpression node)
         {
             var operand = node.Operand.Accept(this);
-            string name = null;
-            switch (node.NodeType)
+            if (node.NodeType == ExpressionType.Parenthesized)
             {
-                case ExpressionType.Parenthesized:
-                    return operand;
-                case ExpressionType.PostfixPlusPlus:
-                    name = "op_Increment";
-                    break;
-                case ExpressionType.PrefixPlusPlus:
-                    name = "op_Increment";
-                    break;
-                case ExpressionType.PostfixMinusMinus:
-                    name = "op_Decrement";
-                    break;
-                case ExpressionType.PrefixMinusMinus:
-                    name = "op_Decrement";
-                    break;
-                case ExpressionType.Bang:
-                    name = "op_LogicalNot";
-                    break;
-                case ExpressionType.Plus:
-                    name = "op_UnaryPlus";
-                    break;
-                case ExpressionType.Minus:
-                    name = "op_UnaryNegation";
-                    break;
-                case ExpressionType.Circumflex:
-                    name = "op_ExclusiveOr";
-                    break;
-                case ExpressionType.Or:
-                    name = "op_BitwiseOr";
-                    break;
-                case ExpressionType.And:
-                    name = "op_BitwiseAnd";
-                    break;
+                node.Type = operand.Type;
+                return operand;
             }
             ArgumentConversions conversions = new ArgumentConversions(2);
-            var method = TypeUtils.GetOperatorOverload(name, conversions, operand.Type);
+            var method = TypeUtils.GetOperatorOverload(node.MethodName, conversions, operand.Type);
             node.Conversions = conversions;
             node.Method = method;
             node.Type = method.ReturnType;
@@ -398,53 +368,7 @@ namespace FluidScript.Compiler.Emit
         /// <inheritdoc/>
         Expression IExpressionVisitor<Expression>.VisitBinary(BinaryExpression node)
         {
-            string opName = null;
-            var nodeType = node.NodeType;
-            switch (node.NodeType)
-            {
-                case ExpressionType.Plus:
-                    opName = "op_Addition";
-                    break;
-                case ExpressionType.Minus:
-                    opName = "op_Subtraction";
-                    break;
-                case ExpressionType.Multiply:
-                    opName = "op_Multiply";
-                    break;
-                case ExpressionType.Divide:
-                    opName = "op_Division";
-                    break;
-                case ExpressionType.Percent:
-                    opName = "op_Modulus";
-                    break;
-                case ExpressionType.BangEqual:
-                    opName = "op_Inequality";
-                    break;
-                case ExpressionType.EqualEqual:
-                    opName = "op_Equality";
-                    break;
-                case ExpressionType.Greater:
-                    opName = "op_GreaterThan";
-                    break;
-                case ExpressionType.GreaterEqual:
-                    opName = "op_GreaterThanOrEqual";
-                    break;
-                case ExpressionType.Less:
-                    opName = "op_LessThan";
-                    break;
-                case ExpressionType.LessEqual:
-                    opName = "op_LessThanOrEqual";
-                    break;
-                case ExpressionType.And:
-                    opName = "op_BitwiseAnd";
-                    break;
-                case ExpressionType.Or:
-                    opName = "op_BitwiseOr";
-                    break;
-                case ExpressionType.Circumflex:
-                    opName = "op_ExclusiveOr";
-                    break;
-            }
+            var opName = node.MethodName;
             //todo like rutime compiler
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
@@ -454,14 +378,14 @@ namespace FluidScript.Compiler.Emit
             {
                 var types = new Type[2] { left.Type, right.Type };
                 conversions = new ArgumentConversions(2);
-                if (left.Type.IsPrimitive || right.Type.IsPrimitive)
+                if (left.Type.IsPrimitive == true || right.Type.IsPrimitive == true)
                 {
                     TypeUtils.FromSystemType(conversions, ref types);
                 }
                 method = TypeUtils.
                    GetOperatorOverload(opName, conversions, types);
             }
-            else if (nodeType == ExpressionType.AndAnd || nodeType == ExpressionType.OrOr)
+            else if (node.NodeType == ExpressionType.AndAnd || node.NodeType == ExpressionType.OrOr)
             {
                 conversions = new ArgumentConversions(2);
                 System.Reflection.MethodInfo convertLeft = TypeUtils.GetBooleanOveraload(left.Type);
@@ -470,7 +394,19 @@ namespace FluidScript.Compiler.Emit
                 var convertRight = TypeUtils.GetBooleanOveraload(right.Type);
                 if (convertRight != null)
                     conversions.Add(new ParamConversion(1, convertRight));
-                method = nodeType == ExpressionType.AndAnd ? ReflectionHelpers.LogicalAnd : ReflectionHelpers.LogicalOr;
+                method = node.NodeType == ExpressionType.AndAnd ? ReflectionHelpers.LogicalAnd : ReflectionHelpers.LogicalOr;
+            }
+            else if(node.NodeType == ExpressionType.StarStar)
+            {
+                var types = new Type[2] { left.Type, right.Type };
+                conversions = new ArgumentConversions(2);
+                if (left.Type.IsPrimitive == true || right.Type.IsPrimitive == true)
+                {
+                    TypeUtils.FromSystemType(conversions, ref types);
+                }
+                method = ReflectionHelpers.MathPow;
+                if (!TypeUtils.MatchesTypes(method, types, conversions))
+                    ExecutionException.ThrowArgumentMisMatch(node);
             }
             node.Conversions = conversions;
             node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
@@ -479,9 +415,9 @@ namespace FluidScript.Compiler.Emit
         }
 
         /// <inheritdoc/>
-        Expression IExpressionVisitor<Expression>.VisitArrayLiteral(ArrayLiteralExpression node)
+        Expression IExpressionVisitor<Expression>.VisitArrayLiteral(ArrayListExpression node)
         {
-            var type = node.ArrayType != null ? node.ArrayType.GetType(TypeProvider) : typeof(object);
+            var type = node.ArrayType != null ? node.ArrayType.GetType(Context) : typeof(object);
             node.Type = typeof(Collections.List<>).MakeGenericType(type);
             node.ElementType = type;
             if (node.Arguments != null)
@@ -569,6 +505,9 @@ namespace FluidScript.Compiler.Emit
             var types = node.Arguments.Map(arg => arg.Accept(this).Type);
             Type resultType = null;
             string name = null;
+            System.Reflection.MethodInfo method;
+            ArgumentConversions conversions;
+            // we can't resolve method directly using target.Accept()
             var target = node.Target;
             if (target.NodeType == ExpressionType.Identifier)
             {
@@ -582,11 +521,19 @@ namespace FluidScript.Compiler.Emit
                 resultType = exp.Type;
                 name = member.Name;
             }
-            //todo parameterised expression invoke (expression)()
-            var method = TypeUtils.FindMethod(name, resultType, types, out ArgumentConversions binders);
+            else if (typeof(Delegate).IsAssignableFrom(target.Type))
+            {
+                method = target.Type.GetInstanceMethod("Invoke");
+                conversions = new ArgumentConversions(types.Length);
+                if (!TypeUtils.MatchesTypes(method, types, conversions))
+                    ExecutionException.ThrowArgumentMisMatch(node.Target, node);
+                goto done;
+            }
+            method = TypeUtils.FindMethod(name, resultType, types, out conversions);
             if (method is IMethodBaseGenerator baseGenerator)
                 method = (System.Reflection.MethodInfo)baseGenerator.MethodBase;
-            node.Convertions = binders;
+            done:
+            node.Convertions = conversions;
             node.Method = method ?? throw ExecutionException.ThrowMissingMethod(resultType, name, node);
             node.Type = method.ReturnType;
             return node;
@@ -693,6 +640,12 @@ namespace FluidScript.Compiler.Emit
                     node.Binder = new PropertyBinder(property);
                 }
             }
+            else if(Context.TryGetType(name, out Type type))
+            {
+                // if static type name
+                node.Type = type;
+                node.Binder = new EmptyBinder(type);
+            }
             return node;
         }
 
@@ -742,7 +695,7 @@ namespace FluidScript.Compiler.Emit
             }
             else
             {
-                node.Type = node.VariableType.GetType(TypeProvider);
+                node.Type = node.VariableType.GetType(Context);
             }
             return node;
 
@@ -770,7 +723,30 @@ namespace FluidScript.Compiler.Emit
 
         Expression IExpressionVisitor<Expression>.VisitAnonymousFunction(AnonymousFunctionExpression node)
         {
-            throw new NotImplementedException();
+            if (node.Type is null)
+            {
+                Type returnType;
+                if (node.ReturnSyntax != null)
+                    returnType = node.ReturnSyntax.GetType(Context);
+                else
+                    returnType = typeof(object);
+                int length = node.Parameters.Count;
+                Type[] types = new Type[length];
+                var parameters = new ParameterInfo[length];
+                for (int i = 0; i < length; i++)
+                {
+                    var para = node.Parameters[i];
+                    Type paramerterType = para.Type == null ? Compiler.TypeProvider.ObjectType : para.Type.GetType(Context);
+                    parameters[i] = new ParameterInfo(para.Name, i + 1, paramerterType, para.IsVar);
+                    types[i] = paramerterType;
+                }
+                var delgateType = DelegateGen.MakeNewDelegate(types, returnType);
+                node.Type = delgateType;
+                node.Types = types;
+                node.ReturnType = returnType;
+                node.ParameterInfos = parameters;
+            }
+            return node;
         }
 
         Expression IExpressionVisitor<Expression>.VisitSizeOf(SizeOfExpression node)
@@ -783,10 +759,10 @@ namespace FluidScript.Compiler.Emit
             var value = node.Target.Accept(this);
             if (node.Type == null)
             {
-                var type = node.TypeName.GetType(TypeProvider);
+                var type = node.TypeName.GetType(Context);
 
-                //todo explict convert
-                if (!TypeUtils.AreReferenceAssignable(type, node.Type) &&
+                // todo explict convert
+                if (!TypeUtils.AreReferenceAssignable(type, value.Type) &&
                     TypeUtils.TryImplicitConvert(value.Type, type, out System.Reflection.MethodInfo implicitConvert))
                 {
                     node.Method = implicitConvert;

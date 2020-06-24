@@ -22,7 +22,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             foreach (var declaration in DeclarationExpressions)
             {
-                declaration.GenerateCode(generator);
+                declaration.GenerateCode(generator, MethodGenerateOption.None);
             }
         }
 

@@ -42,28 +42,5 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             return values;
         }
-
-        /// <summary>
-        /// Iterate items
-        /// </summary>
-        public static void Iterate<TSource>(IEnumerable<TSource> sources, System.Action<TSource> callback) where TSource : Node
-        {
-            foreach (var item in sources)
-            {
-                callback(item);
-            }
-        }
-
-        /// <summary>
-        /// Iterate items
-        /// </summary>
-        public static void Iterate<TSource>(IEnumerable<TSource> sources, System.Action<TSource, int> callback) where TSource : Node
-        {
-            int index = 0;
-            foreach (var item in sources)
-            {
-                callback(item, index++);
-            }
-        }
     }
 }

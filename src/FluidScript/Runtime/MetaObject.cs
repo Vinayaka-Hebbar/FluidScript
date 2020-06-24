@@ -1,4 +1,5 @@
-﻿using System.Dynamic;
+﻿using FluidScript.Extensions;
+using System.Dynamic;
 using System.Linq.Expressions;
 
 namespace FluidScript.Runtime
@@ -39,7 +40,7 @@ namespace FluidScript.Runtime
         public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
         {
             var name = binder.Name;
-            var arguments = Utils.CollectionExtensions.Map(args, arg => arg.Value);
+            var arguments = args.Map(arg => arg.Value);
             var del = m_value.GetDelegate(name, arguments, out Compiler.Binders.ArgumentConversions conversions);
             var method = del.Method;
             // todo check whether target is correct

@@ -56,7 +56,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.11-preview.26.4" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.11" />
   </ItemGroup>
 
 </Project>

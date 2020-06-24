@@ -12,7 +12,7 @@ namespace FluidScript.Compiler.Emit
         /// <summary>
         /// Underlying ILGenerator
         /// </summary>
-        public readonly System.Reflection.Emit.ILGenerator Generator;
+        protected readonly System.Reflection.Emit.ILGenerator Generator;
         /// <summary>
         /// Indicated whether to emit debug info
         /// </summary>
@@ -710,6 +710,13 @@ namespace FluidScript.Compiler.Emit
         public override void NewObject(ConstructorInfo constructor)
         {
             Generator.Emit(OpCodes.Newobj, constructor);
+        }
+
+
+        public void LoadFunction(MethodInfo method, Type delgateType)
+        {
+            Generator.Emit(OpCodes.Ldftn, method);
+            Generator.Emit(OpCodes.Newobj, delgateType.GetConstructors()[0]);
         }
 
         ///<inheritdoc/>

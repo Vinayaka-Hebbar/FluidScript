@@ -272,6 +272,8 @@ namespace FluidScript.Compiler
                         return TokenType.BangEqual;
                     }
                     return TokenType.Bang;
+                case '~':
+                    return TokenType.Tilda;
                 case '_':
                     if (char.IsLetter(n))
                     {
@@ -916,6 +918,10 @@ namespace FluidScript.Compiler
                     MoveNext();
                     exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.Plus);
                     break;
+                case TokenType.Tilda:
+                    MoveNext();
+                    exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.Tilda);
+                    break;
                 case TokenType.Minus:
                     MoveNext();
                     exp = new UnaryExpression(VisitLeftHandSideExpression(), ExpressionType.Minus);
@@ -1132,7 +1138,7 @@ namespace FluidScript.Compiler
                 arguments = VisitArgumentList(TokenType.Comma, TokenType.RightParenthesis);
                 MoveNextIf(TokenType.RightParenthesis);
             }
-            return new ArrayLiteralExpression(list, type, arguments);
+            return new ArrayListExpression(list, type, arguments);
         }
 
         /// <summary>

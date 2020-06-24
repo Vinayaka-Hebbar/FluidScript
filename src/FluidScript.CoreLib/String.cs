@@ -1,4 +1,6 @@
-﻿namespace FluidScript
+﻿using System;
+
+namespace FluidScript
 {
     /// <summary>
     /// Represents text as a series of Unicode characters.
@@ -6,7 +8,7 @@
     [System.Serializable]
     [Runtime.Register(nameof(String))]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public sealed class String : FSObject, System.IConvertible
+    public sealed class String : FSObject, System.IConvertible, IEquatable<string>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly string m_value;
@@ -120,6 +122,8 @@
         [Runtime.Register("equals")]
         public Boolean Equals(String obj)
         {
+            if (obj is null)
+                return m_value == null;
             return m_value == obj.m_value ? Boolean.True : Boolean.False;
         }
 
@@ -128,6 +132,17 @@
         {
             return other is String s &&
                   m_value == s.m_value;
+        }
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="other"> The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value;
+        ///  otherwise, false.</returns>
+        public bool Equals(string other)
+        {
+            return m_value == other;
         }
 
         ///<inheritdoc/>
@@ -254,7 +269,9 @@
         /// </summary>
         public static Boolean operator ==(String left, String right)
         {
-            return left.m_value.Equals(right.m_value) ? Boolean.True : Boolean.False;
+            // If value is null
+            if (left is null) return right is null || right.m_value is null;
+            return left.Equals(right);
         }
 
         /// <summary>
@@ -262,7 +279,7 @@
         /// </summary>
         public static Boolean operator !=(String left, String right)
         {
-            return left.m_value.Equals(right.m_value) == false ? Boolean.True : Boolean.False;
+            return !(left == right);
         }
 
     }

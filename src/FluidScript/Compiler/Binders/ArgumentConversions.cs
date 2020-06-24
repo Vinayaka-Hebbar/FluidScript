@@ -94,7 +94,7 @@
         /// <returns></returns>
         public bool Recycle()
         {
-            // Retail the array values ok
+            // Reset the array values length
             count = start;
             return false;
         }

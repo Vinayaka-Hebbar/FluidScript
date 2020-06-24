@@ -111,8 +111,18 @@
         #endregion
 
         #region PostFix Prefix
+        /// <summary>
+        /// ++
+        /// </summary>
         PlusPlus = 141,
+        /// <summary>
+        /// --
+        /// </summary>
         MinusMinus = 142,
+        /// +=
+        PlusEqual = 143,
+        /// -=
+        MinusEqual = 144,
         #endregion
         #region Other
         /// <summary>
@@ -123,6 +133,7 @@
         /// \
         /// </summary>
         ForwardSlash = 181,
+        Tilda = 182,
         #endregion
         End = 255,
         Bad = 254

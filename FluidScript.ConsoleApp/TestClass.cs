@@ -1,6 +1,7 @@
-﻿using System;
+﻿using FluidScript;
+using System;
 
-namespace FluidScipt.ConsoleTest
+namespace FluidScript.ConsoleTest
 {
     public class TestClass
     {
@@ -25,15 +26,35 @@ namespace FluidScipt.ConsoleTest
     public sealed class Closure
     {
         public object[] Values;
+        Closure Current => this;
 
         public Closure(params object[] values)
         {
             Values = values;
         }
 
-        public object Test(Closure closure)
+        public object Test(Integer i)
         {
-            return 2;
+            return -i;
+        }
+
+        public object Test2()
+        {
+            return i<<1;
+        }
+
+        Integer i;
+        public object Value
+        {
+            get
+            {
+                var x = 0;
+                for (i = 0; i < 10; i++)
+                {
+                    x = i;
+                }
+                return x;
+            }
         }
     }
 }

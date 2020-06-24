@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Extensions;
 using FluidScript.Utils;
 using System;
 
@@ -40,7 +41,7 @@ namespace FluidScript.Compiler
         }
 
         #region Array Literal
-        public virtual object VisitArrayLiteral(ArrayLiteralExpression node)
+        public virtual object VisitArrayLiteral(ArrayListExpression node)
         {
             Type type = node.ArrayType != null ? node.ArrayType.GetType(TypeProvider.Default) : TypeProvider.ObjectType;
             node.Type = typeof(Collections.List<>).MakeGenericType(type);
@@ -130,54 +131,24 @@ namespace FluidScript.Compiler
         public virtual object VisitBinary(BinaryExpression node)
         {
             // todo compatible for system type
-            string opName = null;
+            string opName;
             ExpressionType nodeType = node.NodeType;
             switch (nodeType)
             {
                 case ExpressionType.Plus:
                     return InvokeAddition(node);
-                case ExpressionType.Minus:
-                    opName = "op_Subtraction";
-                    break;
-                case ExpressionType.Multiply:
-                    opName = "op_Multiply";
-                    break;
-                case ExpressionType.Divide:
-                    opName = "op_Division";
-                    break;
-                case ExpressionType.Percent:
-                    opName = "op_Modulus";
-                    break;
                 case ExpressionType.BangEqual:
                     return VisitCompare(node, "op_Inequality");
                 case ExpressionType.EqualEqual:
                     return VisitCompare(node, "op_Equality");
-                case ExpressionType.Greater:
-                    opName = "op_GreaterThan";
-                    break;
-                case ExpressionType.GreaterEqual:
-                    opName = "op_GreaterThanOrEqual";
-                    break;
-                case ExpressionType.Less:
-                    opName = "op_LessThan";
-                    break;
-                case ExpressionType.LessEqual:
-                    opName = "op_LessThanOrEqual";
-                    break;
-                case ExpressionType.And:
-                    opName = "op_BitwiseAnd";
-                    break;
-                case ExpressionType.Or:
-                    opName = "op_BitwiseOr";
-                    break;
-                case ExpressionType.Circumflex:
-                    opName = "op_ExclusiveOr";
-                    break;
                 case ExpressionType.AndAnd:
                 case ExpressionType.OrOr:
                     return VisitLogical(node);
                 case ExpressionType.StarStar:
                     return VisitExponentiation(node);
+                default:
+                    opName = node.MethodName;
+                    break;
             }
             return Invoke(node, opName);
         }
@@ -481,52 +452,33 @@ namespace FluidScript.Compiler
         public object VisitUnary(UnaryExpression node)
         {
             var value = node.Operand.Accept(this);
-            string name = null;
+            if (node.NodeType == ExpressionType.Parenthesized)
+            {
+                node.Type = node.Operand.Type;
+                return value;
+            }
             //modified a++; updated new value
             bool modified = false, updated = true;
             switch (node.NodeType)
             {
-                case ExpressionType.Parenthesized:
-                    node.Type = node.Operand.Type;
-                    return value;
                 case ExpressionType.PostfixPlusPlus:
-                    name = "op_Increment";
                     modified = true;
                     updated = false;
                     break;
                 case ExpressionType.PrefixPlusPlus:
-                    name = "op_Increment";
                     modified = true;
                     break;
                 case ExpressionType.PostfixMinusMinus:
-                    name = "op_Decrement";
                     modified = true;
                     updated = false;
                     break;
                 case ExpressionType.PrefixMinusMinus:
-                    name = "op_Decrement";
                     modified = true;
                     break;
                 case ExpressionType.Bang:
-                    name = "op_LogicalNot";
                     // here value is null it is as not defined
                     if (value is null)
                         return Boolean.True;
-                    break;
-                case ExpressionType.Plus:
-                    name = "op_UnaryPlus";
-                    break;
-                case ExpressionType.Minus:
-                    name = "op_UnaryNegation";
-                    break;
-                case ExpressionType.Circumflex:
-                    name = "op_ExclusiveOr";
-                    break;
-                case ExpressionType.Or:
-                    name = "op_BitwiseOr";
-                    break;
-                case ExpressionType.And:
-                    name = "op_BitwiseAnd";
                     break;
             }
             if (value is null)
@@ -545,7 +497,7 @@ namespace FluidScript.Compiler
                     type = TypeProvider.Find(typeCode);
                     conversions.Backup();
                 }
-                var method = TypeUtils.GetOperatorOverload(name, conversions, type);
+                var method = TypeUtils.GetOperatorOverload(node.MethodName, conversions, type);
                 if (method == null)
                     ExecutionException.ThrowInvalidOp(node);
                 node.Conversions = conversions;

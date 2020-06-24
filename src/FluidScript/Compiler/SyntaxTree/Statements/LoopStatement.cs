@@ -77,14 +77,14 @@
 
             // Increment the loop variable.
             if (Increments != null)
-                Increments.ForEach(e => e.GenerateCode(generator));
+                Increments.ForEach(e => e.Accept(generator).GenerateCode(generator));
 
             generator.DefineLabelPosition(startOfCondition);
             // Check the condition and jump to the end if it is false.
             if (Condition != null)
             {
                 // generator.MarkSequencePoint(ConditionStatement.Span);
-                Condition.GenerateCode(generator);
+                Condition.Accept(generator).GenerateCode(generator);
                 generator.CallStatic(Utils.ReflectionHelpers.BoooleanToBool);
                 generator.BranchIfTrue(startOfLoop);
             }

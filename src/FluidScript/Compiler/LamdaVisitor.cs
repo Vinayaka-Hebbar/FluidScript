@@ -37,7 +37,7 @@ namespace FluidScript.Compiler
             return node;
         }
 
-        public Expression VisitArrayLiteral(ArrayLiteralExpression node)
+        public Expression VisitArrayLiteral(ArrayListExpression node)
         {
             for (int i = 0; i < node.Expressions.Count; i++)
             {

@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Extensions;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -31,13 +32,13 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitIndex(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
         {
             Target.GenerateCode(generator);
             System.Type type = Target.Type;
             if (type.IsArray)
             {
-                Iterate(Arguments, (arg) =>
+                Arguments.Iterate((arg) =>
                 {
                     arg.GenerateCode(generator);
                     generator.CallStatic(Utils.ReflectionHelpers.IntegerToInt32);
@@ -48,7 +49,7 @@ namespace FluidScript.Compiler.SyntaxTree
             else
             {
 
-                Iterate(Arguments, (arg) => arg.GenerateCode(generator));
+                Arguments.Iterate((arg) => arg.GenerateCode(generator));
                 //todo indexer argument convert
                 generator.Call(Getter);
             }

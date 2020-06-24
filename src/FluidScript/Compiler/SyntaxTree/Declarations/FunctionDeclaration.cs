@@ -1,5 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
-using FluidScript.Utils;
+using FluidScript.Extensions;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -21,18 +21,18 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override System.Collections.Generic.IEnumerable<Node> ChildNodes() => Childs(Body);
 
-        public bool IsGetter => (Modifiers & Compiler.Modifiers.Getter) == Compiler.Modifiers.Getter;
+        public bool IsGetter => (Modifiers & Modifiers.Getter) == Compiler.Modifiers.Getter;
 
         public bool IsSetter => (Modifiers & Modifiers.Setter) == Modifiers.Setter;
 
-        public override void Compile(Generators.TypeGenerator generator)
+        public override void Generate(Generators.TypeGenerator generator)
         {
             System.Type returnType;
             if (ReturnType != null)
-                returnType = ReturnType.GetType(generator);
+                returnType = ReturnType.GetType(generator.Context);
             else
                 returnType = TypeProvider.ObjectType;
-            var parameters = Parameters.Map(para => para.GetParameterInfo(generator));
+            var parameters = Parameters.Map(para => para.GetParameterInfo(generator.Context));
             var parameterTypes = parameters.Map(para => para.Type);
             if (IsGetter || IsSetter)
                 CreateProperty(generator, returnType, parameters, parameterTypes);
@@ -40,6 +40,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 CreateFunction(generator, returnType, parameters, parameterTypes);
         }
 
+        #region Property Get Set
         private void CreateProperty(Generators.TypeGenerator generator, System.Type returnType, ParameterInfo[] parameters, System.Type[] parameterTypes)
         {
             Generators.PropertyGenerator.PropertyHolder accessor = null;
@@ -82,7 +83,8 @@ namespace FluidScript.Compiler.SyntaxTree
             else
                 throw new System.Exception("Accessor not found");
             property.Accessors.Add(accessor);
-        }
+        } 
+        #endregion
 
         private void CreateFunction(Generators.TypeGenerator generator, System.Type returnType, ParameterInfo[] parameters, System.Type[] parameterTypes)
         {
@@ -103,19 +105,19 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public System.Reflection.MethodInfo CreateMethod()
         {
-            var provider = TypeProvider.Default;
+            var context = ProgramContext.Default;
             System.Type returnType;
             if (ReturnType != null)
-                returnType = ReturnType.GetType(provider);
+                returnType = ReturnType.GetType(context);
             else
                 returnType = TypeProvider.ObjectType;
-            var parameters = Parameters.Map(para => para.GetParameterInfo(provider));
+            var parameters = Parameters.Map(para => para.GetParameterInfo(context));
             var parameterTypes = parameters.Map(para => para.Type);
             var method = new System.Reflection.Emit.DynamicMethod(Name, returnType, parameterTypes);
             var methodOpt = new Generators.DynamicMethodGenerator(method, parameters, null)
             {
                 SyntaxBody = Body,
-                Provider = provider
+                Context = context
             };
             methodOpt.Generate();
             return method;
@@ -137,23 +139,22 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public System.Delegate Compile()
         {
-            var visitor = ScriptCompiler.Default;
-            //pass scoped arguments // refer System.Linq.Expression.Compiler folder
-            var provider = TypeProvider.Default;
+            // pass scoped arguments // refer System.Linq.Expression.Compiler folder
+            var context = ProgramContext.Default;
             System.Type returnType;
             if (ReturnType != null)
-                returnType = ReturnType.GetType(provider);
+                returnType = ReturnType.GetType(context);
             else
                 returnType = typeof(object);
             var names = Parameters.Map(para => para.Name).AddFirst("closure");
             int length = Parameters.Count;
             System.Type[] types = new System.Type[length];
-            var parameters = new Emit.ParameterInfo[length];
+            var parameters = new ParameterInfo[length];
             for (int i = 0; i < Parameters.Count; i++)
             {
                 var para = Parameters[i];
-                System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.GetType(provider);
-                parameters[i] = new Emit.ParameterInfo(para.Name, i + 1, type, para.IsVar);
+                System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.GetType(context);
+                parameters[i] = new ParameterInfo(para.Name, i + 1, type, para.IsVar);
                 types[i] = type;
             }
             // Emit First Argument
@@ -165,10 +166,10 @@ namespace FluidScript.Compiler.SyntaxTree
             var methodGen = new Generators.DynamicMethodGenerator(method, parameters, null)
             {
                 SyntaxBody = Body,
-                Provider = provider
+                Context = context
             };
             methodGen.EmitParameterInfo();
-            var bodyGen = new Emit.MethodBodyGenerator(methodGen, method.GetILGenerator());
+            var bodyGen = new MethodBodyGenerator(methodGen, method.GetILGenerator());
             object[] values = new object[lamdaVisit.HoistedLocals.Count];
             if (values.Length > 0)
             {
@@ -177,8 +178,9 @@ namespace FluidScript.Compiler.SyntaxTree
                 foreach (var item in lamdaVisit.HoistedLocals)
                 {
                     var value = item.Value;
-                    values[index] = visitor.Visit(value);
+                    values[index] = ScriptCompiler.Default.Visit(value);
                     var variable = bodyGen.DeclareVariable(value.Type, item.Key);
+                    // load closure argument
                     bodyGen.LoadArgument(0);
                     bodyGen.LoadField(field);
                     bodyGen.LoadInt32(index);
@@ -189,13 +191,12 @@ namespace FluidScript.Compiler.SyntaxTree
                 }
             }
             bodyGen.EmitBody();
-            var delgateType = DelegateGen.MakeNewDelegate(types, returnType);
-            return method.CreateDelegate(delgateType, new Runtime.Closure(values));
+            return method.CreateDelegate(DelegateGen.MakeNewDelegate(types, returnType), new Runtime.Closure(values));
         }
 
         public override string ToString()
         {
-            return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnType == null ? "any" : ReturnType.ToString());
+            return string.Concat(Name, "(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnType == null ? "any" : ReturnType.ToString());
         }
     }
 }

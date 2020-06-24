@@ -143,7 +143,12 @@ namespace FluidScript.Utils
                 if (i >= length)
                     return conversions.Recycle();
                 var src = types[i];
-                if (!AreReferenceAssignable(dest, src))
+                if (src is null)
+                {
+                    if (dest.IsValueType && !TypeUtils.IsNullableType(dest))
+                        return conversions.Recycle();
+                }
+                else if (!AreReferenceAssignable(dest, src))
                 {
                     if (TryImplicitConvert(src, dest, out MethodInfo m) == false)
                         return conversions.Recycle();

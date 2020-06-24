@@ -57,12 +57,12 @@ namespace FluidScript.Utils
                 }
                 // matches current index
                 if (i >= length)
-                    return false;
+                    break;
                 var arg = args[i];
                 if (arg is null)
                 {
                     if (dest.IsValueType && !TypeUtils.IsNullableType(dest))
-                        return false;
+                        break;
                 }
                 else
                 {
@@ -70,7 +70,7 @@ namespace FluidScript.Utils
                     if (!TypeUtils.AreReferenceAssignable(dest, src))
                     {
                         if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
-                            return false;
+                            break;
                         conversions.Add(new ParamConversion(i, opImplict));
                     }
                 }

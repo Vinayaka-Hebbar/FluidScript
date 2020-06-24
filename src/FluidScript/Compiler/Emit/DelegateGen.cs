@@ -1,4 +1,4 @@
-﻿using FluidScript.Utils;
+﻿using FluidScript.Extensions;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -8,9 +8,9 @@ namespace FluidScript.Compiler.Emit
 {
     internal static class DelegateGen
     {
-        private const MethodAttributes CtorAttributes = MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public;
-        private const MethodImplAttributes ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
-        private const MethodAttributes InvokeAttributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual;
+        internal const MethodAttributes CtorAttributes = MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public | MethodAttributes.SpecialName;
+        internal const MethodImplAttributes ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
+        internal const MethodAttributes InvokeAttributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual;
         private static readonly Type[] _DelegateCtorSignature = new Type[] { typeof(object), typeof(IntPtr) };
 
         private const int MaximumArity = 17;
@@ -20,7 +20,7 @@ namespace FluidScript.Compiler.Emit
             TypeBuilder builder = AssemblyGen.DynamicAssembly
                 .DefineDynamicType("Delegate" + types.Length, typeof(MulticastDelegate), TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass);
             builder.DefineConstructor(CtorAttributes, CallingConventions.Standard, _DelegateCtorSignature).SetImplementationFlags(ImplAttributes);
-            builder.DefineMethod("Invoke", InvokeAttributes, returnType, types).SetImplementationFlags(ImplAttributes);
+            builder.DefineMethod("Invoke", InvokeAttributes, returnType, types);
 #if NETFRAMEWORK || MONOANDROID
             return builder.CreateType();
 #else

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace FluidScript.Compiler.Generators
 {
-    public sealed class TypeGenerator : System.Type, ITypeProvider
+    public sealed class TypeGenerator : System.Type
     {
         private const System.Reflection.BindingFlags PublicInstanceOrStatic = PublicInstance | System.Reflection.BindingFlags.Static;
         private const System.Reflection.BindingFlags PublicInstance = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
@@ -22,6 +22,8 @@ namespace FluidScript.Compiler.Generators
         public override string Name { get; }
 
         public System.Type Type => _builder;
+
+        public IProgramContext Context { get; }
 
         public override System.Type BaseType { get; }
 
@@ -72,6 +74,7 @@ namespace FluidScript.Compiler.Generators
             Name = builder.Name;
             _builder = builder;
             BaseType = _builder.BaseType;
+            Context = new ProgramContext(assemblyGen.Context);
         }
 
         public void Add(IMemberGenerator generator)
@@ -84,7 +87,10 @@ namespace FluidScript.Compiler.Generators
             if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Constructor) == false)
             {
                 //default ctor
-                var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultCtor, System.Reflection.CallingConventions.Standard, new System.Type[0]), new ParameterInfo[0], new System.Type[0], this, Compiler.SyntaxTree.Statement.Empty);
+                var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultCtor, System.Reflection.CallingConventions.Standard, new System.Type[0]), new ParameterInfo[0], new System.Type[0], this)
+                {
+                    SyntaxBody = SyntaxTree.Statement.Empty
+                };
                 ctor.Generate();
             }
             if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic))
@@ -92,7 +98,10 @@ namespace FluidScript.Compiler.Generators
                 //check for static ctor
                 if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Constructor && mem.IsStatic) == false)
                 {
-                    var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultStaticCtor, System.Reflection.CallingConventions.Standard, new System.Type[0]), new ParameterInfo[0], new System.Type[0], this, Compiler.SyntaxTree.Statement.Empty);
+                    var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultStaticCtor, System.Reflection.CallingConventions.Standard, new System.Type[0]), new ParameterInfo[0], new System.Type[0], this)
+                    {
+                        SyntaxBody = Compiler.SyntaxTree.Statement.Empty
+                    };
                     ctor.Generate();
                 }
             }
@@ -180,11 +189,6 @@ namespace FluidScript.Compiler.Generators
             {
                 member.Generate();
             }
-        }
-
-        public System.Type GetType(TypeName typeName)
-        {
-            return assemblyGen.GetType(typeName.FullName);
         }
 
         /// <inheritdoc/>

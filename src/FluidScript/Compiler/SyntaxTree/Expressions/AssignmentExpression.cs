@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Extensions;
 using FluidScript.Utils;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -19,23 +20,23 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitAssignment(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
         {
             //todo index implementation pending
             if (Left.NodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)Left;
                 var binder = exp.Binder;
-                if (binder.IsMember && binder.IsStatic == false)
+                if (binder.CanEmitThis)
                     generator.LoadArgument(0);
-                Right.GenerateCode(generator);
+                Right.GenerateCode(generator, MethodGenerateOption.Dupplicate);
                 binder.GenerateSet(generator);
             }
             else if (Left.NodeType == ExpressionType.MemberAccess)
             {
                 var exp = (MemberExpression)Left;
                 exp.Target.GenerateCode(generator);
-                Right.GenerateCode(generator);
+                Right.GenerateCode(generator, MethodGenerateOption.Dupplicate);
                 exp.Binder.GenerateSet(generator);
             }
             else if (Left.NodeType == ExpressionType.Indexer)
@@ -45,19 +46,19 @@ namespace FluidScript.Compiler.SyntaxTree
                 System.Type type = exp.Target.Type;
                 if (type.IsArray)
                 {
-                    Iterate(exp.Arguments, (arg) =>
+                    exp.Arguments.Iterate((arg) =>
                     {
                         arg.GenerateCode(generator);
                         generator.CallStatic(ReflectionHelpers.IntegerToInt32);
                     });
-                    Right.GenerateCode(generator);
+                    Right.GenerateCode(generator, MethodGenerateOption.Dupplicate);
                     System.Type elementType = type.GetElementType();
                     generator.StoreArrayElement(elementType);
                 }
                 else
                 {
 
-                    Iterate(exp.Arguments, (arg) => arg.GenerateCode(generator));
+                    exp.Arguments.Iterate((arg) => arg.GenerateCode(generator));
                     //todo indexer argument convert
                     generator.Call(exp.Setter);
                 }

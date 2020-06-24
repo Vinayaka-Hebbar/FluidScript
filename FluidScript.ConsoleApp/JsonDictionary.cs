@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace FluidScipt.ConsoleTest
+namespace FluidScript.ConsoleTest
 {
     [Serializable]
     public class JsonDictionary<TKey, TValue> : IDictionary<TKey, TValue>

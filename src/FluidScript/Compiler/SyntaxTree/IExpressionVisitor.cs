@@ -46,7 +46,7 @@ namespace FluidScript.Compiler
         /// <summary>
         /// Array Literal
         /// </summary>
-        TResult VisitArrayLiteral(ArrayLiteralExpression node);
+        TResult VisitArrayLiteral(ArrayListExpression node);
         /// <summary>
         /// Assignment Expression
         /// </summary>

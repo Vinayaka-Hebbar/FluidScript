@@ -1,8 +1,10 @@
 ﻿using FluidScript.Compiler;
+using FluidScript.Compiler.Emit;
 using FluidScript.Compiler.SyntaxTree;
 using System;
+using System.Reflection;
 
-namespace FluidScipt.ConsoleTest
+namespace FluidScript.ConsoleTest
 {
     public class Class1
     {
@@ -16,21 +18,41 @@ namespace FluidScipt.ConsoleTest
 
         private void Test()
         {
-            Console.WriteLine(default(DateTime));
-            Console.WriteLine(default(DateTime));
-            NodeList<TypeParameter> types = new NodeList<TypeParameter>();
-            NodeList<Statement> statements = new NodeList<Statement>();
-            BlockStatement body = new BlockStatement(statements);
-            FunctionDeclaration declaration = new FunctionDeclaration("Test", types, TypeSyntax.Create(typeof(bool)), body);
-            statements.Add(Statement.Return(Expression.False));
-            var del = declaration.Compile();
-            Console.WriteLine(del.DynamicInvoke());
+            try
+            {
+                var val = FuncTest(this, 0);
+                var code = (TypeDeclaration)ScriptParser.ParseFile(AppDomain.CurrentDomain.BaseDirectory + "source.fls");
+                AssemblyGen assembly = new AssemblyGen("FluidTest", "1.0");
+                assembly.Context.Register("Console", typeof(Console));
+                var type = code.Generate(assembly);
+                var value = Activator.CreateInstance(type);
+                
+                Console.WriteLine();
+            }
+            catch (TargetInvocationException ex)
+            {
+                throw ex;
+            }
         }
 
         public void Compile()
         {
             Console.WriteLine("OK");
         }
+
+        public int GetInt(int i) => ++i;
+        Integer j = 1;
+
+        static object FuncTest(object sender, Integer i)
+        {
+            return ++i;
+        }
+
+        public Action TestFun3()
+        {
+            return () => Console.WriteLine();
+        }
+
 
     }
 }

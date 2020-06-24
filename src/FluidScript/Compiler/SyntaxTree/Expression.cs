@@ -84,7 +84,7 @@
         /// Generates IL code for <see cref="Expression"/>
         /// </summary>
         /// <param name="generator"></param>
-        public virtual void GenerateCode(Emit.MethodBodyGenerator generator)
+        public virtual void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption option = Emit.MethodGenerateOption.None)
         {
             generator.NoOperation();
         }

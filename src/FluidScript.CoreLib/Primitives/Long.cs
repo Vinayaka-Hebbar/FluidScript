@@ -279,7 +279,7 @@ namespace FluidScript
 
         public static Long operator --(Long value)
         {
-            return new Long(value.m_value + 1);
+            return new Long(value.m_value - 1);
         }
     }
 }

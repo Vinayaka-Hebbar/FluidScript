@@ -16,7 +16,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitNull(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
         {
             generator.LoadNull();
         }

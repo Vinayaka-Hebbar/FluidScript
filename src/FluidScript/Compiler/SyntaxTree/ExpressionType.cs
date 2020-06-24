@@ -68,33 +68,33 @@ namespace FluidScript.Compiler.SyntaxTree
         #endregion
 
         #region Logical & Shift
-        Equal = 127,
+        Equal = TokenType.Equal,
         // <
-        Less = 128,
+        Less = TokenType.Less,
         // > 
-        Greater = 129,
+        Greater = TokenType.Greater,
         // <=
-        LessEqual = 130,
+        LessEqual = TokenType.LessEqual,
         // >= 
-        GreaterEqual = 131,
+        GreaterEqual = TokenType.GreaterEqual,
         // == 
-        EqualEqual = 132,
+        EqualEqual = TokenType.EqualEqual,
         //!
-        Bang = 133,
+        Bang = TokenType.Bang,
         // != 
-        BangEqual = 134,
+        BangEqual = TokenType.BangEqual,
         // << 
-        LessLess = 135,
+        LessLess = TokenType.LessLess,
         // >> 
-        GreaterGreater = 136,
+        GreaterGreater = TokenType.GreaterGreater,
         //|
-        Or = 137,
+        Or = TokenType.Or,
         //||
-        OrOr = 138,
+        OrOr = TokenType.OrOr,
         //&
-        And = 139,
+        And = TokenType.And,
         //&&
-        AndAnd = 140,
+        AndAnd = TokenType.AndAnd,
         #endregion
 
         #region PostFix Prefix
@@ -102,6 +102,10 @@ namespace FluidScript.Compiler.SyntaxTree
         PostfixMinusMinus = 144,
         PrefixPlusPlus = 145,
         PrefixMinusMinus = 146,
+        #endregion
+
+        #region Other
+        Tilda = TokenType.Tilda
         #endregion
     }
 }
