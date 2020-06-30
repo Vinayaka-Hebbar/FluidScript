@@ -2,26 +2,27 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 
 namespace FluidScript.Compiler.Generators
 {
-    public class FieldGenerator : System.Reflection.FieldInfo, Emit.IMemberGenerator
+    public class FieldGenerator : FieldInfo, Emit.IMemberGenerator
     {
         private IList<AttributeGenerator> _CustomAttributes;
 
         private readonly TypeGenerator TypeGenerator;
 
-        public FieldGenerator(TypeGenerator builder, System.Reflection.FieldAttributes attributes, Compiler.SyntaxTree.VariableDeclarationExpression expression)
+        public FieldGenerator(TypeGenerator builder, FieldAttributes attributes, Compiler.SyntaxTree.VariableDeclarationExpression expression)
         {
             TypeGenerator = builder;
             Attributes = attributes;
             Name = expression.Name;
             DeclarationExpression = expression;
             DefaultValue = expression.Value;
-            MemberType = System.Reflection.MemberTypes.Field;
+            MemberType = MemberTypes.Field;
         }
 
-        public override System.Reflection.FieldAttributes Attributes { get; }
+        public override FieldAttributes Attributes { get; }
 
         public SyntaxTree.Expression DefaultValue { get; }
 
@@ -29,11 +30,11 @@ namespace FluidScript.Compiler.Generators
 
         public SyntaxTree.VariableDeclarationExpression DeclarationExpression { get; }
 
-        public System.Reflection.MemberInfo MemberInfo => this;
+        public MemberInfo MemberInfo => this;
 
-        public System.Reflection.FieldInfo FieldInfo { get; private set; }
+        public FieldInfo FieldInfo { get; private set; }
 
-        public override System.Reflection.MemberTypes MemberType { get; }
+        public override MemberTypes MemberType { get; }
 
         public override RuntimeFieldHandle FieldHandle => FieldInfo.FieldHandle;
 
@@ -45,13 +46,7 @@ namespace FluidScript.Compiler.Generators
 
         internal Emit.MethodBodyGenerator MethodBody { get; set; }
 
-        public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
-        {
-            return Utils.TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
-                && Utils.TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
-        }
-
-        public virtual void SetCustomAttribute(Type type, System.Reflection.ConstructorInfo ctor, object[] parameters)
+        public virtual void SetCustomAttribute(Type type, ConstructorInfo ctor, object[] parameters)
         {
             if (_CustomAttributes == null)
                 _CustomAttributes = new List<AttributeGenerator>();
@@ -85,7 +80,7 @@ namespace FluidScript.Compiler.Generators
             return _CustomAttributes != null && _CustomAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
 
-        public override void SetValue(object obj, object value, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, CultureInfo culture)
+        public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -94,13 +89,13 @@ namespace FluidScript.Compiler.Generators
         {
             if (FieldInfo == null)
             {
-                System.Type type;
+                Type type;
                 if (DeclarationExpression.VariableType == null)
                 {
                     if (DefaultValue == null)
-                        throw new System.ArgumentNullException(nameof(DefaultValue));
+                        throw new ArgumentNullException(nameof(DefaultValue));
                     //literal ok
-                    if (DefaultValue.NodeType != Compiler.SyntaxTree.ExpressionType.Literal && MethodBody == null)
+                    if (DefaultValue.NodeType != SyntaxTree.ExpressionType.Literal && MethodBody == null)
                         return;
                     type = DefaultValue.Accept(MethodBody).Type;
 

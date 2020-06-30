@@ -9,7 +9,7 @@ namespace FluidScript.Compiler.Generators
     // Temporary Method info wrapper
     public abstract class BaseMethodGenerator : System.Reflection.MethodInfo, IMethodBaseGenerator
     {
-        protected IList<AttributeGenerator> _CustomAttributes;
+        protected IList<AttributeGenerator> _customAttributes;
 
         private readonly System.Reflection.MethodInfo methodInfo;
         internal readonly Type Declaring;
@@ -64,9 +64,9 @@ namespace FluidScript.Compiler.Generators
 
         public virtual void SetCustomAttribute(Type type, System.Reflection.ConstructorInfo ctor, object[] parameters)
         {
-            if (_CustomAttributes == null)
-                _CustomAttributes = new List<AttributeGenerator>();
-            _CustomAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
+            if (_customAttributes == null)
+                _customAttributes = new List<AttributeGenerator>();
+            _customAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
         }
 
         public abstract void Generate();
@@ -83,19 +83,19 @@ namespace FluidScript.Compiler.Generators
 
         public override object[] GetCustomAttributes(bool inherit)
         {
-            if (_CustomAttributes != null)
-                return _CustomAttributes.Select(att => att.Instance).ToArray();
-            return new object[0];
+            if (_customAttributes != null)
+                return _customAttributes.Select(att => att.Instance).ToArray();
+            return new Attribute[0];
         }
 
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
         {
-            if (_CustomAttributes != null)
+            if (_customAttributes != null)
             {
-                IEnumerable<AttributeGenerator> enumerable = _CustomAttributes.Where(att => att.Type == attributeType);
-                return enumerable.Select(att => att.Instance).ToArray();
+                return _customAttributes.Where(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType))).
+                    Select(att => att.Instance).ToArray();
             }
-            return new object[0];
+            return new Attribute[0];
         }
 
         public override System.Reflection.MethodImplAttributes GetMethodImplementationFlags()
@@ -132,7 +132,7 @@ namespace FluidScript.Compiler.Generators
 
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return _CustomAttributes != null && _CustomAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+            return _customAttributes != null && _customAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
 
         public override string ToString()
@@ -164,9 +164,9 @@ namespace FluidScript.Compiler.Generators
 
         public override void EmitParameterInfo()
         {
-            if (_CustomAttributes != null)
+            if (_customAttributes != null)
             {
-                foreach (var attr in _CustomAttributes)
+                foreach (var attr in _customAttributes)
                 {
                     var cuAttr = new System.Reflection.Emit.CustomAttributeBuilder(attr.Ctor, attr.Parameters);
                     _builder.SetCustomAttribute(cuAttr);

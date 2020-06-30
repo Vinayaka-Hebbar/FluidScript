@@ -43,7 +43,7 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 member.Generate(generator);
             }
-            return generator.Create();
+            return generator.CreateType();
         }
     }
 }

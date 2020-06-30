@@ -11,5 +11,9 @@
         /// currently Returning the value
         /// </summary>
         Return = 2,
+        /// <summary>
+        /// Currently Assigning value
+        /// </summary>
+        Assign = 4
     }
 }

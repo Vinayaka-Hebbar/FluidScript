@@ -56,5 +56,15 @@ namespace FluidScript.ConsoleTest
                 return x;
             }
         }
+
+        public void Read()
+        {
+            Print(new Integer(10));
+        }
+
+        public static void Print(object value)
+        {
+            Console.Write(new String("Hello"));
+        }
     }
 }

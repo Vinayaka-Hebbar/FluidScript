@@ -84,7 +84,7 @@ namespace FluidScript.Compiler
                         conversion = new Binders.ParamConversion(index, implicitCall);
                         arrayConversions.Insert(index, conversion);
                     }
-                    if (conversion != null && conversion.ConversionType == Binders.ConversionType.Convert)
+                    if (conversion != null && conversion.ConversionType == Binders.ConversionType.Normal)
                     {
                         value = conversion.Invoke(value);
                     }

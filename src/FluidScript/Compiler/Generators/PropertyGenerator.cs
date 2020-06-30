@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.Generators
             }
         }
 
-        private IList<AttributeGenerator> _CustomAttributes;
+        private IList<AttributeGenerator> _customAttributes;
 
         internal readonly TypeGenerator TypeGenerator;
 
@@ -82,12 +82,6 @@ namespace FluidScript.Compiler.Generators
 
         public override Type ReflectedType => TypeGenerator;
 
-        public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
-        {
-            return Utils.TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
-                           && Utils.TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
-        }
-
         public override void SetValue(object obj, object value, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, object[] index, CultureInfo culture)
         {
             throw new NotImplementedException();
@@ -124,23 +118,24 @@ namespace FluidScript.Compiler.Generators
 
         public void SetCustomAttribute(Type type, System.Reflection.ConstructorInfo ctor, object[] parameters)
         {
-            if (_CustomAttributes == null)
-                _CustomAttributes = new List<AttributeGenerator>();
-            _CustomAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
+            if (_customAttributes == null)
+                _customAttributes = new List<AttributeGenerator>();
+            _customAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
         }
 
         public override object[] GetCustomAttributes(bool inherit)
         {
-            if (_CustomAttributes != null)
-                return _CustomAttributes.Select(att => att.Instance).ToArray();
+            if (_customAttributes != null)
+                return _customAttributes.Select(att => att.Instance).ToArray();
             return new object[0];
         }
 
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
         {
-            if (_CustomAttributes != null)
+            if (_customAttributes != null)
             {
-                var enumerable = _CustomAttributes.Where(att => att.Type == attributeType);
+                var enumerable = _customAttributes
+                    .Where(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType)));
                 return enumerable.Select(att => att.Instance).ToArray();
             }
             return new object[0];
@@ -148,7 +143,7 @@ namespace FluidScript.Compiler.Generators
 
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return _CustomAttributes != null && _CustomAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+            return _customAttributes != null && _customAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
 
         internal System.Reflection.Emit.PropertyBuilder GetBuilder()
@@ -159,9 +154,9 @@ namespace FluidScript.Compiler.Generators
 
         public void Generate()
         {
-            if (_CustomAttributes != null)
+            if (_customAttributes != null)
             {
-                foreach (var attr in _CustomAttributes)
+                foreach (var attr in _customAttributes)
                 {
                     var cuAttr = new System.Reflection.Emit.CustomAttributeBuilder(attr.Ctor, attr.Parameters);
                     _builder.SetCustomAttribute(cuAttr);
@@ -180,7 +175,7 @@ namespace FluidScript.Compiler.Generators
 
         public void Initialize()
         {
-            
+
         }
     }
 

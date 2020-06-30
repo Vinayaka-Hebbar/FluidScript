@@ -2,24 +2,13 @@
 {
     public sealed class ArgumentConversions
     {
-        private struct Entry
-        {
-            public int index;
-            public Conversion conversion;
-            public int next;
-        }
-
-        Entry[] entries;
-        int[] buckets;
+        Conversion[] items;
         int count;
         int start;
 
         public ArgumentConversions(int capacity)
         {
-            if (capacity == 0)
-                Initialize(3);
-            else
-                Initialize(capacity);
+            items = new Conversion[capacity];
         }
 
         public int Count => count;
@@ -31,32 +20,22 @@
 
         internal void Insert(int index, Conversion c)
         {
-            if (buckets == null) Initialize(3);
-            int hashCode = index & 0x7FFFFFFF;
-            int targetBucket = hashCode % buckets.Length;
-            for (int i = buckets[targetBucket]; i >= 0; i = entries[i].next)
+            if(index < count)
             {
-                if (entries[i].index == hashCode)
-                {
-                    // add to next node
-                    Conversion last = entries[i].conversion;
-                    c.next = last;
-                    last.next = c;
-                    entries[i].conversion = c;
-                    return;
-                }
+                // add to next node
+                Conversion last = items[index];
+                c.next = last;
+                last.next = c;
+                items[index] = c;
+                return;
             }
-            var target = count;
-            if (count == entries.Length)
+            if (count == items.Length)
             {
                 Resize(2 * count);
-                targetBucket = hashCode % buckets.Length;
             }
+            /// empty next node
             c.next = c;
-            entries[target].index = hashCode;
-            entries[target].conversion = c;
-            entries[target].next = buckets[targetBucket];
-            buckets[targetBucket] = target;
+            items[count] = c;
             count++;
         }
 
@@ -64,17 +43,9 @@
         {
             get
             {
-                if (buckets != null)
+                if (count > index)
                 {
-                    int hashCode = index & 0x7FFFFFFF;
-                    for (int i = buckets[hashCode % buckets.Length]; i >= 0; i = entries[i].next)
-                    {
-                        if (entries[i].index == hashCode)
-                        {
-                            var entry = entries[i];
-                            return entry.conversion;
-                        }
-                    }
+                    return items[index];
                 }
                 return null;
             }
@@ -99,31 +70,11 @@
             return false;
         }
 
-        private void Initialize(int size)
-        {
-            buckets = new int[size];
-            for (int i = 0; i < buckets.Length; i++) buckets[i] = -1;
-            entries = new Entry[size];
-        }
-
         private void Resize(int newSize)
         {
-            //Contract.Assert(newSize >= entries.Length);
-            int[] newBuckets = new int[newSize];
-            for (int i = 0; i < newBuckets.Length; i++) newBuckets[i] = -1;
-            var newEntries = new Entry[newSize];
-            System.Array.Copy(entries, 0, newEntries, 0, count);
-            for (int i = 0; i < count; i++)
-            {
-                if (newEntries[i].index >= 0)
-                {
-                    int bucket = newEntries[i].index % newSize;
-                    newEntries[i].next = newBuckets[bucket];
-                    newBuckets[bucket] = i;
-                }
-            }
-            buckets = newBuckets;
-            entries = newEntries;
+            var newItems = new Conversion[newSize];
+            System.Array.Copy(items, 0, newItems, 0, count);
+            items = newItems;
         }
 
         public void Invoke(ref object[] values)
@@ -132,18 +83,18 @@
             {
                 for (int i = 0; i < count; i++)
                 {
-                    var entry = entries[i];
-                    int index = entry.index;
-                    Conversion c = entry.conversion;
+                    var c = items[i];
+                    if (c == null)
+                        continue;
                     Conversion n = c;
                     do
                     {
                         n = n.next;
                         switch (n.ConversionType)
                         {
-                            case ConversionType.Convert:
-                                var arg = values[index];
-                                values[index] = n.Invoke(arg);
+                            case ConversionType.Normal:
+                                var arg = values[i];
+                                values[i] = n.Invoke(arg);
                                 break;
                             case ConversionType.ParamArray:
                                 values = (object[])n.Invoke(values);

@@ -50,25 +50,30 @@ namespace FluidScript.Utils
         internal static MethodInfo FindMethod(string name, System.Type type, System.Type[] types, out ArgumentConversions conversions)
         {
             conversions = new ArgumentConversions(types.Length);
-            bool isRuntime = type.IsDefined(typeof(Runtime.RegisterAttribute), false);
-            if (!isRuntime)
-                return FindSystemMethod(name, type, types, conversions);
-            var methods = type.GetMethods(AnyPublic);
-            for (int i = 0; i < methods.Length; i++)
+            if (type.IsDefined(typeof(Runtime.RegisterAttribute), false))
             {
-                var m = methods[i];
-                var attrs = (Runtime.RegisterAttribute[])m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
-                if (attrs.Length > 0 && attrs[0].Match(name)
-                    && MatchesTypes(m, types, conversions))
-                    return m;
+                var methods = type.GetMethods(AnyPublic);
+                for (int i = 0; i < methods.Length; i++)
+                {
+                    var m = methods[i];
+                    var attrs = (Runtime.RegisterAttribute[])m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
+                    if (attrs.Length > 0 && attrs[0].Match(name)
+                        && MatchesTypes(m, types, conversions))
+                        return m;
+                }
+                return null;
             }
-            return null;
+
+            return FindSystemMethod(name, type, types, conversions);
         }
 
         private static MethodInfo FindSystemMethod(string name, System.Type type, System.Type[] types, ArgumentConversions conversions)
         {
-            foreach (MethodInfo m in type.GetMember(name, MemberTypes.Method, AnyPublic))
+            var members = type.GetMember(name, MemberTypes.Method, AnyPublic);
+            // start from last ex: in Console.Write(String) no match at the beginning
+            for (int i = members.Length - 1; i >= 0; i--)
             {
+                MethodInfo m = (MethodInfo)members[i];
                 if (MatchesTypes(m, types, conversions))
                     return m;
             }
@@ -145,7 +150,7 @@ namespace FluidScript.Utils
                 var src = types[i];
                 if (src is null)
                 {
-                    if (dest.IsValueType && !TypeUtils.IsNullableType(dest))
+                    if (dest.IsValueType && !IsNullableType(dest))
                         return conversions.Recycle();
                 }
                 else if (!AreReferenceAssignable(dest, src))
@@ -153,6 +158,10 @@ namespace FluidScript.Utils
                     if (TryImplicitConvert(src, dest, out MethodInfo m) == false)
                         return conversions.Recycle();
                     conversions.Add(new ParamConversion(i, m));
+                }
+                else if (src.IsValueType && dest.IsValueType == false)
+                {
+                    conversions.Add(new BoxConversion(i, src));
                 }
             }
             if (i == length)

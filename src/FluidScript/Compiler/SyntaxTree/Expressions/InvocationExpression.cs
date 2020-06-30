@@ -38,19 +38,19 @@ namespace FluidScript.Compiler.SyntaxTree
                 for (int i = 0; i < Arguments.Count; i++)
                 {
                     var arg = Arguments[i];
-                    var item = conversions[i];
-                    if (item != null)
+                    var conv = conversions[i];
+                    if (conv != null)
                     {
-                        if (item.ConversionType == ConversionType.Convert)
+                        if (conv.ConversionType == ConversionType.Normal)
                         {
                             arg.GenerateCode(generator);
-                            item.GenerateCode(generator);
+                            conv.GenerateCode(generator);
                         }
-                        else if (item.ConversionType == ConversionType.ParamArray)
+                        else if (conv.ConversionType == ConversionType.ParamArray)
                         {
                             var arguments = new Expression[Arguments.Count - i];
-                            Arguments.CopyTo(arguments, item.Index);
-                            item.GenerateCode(generator, arguments);
+                            Arguments.CopyTo(arguments, conv.Index);
+                            conv.GenerateCode(generator, arguments);
                             break;
                         }
                     }
@@ -65,10 +65,25 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 for (var i = Arguments.Count; i < Convertions.Count; i++)
                 {
-                    Convertions[i].GenerateCode(generator);
+                    Conversion conv = Convertions[i];
+                    if (conv.ConversionType == ConversionType.Normal)
+                    {
+                        Arguments[i].GenerateCode(generator);
+                        conv.GenerateCode(generator);
+                    }
+                    else if (conv.ConversionType == ConversionType.ParamArray)
+                    {
+                        // remaining arguments
+                        var arguments = new Expression[Arguments.Count - i];
+                        Arguments.CopyTo(arguments, conv.Index);
+                        conv.GenerateCode(generator, arguments);
+                        break;
+                    }
                 }
             }
             generator.Call(Method);
+            if((option & MethodGenerateOption.Assign) == 0 && Type != TypeProvider.VoidType)
+                generator.Pop();
         }
 
         internal static void GenerateCall(MethodBodyGenerator generator, System.Reflection.MethodBase method, System.Collections.Generic.IEnumerable<Expression> arguments)

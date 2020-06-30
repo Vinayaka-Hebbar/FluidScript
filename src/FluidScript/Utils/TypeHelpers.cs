@@ -183,6 +183,7 @@ namespace FluidScript.Utils
             return null;
         }
 
+        #region Indexer
         /// Current Declared Indexer can get
         public static MethodInfo FindGetIndexer(this System.Type type, object[] args, out ArgumentConversions conversions)
         {
@@ -244,5 +245,6 @@ namespace FluidScript.Utils
             }
             return null;
         }
+        #endregion
     }
 }

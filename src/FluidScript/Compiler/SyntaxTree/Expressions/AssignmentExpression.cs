@@ -6,6 +6,10 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public sealed class AssignmentExpression : Expression
     {
+        #region GenerateOption
+        const MethodGenerateOption Option = MethodGenerateOption.Dupplicate | MethodGenerateOption.Assign;
+        #endregion
+
         public readonly Expression Left;
         public readonly Expression Right;
 
@@ -29,14 +33,14 @@ namespace FluidScript.Compiler.SyntaxTree
                 var binder = exp.Binder;
                 if (binder.CanEmitThis)
                     generator.LoadArgument(0);
-                Right.GenerateCode(generator, MethodGenerateOption.Dupplicate);
+                Right.GenerateCode(generator, Option);
                 binder.GenerateSet(generator);
             }
             else if (Left.NodeType == ExpressionType.MemberAccess)
             {
                 var exp = (MemberExpression)Left;
                 exp.Target.GenerateCode(generator);
-                Right.GenerateCode(generator, MethodGenerateOption.Dupplicate);
+                Right.GenerateCode(generator, Option);
                 exp.Binder.GenerateSet(generator);
             }
             else if (Left.NodeType == ExpressionType.Indexer)

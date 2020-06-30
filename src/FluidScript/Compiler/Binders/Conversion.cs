@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
+using System;
 
 namespace FluidScript.Compiler.Binders
 {
@@ -16,7 +17,7 @@ namespace FluidScript.Compiler.Binders
         /// </summary>
         internal Conversion next;
 
-        public abstract System.Type Type { get; }
+        public abstract Type Type { get; }
 
         /// <summary>
         /// Initializes new <see cref="Conversion"/>
@@ -26,14 +27,24 @@ namespace FluidScript.Compiler.Binders
             Index = index;
         }
 
-        internal virtual void GenerateCode(Emit.MethodBodyGenerator generator)
+        public void GenerateCode(Emit.MethodBodyGenerator generator)
         {
-            throw new System.NotImplementedException(nameof(GenerateCode));
+            Conversion n = this;
+            do
+            {
+                n = n.next;
+                n.InternalGenerateCode(generator);
+            } while (n != this);
         }
 
-        internal virtual void GenerateCode(Emit.MethodBodyGenerator generator, Expression[] expressions)
+        protected virtual void InternalGenerateCode(Emit.MethodBodyGenerator generator)
         {
-            throw new System.NotImplementedException(nameof(GenerateCode));
+            throw new NotImplementedException(nameof(GenerateCode));
+        }
+
+        public virtual void GenerateCode(Emit.MethodBodyGenerator generator, Expression[] expressions)
+        {
+            throw new NotImplementedException(nameof(GenerateCode));
         }
 
         internal abstract object Invoke(params object[] args);
@@ -41,9 +52,30 @@ namespace FluidScript.Compiler.Binders
 
     public enum ConversionType
     {
-        None,
-        Convert,
-        ParamArray
+        Normal,
+        ParamArray,
+    }
+
+    internal sealed class BoxConversion : Conversion
+    {
+        public BoxConversion(int index, Type type) : base(index)
+        {
+            Type = type;
+        }
+
+        public override ConversionType ConversionType => ConversionType.Normal;
+
+        public override Type Type { get; }
+
+        internal override object Invoke(params object[] args)
+        {
+            return args[0];
+        }
+
+        protected override void InternalGenerateCode(Emit.MethodBodyGenerator generator)
+        {
+            generator.Box(Type);
+        }
     }
 
     internal sealed class ParamConversion : Conversion
@@ -58,11 +90,11 @@ namespace FluidScript.Compiler.Binders
             Method = method;
         }
 
-        public override System.Type Type => Method.ReturnType;
+        public override Type Type => Method.ReturnType;
 
-        public override ConversionType ConversionType => ConversionType.Convert;
+        public override ConversionType ConversionType => ConversionType.Normal;
 
-        internal override void GenerateCode(Emit.MethodBodyGenerator generator)
+        protected override void InternalGenerateCode(Emit.MethodBodyGenerator generator)
         {
             generator.CallStatic(Method);
         }
@@ -74,22 +106,22 @@ namespace FluidScript.Compiler.Binders
 
         public override string ToString()
         {
-            return string.Concat(nameof(ConversionType.Convert), "(", Type, ")");
+            return string.Concat(nameof(ConversionType.Normal), "(", Type, ")");
         }
     }
 
     internal sealed class ParamArrayConversion : Conversion
     {
-        public override System.Type Type { get; }
+        public override Type Type { get; }
 
         public ArgumentConversions ParamBinders { get; }
 
-        public ParamArrayConversion(int index, System.Type type) : base(index)
+        public ParamArrayConversion(int index, Type type) : base(index)
         {
             Type = type;
         }
 
-        public ParamArrayConversion(int index, System.Type type, ArgumentConversions paramBinders) : base(index)
+        public ParamArrayConversion(int index, Type type, ArgumentConversions paramBinders) : base(index)
         {
             Type = type;
             ParamBinders = paramBinders;
@@ -97,7 +129,7 @@ namespace FluidScript.Compiler.Binders
 
         public override ConversionType ConversionType => ConversionType.ParamArray;
 
-        internal override void GenerateCode(Emit.MethodBodyGenerator generator, Expression[] expression)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator, Expression[] expression)
         {
             // Remaining size
             var size = expression.Length;
@@ -136,8 +168,8 @@ namespace FluidScript.Compiler.Binders
             {
                 ParamBinders.Invoke(ref args);
             }
-            System.Array.Copy(args, newArgs, Index);
-            System.Array.Copy(args, Index, paramArray, 0, size);
+            Array.Copy(args, newArgs, Index);
+            Array.Copy(args, Index, paramArray, 0, size);
             newArgs[Index] = paramArray;
             return newArgs;
         }

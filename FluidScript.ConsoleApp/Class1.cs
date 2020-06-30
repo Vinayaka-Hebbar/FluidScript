@@ -20,13 +20,13 @@ namespace FluidScript.ConsoleTest
         {
             try
             {
-                var val = FuncTest(this, 0);
-                var code = (TypeDeclaration)ScriptParser.ParseFile(AppDomain.CurrentDomain.BaseDirectory + "source.fls");
-                AssemblyGen assembly = new AssemblyGen("FluidTest", "1.0");
-                assembly.Context.Register("Console", typeof(Console));
-                var type = code.Generate(assembly);
-                var value = Activator.CreateInstance(type);
-                
+                var res = new FluidTest.Sample().Add(10, 20);
+                //var code = (TypeDeclaration)ScriptParser.ParseFile(AppDomain.CurrentDomain.BaseDirectory + "source.fls");
+                //AssemblyGen assembly = new AssemblyGen("FluidTest", "1.0");
+                //assembly.Context.Register("Console", typeof(Console));
+                //var type = code.Generate(assembly);
+                //var value = Activator.CreateInstance(type);
+                //assembly.Save("FluidTest.dll");
                 Console.WriteLine();
             }
             catch (TargetInvocationException ex)

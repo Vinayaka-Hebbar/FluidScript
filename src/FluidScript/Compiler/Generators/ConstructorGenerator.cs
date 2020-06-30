@@ -46,12 +46,6 @@ namespace FluidScript.Compiler.Generators
 
         public IProgramContext Context { get; set; }
 
-        public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
-        {
-            return Utils.TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
-                 && Utils.TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
-        }
-
         public override object[] GetCustomAttributes(bool inherit)
         {
             return _builder.GetCustomAttributes(inherit);

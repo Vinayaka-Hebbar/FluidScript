@@ -15,6 +15,21 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:FluidScript.Compiler.Binders.IBinder">
+            <summary>
+            Binder for variable or member
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.Binders.IBinder.CanEmitThis">
+            <summary>
+            From this you can identify whether Binder is a Variable or Static Member 
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.Binders.IBinder.IsMember">
+            <summary>
+             From this you can identify whether Binder is a Variable or Member 
+            </summary>
+        </member>
         <member name="T:FluidScript.Compiler.Binders.RuntimeVariableBinder">
             <summary>
             IL generator for <see cref="T:FluidScript.Compiler.RuntimeVariables"/>
@@ -871,6 +886,11 @@
             Member Generate
             </summary>
         </member>
+        <member name="P:FluidScript.Compiler.Emit.IMemberGenerator.MemberInfo">
+            <summary>
+            Member Builder
+            </summary>
+        </member>
         <member name="M:FluidScript.Compiler.Emit.LamdaGen.DefineAnonymousMethod(System.Type[],System.Type)">
             <summary>
             Define Anonymous class
@@ -1059,6 +1079,11 @@
         <member name="F:FluidScript.Compiler.Emit.MethodGenerateOption.Return">
             <summary>
             currently Returning the value
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Emit.MethodGenerateOption.Assign">
+            <summary>
+            Currently Assigning value
             </summary>
         </member>
         <member name="T:FluidScript.Compiler.Emit.ParameterInfo">
@@ -1567,6 +1592,22 @@
             !
             </summary>
         </member>
+        <member name="F:FluidScript.Compiler.Lexer.TokenType.PlusPlus">
+            <summary>
+            ++
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Lexer.TokenType.MinusMinus">
+            <summary>
+            --
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Lexer.TokenType.PlusEqual">
+            +=
+        </member>
+        <member name="F:FluidScript.Compiler.Lexer.TokenType.MinusEqual">
+            -=
+        </member>
         <member name="F:FluidScript.Compiler.Lexer.TokenType.BackSlash">
             <summary>
             /
@@ -1918,6 +1959,28 @@
         </member>
         <member name="M:FluidScript.Compiler.ScriptParser.VisitFunctionDeclaration">
             <summary>
+            FunctioScript.Compiler.ScriptParser.VisitMember">
+            <summary>
+            Visit member declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitMembers">
+            <summary>
+            Visit members declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitTypeDeclaration">
+            <summary>
+            Type declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitFieldDeclaration">
+            <summary>
+            Field declaration
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.VisitFunctionDeclaration">
+            <summary>
             Function Declartion
             </summary>
         </member>
@@ -2075,25 +2138,7 @@
             Name of the Identifier
             </summary>
         </member>
-        <member name="P:FluidScript.Compiler.SyntaxTree.NameExpression.Binder">
-            <summary>
-            Binding for compiler generation
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.#ctor(System.String,FluidScript.Compiler.SyntaxTree.ExpressionType)">
-            <summary>
-            Creates Identifier Expression
-            </summary>
-            <param name="name">Name of the Identifier</param>
-            <param name="expType">Expression type</param>
-        </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.ToString">
-            <summary>
-            String Value
-            </summary>
-            <returns>string</returns>
-        </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
+        <member name="P:FluidScript.Compiler.SyntaxTree.NameExpiler.IExpressionVisitor{``0})">
             <summary>
             Optimizes or evaluate the expression
             </summary>
@@ -2112,6 +2157,11 @@
         <member name="P:FluidScript.Compiler.SyntaxTree.UnaryExpression.Method">
             <summary>
             Operator overload method
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.SyntaxTree.UnaryExpression.MethodName">
+            <summary>
+            Get the unary operator method name
             </summary>
         </member>
         <member name="P:FluidScript.Compiler.SyntaxTree.UnaryExpression.Conversions">
@@ -2764,10 +2814,45 @@
             Iterate items
             </summary>
         </member>
+        <member name="M:FluidScript.Extensions.MemberExtensions.IsEquals(FluidScript.Compiler.Emit.IMemberGenerator,System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Matches generating argument 
+            </summary>
+            <param name="member"></param>
+            <param name="name"></param>
+            <param name="flags"></param>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Extensions.MemberExtensions.BindingFlagsMatch(FluidScript.Compiler.Emit.IMemberGenerator,System.Reflection.BindingFlags)">
+            <summary>
+            Matches generating argument 
+            </summary>
+            <param name="member"></param>
+            <param name="name"></param>
+            <param name="flags"></param>
+            <returns></returns>
+        </member>
         <member name="M:FluidScript.Utils.TypeHelpers.FindGetIndexer(System.Type,System.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
             Current Declared Indexer can get
         </member>
         <member name="M:FluidScript.Utils.TypeHelpers.FindSetIndexer(System.Type,System.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
+            Current Declared Indexer can get
+        </member>
+        <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
+            <summary>
+            Returns true if the method's parameter types are reference assignable from
+            the argument types, otherwise false.
+            
+            An example that can make the method return false is that 
+            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
+            returns a method with two double parameters, which doesn't match the provided
+            argument types.
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
+m.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
             Current Declared Indexer can get
         </member>
         <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">

@@ -1,21 +1,25 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Extensions;
+using FluidScript.Utils;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 
 namespace FluidScript.Compiler.Generators
 {
-    public sealed class TypeGenerator : System.Type
+    public sealed class TypeGenerator : System.Type, IMemberGenerator
     {
-        private const System.Reflection.BindingFlags PublicInstanceOrStatic = PublicInstance | System.Reflection.BindingFlags.Static;
-        private const System.Reflection.BindingFlags PublicInstance = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
-        private const System.Reflection.MethodAttributes DefaultStaticCtor = System.Reflection.MethodAttributes.Private | System.Reflection.MethodAttributes.Static | System.Reflection.MethodAttributes.HideBySig;
-        private const System.Reflection.MethodAttributes DefaultCtor = System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.HideBySig;
+        private const BindingFlags PublicInstanceOrStatic = PublicInstance | BindingFlags.Static;
+        private const BindingFlags PublicInstance = BindingFlags.Public | BindingFlags.Instance;
+        private const MethodAttributes DefaultStaticCtor = MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.HideBySig;
+        private const MethodAttributes DefaultCtor = MethodAttributes.Public | MethodAttributes.HideBySig;
 
         internal readonly IList<IMemberGenerator> Members = new List<IMemberGenerator>();
         private readonly System.Reflection.Emit.TypeBuilder _builder;
-        public System.Reflection.Emit.ModuleBuilder ModuleGen => _builder.Module as System.Reflection.Emit.ModuleBuilder;
-        public override System.Reflection.Module Module => _builder.Module;
+        IList<AttributeGenerator> _customAttributes;
+
+        public override Module Module => _builder.Module;
 
         private readonly AssemblyGen assemblyGen;
 
@@ -35,7 +39,7 @@ namespace FluidScript.Compiler.Generators
 
         internal bool TryGetProperty(string name, out PropertyGenerator property)
         {
-            var member = Members.FirstOrDefault(mem => mem.MemberType == System.Reflection.MemberTypes.Property && string.Equals(mem.Name, name, System.StringComparison.OrdinalIgnoreCase));
+            var member = Members.FirstOrDefault(mem => mem.MemberType == MemberTypes.Property && string.Equals(mem.Name, name, System.StringComparison.OrdinalIgnoreCase));
             if (member != null)
             {
                 property = (PropertyGenerator)member;
@@ -48,10 +52,10 @@ namespace FluidScript.Compiler.Generators
         /// <summary>
         /// MemberType of Generator
         /// </summary>
-        public System.Reflection.MemberInfo MemberInfo => _builder;
+        public MemberInfo MemberInfo => _builder;
 
         /// <inheritdoc/>
-        public override System.Reflection.Assembly Assembly => _builder.Assembly;
+        public override Assembly Assembly => _builder.Assembly;
 
         /// <inheritdoc/>
         public override string AssemblyQualifiedName => _builder.AssemblyQualifiedName;
@@ -82,23 +86,28 @@ namespace FluidScript.Compiler.Generators
             Members.Add(generator);
         }
 
-        public System.Type Create()
+        public void Generate()
         {
-            if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Constructor) == false)
+            CreateType();
+        }
+
+        public System.Type CreateType()
+        {
+            if (Members.Any(mem => mem.MemberType == MemberTypes.Constructor) == false)
             {
                 //default ctor
-                var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultCtor, System.Reflection.CallingConventions.Standard, new System.Type[0]), new ParameterInfo[0], new System.Type[0], this)
+                var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultCtor, CallingConventions.Standard, new System.Type[0]), new Emit.ParameterInfo[0], new System.Type[0], this)
                 {
                     SyntaxBody = SyntaxTree.Statement.Empty
                 };
                 ctor.Generate();
             }
-            if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic))
+            if (Members.Any(mem => mem.MemberType == MemberTypes.Field && mem.IsStatic))
             {
                 //check for static ctor
-                if (Members.Any(mem => mem.MemberType == System.Reflection.MemberTypes.Constructor && mem.IsStatic) == false)
+                if (Members.Any(mem => mem.MemberType == MemberTypes.Constructor && mem.IsStatic) == false)
                 {
-                    var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultStaticCtor, System.Reflection.CallingConventions.Standard, new System.Type[0]), new ParameterInfo[0], new System.Type[0], this)
+                    var ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultStaticCtor, CallingConventions.Standard, new System.Type[0]), new Emit.ParameterInfo[0], new System.Type[0], this)
                     {
                         SyntaxBody = Compiler.SyntaxTree.Statement.Empty
                     };
@@ -130,46 +139,12 @@ namespace FluidScript.Compiler.Generators
             }
         }
 
-        public IEnumerable<System.Reflection.MemberInfo> FindMember(string name)
-        {
-            bool HasMember(System.Reflection.MemberInfo m)
-            {
-                if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
-                {
-                    var data = (System.Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
-                    if (data != null)
-                        return data.Match(name);
-                }
-                return m.Name == name;
-            }
-            var member = Members.Select(mem => mem.MemberInfo).Where(HasMember);
-            if (member.Any())
-                return member;
-            return BaseType.GetMembers(PublicInstanceOrStatic).Where(HasMember);
-        }
-
-        public IEnumerable<System.Reflection.MemberInfo> FindMember(string name, System.Reflection.BindingFlags flags)
-        {
-            bool HasMember(System.Reflection.MemberInfo m)
-            {
-                if (m.IsDefined(typeof(Runtime.RegisterAttribute), false))
-                {
-                    var data = (System.Attribute)m.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false).FirstOrDefault();
-                    if (data != null)
-                        return data.Match(name);
-                }
-                return name.Equals(name);
-            }
-            var member = Members.Where(m => m.BindingFlagsMatch(flags)).Select(mem => mem.MemberInfo).Where(HasMember);
-            if (member.Any())
-                return member;
-            return BaseType.GetMembers(flags).Where(HasMember);
-        }
+        public bool IsStatic => _builder.IsAbstract && _builder.IsSealed;
 
         internal bool CanImplementMethod(string name, System.Type[] types, out string newName)
         {
-            var methods = BaseType.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Where(m => m.IsDefined(typeof(Runtime.RegisterAttribute), false) && System.Attribute.GetCustomAttribute(m, typeof(Runtime.RegisterAttribute)).Match(name)).ToArray();
-            var selected = DefaultBinder.SelectMethod(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance, methods, types, null);
+            var methods = BaseType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(m => m.IsDefined(typeof(Runtime.RegisterAttribute), false) && System.Attribute.GetCustomAttribute(m, typeof(Runtime.RegisterAttribute)).Match(name)).ToArray();
+            var selected = DefaultBinder.SelectMethod(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, methods, types, null);
             bool hasExist = selected != null;
             newName = hasExist ? selected.Name : name;
             return hasExist;
@@ -177,7 +152,7 @@ namespace FluidScript.Compiler.Generators
 
         internal bool CanImplementProperty(string name, System.Type returnType, System.Type[] parameterTypes, out string newName)
         {
-            var property = BaseType.GetProperty(name, PublicInstance, null, returnType, parameterTypes, new System.Reflection.ParameterModifier[0]);
+            var property = BaseType.GetProperty(name, PublicInstance, null, returnType, parameterTypes, new ParameterModifier[0]);
             bool hasExist = property != null;
             newName = hasExist ? property.Name : name;
             return hasExist;
@@ -192,21 +167,21 @@ namespace FluidScript.Compiler.Generators
         }
 
         /// <inheritdoc/>
-        protected override System.Reflection.TypeAttributes GetAttributeFlagsImpl()
+        protected override TypeAttributes GetAttributeFlagsImpl()
         {
             return _builder.Attributes;
         }
 
         /// <inheritdoc/>
-        protected override System.Reflection.ConstructorInfo GetConstructorImpl(System.Reflection.BindingFlags bindingAttr, System.Reflection.Binder binder, System.Reflection.CallingConventions callConvention, System.Type[] types, System.Reflection.ParameterModifier[] modifiers)
+        protected override ConstructorInfo GetConstructorImpl(BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, System.Type[] types, ParameterModifier[] modifiers)
         {
             return _builder.GetConstructor(bindingAttr, binder, callConvention, types, modifiers);
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.ConstructorInfo[] GetConstructors(System.Reflection.BindingFlags bindingAttr)
+        public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
         {
-            return GetMembers<System.Reflection.ConstructorInfo>(System.Reflection.MemberTypes.Constructor, bindingAttr).ToArray();
+            return GetMembers<ConstructorInfo>(MemberTypes.Constructor, bindingAttr).ToArray();
         }
 
         /// <inheritdoc/>
@@ -216,27 +191,27 @@ namespace FluidScript.Compiler.Generators
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.EventInfo GetEvent(string name, System.Reflection.BindingFlags bindingAttr)
+        public override EventInfo GetEvent(string name, BindingFlags bindingAttr)
         {
             throw new System.NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.EventInfo[] GetEvents(System.Reflection.BindingFlags bindingAttr)
+        public override EventInfo[] GetEvents(BindingFlags bindingAttr)
         {
             throw new System.NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.FieldInfo GetField(string name, System.Reflection.BindingFlags bindingAttr)
+        public override FieldInfo GetField(string name, BindingFlags bindingAttr)
         {
-            return GetMembers<System.Reflection.FieldInfo>(System.Reflection.MemberTypes.Field, name, bindingAttr).FirstOrDefault();
+            return GetMembers<FieldInfo>(MemberTypes.Field, name, bindingAttr).FirstOrDefault();
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.FieldInfo[] GetFields(System.Reflection.BindingFlags bindingAttr)
+        public override FieldInfo[] GetFields(BindingFlags bindingAttr)
         {
-            return GetMembers<System.Reflection.FieldInfo>(System.Reflection.MemberTypes.Field, bindingAttr).ToArray();
+            return GetMembers<FieldInfo>(MemberTypes.Field, bindingAttr).ToArray();
         }
 
         /// <inheritdoc/>
@@ -252,49 +227,60 @@ namespace FluidScript.Compiler.Generators
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.MemberInfo[] GetMembers(System.Reflection.BindingFlags bindingAttr)
+        public override MemberInfo[] GetMembers(BindingFlags bindingAttr)
         {
             return InternalGetMembers(bindingAttr).ToArray();
         }
 
         /// <inheritdoc/>
-        protected override System.Reflection.MethodInfo GetMethodImpl(string name, System.Reflection.BindingFlags bindingAttr, System.Reflection.Binder binder, System.Reflection.CallingConventions callConvention, System.Type[] types, System.Reflection.ParameterModifier[] modifiers)
+        protected override MethodInfo GetMethodImpl(string name, BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, System.Type[] types, ParameterModifier[] modifiers)
         {
             return _builder.GetMethod(name, bindingAttr, binder, callConvention, types, modifiers);
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.MethodInfo[] GetMethods(System.Reflection.BindingFlags bindingAttr)
+        public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
         {
-            return GetMembers<System.Reflection.MethodInfo>(System.Reflection.MemberTypes.Method, bindingAttr).ToArray();
+            return GetMembers<MethodInfo>(MemberTypes.Method, bindingAttr).ToArray();
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.MemberInfo[] GetMember(string name, System.Reflection.BindingFlags bindingAttr)
+        public override MemberInfo[] GetMember(string name, BindingFlags bindingAttr)
         {
-            return FindMember(name, bindingAttr).ToArray();
+            var member = Members.Where(m => m.IsEquals(name, bindingAttr)).Select(mem => mem.MemberInfo);
+            if (member.Any())
+                return member.ToArray();
+            return BaseType.GetMember(name, bindingAttr);
+        }
+
+        public override MemberInfo[] GetMember(string name, MemberTypes type, BindingFlags bindingAttr)
+        {
+            var member = Members.Where(m => m.MemberType == type && m.IsEquals(name, bindingAttr)).Select(mem => mem.MemberInfo);
+            if (member.Any())
+                return member.ToArray();
+            return BaseType.GetMember(name, type, bindingAttr);
         }
 
         /// <inheritdoc/>
-        public override System.Type GetNestedType(string name, System.Reflection.BindingFlags bindingAttr)
+        public override System.Type GetNestedType(string name, BindingFlags bindingAttr)
         {
-            return GetMembers<System.Type>(System.Reflection.MemberTypes.TypeInfo, bindingAttr).FirstOrDefault();
+            return GetMembers<System.Type>(MemberTypes.TypeInfo, bindingAttr).FirstOrDefault();
         }
 
         /// <inheritdoc/>
-        public override System.Type[] GetNestedTypes(System.Reflection.BindingFlags bindingAttr)
+        public override System.Type[] GetNestedTypes(BindingFlags bindingAttr)
         {
-            return GetMembers<System.Type>(System.Reflection.MemberTypes.TypeInfo, bindingAttr).ToArray();
+            return GetMembers<System.Type>(MemberTypes.TypeInfo, bindingAttr).ToArray();
         }
 
         /// <inheritdoc/>
-        public override System.Reflection.PropertyInfo[] GetProperties(System.Reflection.BindingFlags bindingAttr)
+        public override PropertyInfo[] GetProperties(BindingFlags bindingAttr)
         {
-            return GetMembers<System.Reflection.PropertyInfo>(System.Reflection.MemberTypes.Property, bindingAttr).ToArray();
+            return GetMembers<PropertyInfo>(MemberTypes.Property, bindingAttr).ToArray();
         }
 
         /// <inheritdoc/>
-        protected override System.Reflection.PropertyInfo GetPropertyImpl(string name, System.Reflection.BindingFlags bindingAttr, System.Reflection.Binder binder, System.Type returnType, System.Type[] types, System.Reflection.ParameterModifier[] modifiers)
+        protected override PropertyInfo GetPropertyImpl(string name, BindingFlags bindingAttr, Binder binder, System.Type returnType, System.Type[] types, ParameterModifier[] modifiers)
         {
             return _builder.GetProperty(name, bindingAttr, binder, returnType, types, modifiers);
         }
@@ -306,12 +292,12 @@ namespace FluidScript.Compiler.Generators
         }
 
         /// <inheritdoc/>
-        public override object InvokeMember(string name, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, object target, object[] args, System.Reflection.ParameterModifier[] modifiers, CultureInfo culture, string[] namedParameters)
+        public override object InvokeMember(string name, BindingFlags invokeAttr, Binder binder, object target, object[] args, ParameterModifier[] modifiers, CultureInfo culture, string[] namedParameters)
         {
             return _builder.InvokeMember(name, invokeAttr, binder, target, args);
         }
 
-        private IEnumerable<System.Reflection.MemberInfo> InternalGetMembers(System.Reflection.BindingFlags flags)
+        private IEnumerable<MemberInfo> InternalGetMembers(BindingFlags flags)
         {
             foreach (var member in Members)
             {
@@ -320,7 +306,7 @@ namespace FluidScript.Compiler.Generators
                     yield return member.MemberInfo;
                 }
             }
-            if ((flags & System.Reflection.BindingFlags.DeclaredOnly) == 0)
+            if ((flags & BindingFlags.DeclaredOnly) == 0)
             {
                 for (System.Type type = BaseType; type != null; type = type.BaseType)
                 {
@@ -332,8 +318,8 @@ namespace FluidScript.Compiler.Generators
             }
         }
 
-        private IEnumerable<T> GetMembers<T>(System.Reflection.MemberTypes memberType, System.Reflection.BindingFlags flags)
-            where T : System.Reflection.MemberInfo
+        private IEnumerable<T> GetMembers<T>(MemberTypes memberType, BindingFlags flags)
+            where T : MemberInfo
         {
             foreach (var member in Members)
             {
@@ -342,7 +328,7 @@ namespace FluidScript.Compiler.Generators
                     yield return (T)member.MemberInfo;
                 }
             }
-            if ((flags & System.Reflection.BindingFlags.DeclaredOnly) == 0)
+            if ((flags & BindingFlags.DeclaredOnly) == 0)
             {
                 for (System.Type type = this.BaseType; type != null; type = type.BaseType)
                 {
@@ -357,8 +343,8 @@ namespace FluidScript.Compiler.Generators
             }
         }
 
-        private IEnumerable<T> GetMembers<T>(System.Reflection.MemberTypes memberType, string name, System.Reflection.BindingFlags flags)
-            where T : System.Reflection.MemberInfo
+        private IEnumerable<T> GetMembers<T>(MemberTypes memberType, string name, BindingFlags flags)
+            where T : MemberInfo
         {
             foreach (var member in Members)
             {
@@ -367,7 +353,7 @@ namespace FluidScript.Compiler.Generators
                     yield return (T)member.MemberInfo;
                 }
             }
-            if ((flags & System.Reflection.BindingFlags.DeclaredOnly) == 0)
+            if ((flags & BindingFlags.DeclaredOnly) == 0)
             {
                 for (System.Type type = this.BaseType; type != null; type = type.BaseType)
                 {
@@ -415,19 +401,33 @@ namespace FluidScript.Compiler.Generators
         /// <inheritdoc/>
         public override object[] GetCustomAttributes(bool inherit)
         {
-            return _builder.GetCustomAttributes(inherit);
+            if (_customAttributes != null)
+                return _customAttributes.Select(att => att.Instance).ToArray();
+            return new object[0];
         }
 
         /// <inheritdoc/>
         public override object[] GetCustomAttributes(System.Type attributeType, bool inherit)
         {
-            return _builder.GetCustomAttributes(attributeType, inherit);
+            if (_customAttributes != null)
+            {
+                return _customAttributes.Where(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType))).
+                    Select(att => att.Instance).ToArray();
+            }
+            return new object[0];
+        }
+
+        public void SetCustomAttribute(System.Type type, ConstructorInfo ctor, object[] parameters)
+        {
+            if (_customAttributes == null)
+                _customAttributes = new List<AttributeGenerator>();
+            _customAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
         }
 
         /// <inheritdoc/>
         public override bool IsDefined(System.Type attributeType, bool inherit)
         {
-            return _builder.IsDefined(attributeType, inherit);
+            return _customAttributes != null && _customAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
     }
 }

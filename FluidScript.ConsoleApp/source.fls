@@ -1,5 +1,15 @@
 ﻿class Sample {
-	func read(i:int) {
-		Console.Write('hello');
+	func read(i:int):void {
+		var x = 11;
+		var y = 10;
+		Sample.print(x+y+i);
+	}
+
+	func add(a:int, b:int) {
+		return a+b;
+	}
+
+	static func print(value):void {
+		Console.Write(value);
 	}
 }
