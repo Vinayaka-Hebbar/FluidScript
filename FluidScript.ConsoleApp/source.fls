@@ -1,11 +1,5 @@
 ﻿class Sample {
-	var i=2;
 	func read(i:int) {
 		Console.Write('hello');
-		return i++;
-	}
-
-	get I() {
-		return i++;
 	}
 }

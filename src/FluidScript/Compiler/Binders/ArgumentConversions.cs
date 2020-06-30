@@ -38,7 +38,7 @@
             {
                 if (entries[i].index == hashCode)
                 {
-                    // replace
+                    // add to next node
                     Conversion last = entries[i].conversion;
                     c.next = last;
                     last.next = c;

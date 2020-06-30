@@ -4,7 +4,12 @@
     <TargetFramework>net45</TargetFramework>
     <OutputType>Exe</OutputType>
     <StartupObject>FluidScript.ConsoleTest.Class1</StartupObject>
+    <UserSecretsId>5d1cd3b9-7b42-41d1-b5fb-32474fc89452</UserSecretsId>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="JsonDictionary.cs" />
+    <Compile Remove="ScriptIndentation.cs" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="FluidScript.CoreLib, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\FluidScript.CoreLib.1.0.11\lib\net40\FluidScript.CoreLib.dll</HintPath>
