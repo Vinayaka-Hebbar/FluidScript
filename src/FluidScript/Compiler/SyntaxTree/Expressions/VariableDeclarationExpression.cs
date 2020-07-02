@@ -20,14 +20,14 @@
         /// <inheritdoc/>
         public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption options)
         {
-            Type = VariableType != null ? VariableType.GetType(generator.Context) : TypeProvider.ObjectType;
+            Type = VariableType != null ? VariableType.ResolveType((ITypeContext)generator.Context) : TypeProvider.ObjectType;
             if (Value != null)
             {
                 var defValue = Value.Accept(generator);
                 defValue.GenerateCode(generator);
                 if (VariableType == null)
                     Type = defValue.Type;
-                else if (!Utils.TypeUtils.AreReferenceAssignable(Type, defValue.Type) && Utils.TypeUtils.TryImplicitConvert(defValue.Type, Type, out System.Reflection.MethodInfo opConvert))
+                else if (!Runtime.TypeUtils.AreReferenceAssignable(Type, defValue.Type) && Runtime.TypeUtils.TryImplicitConvert(defValue.Type, Type, out System.Reflection.MethodInfo opConvert))
                     generator.CallStatic(opConvert);
                 else if (defValue.Type.IsValueType && !Type.IsValueType)
                     generator.Box(defValue.Type);

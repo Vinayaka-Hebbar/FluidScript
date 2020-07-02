@@ -1,15 +1,46 @@
-﻿class Sample {
-	func read(i:int):void {
+﻿import {Console} from mscorlib;
+
+class Sample {
+	var value:object;
+	ctor() {
+		this(Math.pow(10,2));
+	}
+
+	ctor(val:object){
+		super();
+		value = val;
+	}
+
+	impl get x() : int {
+		return 10;
+	}
+
+	impl func read(i:int):void {
 		var x = 11;
 		var y = 10;
 		Sample.print(x+y+i);
 	}
 
-	func add(a:int, b:int) {
+	func add(a:int, b:int):any {
 		return a+b;
 	}
 
 	static func print(value):void {
 		Console.Write(value);
+	}
+}
+
+class Sample3 {
+	impl func toString() {
+		return 'My Sample 3';
+	}
+}
+
+class User {
+	var name = null;
+	var age = null;
+	ctor(name, age){
+		this.name = name;
+		this.age = age;
 	}
 }

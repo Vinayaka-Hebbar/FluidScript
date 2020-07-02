@@ -1,11 +1,12 @@
-﻿using System;
+﻿using FluidScript.Compiler.Emit;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
 namespace FluidScript.Compiler.Generators
 {
-    public sealed class PropertyGenerator : System.Reflection.PropertyInfo, Emit.IMemberGenerator
+    public sealed class PropertyGenerator : System.Reflection.PropertyInfo, Emit.IMember
     {
         public sealed class PropertyHolder
         {
@@ -152,7 +153,7 @@ namespace FluidScript.Compiler.Generators
         }
 
 
-        public void Generate()
+        void IMember.Compile()
         {
             if (_customAttributes != null)
             {
@@ -164,7 +165,7 @@ namespace FluidScript.Compiler.Generators
             }
             foreach (var accessor in Accessors)
             {
-                accessor.Method.Generate();
+                ((IMember)accessor.Method).Compile();
             }
         }
 

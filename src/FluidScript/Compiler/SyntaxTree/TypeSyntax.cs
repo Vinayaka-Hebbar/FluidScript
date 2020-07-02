@@ -13,10 +13,12 @@
             }
         }
 
-        protected System.Type Type;
+        public System.Type Type { get; protected set; }
 
         public static TypeSyntax Create(System.Type type)
         {
+            if (type is null)
+                return null;
             TypeSyntax value;
             if (type.IsArray)
             {
@@ -40,6 +42,6 @@
             return value;
         }
 
-        public abstract System.Type GetType(ITypeProvider provider);
+        public abstract System.Type ResolveType(ITypeContext provider);
     }
 }

@@ -4,18 +4,8 @@ using System.Collections.Generic;
 
 namespace FluidScript.Compiler
 {
-    /// <summary>
-    /// Resolve type
-    /// </summary>
-    public interface ITypeProvider
-    {
-        /// <summary>
-        /// Get resolved <see cref="Type"/>
-        /// </summary>
-        Type GetType(TypeName name);
-    }
 
-    public class TypeProvider : ITypeProvider
+    public class TypeProvider 
     {
         internal static readonly Type FSType;
         internal static readonly Type ObjectType;
@@ -34,12 +24,8 @@ namespace FluidScript.Compiler
 
         internal static readonly Dictionary<string, Type> Inbuilts;
 
-        internal static readonly ITypeProvider Default;
-
         static TypeProvider()
         {
-            Default = new TypeProvider();
-
             FSType = typeof(FSObject);
             ObjectType = typeof(object);
             // Primitives
@@ -56,6 +42,9 @@ namespace FluidScript.Compiler
 
             Inbuilts = new Dictionary<string, Type>()
             {
+                {"any", ObjectType },
+                {"object", ObjectType },
+                {"void", VoidType },
                 {"byte", ByteType },
                 {"short", ShortType },
                 {"int", IntType },
@@ -64,13 +53,11 @@ namespace FluidScript.Compiler
                 {"double", DoubleType },
                 {"bool", BooleanType },
                 {"char", CharType },
-                {"string", StringType },
-                {"any", ObjectType },
-                {"void", VoidType }
+                {"string", StringType }
             };
         }
 
-        public Type GetType(TypeName typeName)
+        public static Type GetType(TypeName typeName)
         {
             if (typeName.Namespace == null && Inbuilts.TryGetValue(typeName.Name, out Type t))
                 return t;

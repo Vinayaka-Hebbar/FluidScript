@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluidScript.Compiler.SyntaxTree;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -6,13 +7,13 @@ using System.Reflection;
 
 namespace FluidScript.Compiler.Generators
 {
-    public class FieldGenerator : FieldInfo, Emit.IMemberGenerator
+    public class FieldGenerator : FieldInfo, Emit.IMember
     {
-        private IList<AttributeGenerator> _CustomAttributes;
+        private IList<AttributeGenerator> _customAttributes;
 
         private readonly TypeGenerator TypeGenerator;
 
-        public FieldGenerator(TypeGenerator builder, FieldAttributes attributes, Compiler.SyntaxTree.VariableDeclarationExpression expression)
+        public FieldGenerator(TypeGenerator builder, FieldAttributes attributes, SyntaxTree.VariableDeclarationExpression expression)
         {
             TypeGenerator = builder;
             Attributes = attributes;
@@ -24,7 +25,7 @@ namespace FluidScript.Compiler.Generators
 
         public override FieldAttributes Attributes { get; }
 
-        public SyntaxTree.Expression DefaultValue { get; }
+        public SyntaxTree.Expression DefaultValue { get; set; }
 
         public override string Name { get; }
 
@@ -46,26 +47,25 @@ namespace FluidScript.Compiler.Generators
 
         internal Emit.MethodBodyGenerator MethodBody { get; set; }
 
-        public virtual void SetCustomAttribute(Type type, ConstructorInfo ctor, object[] parameters)
+        public virtual void SetCustomAttribute(Type type, ConstructorInfo ctor, params object[] parameters)
         {
-            if (_CustomAttributes == null)
-                _CustomAttributes = new List<AttributeGenerator>();
-            _CustomAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
+            if (_customAttributes == null)
+                _customAttributes = new List<AttributeGenerator>();
+            _customAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
         }
 
         public override object[] GetCustomAttributes(bool inherit)
         {
-            if (_CustomAttributes != null)
-                return _CustomAttributes.Select(att => att.Instance).ToArray();
+            if (_customAttributes != null)
+                return _customAttributes.Select(att => att.Instance).ToArray();
             return new object[0];
         }
 
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
         {
-            if (_CustomAttributes != null)
+            if (_customAttributes != null)
             {
-                var enumerable = _CustomAttributes.Where(att => att.Type == attributeType);
-                return enumerable.Select(att => att.Instance).ToArray();
+                return _customAttributes.Where(att => att.Type == attributeType).Select(att => att.Instance).ToArray();
             }
             return new object[0];
         }
@@ -77,7 +77,7 @@ namespace FluidScript.Compiler.Generators
 
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return _CustomAttributes != null && _CustomAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+            return _customAttributes != null && _customAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
 
         public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, CultureInfo culture)
@@ -85,7 +85,7 @@ namespace FluidScript.Compiler.Generators
             throw new NotImplementedException();
         }
 
-        public void Generate()
+        void Emit.IMember.Compile()
         {
             if (FieldInfo == null)
             {
@@ -94,18 +94,28 @@ namespace FluidScript.Compiler.Generators
                 {
                     if (DefaultValue == null)
                         throw new ArgumentNullException(nameof(DefaultValue));
-                    //literal ok
-                    if (DefaultValue.NodeType != SyntaxTree.ExpressionType.Literal && MethodBody == null)
+                    // literal ok
+                    if (DefaultValue.NodeType != ExpressionType.Literal && MethodBody == null)
                         return;
-                    type = DefaultValue.Accept(MethodBody).Type;
+                    if (MethodBody is null && DefaultValue == Expression.Null)
+                    {
+                        type = TypeProvider.ObjectType;
+                    }
+                    else
+                    {
+                        type = DefaultValue.Accept(MethodBody).Type;
+                    }
 
                 }
                 else
-                    type = DeclarationExpression.VariableType.GetType(TypeGenerator.Context);
-                var fieldBul = TypeGenerator.Builder.DefineField(Name, type, Attributes);
-                if (_CustomAttributes != null)
                 {
-                    foreach (var attr in _CustomAttributes)
+                    type = DeclarationExpression.VariableType.ResolveType(TypeGenerator.Context);
+                }
+
+                var fieldBul = TypeGenerator.Builder.DefineField(Name, type, Attributes);
+                if (_customAttributes != null)
+                {
+                    foreach (var attr in _customAttributes)
                     {
                         var cuAttr = new System.Reflection.Emit.CustomAttributeBuilder(attr.Ctor, attr.Parameters);
                         fieldBul.SetCustomAttribute(cuAttr);

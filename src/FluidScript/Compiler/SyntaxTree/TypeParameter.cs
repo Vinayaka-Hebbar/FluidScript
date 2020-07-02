@@ -10,14 +10,14 @@
 
         public Expression DefaultValue { get; set; }
 
-        public readonly bool IsVar;
+        public readonly bool IsVarArgs;
 
-        public TypeParameter(string name, TypeSyntax type, int index, bool isVar)
+        public TypeParameter(string name, TypeSyntax type, int index, bool isVarArgs)
         {
             Name = name;
             Type = type;
             Index = index;
-            IsVar = isVar;
+            IsVarArgs = isVarArgs;
         }
 
         public override string ToString()
@@ -25,11 +25,11 @@
             return string.Concat(Name, ":", Type == null ? "any" : Type.ToString());
         }
 
-        public Compiler.Emit.ParameterInfo GetParameterInfo(Compiler.ITypeProvider provider)
+        public Emit.ParameterInfo GetParameterInfo(ITypeContext provider)
         {
             if (Type == null)
-                return new Compiler.Emit.ParameterInfo(Name, Index, TypeProvider.ObjectType, IsVar);
-            return new Compiler.Emit.ParameterInfo(Name, Index, Type.GetType(provider), IsVar);
+                return new Emit.ParameterInfo(Name, Index, TypeProvider.ObjectType, IsVarArgs);
+            return new Emit.ParameterInfo(Name, Index, Type.ResolveType(provider), IsVarArgs);
 
         }
     }

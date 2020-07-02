@@ -43,9 +43,9 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public Type ElementType { get; set; }
 
-        public Binders.ArgumentConversions ArgumentConversions { get; set; }
+        public Runtime.ArgumentConversions ArgumentConversions { get; set; }
 
-        public Binders.ArgumentConversions ArrayConversions { get; set; }
+        public Runtime.ArgumentConversions ArrayConversions { get; set; }
 
         /// <inheritdoc/>
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
@@ -64,7 +64,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     Arguments[i].GenerateCode(generator);
                     var conversion = conversions[i];
                     if (conversion != null)
-                        conversion.GenerateCode(generator);
+                        generator.EmitConvert(conversion);
                 }
             }
             generator.NewObject(Constructor);
@@ -87,13 +87,13 @@ namespace FluidScript.Compiler.SyntaxTree
                     expression.GenerateCode(generator);
                     if (expression.Type.IsValueType && type.IsValueType == false)
                         generator.Box(expression.Type);
-                    var group = conversions[i];
-                    if (group != null)
-                        group.GenerateCode(generator);
+                    var convertion = conversions[i];
+                    if (convertion != null)
+                        generator.EmitConvert(convertion);
 
                     generator.StoreArrayElement(type);
                 }
-                var m = Type.GetMethod("AddRange", Utils.TypeUtils.PublicInstance);
+                var m = Type.GetMethod("AddRange", Utils.ReflectionUtils.PublicInstance);
                 generator.Call(m);
                 generator.LoadVariable(variable);
             }

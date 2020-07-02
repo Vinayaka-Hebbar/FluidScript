@@ -3,7 +3,7 @@
     /// <summary>
     /// Member Generate
     /// </summary>
-    public interface IMemberGenerator
+    public interface IMember
     {
         string Name { get; }
         /// <summary>
@@ -21,6 +21,8 @@
 
         bool IsPublic { get; }
 
-        void Generate();
+        bool IsSpecialName { get; }
+
+        void Compile();
     }
 }

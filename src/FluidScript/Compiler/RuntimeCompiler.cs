@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Extensions;
 using FluidScript.Runtime;
 using FluidScript.Utils;
 using System;
@@ -168,11 +169,11 @@ namespace FluidScript.Compiler
                 binder = exp.Binder;
                 if (binder is null)
                 {
-                    if (m_target != null && TypeUtils.TryFindMember(m_target.GetType(), name, TypeUtils.AnyPublic, out binder))
+                    if (m_target != null && TypeExtensions.TryFindMember(m_target.GetType(), name, ReflectionUtils.AnyPublic, out binder))
                     {
                         exp.Target = m_target;
                     }
-                    else if (TypeUtils.TryFindMember(GlobalType, name, TypeUtils.AnyPublic, out binder))
+                    else if (GlobalType.TryFindMember(name, ReflectionUtils.AnyPublic, out binder))
                     {
                         exp.Target = m_global;
                     }
@@ -192,7 +193,7 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)left;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                if (binder is null && TypeUtils.TryFindMember(exp.Target.Type, name, TypeUtils.AnyPublic, out binder))
+                if (binder is null && exp.Target.Type.TryFindMember(name, ReflectionUtils.AnyPublic, out binder))
                 {
                     exp.Binder = binder;
                 }
@@ -237,7 +238,7 @@ namespace FluidScript.Compiler
         /// <returns>target to invoke</returns>
         protected override object ResolveCall(InvocationExpression node, object[] args)
         {
-            Binders.ArgumentConversions conversions = null;
+            ArgumentConversions conversions = null;
             var target = node.Target;
             System.Reflection.MethodInfo method = null;
             string name;
@@ -288,10 +289,10 @@ namespace FluidScript.Compiler
                         var value = exp.Binder.Get(obj);
                         if (value is Delegate del)
                         {
-                            conversions = new Binders.ArgumentConversions(args.Length);
+                            conversions = new ArgumentConversions(args.Length);
                             name = nameof(Action.Invoke);
                             method = del.GetType().GetMethod(name);
-                            if (TypeHelpers.MatchesTypes(method, args, conversions))
+                            if (TypeUtils.MatchesTypes(method, args, conversions))
                             {
                                 obj = del;
                             }
@@ -315,8 +316,8 @@ namespace FluidScript.Compiler
                 name = nameof(Action.Invoke);
                 //Multi Delegate Invoke()
                 System.Reflection.MethodInfo invoke = res.GetType().GetMethod(name);
-                conversions = new Binders.ArgumentConversions(args.Length);
-                if (!TypeHelpers.MatchesTypes(invoke, args, conversions))
+                conversions = new ArgumentConversions(args.Length);
+                if (!TypeUtils.MatchesTypes(invoke, args, conversions))
                     ExecutionException.ThrowArgumentMisMatch(node.Target, node);
                 method = invoke;
                 obj = res;
@@ -326,7 +327,7 @@ namespace FluidScript.Compiler
                 ExecutionException.ThrowMissingMethod(obj.GetType(), name, node);
             node.Method = method;
             node.Type = method.ReturnType;
-            node.Convertions = conversions;
+            node.Conversions = conversions;
             return obj;
         }
         #endregion
@@ -337,7 +338,7 @@ namespace FluidScript.Compiler
             var target = node.Target.Accept(this);
             if (node.Binder == null)
             {
-                if (TypeUtils.TryFindMember(node.Target.Type, node.Name, TypeUtils.AnyPublic, out Binders.IBinder binder) == false
+                if (node.Target.Type.TryFindMember(node.Name, ReflectionUtils.AnyPublic, out Binders.IBinder binder) == false
                     && target is IMetaObjectProvider runtime)
                 {
                     binder = runtime.GetMetaObject().BindGetMember(node.Name);
@@ -373,13 +374,13 @@ namespace FluidScript.Compiler
                 else if (m_target != null)
                 {
                     var target = m_target;
-                    if (TypeUtils.TryFindMember(target.GetType(), name, TypeUtils.AnyPublic, out binder))
+                    if (TypeExtensions.TryFindMember(target.GetType(), name, ReflectionUtils.AnyPublic, out binder))
                     {
                         node.Target = target;
                         goto done;
                     }
                 }
-                if (TypeUtils.TryFindMember(GlobalType, name, TypeUtils.AnyPublic, out binder))
+                if (GlobalType.TryFindMember(name, ReflectionUtils.AnyPublic, out binder))
                 {
                     node.Target = m_global;
                 }
@@ -406,7 +407,7 @@ namespace FluidScript.Compiler
         public override object VisitDeclaration(VariableDeclarationExpression node)
         {
             object value = node.Value?.Accept(this);
-            Type varType = value is null ? node.VariableType?.GetType(TypeProvider.Default) ?? TypeProvider.ObjectType : value.GetType();
+            Type varType = value is null ? node.VariableType?.ResolveType(TypeContext) ?? TypeProvider.ObjectType : value.GetType();
             locals.DeclareVariable(node.Name, varType, value);
             return value;
         }
@@ -414,7 +415,7 @@ namespace FluidScript.Compiler
         /// <inheritdoc/>
         void IStatementVisitor.VisitReturn(ReturnOrThrowStatement node)
         {
-            var value = node.Expression?.Accept(this);
+            var value = node.Value?.Accept(this);
             if (node.NodeType == StatementType.Return)
             {
                 context.Return(value);

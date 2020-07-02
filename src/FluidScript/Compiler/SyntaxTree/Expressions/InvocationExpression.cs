@@ -1,5 +1,5 @@
-﻿using FluidScript.Compiler.Binders;
-using FluidScript.Compiler.Emit;
+﻿using FluidScript.Compiler.Emit;
+using FluidScript.Runtime;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -10,12 +10,12 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public readonly INodeList<Expression> Arguments;
 
-        public System.Reflection.MethodInfo Method { get; set; }
+        public System.Reflection.MethodBase Method { get; set; }
 
         /// <summary>
         /// Argument convert list
         /// </summary>
-        public ArgumentConversions Convertions { get; set; }
+        public ArgumentConversions Conversions { get; set; }
 
         public InvocationExpression(Expression target, NodeList<Expression> arguments) : base(ExpressionType.Invocation)
         {
@@ -32,67 +32,63 @@ namespace FluidScript.Compiler.SyntaxTree
         public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
         {
             Target.GenerateCode(generator);
-            if (Arguments.Count > 0)
+            EmitArguments(generator, Arguments, Conversions);
+            generator.Call(Method);
+            // if current value must not be returned for assigment
+            if ((option & MethodGenerateOption.Return) == 0 && Type is object && Type != TypeProvider.VoidType)
+                generator.Pop();
+        }
+
+        internal static void EmitArguments(MethodBodyGenerator generator, INodeList<Expression> arguments, ArgumentConversions conversions)
+        {
+            if (arguments.Count > 0)
             {
-                var conversions = Convertions;
-                for (int i = 0; i < Arguments.Count; i++)
+                for (int i = 0; i < arguments.Count; i++)
                 {
-                    var arg = Arguments[i];
+                    var arg = arguments[i];
                     var conv = conversions[i];
                     if (conv != null)
                     {
                         if (conv.ConversionType == ConversionType.Normal)
                         {
-                            arg.GenerateCode(generator);
-                            conv.GenerateCode(generator);
+                            arg.GenerateCode(generator, AssignOption);
+                            generator.EmitConvert(conv);
                         }
                         else if (conv.ConversionType == ConversionType.ParamArray)
                         {
-                            var arguments = new Expression[Arguments.Count - i];
-                            Arguments.CopyTo(arguments, conv.Index);
-                            conv.GenerateCode(generator, arguments);
+                            var args = new Expression[arguments.Count - i];
+                            arguments.CopyTo(args, conv.Index);
+                            generator.EmitConvert((ParamArrayConversion)conv, args);
                             break;
                         }
                     }
                     else
                     {
-                        arg.GenerateCode(generator);
+                        arg.GenerateCode(generator, AssignOption);
                     }
                 }
             }
-            // remaing binding
-            if (Arguments.Count < Convertions.Count)
+            // remaing Conversions like optional or param array
+            if (arguments.Count < conversions.Count)
             {
-                for (var i = Arguments.Count; i < Convertions.Count; i++)
+                for (var i = arguments.Count; i < conversions.Count; i++)
                 {
-                    Conversion conv = Convertions[i];
+                    Conversion conv = conversions[i];
                     if (conv.ConversionType == ConversionType.Normal)
                     {
-                        Arguments[i].GenerateCode(generator);
-                        conv.GenerateCode(generator);
+                        arguments[i].GenerateCode(generator);
+                        generator.EmitConvert(conv);
                     }
                     else if (conv.ConversionType == ConversionType.ParamArray)
                     {
                         // remaining arguments
-                        var arguments = new Expression[Arguments.Count - i];
-                        Arguments.CopyTo(arguments, conv.Index);
-                        conv.GenerateCode(generator, arguments);
+                        var args = new Expression[arguments.Count - i];
+                        arguments.CopyTo(args, conv.Index);
+                        generator.EmitConvert((ParamArrayConversion)conv, args);
                         break;
                     }
                 }
             }
-            generator.Call(Method);
-            if((option & MethodGenerateOption.Assign) == 0 && Type != TypeProvider.VoidType)
-                generator.Pop();
-        }
-
-        internal static void GenerateCall(MethodBodyGenerator generator, System.Reflection.MethodBase method, System.Collections.Generic.IEnumerable<Expression> arguments)
-        {
-            foreach (var item in arguments)
-            {
-                item.GenerateCode(generator);
-            }
-            generator.Call(method);
         }
 
         public override string ToString()

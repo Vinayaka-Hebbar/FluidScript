@@ -1,4 +1,6 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Extensions;
+using FluidScript.Runtime;
 using FluidScript.Utils;
 using System;
 
@@ -7,7 +9,7 @@ namespace FluidScript.Compiler
     /// <summary>
     /// Evaluates an <see cref="Expression"/> using reflection
     /// </summary>
-    public class ScriptCompiler : CompilerBase, Runtime.ICompileProvider
+    public class ScriptCompiler : CompilerBase, ICompileProvider
     {
         readonly object target;
         object locals;
@@ -21,14 +23,14 @@ namespace FluidScript.Compiler
             this.target = target;
         }
 
-        static ScriptCompiler _default;
-        public static ScriptCompiler Default
+        static ScriptCompiler _defaultInstance;
+        public static ScriptCompiler Instance
         {
             get
             {
-                if (_default == null)
-                    System.Threading.Interlocked.CompareExchange(ref _default, new ScriptCompiler(GlobalObject.Instance), null);
-                return _default;
+                if (_defaultInstance == null)
+                    System.Threading.Interlocked.CompareExchange(ref _defaultInstance, new ScriptCompiler(GlobalObject.Instance), null);
+                return _defaultInstance;
             }
         }
 
@@ -70,16 +72,16 @@ namespace FluidScript.Compiler
             {
                 var exp = (NameExpression)left;
                 name = exp.Name;
-                if (obj == null || TypeUtils.TryFindMember(obj.GetType(), name, TypeUtils.AnyPublic, out binder) == false)
+                if (obj == null || TypeExtensions.TryFindMember(obj.GetType(), name, ReflectionUtils.AnyPublic, out binder) == false)
                 {
-                    if (obj is Runtime.IMetaObjectProvider runtime)
+                    if (obj is IMetaObjectProvider runtime)
                     {
                         var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
                         value = result.Value;
                         node.Type = result.Type;
                         return value;
                     }
-                    else if (TypeUtils.TryFindMember(TargetType, name, TypeUtils.AnyPublic, out binder))
+                    else if (TargetType.TryFindMember(name, ReflectionUtils.AnyPublic, out binder))
                     {
                         obj = Target;
                     }
@@ -91,9 +93,9 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)left;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                if (exp.Binder is null && TypeUtils.TryFindMember(exp.Target.Type, name, TypeUtils.AnyPublic, out binder))
+                if (exp.Binder is null && exp.Target.Type.TryFindMember(name, ReflectionUtils.AnyPublic, out binder))
                     exp.Binder = binder;
-                else if (obj is Runtime.IMetaObjectProvider runtime)
+                else if (obj is IMetaObjectProvider runtime)
                 {
                     //todo binder for dynamic
                     var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
@@ -131,7 +133,7 @@ namespace FluidScript.Compiler
             var target = node.Target;
             System.Reflection.MethodInfo method = null;
             ExpressionType nodeType = node.Target.NodeType;
-            Binders.ArgumentConversions conversions = null;
+            ArgumentConversions conversions = null;
             string name;
             object obj;
             if (nodeType == ExpressionType.Identifier)
@@ -155,16 +157,16 @@ namespace FluidScript.Compiler
                 name = exp.Name;
                 if (TypeHelpers.TryFindMethod(name, exp.Target.Type, args, out method, out conversions) == false)
                 {
-                    if (obj is Runtime.IMetaObjectProvider runtime)
+                    if (obj is IMetaObjectProvider runtime)
                     {
                         exp.Binder = runtime.GetMetaObject().BindGetMember(name);
                         var value = exp.Binder.Get(obj);
                         if (value is Delegate del)
                         {
-                            conversions = new Binders.ArgumentConversions(args.Length);
+                            conversions = new ArgumentConversions(args.Length);
                             name = nameof(Action.Invoke);
                             method = del.GetType().GetMethod(name);
-                            if (TypeHelpers.MatchesTypes(method, args, conversions))
+                            if (TypeUtils.MatchesTypes(method, args, conversions))
                             {
                                 obj = del;
                             }
@@ -185,8 +187,8 @@ namespace FluidScript.Compiler
                     ExecutionException.ThrowInvalidOp(target, node);
                 name = "Invoke";
                 System.Reflection.MethodInfo invoke = res.GetType().GetMethod(name);
-                conversions = new Binders.ArgumentConversions(args.Length);
-                if (!TypeHelpers.MatchesTypes(invoke, args, conversions))
+                conversions = new ArgumentConversions(args.Length);
+                if (!TypeUtils.MatchesTypes(invoke, args, conversions))
                     ExecutionException.ThrowArgumentMisMatch(node.Target, node);
                 method = invoke;
                 obj = res;
@@ -195,7 +197,7 @@ namespace FluidScript.Compiler
                 ExecutionException.ThrowMissingMethod(obj.GetType(), name, node);
             node.Method = method;
             node.Type = method.ReturnType;
-            node.Convertions = conversions;
+            node.Conversions = conversions;
             return obj;
         }
 
@@ -208,9 +210,9 @@ namespace FluidScript.Compiler
         public override object VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            if (TypeUtils.TryFindMember(node.Target.Type, node.Name, TypeUtils.AnyPublic, out Binders.IBinder binder) == false)
+            if (node.Target.Type.TryFindMember( node.Name, ReflectionUtils.AnyPublic, out Binders.IBinder binder) == false)
             {
-                if (target is Runtime.IMetaObjectProvider runtime)
+                if (target is IMetaObjectProvider runtime)
                 {
                     binder = runtime.GetMetaObject().BindGetMember(node.Name);
                 }
@@ -234,24 +236,24 @@ namespace FluidScript.Compiler
         {
             string name = node.Name;
             object obj = locals;
-            if (obj == null || TypeUtils.TryFindMember(obj.GetType(), name, TypeUtils.AnyPublic, out Binders.IBinder binder) == false)
+            if (obj == null || TypeExtensions.TryFindMember(obj.GetType(), name, ReflectionUtils.AnyPublic, out Binders.IBinder binder) == false)
             {
-                Runtime.IMetaObjectProvider dynamic;
-                if (obj is Runtime.IMetaObjectProvider)
+                IMetaObjectProvider dynamic;
+                if (obj is IMetaObjectProvider)
                 {
-                    dynamic = (Runtime.IMetaObjectProvider)obj;
+                    dynamic = (IMetaObjectProvider)obj;
                     binder = dynamic.GetMetaObject().BindGetMember(name);
                 }
-                else if (TypeUtils.TryFindMember(TargetType, name, TypeUtils.AnyPublic, out binder) == false)
+                else if (TargetType.TryFindMember(name, ReflectionUtils.AnyPublic, out binder) == false)
                 {
                     // find in the class level
                     obj = Target;
-                    if (obj is Runtime.IMetaObjectProvider)
+                    if (obj is IMetaObjectProvider)
                     {
-                        dynamic = (Runtime.IMetaObjectProvider)obj;
+                        dynamic = (IMetaObjectProvider)obj;
                         binder = dynamic.GetMetaObject().BindGetMember(name);
                     }
-                    else if (TypeUtils.TryFindMember(typeof(GlobalObject), name, TypeUtils.AnyPublic, out binder))
+                    else if (typeof(GlobalObject).TryFindMember(name, ReflectionUtils.AnyPublic, out binder))
                     {
                         obj = GlobalObject.Instance;
                     }

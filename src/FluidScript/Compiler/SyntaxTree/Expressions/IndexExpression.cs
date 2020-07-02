@@ -15,7 +15,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Argument convert list
         /// </summary>
-        public Binders.ArgumentConversions Conversions { get; set; }
+        public Runtime.ArgumentConversions Conversions { get; set; }
 
         public System.Reflection.MethodInfo Getter { get; set; }
 

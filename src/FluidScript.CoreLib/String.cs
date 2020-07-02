@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace FluidScript
 {
     /// <summary>
@@ -8,7 +7,7 @@ namespace FluidScript
     [System.Serializable]
     [Runtime.Register(nameof(String))]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public sealed class String : FSObject, System.IConvertible, IEquatable<string>
+    public sealed class String : FSObject, System.IConvertible, System.IEquatable<string>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly string m_value;

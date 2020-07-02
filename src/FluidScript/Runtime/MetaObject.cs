@@ -41,7 +41,7 @@ namespace FluidScript.Runtime
         {
             var name = binder.Name;
             var arguments = args.Map(arg => arg.Value);
-            var del = m_value.GetDelegate(name, arguments, out Compiler.Binders.ArgumentConversions conversions);
+            var del = m_value.GetDelegate(name, arguments, out ArgumentConversions conversions);
             var method = del.Method;
             // todo check whether target is correct
             conversions.Invoke(ref arguments);

@@ -1,24 +1,20 @@
-﻿using Microsoft.VisualBasic.CompilerServices;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
-namespace FluidScript.Primitives
+namespace FluidScript
 {
-    public struct Any : IStrongBox
+    public struct Any
     {
-        object value;
-
-        object IStrongBox.Value { get => value; set => this.value = value; }
+        object m_value;
 
         public Any(object value)
         {
-            this.value = value;
+            m_value = value;
         }
 
-        public static implicit operator Any(Double i) => new Any(i);
-        public static implicit operator Any(Float i) => new Any(i);
-        public static implicit operator Any(Integer i) => new Any(i);
-        public static implicit operator Any(Char i) => new Any(i);
-        public static implicit operator Any(String i) => new Any(i);
+        [SpecialName]
+        public static Any op_Implicit(object value)
+        {
+            return new Any(value);
         }
     }
 }

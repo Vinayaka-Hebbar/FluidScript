@@ -4,17 +4,6 @@
         <name>FluidScript</name>
     </assembly>
     <members>
-        <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Backup">
-            <summary>
-            Save the position
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Binders.ArgumentConversions.Recycle">
-            <summary>
-            Revert back to last backup position <see cref="M:FluidScript.Compiler.Binders.ArgumentConversions.Backup"/>
-            </summary>
-            <returns></returns>
-        </member>
         <member name="T:FluidScript.Compiler.Binders.IBinder">
             <summary>
             Binder for variable or member
@@ -33,26 +22,6 @@
         <member name="T:FluidScript.Compiler.Binders.RuntimeVariableBinder">
             <summary>
             IL generator for <see cref="T:FluidScript.Compiler.RuntimeVariables"/>
-            </summary>
-        </member>
-        <member name="T:FluidScript.Compiler.Binders.Conversion">
-            <summary>
-            Operator overload conversion
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Binders.Conversion.next">
-            <summary>
-            case when Int32 -> FluidScript.Integer and FluidScript.Double to double ex: int32 * FluidScript.Double
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Binders.Conversion.#ctor(System.Int32)">
-            <summary>
-            Initializes new <see cref="T:FluidScript.Compiler.Binders.Conversion"/>
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Binders.ParamConversion.Method">
-            <summary>
-            Conversion method
             </summary>
         </member>
         <member name="T:FluidScript.Compiler.CompilerBase">
@@ -118,6 +87,21 @@
         <member name="P:FluidScript.Compiler.Debugging.TextSpan.EndColumn">
             <summary>
             Gets the ending column number of this range.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.LanguageType">
+            <summary>
+            Gets the language type GUID for the symbol store.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.LanguageVendor">
+            <summary>
+            Gets the language vendor GUID for the symbol store.
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.DocumentType">
+            <summary>
+            Gets the document type GUID for the symbol store.
             </summary>
         </member>
         <member name="T:FluidScript.Compiler.Emit.ILGenerator">
@@ -914,6 +898,11 @@
             Initializes new instance of <see cref="T:FluidScript.Compiler.Emit.MethodBodyGenerator"/>
             </summary>
         </member>
+        <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.DebugDoument">
+            <summary>
+            Debug Document writter
+            </summary>
+        </member>
         <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.Source">
             <summary>
             Source code
@@ -1026,7 +1015,7 @@
             </summary>
             Problem when scope
         </member>
-        <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.EmitBody">
+        <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.Compile">
             <summary>Creates IL Code</summary>
         </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitUnary(FluidScript.Compiler.SyntaxTree.UnaryExpression)">
@@ -1053,10 +1042,16 @@
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitTernary(FluidScript.Compiler.SyntaxTree.TernaryExpression)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitNew(FluidScript.Compiler.SyntaxTree.NewExpression)">
+            <inheritdoc/>
+        </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitMember(FluidScript.Compiler.SyntaxTree.NameExpression)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitThis(FluidScript.Compiler.SyntaxTree.ThisExpression)">
+            <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitSuper(FluidScript.Compiler.SyntaxTree.SuperExpression)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.FluidScript#Compiler#IExpressionVisitor{FluidScript#Compiler#SyntaxTree#Expression}#VisitIndex(FluidScript.Compiler.SyntaxTree.IndexExpression)">
@@ -1081,9 +1076,9 @@
             currently Returning the value
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.Emit.MethodGenerateOption.Assign">
+        <member name="F:FluidScript.Compiler.Emit.MethodGenerateOption.HasThis">
             <summary>
-            Currently Assigning value
+            Calling Argument has this
             </summary>
         </member>
         <member name="T:FluidScript.Compiler.Emit.ParameterInfo">
@@ -1494,22 +1489,7 @@
         <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetMethodImpl(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Reflection.CallingConventions,System.Type[],System.Reflection.ParameterModifier[])">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetMethods(System.Reflection.BindingFlags)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetMember(System.String,System.Reflection.BindingFlags)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetNestedType(System.String,System.Reflection.BindingFlags)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetNestedTypes(System.Reflection.BindingFlags)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetProperties(System.Reflection.BindingFlags)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.Generators.TypeGenerator.GetPropertyImpl(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type,System.Type[],System.Reflection.ParameterModifier[])">
+        <member name="M:FluidScript.Compilerember name="M:FluidScript.Compiler.Generators.TypeGenerator.GetPropertyImpl(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Type,System.Type[],System.Reflection.ParameterModifier[])">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.Generators.TypeGenerator.HasElementTypeImpl">
@@ -1717,6 +1697,30 @@
         </member>
         <member name="M:FluidScript.Compiler.Parser.VisitPostfixExpression">
             <summary>
+          ser.VisitDoWhileStatement">
+            <summary>
+            Loop Statement do while
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Parser.VisitIfStatement">
+            <summary>
+            Visit if statement
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.Parser.VisitLocalFunction">
+            <summary>
+            Visit local function
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.Parser.VisitBlock">
+            <summary>
+            Visit block {}
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Parser.VisitPostfixExpression">
+            <summary>
             Postfix Expression
             </summary>
         </member>
@@ -1876,18 +1880,7 @@
         </member>
         <member name="M:FluidScript.Compiler.RuntimeCompiler.VisitMember(FluidScript.Compiler.SyntaxTree.NameExpression)">
             <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitExpression(FluidScript.Compiler.SyntaxTree.ExpressionStatement)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.VisitDeclaration(FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitReturn(FluidScript.Compiler.SyntaxTree.ReturnOrThrowStatement)">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitBlock(FluidScript.Compiler.SyntaxTree.BlockStatement)">
-            <inheritdoc/>
+        </ritdoc/>
         </member>
         <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitDeclaration(FluidScript.Compiler.SyntaxTree.LocalDeclarationStatement)">
             <inheritdoc/>
@@ -1959,29 +1952,20 @@
         </member>
         <member name="M:FluidScript.Compiler.ScriptParser.VisitFunctionDeclaration">
             <summary>
-            FunctioScript.Compiler.ScriptParser.VisitMember">
-            <summary>
-            Visit member declaration
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.ScriptParser.VisitMembers">
-            <summary>
-            Visit members declaration
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.ScriptParser.VisitTypeDeclaration">
-            <summary>
-            Type declaration
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.ScriptParser.VisitFieldDeclaration">
-            <summary>
-            Field declaration
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.ScriptParser.VisitFunctionDeclaration">
-            <summary>
             Function Declartion
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.ParseText(System.String,FluidScript.Compiler.ParserSettings)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/> for <paramref name="text"/>
+            </summary>
+            <param name="text">Text to parse</param>
+            <param name="settings">Parser options if null will be default options</param>
+            <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.ScriptParser.ParseFile(System.String,FluidScript.Compiler.ParserSettings)">
+            <summary>
+            Creates <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/> for Function Declartion
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.ScriptParser.ParseText(System.String,FluidScript.Compiler.ParserSettings)">
@@ -2083,7 +2067,7 @@
             Argument convert list
             </summary>
         </member>
-        <member name="P:FluidScript.Compiler.SyntaxTree.InvocationExpression.Convertions">
+        <member name="P:FluidScript.Compiler.SyntaxTree.InvocationExpression.Conversions">
             <summary>
             Argument convert list
             </summary>
@@ -2138,7 +2122,25 @@
             Name of the Identifier
             </summary>
         </member>
-        <member name="P:FluidScript.Compiler.SyntaxTree.NameExpiler.IExpressionVisitor{``0})">
+        <member name="P:FluidScript.Compiler.SyntaxTree.NameExpression.Binder">
+            <summary>
+            Binding for compiler generation
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.#ctor(System.String,FluidScript.Compiler.SyntaxTree.ExpressionType)">
+            <summary>
+            Creates Identifier Expression
+            </summary>
+            <param name="name">Name of the Identifier</param>
+            <param name="expType">Expression type</param>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.ToString">
+            <summary>
+            String Value
+            </summary>
+            <returns>string</returns>
+        </member>
+        <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.Accept``1(FluidScript.Compiler.IExpressionVisitor{``0})">
             <summary>
             Optimizes or evaluate the expression
             </summary>
@@ -2308,6 +2310,7 @@
             <summary>
             Statement Locals
             </summary>
+            
         </member>
         <member name="F:FluidScript.Compiler.SyntaxTree.Statement.StatementLocals.NonDefaultBreakStatementBehavior">
             <summary>
@@ -2500,7 +2503,7 @@
             Return statement
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.SyntaxTree.ReturnOrThrowStatement.Expression">
+        <member name="F:FluidScript.Compiler.SyntaxTree.ReturnOrThrowStatement.Value">
             <summary>
             return expression
             </summary>
@@ -2546,6 +2549,13 @@
             </summary>
             <param name="node"></param>
             <returns></returns>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitNew(FluidScript.Compiler.SyntaxTree.NewExpression)">
+            <summary>
+            New Expression
+            </summary>
+            <param name="node">Node</param>
+            <returns>Resolved value</returns>
         </member>
         <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitSizeOf(FluidScript.Compiler.SyntaxTree.SizeOfExpression)">
             <summary>
@@ -2596,6 +2606,13 @@
             <summary>
             Visit this
             </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitSuper(FluidScript.Compiler.SyntaxTree.SuperExpression)">
+            <summary>
+            Visit super
+            </summary>
+            <param name="node"></param>
+            <returns>Result</returns>
         </member>
         <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitDeclaration(FluidScript.Compiler.SyntaxTree.VariableDeclarationExpression)">
             <summary>
@@ -2832,40 +2849,11 @@
             <param name="flags"></param>
             <returns></returns>
         </member>
-        <member name="M:FluidScript.Utils.TypeHelpers.FindGetIndexer(System.Type,System.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
+        <member name="M:FluidScript.Utils.TypeHelpers.FindGetIndexer(System.Type,System.Object[],FluidScript.Runtime.ArgumentConversions@)">
             Current Declared Indexer can get
         </member>
-        <member name="M:FluidScript.Utils.TypeHelpers.FindSetIndexer(System.Type,System.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
+        <member name="M:FluidScript.Utils.TypeHelpers.FindSetIndexer(System.Type,System.Object[],FluidScript.Runtime.ArgumentConversions@)">
             Current Declared Indexer can get
-        </member>
-        <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
-            <summary>
-            Returns true if the method's parameter types are reference assignable from
-            the argument types, otherwise false.
-            
-            An example that can make the method return false is that 
-            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
-            returns a method with two double parameters, which doesn't match the provided
-            argument types.
-            </summary>
-            <returns></returns>
-        </member>
-    </members>
-</doc>
-m.Object[],FluidScript.Compiler.Binders.ArgumentConversions@)">
-            Current Declared Indexer can get
-        </member>
-        <member name="M:FluidScript.Utils.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
-            <summary>
-            Returns true if the method's parameter types are reference assignable from
-            the argument types, otherwise false.
-            
-            An example that can make the method return false is that 
-            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
-            returns a method with two double parameters, which doesn't match the provided
-            argument types.
-            </summary>
-            <returns></returns>
         </member>
     </members>
 </doc>

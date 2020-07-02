@@ -11,17 +11,31 @@ namespace FluidScript.Compiler
         /// <summary>
         /// Any Expressions
         /// </summary>
-        TResult Visit(Expression node);
+        TResult Default(Expression node);
+
         /// <summary>
         /// Unary Expressions
         /// </summary>
         TResult VisitUnary(UnaryExpression node);
+        /// <summary>
+        /// Instance of 
+        /// </summary>
+        /// <param name="instanceOfExpression"></param>
+        /// <returns></returns>
+        TResult VisitInstanceOf(InstanceOfExpression node);
+
         /// <summary>
         /// Convert Expression &lt;int&gt;
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
         TResult VisitConvert(ConvertExpression node);
+        /// <summary>
+        /// New Expression
+        /// </summary>
+        /// <param name="node">Node</param>
+        /// <returns>Resolved value</returns>
+        TResult VisitNew(NewExpression node);
 
         /// <summary>
         /// Size of expression
@@ -67,6 +81,12 @@ namespace FluidScript.Compiler
         /// Visit this
         /// </summary>
         TResult VisitThis(ThisExpression node);
+        /// <summary>
+        /// Visit super
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns>Result</returns>
+        TResult VisitSuper(SuperExpression node);
         /// <summary>
         /// Visit Declaration
         /// </summary>

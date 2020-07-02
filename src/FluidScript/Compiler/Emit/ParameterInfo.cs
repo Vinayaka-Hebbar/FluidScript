@@ -8,14 +8,14 @@
         public readonly string Name;
         public readonly int Index;
         public readonly System.Type Type;
-        public readonly bool IsVar;
+        public readonly bool IsVarArgs;
 
-        public ParameterInfo(string name, int index, System.Type type, bool isVar)
+        public ParameterInfo(string name, int index, System.Type type, bool isVarArgs = false)
         {
             Name = name;
             Index = index;
             Type = type;
-            IsVar = isVar;
+            IsVarArgs = isVarArgs;
         }
     }
 }

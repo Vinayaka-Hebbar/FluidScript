@@ -39,7 +39,7 @@ namespace FluidScript.Compiler.SyntaxTree
         public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
         {
             var target = generator.Method.DeclaringType;
-            IExpressionVisitor<object> visitor = ScriptCompiler.Default;
+            IExpressionVisitor<object> visitor = ScriptCompiler.Instance;
             //pass scoped arguments // refer System.Linq.Expression.Compiler folder
             var names = Parameters.Map(para => para.Name).AddFirst("closure");
             // Emit First Argument
@@ -74,7 +74,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     index++;
                 }
             }
-            bodyGen.EmitBody();
+            bodyGen.Compile();
             var type = lamdaGen.CreateType();
             generator.LoadVariable(valVar);
             generator.NewObject(type.GetConstructors()[0]);
@@ -85,10 +85,10 @@ namespace FluidScript.Compiler.SyntaxTree
         public System.Delegate Compile(System.Type target, IExpressionVisitor<object> visitor)
         {
             //pass scoped arguments // refer System.Linq.Expression.Compiler folder
-            var context = ProgramContext.Default;
+            var context = TypeContext.Default;
             System.Type returnType;
             if (ReturnSyntax != null)
-                returnType = ReturnSyntax.GetType(context);
+                returnType = ReturnSyntax.ResolveType((ITypeContext)context);
             else
                 returnType = typeof(object);
             var names = Parameters.Map(para => para.Name).AddFirst("closure");
@@ -98,8 +98,8 @@ namespace FluidScript.Compiler.SyntaxTree
             for (int i = 0; i < Parameters.Count; i++)
             {
                 var para = Parameters[i];
-                System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.GetType(context);
-                parameters[i] = new ParameterInfo(para.Name, i + 1, type, para.IsVar);
+                System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.ResolveType((ITypeContext)context);
+                parameters[i] = new ParameterInfo(para.Name, i + 1, type, para.IsVarArgs);
                 types[i] = type;
             }
             // Emit First Argument
@@ -123,7 +123,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 foreach (var item in lamdaVisit.HoistedLocals)
                 {
                     var value = item.Value;
-                    values[index] = visitor.Visit(value);
+                    values[index] = value.Accept(visitor);
                     var variable = bodyGen.DeclareVariable(value.Type, item.Key);
                     bodyGen.LoadArgument(0);
                     bodyGen.LoadField(field);
@@ -134,7 +134,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     index++;
                 }
             }
-            bodyGen.EmitBody();
+            bodyGen.Compile();
             var delgateType = DelegateGen.MakeNewDelegate(types, returnType);
             Type = delgateType;
             return method.CreateDelegate(delgateType, new Runtime.Closure(values));

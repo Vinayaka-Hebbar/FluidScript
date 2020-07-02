@@ -4,6 +4,11 @@ namespace FluidScript.Compiler.Lexer
 {
     public static class Keywords
     {
+        public const string From = "from";
+        public const string Extends = "extends";
+
+        public const string Implements = "implements";
+
         static readonly IDictionary<string, IdentifierType> keywords;
 
         static Keywords()
@@ -18,6 +23,8 @@ namespace FluidScript.Compiler.Lexer
                 {"set", IdentifierType.Set },
                 {"new", IdentifierType.New },
                 {"this", IdentifierType.This },
+                {"super", IdentifierType.Super },
+                {"import", IdentifierType.Import },
                 {"true",IdentifierType.True },
                 {"false",IdentifierType.False },
                 {"NaN",IdentifierType.NaN },
@@ -28,6 +35,7 @@ namespace FluidScript.Compiler.Lexer
                 {"val", IdentifierType.Val },
                 {"impl", IdentifierType.Implement },
                 {"func", IdentifierType.Function },
+                {"ctor", IdentifierType.Ctor },
                 {"if", IdentifierType.If},
                 {"else", IdentifierType.Else },
                 {"while",IdentifierType.While },
@@ -38,14 +46,15 @@ namespace FluidScript.Compiler.Lexer
                 {"switch", IdentifierType.Switch },
                 {"break", IdentifierType.Break },
                 {"throw", IdentifierType.Throw },
-                {"sizeof", IdentifierType.SizeOf}
+                {"sizeof", IdentifierType.SizeOf},
+                {From, IdentifierType.From }
             };
         }
 
 
-        public static bool TryGetIdentifier(string name, out IdentifierType type)
+        public static bool TryGetIdentifier(string name, out IdentifierType value)
         {
-            return keywords.TryGetValue(name, out type);
+            return keywords.TryGetValue(name, out value);
         }
 
         public static bool Match(string name, IdentifierType expected)

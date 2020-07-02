@@ -182,6 +182,8 @@ namespace FluidScript.Compiler.Emit
         ///<inheritdoc/>
         public override void CallStatic(MethodBase method)
         {
+            if (method is IMethodBase)
+                method = ((IMethodBase)method).MethodBase;
             if (method is ConstructorInfo)
                 Generator.Emit(OpCodes.Call, (ConstructorInfo)method);
             else if (method is MethodInfo)
@@ -197,8 +199,15 @@ namespace FluidScript.Compiler.Emit
                 throw new ArgumentNullException(nameof(method));
             if (method.IsStatic)
                 throw new ArgumentNullException(nameof(method));
+            if (method is IMethodBase)
+                method = ((IMethodBase)method).MethodBase;
             if (method is ConstructorInfo)
-                Generator.Emit(OpCodes.Callvirt, (ConstructorInfo)method);
+            {
+                if (method.IsVirtual)
+                    Generator.Emit(OpCodes.Callvirt, (ConstructorInfo)method);
+                else
+                    Generator.Emit(OpCodes.Call, (ConstructorInfo)method);
+            }
             else if (method is MethodInfo)
             {
                 if (method.IsVirtual)
@@ -331,9 +340,9 @@ namespace FluidScript.Compiler.Emit
         }
 
         ///<inheritdoc/>
-        public override ILLocalVariable DeclareVariable(Type type, string name = null)
+        public override ILLocalVariable DeclareVariable(Type type, string name = null, bool pinned = false)
         {
-            var localBuilder = Generator.DeclareLocal(type);
+            var localBuilder = Generator.DeclareLocal(type, pinned);
 #if NETFRAMEWORK
             if (EmitDebugInfo && name != null)
             {
@@ -709,6 +718,12 @@ namespace FluidScript.Compiler.Emit
         ///<inheritdoc/>
         public override void NewObject(ConstructorInfo constructor)
         {
+            if (constructor is Generators.ConstructorGenerator)
+            {
+                Generator.Emit(OpCodes.Newobj, (ConstructorInfo)((Generators.ConstructorGenerator)constructor).MethodBase);
+                return;
+            }
+
             Generator.Emit(OpCodes.Newobj, constructor);
         }
 
@@ -872,6 +887,11 @@ namespace FluidScript.Compiler.Emit
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
             Generator.Emit(OpCodes.Unbox_Any, type);
+        }
+
+        public void UsingNamespace(string namespaceName)
+        {
+            Generator.UsingNamespace(namespaceName);
         }
     }
 }

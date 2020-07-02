@@ -24,9 +24,14 @@
         {
             Target.GenerateCode(generator);
             if (Method != null)
+            {
+                // implicit conversion
                 generator.CallStatic(Method);
+            }
             else
-                generator.UnboxObject(Type);
+            {
+                generator.CastClass(Type);
+            }
         }
 
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)

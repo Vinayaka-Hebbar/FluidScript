@@ -135,7 +135,7 @@
         ForwardSlash = 181,
         Tilda = 182,
         #endregion
+        Bad = 254,
         End = 255,
-        Bad = 254
     }
 }

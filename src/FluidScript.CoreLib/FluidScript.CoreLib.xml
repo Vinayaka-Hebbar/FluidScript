@@ -1299,6 +1299,37 @@
         <member name="M:FluidScript.Short.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
         </member>
+        <member name="M:FluidScript.Runtime.ArgumentConversions.Backup">
+            <summary>
+            Save the position
+            </summary>
+        </member>
+        <member name="M:FluidScript.Runtime.ArgumentConversions.Recycle">
+            <summary>
+            Revert back to last backup position <see cref="M:FluidScript.Runtime.ArgumentConversions.Backup"/>
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:FluidScript.Runtime.Conversion">
+            <summary>
+            Operator overload conversion
+            </summary>
+        </member>
+        <member name="F:FluidScript.Runtime.Conversion.next">
+            <summary>
+            case when Int32 -> FluidScript.Integer and FluidScript.Double to double ex: int32 * FluidScript.Double
+            </summary>
+        </member>
+        <member name="M:FluidScript.Runtime.Conversion.#ctor(System.Int32)">
+            <summary>
+            Initializes new <see cref="T:FluidScript.Runtime.Conversion"/>
+            </summary>
+        </member>
+        <member name="F:FluidScript.Runtime.ParamConversion.Method">
+            <summary>
+            Conversion method
+            </summary>
+        </member>
         <member name="T:FluidScript.Runtime.IValueBox`1">
             <summary>
             Primitive Value will be wrapped
@@ -1365,6 +1396,18 @@
             Todo serialization support
             </summary>
         </member>
+        <member name="M:FluidScript.Runtime.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
+            <summary>
+            Returns true if the method's parameter types are reference assignable from
+            the argument types, otherwise false.
+            
+            An example that can make the method return false is that 
+            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
+            returns a method with two double parameters, which doesn't match the provided
+            argument types.
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:FluidScript.String">
             <summary>
             Represents text as a series of Unicode characters.
@@ -1401,7 +1444,7 @@
             <summary>
             Indicates whether this instance and a specified object are equal.
             </summary>
-            <param name="obj"> The object to compare with the current instance.</param>
+            <param name="other"> The object to compare with the current instance.</param>
             <returns>true if obj and this instance are the same type and represent the same value;
              otherwise, false.</returns>
         </member>
