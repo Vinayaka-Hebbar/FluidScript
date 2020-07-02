@@ -12,8 +12,8 @@
         /// </summary>
         Return = 2,
         /// <summary>
-        /// Currently Assigning value
+        /// Calling Argument has this
         /// </summary>
-        Assign = 4
+        HasThis
     }
 }

@@ -26,16 +26,16 @@
                 System.Type dest = variable.Type;
                 if (type == null)
                 {
-                    if (Utils.TypeUtils.IsNullAssignable(dest))
+                    if (TypeUtils.IsNullAssignable(dest))
                         m_value.Update(variable, value);
                     else
                         throw new System.Exception(string.Concat("Can't assign null value to type ", dest));
                 }
-                else if (Utils.TypeUtils.AreReferenceAssignable(dest, type))
+                else if (TypeUtils.AreReferenceAssignable(dest, type))
                 {
                     m_value.Update(variable, value);
                 }
-                else if (Utils.TypeUtils.TryImplicitConvert(type, dest, out System.Reflection.MethodInfo implConvert))
+                else if (TypeUtils.TryImplicitConvert(type, dest, out System.Reflection.MethodInfo implConvert))
                 {
                     value = implConvert.Invoke(null, new object[1] { value });
                     m_value.Update(variable, value);
@@ -54,11 +54,11 @@
             }
         }
 
-        internal System.Delegate GetDelegate(string name, object[] args, out Compiler.Binders.ArgumentConversions binders)
+        internal System.Delegate GetDelegate(string name, object[] args, out ArgumentConversions binders)
         {
             System.Reflection.MethodInfo method = null;
             object obj = null;
-            binders = new Compiler.Binders.ArgumentConversions(args.Length);
+            binders = new ArgumentConversions(args.Length);
             if (m_value.TryGetMember(name, out LocalVariable variable))
             {
                 System.Runtime.CompilerServices.IRuntimeVariables runtime = m_value;
@@ -66,7 +66,7 @@
                 {
                     System.Reflection.MethodInfo m = refer.Method;
                     // only static method can allowed
-                    if (Utils.TypeHelpers.MatchesTypes(m, args, binders))
+                    if (TypeUtils.MatchesTypes(m, args, binders))
                     {
                         method = m;
                         obj = refer.Target;

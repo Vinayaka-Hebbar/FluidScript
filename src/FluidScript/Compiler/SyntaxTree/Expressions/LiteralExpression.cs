@@ -7,6 +7,8 @@ namespace FluidScript.Compiler.SyntaxTree
     /// </summary>
     public class LiteralExpression : Expression
     {
+        internal const string NullString = "null";
+
         /// <summary>
         /// Literal valie
         /// </summary>
@@ -114,7 +116,7 @@ namespace FluidScript.Compiler.SyntaxTree
             switch (Value)
             {
                 case null:
-                    return "null";
+                    return NullString;
                 case string _:
                     return string.Concat("'", Value, "'");
             }

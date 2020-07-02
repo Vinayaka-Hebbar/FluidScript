@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -7,19 +8,18 @@ namespace FluidScript.Compiler.SyntaxTree
     /// </summary>
     public sealed class ReturnOrThrowStatement : Statement
     {
-        const MethodGenerateOption GenerateOption = MethodGenerateOption.Return | MethodGenerateOption.Dupplicate;
 
         /// <summary>
         /// return expression
         /// </summary>
-        public readonly Expression Expression;
+        public readonly Expression Value;
 
         /// <summary>
         /// Initializes new <see cref="ReturnOrThrowStatement"/>
         /// </summary>
-        public ReturnOrThrowStatement(Expression expression, StatementType nodeType) : base(nodeType)
+        public ReturnOrThrowStatement(Expression value, StatementType nodeType) : base(nodeType)
         {
-            Expression = expression;
+            Value = value;
         }
 
         /// <inheritdoc/>
@@ -37,10 +37,10 @@ namespace FluidScript.Compiler.SyntaxTree
             if (NodeType == StatementType.Return)
             {
                 bool lastStatement = true;
-                if (Expression != null)
+                if (Value != null)
                 {
-                    var exp = Expression.Accept(generator);
-                    exp.GenerateCode(generator, GenerateOption);
+                    var exp = Value.Accept(generator);
+                    exp.GenerateCode(generator, Expression.AssignOption);
                     if (generator.SyntaxTree is BlockStatement block)
                     {
                         if (block.Statements.Count > 0)
@@ -61,8 +61,11 @@ namespace FluidScript.Compiler.SyntaxTree
                         System.Type src = exp.Type;
                         if (!dest.IsAssignableFrom(src))
                         {
-                            if (Utils.TypeUtils.TryImplicitConvert(src, dest, out System.Reflection.MethodInfo method))
+                            if (Runtime.TypeUtils.TryImplicitConvert(src, dest, out System.Reflection.MethodInfo method))
                             {
+                                var para = method.GetParameters().First();
+                                if (src.IsValueType && para.ParameterType.IsValueType == false)
+                                    generator.Box(src);
                                 generator.Call(method);
                                 src = method.ReturnType;
                             }
@@ -82,7 +85,7 @@ namespace FluidScript.Compiler.SyntaxTree
                             generator.ReturnTarget = generator.CreateLabel();
                         }
                     }
-                    else if (Expression.NodeType == ExpressionType.Invocation && Expression.Type != TypeProvider.VoidType)
+                    else if (Value.NodeType == ExpressionType.Invocation && Value.Type != TypeProvider.VoidType)
                     {
                         // discard the return result
                         generator.Pop();
@@ -103,9 +106,9 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             if (NodeType == StatementType.Return)
             {
-                return string.Concat("return ", Expression, ';');
+                return string.Concat("return ", Value, ';');
             }
-            return string.Concat("throw ", Expression, ';');
+            return string.Concat("throw ", Value, ';');
         }
     }
 }

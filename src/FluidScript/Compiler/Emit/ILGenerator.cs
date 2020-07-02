@@ -202,8 +202,9 @@ namespace FluidScript.Compiler.Emit
         /// </summary>
         /// <param name="type"> The type of the local variable. </param>
         /// <param name="name"> The name of the local variable. Can be <c>null</c>. </param>
+        /// <param name="pinned">true to pin the object in memory; otherwise, false. </param>
         /// <returns> A new local variable. </returns>
-        public abstract ILLocalVariable DeclareVariable(Type type, string name = null);
+        public abstract ILLocalVariable DeclareVariable(Type type, string name = null, bool pinned = false);
 
         /// <summary>
         /// Pushes the value of the given variable onto the stack.

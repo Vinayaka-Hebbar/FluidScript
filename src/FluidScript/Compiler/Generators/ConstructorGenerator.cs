@@ -1,36 +1,34 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.SyntaxTree;
 using System.Globalization;
 using System.Linq;
 
 namespace FluidScript.Compiler.Generators
 {
-    public class ConstructorGenerator : System.Reflection.ConstructorInfo, IMemberGenerator, IMethodBaseGenerator
+    public class ConstructorGenerator : System.Reflection.ConstructorInfo, IMember, IMethodBase
     {
-        private readonly System.Reflection.Emit.ConstructorBuilder _builder;
-        private readonly System.Type[] _baseParameterTypes;
+        private readonly System.Reflection.Emit.ConstructorBuilder builder;
         private readonly TypeGenerator Declaring;
 
-        public ConstructorGenerator(System.Reflection.Emit.ConstructorBuilder builder, ParameterInfo[] parameters, System.Type[] baseParameterTypes, TypeGenerator generator)
+        public ConstructorGenerator(System.Reflection.Emit.ConstructorBuilder builder, ParameterInfo[] parameters, TypeGenerator generator)
         {
-            _builder = builder;
-            _baseParameterTypes = baseParameterTypes;
+            this.builder = builder;
             Name = builder.Name;
             Parameters = parameters;
             Declaring = generator;
             Context = generator.Context;
             Attributes = builder.Attributes;
-            MemberType = System.Reflection.MemberTypes.Method;
         }
 
-        public override System.Reflection.MemberTypes MemberType { get; }
+        public override System.Reflection.MemberTypes MemberType => System.Reflection.MemberTypes.Constructor;
 
-        public SyntaxTree.Statement SyntaxBody { get; set; }
+        public Statement SyntaxBody { get; set; }
 
         public System.Reflection.MemberInfo MemberInfo => this;
 
-        public System.Reflection.MethodBase MethodBase => this;
+        public System.Reflection.MethodBase MethodBase => builder;
 
-        public override System.RuntimeMethodHandle MethodHandle => _builder.MethodHandle;
+        public override System.RuntimeMethodHandle MethodHandle => builder.MethodHandle;
 
         public override System.Reflection.MethodAttributes Attributes { get; }
 
@@ -44,36 +42,47 @@ namespace FluidScript.Compiler.Generators
 
         public System.Type ReturnType => null;
 
-        public IProgramContext Context { get; set; }
+        public ITypeContext Context { get; set; }
+
+        public override int MetadataToken => builder.MetadataToken;
 
         public override object[] GetCustomAttributes(bool inherit)
         {
-            return _builder.GetCustomAttributes(inherit);
+            return builder.GetCustomAttributes(inherit);
         }
 
         public override object[] GetCustomAttributes(System.Type attributeType, bool inherit)
         {
-            return _builder.GetCustomAttributes(attributeType, inherit);
+            return builder.GetCustomAttributes(attributeType, inherit);
         }
 
         public override System.Reflection.MethodImplAttributes GetMethodImplementationFlags()
         {
-            return _builder.GetMethodImplementationFlags();
+            return builder.GetMethodImplementationFlags();
         }
 
+        private System.Reflection.ParameterInfo[] parametersInstance;
         public override System.Reflection.ParameterInfo[] GetParameters()
         {
-            return _builder.GetParameters();
+            if (parametersInstance == null)
+            {
+                parametersInstance = new System.Reflection.ParameterInfo[Parameters.Length];
+                for (int index = 0; index < Parameters.Length; index++)
+                {
+                    parametersInstance[index] = new RuntimeParameterInfo(Parameters[index]);
+                }
+            }
+            return parametersInstance;
         }
 
         public override object Invoke(System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, object[] parameters, CultureInfo culture)
         {
-            return _builder.Invoke(invokeAttr, binder, parameters, culture);
+            return builder.Invoke(invokeAttr, binder, parameters, culture);
         }
 
         public override object Invoke(object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, object[] parameters, CultureInfo culture)
         {
-            return _builder.Invoke(obj, invokeAttr, binder, parameters, culture);
+            return builder.Invoke(obj, invokeAttr, binder, parameters, culture);
         }
 
         public override bool IsDefined(System.Type attributeType, bool inherit)
@@ -86,31 +95,35 @@ namespace FluidScript.Compiler.Generators
         {
             if (Context != null)
                 return Context.GetType(typeName);
-            return TypeProvider.Default.GetType(typeName.FullName);
+            return TypeProvider.GetType(typeName.FullName);
         }
 
-        public void Generate()
+        void IMember.Compile()
         {
-            var body = new MethodBodyGenerator(this, _builder.GetILGenerator());
+            var bodyGen = new MethodBodyGenerator(this, builder.GetILGenerator());
             foreach (FieldGenerator generator in Declaring.Members.Where(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic == IsStatic))
             {
                 if (generator.DefaultValue != null)
                 {
                     if (IsStatic == false)
-                        body.LoadArgument(0);
-                    generator.MethodBody = body;
-                    generator.Generate();
-                    generator.DefaultValue.GenerateCode(body);
-                    body.StoreField(generator.FieldInfo);
+                        bodyGen.LoadArgument(0);
+                    generator.MethodBody = bodyGen;
+                    ((IMember)generator).Compile();
+                    generator.DefaultValue.GenerateCode(bodyGen);
+                    bodyGen.StoreField(generator.FieldInfo);
                 }
             }
-            if (IsStatic == false)
+            if (IsStatic == false && Declaring.IsClass)
             {
-                var baseCtor = Declaring.BaseType.GetConstructor(_baseParameterTypes);
-                body.LoadArgument(0);
-                body.Call(baseCtor);
+                // if not call to super or this call
+                if (!(SyntaxBody is BlockStatement body && body.Statements.Count > 0 && body.Statements[0] is ExpressionStatement statement && statement.Expression is InvocationExpression exp && (exp.Target.NodeType == ExpressionType.Super || exp.Target.NodeType == ExpressionType.This)))
+                {
+                    var baseCtor = Declaring.BaseType.GetConstructor(new System.Type[0]);
+                    bodyGen.LoadArgument(0);
+                    bodyGen.Call(baseCtor);
+                }
             }
-            body.EmitBody();
+            bodyGen.Compile();
         }
     }
 }

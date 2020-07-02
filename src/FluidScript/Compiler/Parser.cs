@@ -1056,23 +1056,24 @@ namespace FluidScript.Compiler
         public Expression VisitIdentifier()
         {
             ReadVariableName(out string name);
-            if (Keywords.TryGetIdentifier(name, out IdentifierType type))
+            if (Keywords.TryGetIdentifier(name, out IdentifierType identifier))
             {
-                switch (type)
+                switch (identifier)
                 {
                     case IdentifierType.New:
                         MoveNext();
+                        TypeSyntax type = VisitType();
                         Expression[] arguments;
                         if (TokenType == TokenType.LeftParenthesis)
                         {
-                            arguments = VisitArgumentList(TokenType.Comma, TokenType.LeftParenthesis).ToArray();
+                            arguments = VisitArgumentList(TokenType.Comma, TokenType.RightParenthesis).ToArray();
                             CheckSyntaxExpected(TokenType.RightParenthesis);
                         }
                         else
                         {
                             arguments = new Expression[0];
                         }
-                        return new NewExpression(name, new NodeList<Expression>(arguments));
+                        return new NewExpression(type, new NodeList<Expression>(arguments));
                     case IdentifierType.True:
                         return Expression.True;
                     case IdentifierType.False:
@@ -1094,6 +1095,8 @@ namespace FluidScript.Compiler
                         return lamda;
                     case IdentifierType.This:
                         return new ThisExpression();
+                    case IdentifierType.Super:
+                        return new SuperExpression();
                     case IdentifierType.SizeOf:
                         //skip sizeof
                         if (MoveNextThenIf(TokenType.LeftParenthesis))
@@ -1254,8 +1257,8 @@ namespace FluidScript.Compiler
                 ReadTypeName(out string typeName);
                 //after type name next
                 MoveNext();
-                type = new RefTypeSyntax(typeName, TokenType == TokenType.Less ? VisitGenericTypes() : null);
-                //array
+                type = new RefTypeSyntax(typeName, TokenType == TokenType.Less ? VisitTypes(TokenType.Comma, TokenType.GreaterGreater) : null);
+                // array
                 if (TokenType == TokenType.LeftBracket)
                 {
                     var sizes = VisitArrayRanks();
@@ -1265,14 +1268,15 @@ namespace FluidScript.Compiler
             return type;
         }
 
-        private INodeList<TypeSyntax> VisitGenericTypes()
+        protected INodeList<TypeSyntax> VisitTypes(TokenType seperator, TokenType end)
         {
             var list = new NodeList<TypeSyntax>();
             while (MoveNext())
             {
                 list.Add(VisitType());
-                if (TokenType == TokenType.GreaterGreater)
+                if (TokenType == end)
                     break;
+                CheckSyntaxExpected(seperator);
             }
             return list;
         }

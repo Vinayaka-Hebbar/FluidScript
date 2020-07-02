@@ -439,7 +439,7 @@
                 double x = System.Convert.ToDouble(v);
                 if (hasValue)
                 {
-                    if (x < value || System.Double.IsNaN(x)) value = x;
+                    if (x < value || double.IsNaN(x)) value = x;
                 }
                 else
                 {

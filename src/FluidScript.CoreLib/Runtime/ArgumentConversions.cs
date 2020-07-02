@@ -1,4 +1,4 @@
-﻿namespace FluidScript.Compiler.Binders
+﻿namespace FluidScript.Runtime
 {
     public sealed class ArgumentConversions
     {
@@ -15,10 +15,10 @@
 
         public void Add(Conversion conversion)
         {
-            Insert(conversion.Index, conversion);
+            Append(conversion.Index, conversion);
         }
 
-        internal void Insert(int index, Conversion c)
+        public void Append(int index, Conversion c)
         {
             if(index < count)
             {
@@ -39,7 +39,7 @@
             count++;
         }
 
-        internal Conversion this[int index]
+        public Conversion this[int index]
         {
             get
             {
@@ -54,7 +54,7 @@
         /// <summary>
         /// Save the position
         /// </summary>
-        internal void Backup()
+        public void Backup()
         {
             start = count;
         }

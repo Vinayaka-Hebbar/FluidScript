@@ -13,7 +13,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Argument convert list
         /// </summary>
-        public Binders.ArgumentConversions Conversions { get; internal set; }
+        public Runtime.ArgumentConversions Conversions { get; internal set; }
 
 
         public BinaryExpression(Expression left, Expression right, ExpressionType opCode) : base(opCode)
@@ -99,13 +99,13 @@ namespace FluidScript.Compiler.SyntaxTree
             var first = conversions[0];
             if (first != null)
             {
-                first.GenerateCode(generator);
+                generator.EmitConvert(first);
             }
             Right.GenerateCode(generator);
             var second = conversions[1];
             if (second != null)
             {
-                second.GenerateCode(generator);
+                generator.EmitConvert(second); 
             }
             generator.Call(Method);
         }

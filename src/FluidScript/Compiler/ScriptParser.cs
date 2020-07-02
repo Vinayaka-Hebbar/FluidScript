@@ -1,5 +1,7 @@
 ﻿using FluidScript.Compiler.Lexer;
 using FluidScript.Compiler.SyntaxTree;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FluidScript.Compiler
 {
@@ -31,6 +33,50 @@ namespace FluidScript.Compiler
                 default:
                     throw new System.Exception(string.Format("Invalid Token type {0} at {1}", TokenType, Source.LineInfo));
             }
+        }
+
+        public ParsedProgram Parse()
+        {
+            ParsedProgram program = new ParsedProgram();
+            do
+            {
+                if (TokenType == TokenType.Identifier)
+                {
+                    ReadVariableName(out string name);
+                    if (Keywords.TryGetIdentifier(name, out IdentifierType value))
+                    {
+                        switch (value)
+                        {
+                            case IdentifierType.Class:
+                                MoveNext();
+                                program.Members.Add(VisitTypeDeclaration());
+                                break;
+                            case IdentifierType.Import:
+                                MoveNextThenIf(TokenType.LeftBrace);
+                                var imports = VisitTypeImports().ToArray();
+                                MoveNextIf(TokenType.RightBrace);
+                                ReadVariableName(out string s);
+                                if (s.Equals(Keywords.From, System.StringComparison.OrdinalIgnoreCase))
+                                {
+                                    MoveNextThenIf(TokenType.Identifier);
+                                    ReadVariableName(out string lib);
+                                    program.Import(lib, imports);
+                                    MoveNextThenIf(TokenType.SemiColon);
+                                    break;
+                                }
+                                else
+                                {
+                                    throw new System.Exception(string.Format("Invalid Token type {0} at {1}", TokenType, Source.LineInfo));
+                                }
+                            default:
+                                return program;
+                        }
+                    }
+                }
+                if (TokenType == TokenType.End)
+                    return program;
+            } while (MoveNext());
+            return program;
         }
 
         /// <summary>
@@ -80,6 +126,9 @@ namespace FluidScript.Compiler
                     case IdentifierType.Class:
                         MoveNext();
                         return VisitTypeDeclaration();
+                    case IdentifierType.Ctor:
+                        MoveNext();
+                        return VisitConstructorDeclaration();
                     case IdentifierType.Function:
                         MoveNext();
                         return VisitFunctionDeclaration();
@@ -117,6 +166,31 @@ namespace FluidScript.Compiler
             return null;
         }
 
+
+        public IEnumerable<TypeImport> VisitTypeImports()
+        {
+            while (MoveNext())
+            {
+                if (TokenType == TokenType.Identifier)
+                {
+                    ReadTypeName(out string name);
+                    MoveNext();
+                    if (TokenType == TokenType.Equal)
+                    {
+                        ReadTypeName(out string s);
+                        yield return new AliasImport(name, s);
+                    }
+                    else
+                    {
+                        yield return new TypeImport(name);
+                    }
+                }
+                if (TokenType == TokenType.RightBrace)
+                    break;
+                CheckSyntaxExpected(TokenType.Comma);
+            }
+        }
+
         /// <summary>
         /// Type declaration
         /// </summary>
@@ -126,18 +200,60 @@ namespace FluidScript.Compiler
             {
                 ReadVariableName(out string name);
                 MoveNext();
-                //todo extends
+                TypeSyntax baseType = null;
+                INodeList<TypeSyntax> implements = null;
+                if (TokenType == TokenType.Identifier)
+                {
+                    ReadVariableName(out string s);
+                    if (s.Equals(Keywords.Extends, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        MoveNext();
+                        baseType = VisitType();
+                        if (TokenType == TokenType.Identifier)
+                        {
+                            ReadVariableName(out s);
+                        }
+                    }
+                    if (s.Equals(Keywords.Implements, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        implements = VisitTypes(TokenType.Comma, TokenType.LeftBrace);
+                    }
+                }
+                // todo extends
                 if (TokenType == TokenType.LeftBrace)
                 {
                     var members = VisitMembers();
-                    MoveNextIf(TokenType.RightBrace);
-                    return new TypeDeclaration(name, null, new NodeList<TypeSyntax>(), members)
+                    // end of class
+                    CheckSyntaxExpected(TokenType.RightBrace);
+                    return new TypeDeclaration(name, baseType, implements, members)
                     {
                         Source = Source
                     };
                 }
             }
             throw new System.Exception("Unexpected Keyword");
+        }
+
+
+
+        public ConstructorDeclaration VisitConstructorDeclaration()
+        {
+            if (TokenType == TokenType.LeftParenthesis)
+            {
+                NodeList<TypeParameter> parameterList;
+                //return type
+                TypeParameter[] parameters = new TypeParameter[0];
+                if (TokenType == TokenType.LeftParenthesis)
+                    parameters = VisitFunctionParameters().ToArray();
+                parameterList = new NodeList<TypeParameter>(parameters);
+                //todo throw if other
+                MoveNextIf(TokenType.RightParenthesis);
+                //todo abstract, virtual functions
+                //To avoid block function
+                BlockStatement body = VisitBlock();
+                return new ConstructorDeclaration(parameterList, body);
+            }
+            throw new System.Exception("syntax error at " + Source.LineInfo);
         }
 
         /// <summary>
@@ -204,14 +320,14 @@ namespace FluidScript.Compiler
         /// <param name="path">Text to parse</param>
         /// <param name="settings">Parser options if null will be default options</param>
         /// <returns>Parsed <see cref="Node"/></returns>
-        public static Node ParseFile(string path, ParserSettings settings = null)
+        public static ParsedProgram ParseProgram(string path, ParserSettings settings = null)
         {
             using (ScriptParser visitor = new ScriptParser(new StreamSource(new System.IO.FileInfo(path)), settings ?? ParserSettings.Default))
             {
                 if (visitor.MoveNext())
-                    return visitor.VisitMember();
+                    return visitor.Parse();
             }
-            return Expression.Empty;
+            return null;
         }
         #endregion
     }

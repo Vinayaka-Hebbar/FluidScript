@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace FluidScript.Compiler.Emit
 {
-    public interface IMethodBaseGenerator : IMemberGenerator
+    public interface IMethodBase : IMember
     {
         MethodBase MethodBase { get; }
         ParameterInfo[] Parameters { get; }
@@ -13,6 +13,6 @@ namespace FluidScript.Compiler.Emit
 
         CallingConventions CallingConvention { get; }
 
-        IProgramContext Context { get; set; }
+        ITypeContext Context { get; set; }
     }
 }

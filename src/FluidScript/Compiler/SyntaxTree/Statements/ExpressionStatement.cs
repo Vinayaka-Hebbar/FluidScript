@@ -21,11 +21,6 @@
                 
         }
 
-        public static explicit operator ExpressionStatement(Expression expression)
-        {
-            return new ExpressionStatement(expression);
-        }
-
         public override string ToString()
         {
             return Expression.ToString();

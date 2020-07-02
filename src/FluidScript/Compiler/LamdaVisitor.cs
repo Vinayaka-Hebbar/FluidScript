@@ -17,7 +17,7 @@ namespace FluidScript.Compiler
 
         internal System.Collections.Generic.Dictionary<string, Expression> HoistedLocals { get; }
 
-        public Expression Visit(Expression node)
+        public Expression Default(Expression node)
         {
             node.Accept(this);
             return node;
@@ -164,6 +164,18 @@ namespace FluidScript.Compiler
             return node;
         }
 
+        public Expression VisitNew(NewExpression node)
+        {
+            node.Arguments.ForEach(n => n.Accept(this));
+            return node;
+        }
+
+        public Expression VisitInstanceOf(InstanceOfExpression node)
+        {
+            node.Target.Accept(this);
+            return node;
+        }
+
         public Expression VisitNull(NullExpression node)
         {
             return node;
@@ -178,7 +190,7 @@ namespace FluidScript.Compiler
 
         public void VisitReturn(ReturnOrThrowStatement node)
         {
-            node.Expression.Accept(this);
+            node.Value.Accept(this);
         }
 
         public Expression VisitSizeOf(SizeOfExpression node)
@@ -196,6 +208,14 @@ namespace FluidScript.Compiler
         }
 
         public Expression VisitThis(ThisExpression node)
+        {
+            var name = "__value";
+            if (HoistedLocals.ContainsKey(name) == false)
+                HoistedLocals.Add(name, node);
+            return node;
+        }
+
+        public Expression VisitSuper(SuperExpression node)
         {
             var name = "__value";
             if (HoistedLocals.ContainsKey(name) == false)

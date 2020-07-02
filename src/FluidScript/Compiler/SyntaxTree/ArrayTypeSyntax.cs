@@ -12,9 +12,9 @@
             Rank = rank;
         }
 
-        public override System.Type GetType(ITypeProvider provider)
+        public override System.Type ResolveType(ITypeContext provider)
         {
-            return ElementType.GetType(provider).MakeArrayType(Rank);
+            return ElementType.ResolveType(provider).MakeArrayType(Rank);
         }
 
         public override string ToString()

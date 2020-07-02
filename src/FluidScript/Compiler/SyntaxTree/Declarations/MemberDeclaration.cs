@@ -4,10 +4,13 @@
     {
         public Modifiers Modifiers { get; internal set; }
 
-        protected MemberDeclaration()
+        public DeclarationType DeclarationType { get; }
+
+        protected MemberDeclaration(DeclarationType declarationType)
         {
+            DeclarationType = declarationType;
         }
 
-        public abstract void Generate(Generators.TypeGenerator generator);
+        public abstract void CreateMember(Generators.TypeGenerator generator);
     }
 }

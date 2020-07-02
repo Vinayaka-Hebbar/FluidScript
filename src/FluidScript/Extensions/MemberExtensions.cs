@@ -11,15 +11,19 @@ namespace FluidScript.Extensions
         /// <param name="name"></param>
         /// <param name="flags"></param>
         /// <returns></returns>
-        internal static bool IsEquals(this Compiler.Emit.IMemberGenerator member, string name, BindingFlags flags)
+        internal static bool IsEquals(this Compiler.Emit.IMember member, string name, BindingFlags flags)
         {
-            if (Utils.TypeUtils.BindingFlagsMatch(member.IsPublic, flags, BindingFlags.Public, BindingFlags.NonPublic)
-               && Utils.TypeUtils.BindingFlagsMatch(member.IsStatic, flags, BindingFlags.Static, BindingFlags.Instance))
+            if (Utils.ReflectionUtils.BindingFlagsMatch(member.IsPublic, flags, BindingFlags.Public, BindingFlags.NonPublic)
+               && Utils.ReflectionUtils.BindingFlagsMatch(member.IsStatic, flags, BindingFlags.Static, BindingFlags.Instance))
             {
                 var attrs = (System.Attribute[])member.GetCustomAttributes(typeof(Runtime.RegisterAttribute), false);
                 if (attrs.Length > 0)
                 {
                     return attrs[0].Match(name);
+                }
+                else if(member.IsSpecialName)
+                {
+                    return member.Name.Equals(name);
                 }
             }
             return false;
@@ -32,10 +36,10 @@ namespace FluidScript.Extensions
         /// <param name="name"></param>
         /// <param name="flags"></param>
         /// <returns></returns>
-        internal static bool BindingFlagsMatch(this Compiler.Emit.IMemberGenerator member, BindingFlags flags)
+        internal static bool BindingFlagsMatch(this Compiler.Emit.IMember member, BindingFlags flags)
         {
-            return Utils.TypeUtils.BindingFlagsMatch(member.IsPublic, flags, BindingFlags.Public, BindingFlags.NonPublic)
-               && Utils.TypeUtils.BindingFlagsMatch(member.IsStatic, flags, BindingFlags.Static, BindingFlags.Instance);
+            return Utils.ReflectionUtils.BindingFlagsMatch(member.IsPublic, flags, BindingFlags.Public, BindingFlags.NonPublic)
+               && Utils.ReflectionUtils.BindingFlagsMatch(member.IsStatic, flags, BindingFlags.Static, BindingFlags.Instance);
         }
     }
 }

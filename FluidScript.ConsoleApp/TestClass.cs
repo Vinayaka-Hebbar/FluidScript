@@ -3,6 +3,18 @@ using System;
 
 namespace FluidScript.ConsoleTest
 {
+
+    public class Sample2 
+    {
+        public Sample2()
+        {
+
+        }
+    }
+
+
+
+
     public class TestClass
     {
         public static void Run()
@@ -40,7 +52,7 @@ namespace FluidScript.ConsoleTest
 
         public object Test2()
         {
-            return i<<1;
+            return i << 1;
         }
 
         Integer i;
@@ -60,6 +72,19 @@ namespace FluidScript.ConsoleTest
         public void Read()
         {
             Print(new Integer(10));
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
+
+        public string BaseName
+        {
+            get
+            {
+                return ToString();
+            }
         }
 
         public static void Print(object value)

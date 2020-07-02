@@ -2,7 +2,7 @@
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public sealed class ThisExpression : Expression
+    public class ThisExpression : Expression
     {
         public ThisExpression() : base(ExpressionType.This)
         {
@@ -15,16 +15,16 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
         {
-            if (generator.Method is Generators.MethodGenerator)
-            {
-                generator.LoadArgument(0);
-            }
-            else if(generator.Method is Generators.DynamicMethodGenerator)
+            if (generator.Method is Generators.DynamicMethodGenerator)
             {
                 // for annonymous type
                 // if this is used in anonymous function or objects
                 var variable = generator.GetLocalVariable("__value");
                 generator.LoadVariable(variable);
+            }
+            else
+            {
+                generator.LoadArgument(0);
             }
         }
 

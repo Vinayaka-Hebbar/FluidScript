@@ -16,7 +16,7 @@
             Name = name;
         }
 
-        public override System.Type GetType(ITypeProvider provider)
+        public override System.Type ResolveType(ITypeContext provider)
         {
             if (Type == null)
             {
@@ -29,7 +29,7 @@
                     Type = provider.GetType(string.Concat(Name, '`', GenericPrameters.Count));
                     if (Type == null)
                         Type = TypeProvider.ObjectType;
-                    Type = Type.MakeGenericType(GenericPrameters.Map(p => p.GetType(provider)));
+                    Type = Type.MakeGenericType(GenericPrameters.Map(p => p.ResolveType(provider)));
                 }
             }
             return Type;

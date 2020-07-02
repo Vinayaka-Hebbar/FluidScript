@@ -43,7 +43,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_booleanToBool == null)
-                    m_booleanToBool = TypeProvider.BooleanType.GetStaticMethod(TypeUtils.ImplicitConversionName, TypeProvider.BooleanType);
+                    m_booleanToBool = TypeProvider.BooleanType.GetStaticMethod(ReflectionUtils.ImplicitConversionName, TypeProvider.BooleanType);
                 return m_booleanToBool;
             }
         }
@@ -54,7 +54,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_intergerToInt32 == null)
-                    m_intergerToInt32 = TypeProvider.IntType.GetImplicitConversion(TypeUtils.ImplicitConversionName, typeof(int), TypeProvider.IntType);
+                    m_intergerToInt32 = TypeProvider.IntType.GetImplicitConversion(ReflectionUtils.ImplicitConversionName, typeof(int), TypeProvider.IntType);
                 return m_intergerToInt32;
             }
         }
@@ -146,14 +146,14 @@ namespace FluidScript.Utils
 
         static ReflectionHelpers()
         {
-            Double_New = TypeProvider.DoubleType.GetInstanceCtor( typeof(double));
-            Float_New = TypeProvider.FloatType.GetInstanceCtor( typeof(float));
+            Double_New = TypeProvider.DoubleType.GetInstanceCtor(typeof(double));
+            Float_New = TypeProvider.FloatType.GetInstanceCtor(typeof(float));
             Long_New = TypeProvider.LongType.GetInstanceCtor(typeof(long));
-            Integer_New = TypeProvider.IntType.GetInstanceCtor( typeof(int));
-            Short_New = TypeProvider.ShortType.GetInstanceCtor( typeof(short));
+            Integer_New = TypeProvider.IntType.GetInstanceCtor(typeof(int));
+            Short_New = TypeProvider.ShortType.GetInstanceCtor(typeof(short));
             Byte_New = TypeProvider.ByteType.GetInstanceCtor(typeof(sbyte));
-            Char_New = TypeProvider.CharType.GetInstanceCtor( typeof(char));
-            String_New = TypeProvider.StringType.GetInstanceCtor( typeof(string));
+            Char_New = TypeProvider.CharType.GetInstanceCtor(typeof(char));
+            String_New = TypeProvider.StringType.GetInstanceCtor(typeof(string));
 
             Bool_True = TypeProvider.BooleanType.GetField(nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
             Bool_False = TypeProvider.BooleanType.GetField(nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);

@@ -72,7 +72,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Type conversion of arguments
         /// </summary>
-        public ArgumentConversions Conversions { get; set; }
+        public Runtime.ArgumentConversions Conversions { get; set; }
 
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {

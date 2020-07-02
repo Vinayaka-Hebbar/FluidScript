@@ -2,11 +2,12 @@
 using System.Diagnostics.SymbolStore;
 #endif
 using FluidScript.Compiler.Generators;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace FluidScript.Compiler.Emit
 {
-    public sealed class AssemblyGen 
+    public sealed class AssemblyGen : Assembly
     {
         public readonly AssemblyBuilder Assembly;
         public readonly ModuleBuilder Module;
@@ -15,7 +16,7 @@ namespace FluidScript.Compiler.Emit
         private int dynamicCount;
 
         public string Namespace { get; }
-        public ProgramContext Context { get; }
+        public TypeContext Context { get; }
 
 #if NETFRAMEWORK || MONOANDROID
 
@@ -54,7 +55,7 @@ namespace FluidScript.Compiler.Emit
 
         public AssemblyGen(string assemblyName, string version)
         {
-            System.Reflection.AssemblyName name = new System.Reflection.AssemblyName(string.Concat(assemblyName, ", Version=", version));
+            AssemblyName name = new AssemblyName(string.Concat(assemblyName, ", Version=", version));
 #if NETFRAMEWORK || MONOANDROID
             var assembly = System.Threading.Thread.GetDomain().DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
             var module = assembly.DefineDynamicModule(assemblyName, string.Concat(assemblyName, ".dll"), false);
@@ -67,10 +68,10 @@ namespace FluidScript.Compiler.Emit
             Assembly = assembly;
             Module = module;
             Namespace = module.ScopeName;
-            Context = new ProgramContext(null);
+            Context = new TypeContext(null);
         }
 
-        public TypeGenerator DefineType(string name, System.Type parent, System.Reflection.TypeAttributes attr)
+        public TypeGenerator DefineType(string name, System.Type parent, TypeAttributes attr)
         {
             TypeBuilder builder = Module.DefineType(string.Concat(Namespace, ".", name), attr, parent);
             var generator = new TypeGenerator(builder, this);
@@ -78,19 +79,10 @@ namespace FluidScript.Compiler.Emit
             return generator;
         }
 
-        public TypeBuilder DefineDynamicType(string name, System.Type parent, System.Reflection.TypeAttributes attr)
+        public TypeBuilder DefineDynamicType(string name, System.Type parent, TypeAttributes attr)
         {
             int index = System.Threading.Interlocked.Increment(ref dynamicCount);
             return Module.DefineType(string.Concat(name, "$", index), attr, parent);
-        }
-
-        public System.Type GetType(string typeName)
-        {
-            if (Context.TryGetType(typeName, out System.Type type))
-            {
-                return type;
-            }
-            return Module.GetType(typeName);
         }
 
 #if NETFRAMEWORK || MONOANDROID

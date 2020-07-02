@@ -1,5 +1,6 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Extensions;
+using FluidScript.Runtime;
 using FluidScript.Utils;
 using System;
 
@@ -14,12 +15,24 @@ namespace FluidScript.Compiler
         {
         }
 
-        public object Visit(Expression node)
+        public abstract object Target { get; }
+
+        TypeContext typeContext;
+
+        public TypeContext TypeContext
         {
-            return node.Accept(this);
+            get
+            {
+                if (typeContext == null)
+                    typeContext = new TypeContext(null);
+                return typeContext;
+            }
         }
 
-        public abstract object Target { get; }
+        object IExpressionVisitor<object>.Default(Expression node)
+        {
+            return null;
+        }
 
         public virtual object VisitAnonymousFunction(AnonymousFunctionExpression node)
         {
@@ -43,7 +56,7 @@ namespace FluidScript.Compiler
         #region Array Literal
         public virtual object VisitArrayLiteral(ArrayListExpression node)
         {
-            Type type = node.ArrayType != null ? node.ArrayType.GetType(TypeProvider.Default) : TypeProvider.ObjectType;
+            Type type = node.ArrayType != null ? node.ArrayType.ResolveType(TypeContext) : TypeProvider.ObjectType;
             node.Type = typeof(Collections.List<>).MakeGenericType(type);
             node.ElementType = type;
             var items = node.Expressions;
@@ -54,8 +67,8 @@ namespace FluidScript.Compiler
                 args = node.Arguments.Map(arg => arg.Accept(this));
                 if (node.Constructor == null)
                 {
-                    var methods = node.Type.GetConstructors(TypeUtils.PublicInstance);
-                    var ctor = TypeHelpers.BindToMethod(methods, args, out Binders.ArgumentConversions conversions);
+                    var methods = node.Type.GetConstructors(Utils.ReflectionUtils.PublicInstance);
+                    var ctor = TypeHelpers.BindToMethod(methods, args, out ArgumentConversions conversions);
                     if (ctor == null)
                         ExecutionException.ThrowMissingMethod(node.Type, ".ctor", node);
                     node.Constructor = ctor;
@@ -67,13 +80,13 @@ namespace FluidScript.Compiler
             {
                 args = new object[1] { new Integer(length) };
                 if (node.Constructor == null)
-                    node.Constructor = node.Type.GetConstructor(TypeUtils.PublicInstance, null, new Type[] { TypeProvider.IntType }, null);
+                    node.Constructor = node.Type.GetConstructor(ReflectionUtils.PublicInstance, null, new Type[] { TypeProvider.IntType }, null);
             }
 
             var array = (System.Collections.IList)node.Constructor.Invoke(System.Reflection.BindingFlags.Default, null, args, null);
             if (length > 0)
             {
-                var arrayConversions = node.ArrayConversions ?? new Binders.ArgumentConversions(items.Count);
+                var arrayConversions = node.ArrayConversions ?? new ArgumentConversions(items.Count);
                 for (int index = 0; index < length; index++)
                 {
                     Expression expression = items[index];
@@ -81,10 +94,10 @@ namespace FluidScript.Compiler
                     var conversion = arrayConversions[index];
                     if (conversion == null && !TypeUtils.AreReferenceAssignable(type, expression.Type) && TypeUtils.TryImplicitConvert(expression.Type, type, out System.Reflection.MethodInfo implicitCall))
                     {
-                        conversion = new Binders.ParamConversion(index, implicitCall);
-                        arrayConversions.Insert(index, conversion);
+                        conversion = new ParamConversion(index, implicitCall);
+                        arrayConversions.Append(index, conversion);
                     }
-                    if (conversion != null && conversion.ConversionType == Binders.ConversionType.Normal)
+                    if (conversion != null && conversion.ConversionType == ConversionType.Normal)
                     {
                         value = conversion.Invoke(value);
                     }
@@ -110,14 +123,14 @@ namespace FluidScript.Compiler
             if (exp.Setter == null)
             {
                 var indexer = exp.Target.Type
-                    .FindSetIndexer(args, out Binders.ArgumentConversions conversions);
+                    .FindSetIndexer(args, out ArgumentConversions conversions);
                 if (indexer == null)
                     ExecutionException.ThrowMissingIndexer(exp.Target.Type, "set", exp.Target, node);
 
                 exp.Conversions = conversions;
                 exp.Setter = indexer;
                 // ok to be node.Right.Type instead of indexer.GetParameters().Last().ParameterType
-                Binders.Conversion valueBind = conversions[args.Length - 1];
+                var valueBind = conversions[args.Length - 1];
                 node.Type = (valueBind == null) ? node.Right.Type : valueBind.Type;
             }
             exp.Conversions.Invoke(ref args);
@@ -185,12 +198,12 @@ namespace FluidScript.Compiler
                 var leftType = left.GetType();
                 var rightType = right.GetType();
                 var types = new Type[2] { leftType, rightType };
-                Binders.ArgumentConversions conversions = new Binders.ArgumentConversions(2);
+                ArgumentConversions conversions = new ArgumentConversions(2);
                 if (leftType.IsPrimitive || rightType.IsPrimitive)
                 {
-                    TypeUtils.FromSystemType(conversions, ref types);
+                    ReflectionUtils.FromSystemType(conversions, ref types);
                 }
-                var method = TypeUtils.
+                var method = ReflectionUtils.
                    GetOperatorOverload(opName, conversions, types);
                 if (method == null)
                     ExecutionException.ThrowInvalidOp(node);
@@ -211,8 +224,8 @@ namespace FluidScript.Compiler
             object[] args = new object[2] { left, right };
             if (node.Method == null)
             {
-                var conversions = new Binders.ArgumentConversions(2);
-                if (!TypeHelpers.MatchesTypes(ReflectionHelpers.MathPow, args, conversions))
+                var conversions = new ArgumentConversions(2);
+                if (!TypeUtils.MatchesTypes(ReflectionHelpers.MathPow, args, conversions))
                     ExecutionException.ThrowArgumentMisMatch(node);
                 node.Conversions = conversions;
                 node.Method = ReflectionHelpers.MathPow;
@@ -232,11 +245,11 @@ namespace FluidScript.Compiler
             //right is null or not found
             if (right is null)
                 right = Boolean.False;
-            var convert = TypeUtils.GetBooleanOveraload(left.GetType());
+            var convert = Utils.ReflectionUtils.GetBooleanOveraload(left.GetType());
             //No bool conversion default true object exist
             left = convert == null ? left : convert.ReflectedType != TypeProvider.BooleanType ? Boolean.True :
                 convert.Invoke(null, new object[] { left });
-            convert = TypeUtils.GetBooleanOveraload(right.GetType());
+            convert = Utils.ReflectionUtils.GetBooleanOveraload(right.GetType());
             //No bool conversion default true object exist
             right = convert == null ? right : convert.ReflectedType != TypeProvider.BooleanType ? Boolean.True :
                 convert.Invoke(null, new object[] { right });
@@ -261,12 +274,12 @@ namespace FluidScript.Compiler
                 var leftType = left.GetType();
                 var rightType = right.GetType();
                 var types = new Type[2] { leftType, rightType };
-                Binders.ArgumentConversions conversions = new Binders.ArgumentConversions(2);
+                ArgumentConversions conversions = new ArgumentConversions(2);
                 if (leftType.IsPrimitive || rightType.IsPrimitive)
                 {
-                    TypeUtils.FromSystemType(conversions, ref types);
+                    ReflectionUtils.FromSystemType(conversions, ref types);
                 }
-                System.Reflection.MethodInfo method = TypeUtils.
+                System.Reflection.MethodInfo method = ReflectionUtils.
                     GetOperatorOverload(opName, conversions, types);
                 if (method == null)
                     return NullCompare(node, left, right);
@@ -295,7 +308,7 @@ namespace FluidScript.Compiler
         {
             object[] args = node.Arguments.Map(arg => arg.Accept(this));
             object target = node.Method == null ? ResolveCall(node, args) : FindTarget(node, args);
-            node.Convertions.Invoke(ref args);
+            node.Conversions.Invoke(ref args);
             return node.Method.Invoke(target, args);
         }
 
@@ -336,7 +349,7 @@ namespace FluidScript.Compiler
             var value = node.Target.Accept(this);
             if (node.Type == null)
             {
-                var type = node.TypeName.GetType(TypeProvider.Default);
+                var type = node.TypeName.ResolveType(TypeContext);
                 if (!TypeUtils.AreReferenceAssignable(type, node.Target.Type))
                 {
                     if (!TypeUtils.TryImplicitConvert(node.Target.Type, type, out System.Reflection.MethodInfo method) &&
@@ -371,7 +384,7 @@ namespace FluidScript.Compiler
             System.Reflection.MethodInfo indexer;
             var type = node.Target.Type;
             indexer = type
-                    .FindGetIndexer(args, out Binders.ArgumentConversions conversions);
+                    .FindGetIndexer(args, out ArgumentConversions conversions);
             if (indexer == null)
                 ExecutionException.ThrowMissingIndexer(type, "get", node);
             node.Type = indexer.ReturnType;
@@ -448,6 +461,37 @@ namespace FluidScript.Compiler
             return Target;
         }
 
+        public object VisitSuper(SuperExpression node)
+        {
+            node.Type = Target.GetType().BaseType;
+            return Target;
+        }
+
+        public object VisitNew(NewExpression node)
+        {
+            var args = node.Arguments.Map(a => a.Accept(this));
+            if (node.Constructor == null)
+            {
+                node.Type = node.TypeSyntax.ResolveType(TypeContext);
+                node.Constructor = TypeHelpers.BindToMethod(node.Type.GetConstructors(), args, out ArgumentConversions conversions);
+                node.Conversions = conversions;
+            }
+            node.Conversions.Invoke(ref args);
+            return node.Constructor.Invoke(args);
+        }
+
+        public object VisitInstanceOf(InstanceOfExpression node)
+        {
+            var value = node.Target.Accept(this);
+            if (value is null && node.TypeSyntax is RefTypeSyntax refType && refType.Name.Equals("null"))
+                return Boolean.True;
+            var type = node.TypeSyntax.ResolveType(TypeContext);
+            var valueType = value.GetType();
+            if (TypeUtils.AreReferenceAssignable(type, valueType))
+                return Boolean.True;
+            return Boolean.False;
+        }
+
         #region Unary Expression
         public object VisitUnary(UnaryExpression node)
         {
@@ -489,15 +533,15 @@ namespace FluidScript.Compiler
             if (node.Method == null)
             {
                 Type type = node.Operand.Type;
-                Binders.ArgumentConversions conversions = new Binders.ArgumentConversions(1);
+                ArgumentConversions conversions = new ArgumentConversions(1);
                 if (type.IsPrimitive)
                 {
                     var typeCode = Type.GetTypeCode(type);
-                    conversions.Add(new Binders.ParamConversion(0, ReflectionHelpers.ToAny));
+                    conversions.Append(0, new ParamConversion(0, ReflectionHelpers.ToAny));
                     type = TypeProvider.Find(typeCode);
                     conversions.Backup();
                 }
-                var method = TypeUtils.GetOperatorOverload(node.MethodName, conversions, type);
+                var method = ReflectionUtils.GetOperatorOverload(node.MethodName, conversions, type);
                 if (method == null)
                     ExecutionException.ThrowInvalidOp(node);
                 node.Conversions = conversions;

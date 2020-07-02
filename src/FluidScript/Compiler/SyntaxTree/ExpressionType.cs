@@ -40,7 +40,9 @@ namespace FluidScript.Compiler.SyntaxTree
         Out = 34,
         In = 35,
         This = 36,
-        Convert = 37,
+        Super = 37,
+        InstanceOf = 38,
+        Convert = 39,
         Labeled = 50,
 
 
@@ -105,7 +107,8 @@ namespace FluidScript.Compiler.SyntaxTree
         #endregion
 
         #region Other
-        Tilda = TokenType.Tilda
+        Tilda = TokenType.Tilda,
         #endregion
+        Custom = 253
     }
 }

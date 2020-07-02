@@ -72,6 +72,7 @@
         /// <summary>
         /// Statement Locals
         /// </summary>
+        /// 
         public sealed class StatementLocals
         {
             /// <summary>
@@ -155,6 +156,11 @@
         public static ReturnOrThrowStatement Return(Expression value = null)
         {
             return new ReturnOrThrowStatement(value, StatementType.Return);
+        }
+
+        public static IfStatement If(Expression condition, Statement then, Statement other = null)
+        {
+            return new IfStatement(condition, then, other);
         }
         #endregion
     }

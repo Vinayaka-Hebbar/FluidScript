@@ -19,6 +19,9 @@
         Var,
         Val,
         Function,
+        Ctor,
+        Super,
+        Import,
         Implement,
         Lamda,
         If,
@@ -31,6 +34,7 @@
         Switch,
         Break,
         Throw,
-        SizeOf
+        SizeOf,
+        From
     }
 }

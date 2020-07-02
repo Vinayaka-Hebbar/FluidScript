@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,20 +8,20 @@ using System.Linq;
 namespace FluidScript.Compiler.Generators
 {
     // Temporary Method info wrapper
-    public abstract class BaseMethodGenerator : System.Reflection.MethodInfo, IMethodBaseGenerator
+    public abstract class BaseMethodGenerator : System.Reflection.MethodInfo, IMethodBase
     {
         protected IList<AttributeGenerator> _customAttributes;
 
         private readonly System.Reflection.MethodInfo methodInfo;
-        internal readonly Type Declaring;
+        private readonly Type declaring;
 
         public BaseMethodGenerator(System.Reflection.MethodInfo method, ParameterInfo[] parameters, Type declaring)
         {
+            this.declaring = declaring;
             Name = method.Name;
             methodInfo = method;
             Parameters = parameters;
             ReturnType = method.ReturnType;
-            Declaring = declaring;
             Attributes = method.Attributes;
             MemberType = System.Reflection.MemberTypes.Method;
         }
@@ -38,9 +39,9 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Reflection.MethodAttributes Attributes { get; }
 
-        public override Type DeclaringType => Declaring;
+        public override Type DeclaringType => declaring;
 
-        public override Type ReflectedType => Declaring;
+        public override Type ReflectedType => declaring;
 
         public override string Name { get; }
 
@@ -56,12 +57,6 @@ namespace FluidScript.Compiler.Generators
 
         public System.Reflection.MethodBase MethodBase => methodInfo;
 
-        public bool BindingFlagsMatch(System.Reflection.BindingFlags flags)
-        {
-            return Utils.TypeUtils.BindingFlagsMatch(IsPublic, flags, System.Reflection.BindingFlags.Public, System.Reflection.BindingFlags.NonPublic)
-                 && Utils.TypeUtils.BindingFlagsMatch(IsStatic, flags, System.Reflection.BindingFlags.Static, System.Reflection.BindingFlags.Instance);
-        }
-
         public virtual void SetCustomAttribute(Type type, System.Reflection.ConstructorInfo ctor, object[] parameters)
         {
             if (_customAttributes == null)
@@ -69,16 +64,32 @@ namespace FluidScript.Compiler.Generators
             _customAttributes.Add(new AttributeGenerator(type, ctor, parameters, null, null));
         }
 
-        public abstract void Generate();
+        void IMember.Compile()
+        {
+            EmitParameterInfo();
+            EmitBody();
+        }
+
+        public virtual void EmitBody()
+        {
+            if (SyntaxBody != null)
+            {
+                MethodBodyGenerator bodyGen = GetMethodBodyGenerator();
+                bodyGen.Compile();
+            }
+        }
+
         public abstract void EmitParameterInfo();
 
-        public IProgramContext Context { get; set; }
+        public abstract MethodBodyGenerator GetMethodBodyGenerator();
+
+        public ITypeContext Context { get; set; }
 
         public Type GetType(TypeName typeName)
         {
             if (Context != null)
                 return Context.GetType(typeName);
-            return TypeProvider.Default.GetType(typeName.FullName);
+            return TypeProvider.GetType(typeName.FullName);
         }
 
         public override object[] GetCustomAttributes(bool inherit)
@@ -108,26 +119,18 @@ namespace FluidScript.Compiler.Generators
             return methodInfo.Invoke(obj, invokeAttr, binder, parameters, culture);
         }
 
+        private System.Reflection.ParameterInfo[] parametersInstance;
         public override System.Reflection.ParameterInfo[] GetParameters()
         {
-            return ParametersInstance;
-        }
-
-        private System.Reflection.ParameterInfo[] parametersInstance;
-        public System.Reflection.ParameterInfo[] ParametersInstance
-        {
-            get
+            if (parametersInstance == null)
             {
-                if (parametersInstance == null)
+                parametersInstance = new System.Reflection.ParameterInfo[Parameters.Length];
+                for (int index = 0; index < Parameters.Length; index++)
                 {
-                    parametersInstance = new System.Reflection.ParameterInfo[Parameters.Length];
-                    for (int index = 0; index < Parameters.Length; index++)
-                    {
-                        parametersInstance[index] = new RuntimeParameterInfo(Parameters[index]);
-                    }
+                    parametersInstance[index] = new RuntimeParameterInfo(Parameters[index]);
                 }
-                return parametersInstance;
             }
+            return parametersInstance;
         }
 
         public override bool IsDefined(Type attributeType, bool inherit)
@@ -156,12 +159,6 @@ namespace FluidScript.Compiler.Generators
             Context = declaring.Context;
         }
 
-        public override void Generate()
-        {
-            EmitParameterInfo();
-            new MethodBodyGenerator(this, _builder.GetILGenerator()).EmitBody();
-        }
-
         public override void EmitParameterInfo()
         {
             if (_customAttributes != null)
@@ -178,10 +175,41 @@ namespace FluidScript.Compiler.Generators
             }
         }
 
+        public override void EmitBody()
+        {
+            base.EmitBody();
+            if (IsFinal && IsVirtual
+                && (Attributes & System.Reflection.MethodAttributes.NewSlot) == System.Reflection.MethodAttributes.NewSlot)
+            {
+                var type = DeclaringType as TypeGenerator;
+                if (type == null)
+                    return;
+                int dot = Name.LastIndexOf('.');
+                var implType = type.GetInterface(Name.Substring(0, dot));
+                var method = implType.FindSystemMethod(Name.Substring(dot + 1), Parameters.Map(p => p.Type));
+                if (method == null)
+                    throw new NullReferenceException(nameof(method));
+                type.Builder.DefineMethodOverride(_builder, method);
+
+            }
+        }
+
+        public override MethodBodyGenerator GetMethodBodyGenerator()
+        {
+            return new MethodBodyGenerator(this, _builder.GetILGenerator());
+        }
+
         internal System.Reflection.Emit.MethodBuilder GetBuilder()
         {
             return _builder;
         }
+
+#if NETFRAMEWORK
+        public System.Reflection.Emit.MethodToken GetToken()
+        {
+            return _builder.GetToken();
+        }
+#endif
     }
 
     public sealed class DynamicMethodGenerator : BaseMethodGenerator
@@ -192,12 +220,6 @@ namespace FluidScript.Compiler.Generators
             _builder = builder;
         }
 
-        public override void Generate()
-        {
-            EmitParameterInfo();
-            new MethodBodyGenerator(this, _builder.GetILGenerator()).EmitBody();
-        }
-
         public override void EmitParameterInfo()
         {
 #if NETFRAMEWORK || NETSTANDARD
@@ -206,6 +228,11 @@ namespace FluidScript.Compiler.Generators
                 _builder.DefineParameter(para.Index, System.Reflection.ParameterAttributes.In, para.Name);
             }
 #endif
+        }
+
+        public override MethodBodyGenerator GetMethodBodyGenerator()
+        {
+            return new MethodBodyGenerator(this, _builder.GetILGenerator());
         }
     }
 }

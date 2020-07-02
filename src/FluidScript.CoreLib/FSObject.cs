@@ -1,4 +1,6 @@
-﻿namespace FluidScript
+﻿using System.Runtime.CompilerServices;
+
+namespace FluidScript
 {
     /// <inheritdoc/>
     [Runtime.Register(nameof(System.Object))]
@@ -15,7 +17,7 @@
         [Runtime.Register("toString")]
         String IFSObject.ToString()
         {
-            return ToString();
+            return base.ToString();
         }
 
         /// <inheritdoc/>
@@ -34,6 +36,11 @@
         public override int GetHashCode()
         {
             return base.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return ((IFSObject)this).ToString().m_value;
         }
 
         /// <summary>

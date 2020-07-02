@@ -7,7 +7,7 @@ namespace FluidScript.Compiler.SyntaxTree
     public sealed class AssignmentExpression : Expression
     {
         #region GenerateOption
-        const MethodGenerateOption Option = MethodGenerateOption.Dupplicate | MethodGenerateOption.Assign;
+        const MethodGenerateOption Option = MethodGenerateOption.Dupplicate | MethodGenerateOption.Return;
         #endregion
 
         public readonly Expression Left;
@@ -53,7 +53,8 @@ namespace FluidScript.Compiler.SyntaxTree
                     exp.Arguments.Iterate((arg) =>
                     {
                         arg.GenerateCode(generator);
-                        generator.CallStatic(ReflectionHelpers.IntegerToInt32);
+                        if (arg.Type == typeof(Integer))
+                            generator.CallStatic(ReflectionHelpers.IntegerToInt32);
                     });
                     Right.GenerateCode(generator, MethodGenerateOption.Dupplicate);
                     System.Type elementType = type.GetElementType();

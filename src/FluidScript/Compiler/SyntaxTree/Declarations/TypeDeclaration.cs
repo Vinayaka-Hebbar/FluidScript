@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Extensions;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -7,11 +8,11 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly string Name;
         public readonly TypeSyntax BaseType;
-        public readonly NodeList<TypeSyntax> Implements;
+        public readonly INodeList<TypeSyntax> Implements;
 
-        public readonly NodeList<MemberDeclaration> Members;
+        public readonly INodeList<MemberDeclaration> Members;
 
-        public TypeDeclaration(string name, TypeSyntax baseType, NodeList<TypeSyntax> implements, NodeList<MemberDeclaration> members)
+        public TypeDeclaration(string name, TypeSyntax baseType, INodeList<TypeSyntax> implements, NodeList<MemberDeclaration> members) : base(DeclarationType.Class)
         {
             Name = name;
             BaseType = baseType;
@@ -25,23 +26,34 @@ namespace FluidScript.Compiler.SyntaxTree
             set;
         }
 
-        public override void Generate(Generators.TypeGenerator generator)
+        public override void CreateMember(Generators.TypeGenerator generator)
         {
             throw new System.NotImplementedException();
         }
 
-        public System.Type Generate(AssemblyGen assembly)
+        public System.Type Compile(AssemblyGen assembly)
         {
             System.Type baseType;
             if (BaseType != null)
-                baseType = assembly.GetType(BaseType.ToString());
+                baseType = BaseType.ResolveType(assembly.Context);
             else
                 baseType = typeof(FSObject);
             var generator = assembly.DefineType(Name, baseType, System.Reflection.TypeAttributes.Public);
+            System.Type[] types = null;
+            if (Implements != null)
+            {
+                types = Implements.Map(impl => impl.ResolveType(generator.Context)).AddLast(typeof(IFSObject));
+            }
+            else
+            {
+                types = new System.Type[1] { typeof(IFSObject) };
+            }
+            generator.SetInterfaces(types);
             generator.Source = Source;
+            generator.SetCustomAttribute(typeof(Runtime.RegisterAttribute), Utils.ReflectionHelpers.Register_Attr_Ctor, new object[] { Name });
             foreach (var member in Members)
             {
-                member.Generate(generator);
+                member.CreateMember(generator);
             }
             return generator.CreateType();
         }

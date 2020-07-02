@@ -1,6 +1,7 @@
 ﻿using FluidScript.Compiler.Binders;
 using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Extensions;
+using FluidScript.Runtime;
 using FluidScript.Utils;
 using System;
 using System.Collections.Generic;
@@ -34,20 +35,20 @@ namespace FluidScript.Compiler.Emit
         /// </summary>
         public Statement SyntaxTree { get; internal set; }
 
-        internal readonly IMethodBaseGenerator Method;
+        internal readonly IMethodBase Method;
 
-        internal readonly IProgramContext Context;
+        internal readonly ITypeContext Context;
 
-        internal readonly Type ReturnType;
+        public Type ReturnType { get; }
 
-        private IList<ILLocalVariable> LocalVariables;
+        internal IList<ILLocalVariable> LocalVariables;
 
         private readonly Stack<BreakOrContinueInfo> breakOrContinueStack = new Stack<BreakOrContinueInfo>();
 
         /// <summary>
         /// Initializes new instance of <see cref="MethodBodyGenerator"/>
         /// </summary>
-        public MethodBodyGenerator(IMethodBaseGenerator method, System.Reflection.Emit.ILGenerator generator, bool emitInfo = false) : base(generator, emitInfo)
+        public MethodBodyGenerator(IMethodBase method, System.Reflection.Emit.ILGenerator generator, bool emitInfo = false) : base(generator, emitInfo)
         {
             Method = method;
             ReturnType = method.ReturnType;
@@ -120,7 +121,7 @@ namespace FluidScript.Compiler.Emit
                     {
                         if (info.LabelNames != null && info.LabelNames.Any(ln => ln.Equals(label)))
                         {
-                            throw new System.Exception(string.Format("label {0} already present", label));
+                            throw new Exception(string.Format("label {0} already present", label));
                         }
                     }
                 }
@@ -279,6 +280,46 @@ namespace FluidScript.Compiler.Emit
             }
         }
 
+        #region Emit Convert
+        public void EmitConvert(Conversion c)
+        {
+            if (c is BoxConversion)
+                Box(c.Type);
+            else if (c is ParamConversion p)
+                CallStatic(p.Method);
+            if (c.HasNext)
+                EmitConvert(c.Next);
+        }
+
+        public void EmitConvert(ParamArrayConversion c, Expression[] expressions)
+        {
+            // Remaining size
+            var size = expressions.Length;
+            LoadInt32(size);
+            NewArray(c.Type);
+            if (size > 0)
+            {
+                var conversions = c.ParamBinders;
+                for (int i = 0; i < size; i++)
+                {
+                    Duplicate();
+                    LoadInt32(i);
+                    Expression exp = expressions[i];
+                    exp.GenerateCode(this);
+                    if (exp.Type.IsValueType && c.Type.IsValueType == false)
+                        Box(exp.Type);
+                    if (conversions != null)
+                    {
+                        var group = conversions[i];
+                        if (group != null)
+                            EmitConvert(group);
+                    }
+                    StoreArrayElement(c.Type);
+                }
+            }
+        }
+        #endregion
+
         #region Return
         /// <summary>
         /// Gets or sets the label the return statement should jump to (with the return value on
@@ -307,7 +348,7 @@ namespace FluidScript.Compiler.Emit
         #endregion
 
         ///<inheritdoc/>
-        public override ILLocalVariable DeclareVariable(Type type, string name = null)
+        public ILLocalVariable DeclareVariable(Type type, string name)
         {
             ILLocalVariable variable = base.DeclareVariable(type, name);
             if (LocalVariables == null)
@@ -330,7 +371,7 @@ namespace FluidScript.Compiler.Emit
         }
 
         ///<summary>Creates IL Code</summary>
-        public void EmitBody()
+        public void Compile()
         {
             SyntaxTree.GenerateCode(this);
             if (ReturnTarget != null)
@@ -342,9 +383,8 @@ namespace FluidScript.Compiler.Emit
 
         #region Visitors
 
-        Expression IExpressionVisitor<Expression>.Visit(Expression node)
+        Expression IExpressionVisitor<Expression>.Default(Expression node)
         {
-            node.Accept(this);
             return node;
         }
 
@@ -358,7 +398,7 @@ namespace FluidScript.Compiler.Emit
                 return operand;
             }
             ArgumentConversions conversions = new ArgumentConversions(2);
-            var method = TypeUtils.GetOperatorOverload(node.MethodName, conversions, operand.Type);
+            var method = Utils.ReflectionUtils.GetOperatorOverload(node.MethodName, conversions, operand.Type);
             node.Conversions = conversions;
             node.Method = method;
             node.Type = method.ReturnType;
@@ -380,32 +420,32 @@ namespace FluidScript.Compiler.Emit
                 conversions = new ArgumentConversions(2);
                 if (left.Type.IsPrimitive == true || right.Type.IsPrimitive == true)
                 {
-                    TypeUtils.FromSystemType(conversions, ref types);
+                    Utils.ReflectionUtils.FromSystemType(conversions, ref types);
                 }
-                method = TypeUtils.
+                method = Utils.ReflectionUtils.
                    GetOperatorOverload(opName, conversions, types);
             }
             else if (node.NodeType == ExpressionType.AndAnd || node.NodeType == ExpressionType.OrOr)
             {
                 conversions = new ArgumentConversions(2);
-                System.Reflection.MethodInfo convertLeft = TypeUtils.GetBooleanOveraload(left.Type);
+                System.Reflection.MethodInfo convertLeft = ReflectionUtils.GetBooleanOveraload(left.Type);
                 if (convertLeft != null)
                     conversions.Add(new ParamConversion(0, convertLeft));
-                var convertRight = TypeUtils.GetBooleanOveraload(right.Type);
+                var convertRight = Utils.ReflectionUtils.GetBooleanOveraload(right.Type);
                 if (convertRight != null)
                     conversions.Add(new ParamConversion(1, convertRight));
                 method = node.NodeType == ExpressionType.AndAnd ? ReflectionHelpers.LogicalAnd : ReflectionHelpers.LogicalOr;
             }
-            else if(node.NodeType == ExpressionType.StarStar)
+            else if (node.NodeType == ExpressionType.StarStar)
             {
                 var types = new Type[2] { left.Type, right.Type };
                 conversions = new ArgumentConversions(2);
                 if (left.Type.IsPrimitive == true || right.Type.IsPrimitive == true)
                 {
-                    TypeUtils.FromSystemType(conversions, ref types);
+                    Utils.ReflectionUtils.FromSystemType(conversions, ref types);
                 }
                 method = ReflectionHelpers.MathPow;
-                if (!TypeUtils.MatchesTypes(method, types, conversions))
+                if (!Utils.ReflectionUtils.MatchesTypes(method, types, conversions))
                     ExecutionException.ThrowArgumentMisMatch(node);
             }
             node.Conversions = conversions;
@@ -417,7 +457,7 @@ namespace FluidScript.Compiler.Emit
         /// <inheritdoc/>
         Expression IExpressionVisitor<Expression>.VisitArrayLiteral(ArrayListExpression node)
         {
-            var type = node.ArrayType != null ? node.ArrayType.GetType(Context) : typeof(object);
+            var type = node.ArrayType != null ? node.ArrayType.ResolveType(Context) : typeof(object);
             node.Type = typeof(Collections.List<>).MakeGenericType(type);
             node.ElementType = type;
             if (node.Arguments != null)
@@ -425,8 +465,8 @@ namespace FluidScript.Compiler.Emit
                 var types = node.Arguments.Map(arg => arg.Accept(this).Type);
                 if (node.Constructor == null)
                 {
-                    var ctors = node.Type.GetConstructors(TypeUtils.PublicInstance);
-                    var ctor = TypeUtils.BindToMethod(ctors, types, out ArgumentConversions conversions);
+                    var ctors = node.Type.GetConstructors(Utils.ReflectionUtils.PublicInstance);
+                    var ctor = Utils.ReflectionUtils.BindToMethod(ctors, types, out ArgumentConversions conversions);
                     if (ctor == null)
                         ExecutionException.ThrowMissingMethod(node.Type, "ctor", node);
                     node.Constructor = ctor;
@@ -435,7 +475,7 @@ namespace FluidScript.Compiler.Emit
             }
             else if (node.Constructor == null)
             {
-                node.Constructor = node.Type.GetConstructor(TypeUtils.PublicInstance, null, new Type[0], null);
+                node.Constructor = node.Type.GetConstructor(Utils.ReflectionUtils.PublicInstance, null, new Type[0], null);
             }
             var items = node.Expressions;
             if (items.Count > 0)
@@ -445,9 +485,9 @@ namespace FluidScript.Compiler.Emit
                 {
                     Expression expression = items[index];
                     var value = expression.Accept(this);
-                    if (!TypeUtils.AreReferenceAssignable(type, expression.Type) && TypeUtils.TryImplicitConvert(expression.Type, type, out System.Reflection.MethodInfo implicitCall))
+                    if (!Runtime.TypeUtils.AreReferenceAssignable(type, expression.Type) && Runtime.TypeUtils.TryImplicitConvert(expression.Type, type, out System.Reflection.MethodInfo implicitCall))
                     {
-                        arrayConversions.Insert(index, new ParamConversion(index, implicitCall));
+                        arrayConversions.Append(index, new ParamConversion(index, implicitCall));
                     }
                 }
                 node.ArrayConversions = arrayConversions;
@@ -477,7 +517,7 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            var member = target.Type.FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, TypeUtils.Any, HasMember, node.Name).FirstOrDefault();
+            var member = target.Type.FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, ReflectionUtils.Any, HasMember, node.Name).FirstOrDefault();
             IBinder binder = null;
             if (member != null)
             {
@@ -502,40 +542,49 @@ namespace FluidScript.Compiler.Emit
         /// <inheritdoc/>
         Expression IExpressionVisitor<Expression>.VisitCall(InvocationExpression node)
         {
-            var types = node.Arguments.Map(arg => arg.Accept(this).Type);
-            Type resultType = null;
-            string name = null;
-            System.Reflection.MethodInfo method;
-            ArgumentConversions conversions;
-            // we can't resolve method directly using target.Accept()
-            var target = node.Target;
-            if (target.NodeType == ExpressionType.Identifier)
+            if (node.Method is null)
             {
-                resultType = Method.DeclaringType;
-                name = target.ToString();
-            }
-            else if (target.NodeType == ExpressionType.MemberAccess)
-            {
-                MemberExpression member = (MemberExpression)target;
-                var exp = member.Target.Accept(this);
-                resultType = exp.Type;
-                name = member.Name;
-            }
-            else if (typeof(Delegate).IsAssignableFrom(target.Type))
-            {
-                method = target.Type.GetInstanceMethod("Invoke");
-                conversions = new ArgumentConversions(types.Length);
-                if (!TypeUtils.MatchesTypes(method, types, conversions))
-                    ExecutionException.ThrowArgumentMisMatch(node.Target, node);
-                goto done;
-            }
-            method = TypeUtils.FindMethod(name, resultType, types, out conversions);
-            if (method is IMethodBaseGenerator baseGenerator)
-                method = (System.Reflection.MethodInfo)baseGenerator.MethodBase;
+                var types = node.Arguments.Map(arg => arg.Accept(this).Type);
+                Type resultType = null;
+                string name = null;
+                System.Reflection.MethodInfo method;
+                ArgumentConversions conversions;
+                // we can't resolve method directly using target.Accept()
+                var target = node.Target;
+                if (target.NodeType == ExpressionType.Identifier)
+                {
+                    resultType = Method.DeclaringType;
+                    name = target.ToString();
+                }
+                else if (target.NodeType == ExpressionType.MemberAccess)
+                {
+                    MemberExpression member = (MemberExpression)target;
+                    var exp = member.Target.Accept(this);
+                    resultType = exp.Type;
+                    name = member.Name;
+                }
+                else if (target.NodeType == ExpressionType.Super || target.NodeType == ExpressionType.This)
+                {
+                    // this will be call to super();
+                    var expression = target.Accept(this);
+                    node.Method = ReflectionUtils.BindToMethod(expression.Type.GetConstructors(ReflectionUtils.PublicInstanceDeclared), types, out conversions);
+                    node.Conversions = conversions;
+                    return node;
+                }
+                else if (typeof(Delegate).IsAssignableFrom(target.Type))
+                {
+                    method = target.Type.GetInstanceMethod("Invoke");
+                    conversions = new ArgumentConversions(types.Length);
+                    if (!ReflectionUtils.MatchesTypes(method, types, conversions))
+                        ExecutionException.ThrowArgumentMisMatch(node.Target, node);
+                    goto done;
+                }
+                method = resultType.FindMethod(name, types, out conversions);
             done:
-            node.Convertions = conversions;
-            node.Method = method ?? throw ExecutionException.ThrowMissingMethod(resultType, name, node);
-            node.Type = method.ReturnType;
+                node.Conversions = conversions;
+                node.Method = method ?? throw ExecutionException.ThrowMissingMethod(resultType, name, node);
+                node.Type = method.ReturnType;
+            }
             return node;
         }
 
@@ -602,6 +651,26 @@ namespace FluidScript.Compiler.Emit
         }
 
         /// <inheritdoc/>
+        Expression IExpressionVisitor<Expression>.VisitInstanceOf(InstanceOfExpression node)
+        {
+            node.Target.Accept(this);
+            if (node.TypeSyntax != null)
+                node.TypeSyntax.ResolveType(Context);
+            return node;
+        }
+
+        /// <inheritdoc/>
+        Expression IExpressionVisitor<Expression>.VisitNew(NewExpression node)
+        {
+            node.Type = node.TypeSyntax.ResolveType(Context);
+            var types = node.Arguments.Map(a => a.Accept(this).Type);
+            node.Constructor = ReflectionUtils.BindToMethod(node.Type.GetConstructors(), types, out ArgumentConversions conversions);
+            node.Conversions = conversions;
+            return node;
+
+        }
+
+        /// <inheritdoc/>
         Expression IExpressionVisitor<Expression>.VisitMember(NameExpression node)
         {
             var name = node.Name;
@@ -622,14 +691,14 @@ namespace FluidScript.Compiler.Emit
                 return node;
             }
             //find in the class level
-            var member = Method.DeclaringType.FindMembers(System.Reflection.MemberTypes.Property | System.Reflection.MemberTypes.Field, TypeUtils.Any, HasMember, name).FirstOrDefault();
+            var member = Method.DeclaringType.FindMembers(System.Reflection.MemberTypes.Property | System.Reflection.MemberTypes.Field, ReflectionUtils.Any, HasMember, name).FirstOrDefault();
             if (member != null)
             {
                 if (member.MemberType == System.Reflection.MemberTypes.Field)
                 {
                     var field = (System.Reflection.FieldInfo)member;
                     if (field.FieldType == null)
-                        throw new System.Exception(string.Concat("Use of undeclared field ", field));
+                        throw new Exception(string.Concat("Use of undeclared field ", field));
                     node.Type = field.FieldType;
                     node.Binder = new FieldBinder(field);
                 }
@@ -640,7 +709,7 @@ namespace FluidScript.Compiler.Emit
                     node.Binder = new PropertyBinder(property);
                 }
             }
-            else if(Context.TryGetType(name, out Type type))
+            else if (Context.TryGetType(name, out Type type))
             {
                 // if static type name
                 node.Type = type;
@@ -653,6 +722,13 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitThis(ThisExpression node)
         {
             node.Type = Method.DeclaringType;
+            return node;
+        }
+
+        /// <inheritdoc/>
+        Expression IExpressionVisitor<Expression>.VisitSuper(SuperExpression node)
+        {
+            node.Type = Method.DeclaringType.BaseType;
             return node;
         }
 
@@ -670,8 +746,8 @@ namespace FluidScript.Compiler.Emit
             {
                 var types = node.Arguments.Map(arg => arg.Accept(this).Type);
                 var indexers = type
-                    .FindMembers(System.Reflection.MemberTypes.Method, TypeUtils.Any, FindExactMethod, "get_Item");
-                var indexer = TypeUtils.BindToMethod(indexers, types, out ArgumentConversions bindings);
+                    .FindMembers(System.Reflection.MemberTypes.Method, Utils.ReflectionUtils.Any, this.FindExactMethod, "get_Item");
+                var indexer = Utils.ReflectionUtils.BindToMethod(indexers, types, out ArgumentConversions bindings);
                 //todo binding in array
                 node.Getter = indexer ?? throw new Exception("Indexer not found");
                 type = indexer.ReturnType;
@@ -695,7 +771,7 @@ namespace FluidScript.Compiler.Emit
             }
             else
             {
-                node.Type = node.VariableType.GetType(Context);
+                node.Type = node.VariableType.ResolveType(Context);
             }
             return node;
 
@@ -727,7 +803,7 @@ namespace FluidScript.Compiler.Emit
             {
                 Type returnType;
                 if (node.ReturnSyntax != null)
-                    returnType = node.ReturnSyntax.GetType(Context);
+                    returnType = node.ReturnSyntax.ResolveType(Context);
                 else
                     returnType = typeof(object);
                 int length = node.Parameters.Count;
@@ -736,8 +812,8 @@ namespace FluidScript.Compiler.Emit
                 for (int i = 0; i < length; i++)
                 {
                     var para = node.Parameters[i];
-                    Type paramerterType = para.Type == null ? Compiler.TypeProvider.ObjectType : para.Type.GetType(Context);
-                    parameters[i] = new ParameterInfo(para.Name, i + 1, paramerterType, para.IsVar);
+                    Type paramerterType = para.Type == null ? TypeProvider.ObjectType : para.Type.ResolveType((ITypeContext)Context);
+                    parameters[i] = new ParameterInfo(para.Name, i + 1, paramerterType);
                     types[i] = paramerterType;
                 }
                 var delgateType = DelegateGen.MakeNewDelegate(types, returnType);
@@ -759,7 +835,7 @@ namespace FluidScript.Compiler.Emit
             var value = node.Target.Accept(this);
             if (node.Type == null)
             {
-                var type = node.TypeName.GetType(Context);
+                var type = node.TypeName.ResolveType(Context);
 
                 // todo explict convert
                 if (!TypeUtils.AreReferenceAssignable(type, value.Type) &&

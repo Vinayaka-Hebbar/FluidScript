@@ -4,12 +4,12 @@
     {
         public readonly NodeList<VariableDeclarationExpression> Declarations;
 
-        public FieldDelcaration(NodeList<VariableDeclarationExpression> declarations)
+        public FieldDelcaration(NodeList<VariableDeclarationExpression> declarations):base(DeclarationType.Field)
         {
             Declarations = declarations;
         }
 
-        public override void Generate(Generators.TypeGenerator generator)
+        public override void CreateMember(Generators.TypeGenerator generator)
         {
             System.Reflection.FieldAttributes attrs = GetAttribute();
             foreach (var field in Declarations)

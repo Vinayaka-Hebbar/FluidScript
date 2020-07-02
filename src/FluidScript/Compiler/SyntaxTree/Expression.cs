@@ -1,10 +1,14 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Compiler.Emit;
+using System;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     /// <summary>
     /// Base Expression
     /// </summary>
     public class Expression : Node
     {
+        internal const MethodGenerateOption AssignOption = MethodGenerateOption.Return | MethodGenerateOption.Dupplicate;
         /// <summary>
         /// Empty Expression
         /// </summary>
@@ -73,34 +77,59 @@
         /// <returns></returns>
         public virtual TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
-#if LATEST_VS 
-            return default;
-#else
-            return default(TResult);
-#endif
+            return visitor.Default(this);
         }
 
         /// <summary>
         /// Generates IL code for <see cref="Expression"/>
         /// </summary>
         /// <param name="generator"></param>
-        public virtual void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption option = Emit.MethodGenerateOption.None)
+        public virtual void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option = 0)
         {
             generator.NoOperation();
         }
 
         #region Static
+        public static InvocationExpression Call(Expression instance, System.Reflection.MethodBase method, params Expression[] arguments)
+        {
+            NodeList<Expression> args = new NodeList<Expression>(arguments);
+            InvocationExpression exp = new InvocationExpression(instance, args)
+            {
+                Method = method,
+                Conversions = new Runtime.ArgumentConversions(args.Count)
+            };
+            if (!Utils.ReflectionUtils.MatchesTypes(method, args.Map(ex => ex.Type), exp.Conversions))
+                throw new System.InvalidOperationException("argument miss match");
+            return exp;
+        }
+
         public static InvocationExpression Call(Expression instance, System.Reflection.MethodInfo method, params Expression[] arguments)
         {
             NodeList<Expression> args = new NodeList<Expression>(arguments);
             InvocationExpression exp = new InvocationExpression(instance, args)
             {
                 Method = method,
-                Convertions = new Binders.ArgumentConversions(args.Count)
+                Conversions = new Runtime.ArgumentConversions(args.Count),
+                Type = method.ReturnType
             };
-            if (!Utils.TypeUtils.MatchesTypes(method, args.Map(ex => ex.Type), exp.Convertions))
+            if (!Utils.ReflectionUtils.MatchesTypes(method, args.Map(ex => ex.Type), exp.Conversions))
                 throw new System.InvalidOperationException("argument miss match");
             return exp;
+        }
+
+        public static ThisExpression This()
+        {
+            return new ThisExpression();
+        }
+
+        public static SuperExpression Super()
+        {
+            return new SuperExpression();
+        }
+
+        public static InstanceOfExpression IsInstanceOf(Expression target, System.Type type)
+        {
+            return new InstanceOfExpression(target, TypeSyntax.Create(type));
         }
 
         public static NameExpression Member(System.Reflection.MemberInfo member)
@@ -121,6 +150,16 @@
             return exp;
         }
 
+        public static NameExpression Member(string name)
+        {
+            return new NameExpression(name, ExpressionType.Identifier);
+        }
+
+        public static AssignmentExpression Assign(Expression left, Expression right)
+        {
+            return new AssignmentExpression(left, right);
+        }
+
         public static BinaryExpression MakeBinary(ExpressionType binaryType, Expression left, Expression right)
         {
             return new BinaryExpression(left, right, binaryType);
@@ -129,6 +168,44 @@
         public static LiteralExpression Literal(object value)
         {
             return new LiteralExpression(value);
+        }
+
+        public static Expression SystemLiteral(object value)
+        {
+            return new SystemLiternalExpression(value);
+        }
+
+        public static NewExpression New(System.Type type, params Expression[] args)
+        {
+            return new NewExpression(TypeSyntax.Create(type), new NodeList<Expression>(args));
+        }
+
+        public static ConvertExpression Convert(System.Type type, Expression target)
+        {
+            return new ConvertExpression(TypeSyntax.Create(type), target);
+        }
+
+        public static Expression Parameter(System.Type type, string name)
+        {
+            return new NameExpression(name, ExpressionType.Identifier) { Type = type };
+        }
+
+        public static Expression Parameter(ParameterInfo parameter)
+        {
+            return new NameExpression(parameter.Name, ExpressionType.Identifier) { Type = parameter.Type, Binder = new Binders.ParameterBinder(parameter) };
+        }
+
+        /// <summary>
+        /// Custom IL Generation
+        /// </summary>
+        public static Expression Custom(Action<MethodBodyGenerator> custom)
+        {
+            return new CustomExpression(custom);
+        }
+
+        public static implicit operator ExpressionStatement(Expression expression)
+        {
+            return new ExpressionStatement(expression);
         }
         #endregion
     }

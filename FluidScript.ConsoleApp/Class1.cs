@@ -1,10 +1,11 @@
 ﻿using FluidScript.Compiler;
 using FluidScript.Compiler.Emit;
-using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Extensions;
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
-namespace FluidScript.ConsoleTest
+namespace FluidScript.ConsoleApp
 {
     public class Class1
     {
@@ -16,17 +17,14 @@ namespace FluidScript.ConsoleTest
             Console.ReadKey();
         }
 
-        private void Test()
+        public void Test()
         {
             try
             {
-                var res = new FluidTest.Sample().Add(10, 20);
-                //var code = (TypeDeclaration)ScriptParser.ParseFile(AppDomain.CurrentDomain.BaseDirectory + "source.fls");
-                //AssemblyGen assembly = new AssemblyGen("FluidTest", "1.0");
-                //assembly.Context.Register("Console", typeof(Console));
-                //var type = code.Generate(assembly);
-                //var value = Activator.CreateInstance(type);
-                //assembly.Save("FluidTest.dll");
+                var code = ScriptParser.ParseProgram("source.fls");
+                var assembly = new AssemblyGen("FluidTest", "1.0");
+                code.Compile(assembly);
+                assembly.Save("FluidTest.dll");
                 Console.WriteLine();
             }
             catch (TargetInvocationException ex)
@@ -35,9 +33,12 @@ namespace FluidScript.ConsoleTest
             }
         }
 
-        public void Compile()
+        public void Compile(object s)
         {
-            Console.WriteLine("OK");
+            dynamic value = 10;
+            object x = value.Equals(2);
+            object y = value.ToString();
+            Console.WriteLine(x);
         }
 
         public int GetInt(int i) => ++i;
@@ -46,6 +47,29 @@ namespace FluidScript.ConsoleTest
         static object FuncTest(object sender, Integer i)
         {
             return ++i;
+        }
+
+        public bool IsNull(object x)
+        {
+            return x is null;
+        }
+
+        public bool InstanceOf(object x)
+        {
+            return x is Integer;
+        }
+
+        public bool TestTry(out object res)
+        {
+            res = 10;
+            return true;
+        }
+
+        public override string ToString()
+        {
+            object value = 10;
+            TestTry(out value);
+            return value.ToString();
         }
 
         public Action TestFun3()
