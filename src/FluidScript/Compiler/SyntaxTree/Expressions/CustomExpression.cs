@@ -4,16 +4,16 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     internal class CustomExpression : Expression
     {
-        readonly Action<Emit.MethodBodyGenerator> CustomGeneration;
+        readonly Action<Expression, Emit.MethodBodyGenerator> CustomGeneration;
 
-        public CustomExpression(Action<Emit.MethodBodyGenerator> custom) : base(ExpressionType.Custom)
+        public CustomExpression(Action<Expression, Emit.MethodBodyGenerator> custom) : base(ExpressionType.Custom)
         {
             CustomGeneration = custom;
         }
 
-        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption option)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption option)
         {
-            CustomGeneration(generator);
+            CustomGeneration(this, generator);
         }
     }
 }

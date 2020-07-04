@@ -173,9 +173,11 @@ namespace FluidScript.Utils
                 {
                     if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo m) == false)
                         return conversions.Recycle();
+                    if (src.IsValueType && m.GetParameters()[0].ParameterType.IsValueType == false)
+                        conversions.Add(new BoxConversion(i, src));
                     conversions.Add(new ParamConversion(i, m));
                 }
-                else if (src.IsValueType && dest.IsValueType == false)
+                if (src.IsValueType && dest.IsValueType == false)
                 {
                     conversions.Add(new BoxConversion(i, src));
                 }
@@ -188,9 +190,9 @@ namespace FluidScript.Utils
         static bool ParamArrayMatchs(Type[] types, int index, Type dest)
         {
             // check first parameter type matches
-            for (var i = index; i < types.Length; i++)
+            for (; index < types.Length; index++)
             {
-                var src = types[i];
+                var src = types[index];
                 if (src is null)
                 {
                     if (dest.IsValueType && !TypeUtils.IsNullableType(dest))
@@ -206,11 +208,11 @@ namespace FluidScript.Utils
 
         static bool ParamArrayMatchs(Type[] types, int index, Type dest, ArgumentConversions conversions)
         {
-            var binder = new ArgumentConversions(types.Length);
+            var binder = new ArgumentConversions(types.Length - index);
             // check first parameter type matches
-            for (var i = index; i < types.Length; i++)
+            for (int i = 0, current = index; current < types.Length; i++, current++)
             {
-                var src = types[i];
+                var src = types[current];
                 if (src is null)
                 {
                     if (dest.IsValueType && !TypeUtils.IsNullableType(dest))
@@ -220,7 +222,13 @@ namespace FluidScript.Utils
                 {
                     if (TypeUtils.TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
                         return false;
+                    if (src.IsValueType && opImplict.GetParameters()[0].ParameterType.IsValueType == false)
+                        binder.Add(new BoxConversion(i, src));
                     binder.Add(new ParamConversion(i, opImplict));
+                }
+                else if (src.IsValueType && dest.IsValueType == false)
+                {
+                    conversions.Add(new BoxConversion(i, src));
                 }
             }
             conversions.Add(new ParamArrayConversion(index, dest, binder));
@@ -254,7 +262,7 @@ namespace FluidScript.Utils
                 if (TypeUtils.MatchesArgumentTypes(method, type) && method.ReturnType == TypeProvider.BooleanType)
                     return method;
             }
-            throw new System.Exception(string.Concat("can't convert from ", type, " to type Boolean"));
+            throw new Exception(string.Concat("can't convert from ", type, " to type Boolean"));
         }
 
         #region Member

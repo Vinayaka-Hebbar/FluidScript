@@ -1,48 +1,59 @@
 ﻿namespace FluidScript.Compiler.SyntaxTree
 {
-    internal class SystemLiternalExpression : Expression
+    internal class SystemLiternalExpression : LiteralExpression
     {
-        public readonly object Value;
-
-        public SystemLiternalExpression(object value) : base(ExpressionType.Literal)
+        public SystemLiternalExpression(object value) : base(value)
         {
-            Value = value;
             if (value is object)
                 Type = Value.GetType();
         }
 
+        public override object ReflectedValue => Value;
+
         /// <inheritdoc/>
-        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption options)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption options)
         {
             //todo unsigned to signed
             switch (Value)
             {
-                case sbyte _:
-                    generator.LoadByte((sbyte)Value);
+                case sbyte b:
+                    generator.LoadByte(b);
                     break;
-                case short _:
-                    generator.LoadInt16((short)Value);
+                case byte b:
+                    generator.LoadByte(b);
                     break;
-                case int _:
-                    generator.LoadInt32((int)Value);
+                case short s:
+                    generator.LoadInt16(s);
                     break;
-                case long _:
-                    generator.LoadInt64((long)Value);
+                case ushort s:
+                    generator.LoadInt16(s);
                     break;
-                case float _:
-                    generator.LoadSingle((float)Value);
+                case int i:
+                    generator.LoadInt32(i);
                     break;
-                case double _:
-                    generator.LoadDouble((double)Value);
+                case uint i:
+                    generator.LoadInt32(i);
                     break;
-                case bool value:
-                    generator.LoadBool((bool)Value);
+                case long l:
+                    generator.LoadInt64(l);
                     break;
-                case char _:
-                    generator.LoadChar((char)Value);
+                case ulong l:
+                    generator.LoadInt64(l);
                     break;
-                case string _:
-                    generator.LoadString(Value.ToString());
+                case float f:
+                    generator.LoadSingle(f);
+                    break;
+                case double d:
+                    generator.LoadDouble(d);
+                    break;
+                case bool b:
+                    generator.LoadBool(b);
+                    break;
+                case char c:
+                    generator.LoadChar(c);
+                    break;
+                case string s:
+                    generator.LoadString(s);
                     break;
                 case null:
                     generator.LoadNull();
@@ -55,7 +66,7 @@
             switch (Value)
             {
                 case null:
-                    return LiteralExpression.NullString;
+                    return NullString;
                 case string _:
                     return string.Concat("'", Value, "'");
             }

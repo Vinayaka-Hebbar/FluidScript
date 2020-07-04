@@ -3,7 +3,7 @@
     public sealed class ArgumentConversions
     {
         Conversion[] items;
-        int count;
+        int limit;
         int start;
 
         public ArgumentConversions(int capacity)
@@ -11,39 +11,41 @@
             items = new Conversion[capacity];
         }
 
-        public int Count => count;
-
         public void Add(Conversion conversion)
         {
             Append(conversion.Index, conversion);
         }
 
+        public int Count => limit;
+
         public void Append(int index, Conversion c)
         {
-            if(index < count)
+            if (index == items.Length)
             {
-                // add to next node
-                Conversion last = items[index];
-                c.next = last;
-                last.next = c;
+                Resize(2 * index);
+            }
+
+            // add to next node
+            Conversion last = items[index];
+            if (last == null)
+            {
+                /// empty next node
+                c.next = c;
                 items[index] = c;
+                limit = index + 1;
                 return;
             }
-            if (count == items.Length)
-            {
-                Resize(2 * count);
-            }
-            /// empty next node
-            c.next = c;
-            items[count] = c;
-            count++;
+            c.next = last;
+            last.next = c;
+            items[index] = c;
+            return;
         }
 
         public Conversion this[int index]
         {
             get
             {
-                if (count > index)
+                if (index < limit)
                 {
                     return items[index];
                 }
@@ -56,7 +58,7 @@
         /// </summary>
         public void Backup()
         {
-            start = count;
+            start = limit;
         }
 
         /// <summary>
@@ -66,22 +68,22 @@
         public bool Recycle()
         {
             // Reset the array values length
-            count = start;
+            limit = start;
             return false;
         }
 
         private void Resize(int newSize)
         {
             var newItems = new Conversion[newSize];
-            System.Array.Copy(items, 0, newItems, 0, count);
+            System.Array.Copy(items, 0, newItems, 0, items.Length);
             items = newItems;
         }
 
         public void Invoke(ref object[] values)
         {
-            if (count > 0)
+            if (limit > 0)
             {
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < limit; i++)
                 {
                     var c = items[i];
                     if (c == null)

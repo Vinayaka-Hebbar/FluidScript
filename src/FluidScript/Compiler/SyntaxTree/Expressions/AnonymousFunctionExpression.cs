@@ -36,7 +36,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnSyntax);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
             var target = generator.Method.DeclaringType;
             IExpressionVisitor<object> visitor = ScriptCompiler.Instance;

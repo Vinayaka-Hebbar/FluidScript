@@ -16,7 +16,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitSuper(this);
         }
 
-        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption options)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption options)
         {
             if (generator.Method is Generators.DynamicMethodGenerator)
             {

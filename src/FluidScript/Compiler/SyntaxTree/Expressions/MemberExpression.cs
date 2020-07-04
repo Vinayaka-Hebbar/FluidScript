@@ -43,9 +43,9 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitMember(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
-            Target.GenerateCode(generator);
+            Target.GenerateCode(generator, MethodCompileOption.EmitStartAddress);
             Binder?.GenerateGet(generator);
         }
     }

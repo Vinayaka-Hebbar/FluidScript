@@ -23,7 +23,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitNew(this);
         }
 
-        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption option = 0)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption option = 0)
         {
             InvocationExpression.EmitArguments(generator, Arguments, Conversions);
             generator.NewObject(Constructor);

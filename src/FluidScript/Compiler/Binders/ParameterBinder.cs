@@ -23,15 +23,25 @@ namespace FluidScript.Compiler.Binders
 
         public bool IsMember => false;
 
-        public void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
         {
-            if (generator.Method.IsStatic)
-                generator.LoadArgument(parameter.Index);
+            if((option & MethodCompileOption.EmitStartAddress) == MethodCompileOption.EmitStartAddress)
+            {
+                if (generator.Method.IsStatic)
+                    generator.LoadAddressOfArgument(parameter.Index);
+                else
+                    generator.LoadAddressOfArgument(parameter.Index + 1);
+            }
             else
-                generator.LoadArgument(parameter.Index + 1);
+            {
+                if (generator.Method.IsStatic)
+                    generator.LoadArgument(parameter.Index);
+                else
+                    generator.LoadArgument(parameter.Index + 1);
+            }
         }
 
-        public void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
         {
             if (generator.Method.IsStatic)
                 generator.StoreArgument(parameter.Index);

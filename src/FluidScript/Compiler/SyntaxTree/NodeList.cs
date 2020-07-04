@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
-    public sealed class NodeList<T> : INodeList<T>
+    public sealed class NodeList<T> : INodeList<T>, IEnumerable<T>
 #if NETSTANDARD || NETCOREAPP
         , IReadOnlyList<T>
 #endif
@@ -46,18 +46,39 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             if (size == items.Length)
             {
-                int newCapacity = items.Length == 0 ? 4 : items.Length * 2;
-                // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
-                // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
-                if (newCapacity > int.MaxValue) newCapacity = int.MaxValue;
-                T[] newItems = new T[newCapacity];
-                // srcPtr and destPtr are IntPtr's pointing to valid memory locations
-                // size is the number of long (normally 4 bytes) to copy
-                if (size > 0)
-                    System.Array.Copy(items, 0, newItems, 0, size);
-                items = newItems;
+                EnsureCapacity();
             }
             items[size++] = expression;
+        }
+
+        void EnsureCapacity()
+        {
+            int newCapacity = items.Length == 0 ? 4 : items.Length * 2;
+            // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
+            // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
+            if (newCapacity > int.MaxValue) newCapacity = int.MaxValue;
+            T[] newItems = new T[newCapacity];
+            // srcPtr and destPtr are IntPtr's pointing to valid memory locations
+            // size is the number of long (normally 4 bytes) to copy
+            if (size > 0)
+                System.Array.Copy(items, 0, newItems, 0, size);
+            items = newItems;
+        }
+
+        internal void Insert(int index, T expression)
+        {
+            // Note that insertions at the end are legal.
+            if ((uint)index > (uint)size)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(index));
+            }
+            if (size == items.Length) EnsureCapacity();
+            if (index < size)
+            {
+                System.Array.Copy(items, (int)index, items, (int)index + 1, size - (int)index);
+            }
+            items[index] = expression;
+            size++;
         }
 
         public TElement[] Map<TElement>(System.Func<T, TElement> predicate)

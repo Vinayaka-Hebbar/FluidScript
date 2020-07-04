@@ -162,7 +162,8 @@ namespace FluidScript.Compiler
                         return VisitFunctionDeclaration();
                 }
             }
-            Source.SeekTo(start);
+            Source.SeekTo(start - 1);
+            MoveNext();
             return null;
         }
 

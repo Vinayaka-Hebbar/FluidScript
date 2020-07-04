@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Extensions;
 using System;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -8,7 +9,7 @@ namespace FluidScript.Compiler.SyntaxTree
     /// </summary>
     public class Expression : Node
     {
-        internal const MethodGenerateOption AssignOption = MethodGenerateOption.Return | MethodGenerateOption.Dupplicate;
+        internal const MethodCompileOption AssignOption = MethodCompileOption.Return | MethodCompileOption.Dupplicate;
         /// <summary>
         /// Empty Expression
         /// </summary>
@@ -67,7 +68,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public ExpressionType NodeType { get; }
 
-        public System.Type Type { get; protected internal set; }
+        public Type Type { get; set; }
 
         /// <summary>
         /// Optimizes expression for emit or others
@@ -84,7 +85,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// Generates IL code for <see cref="Expression"/>
         /// </summary>
         /// <param name="generator"></param>
-        public virtual void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option = 0)
+        public virtual void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option = 0)
         {
             generator.NoOperation();
         }
@@ -198,7 +199,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <summary>
         /// Custom IL Generation
         /// </summary>
-        public static Expression Custom(Action<MethodBodyGenerator> custom)
+        public static Expression Custom(Action<Expression, MethodBodyGenerator> custom)
         {
             return new CustomExpression(custom);
         }

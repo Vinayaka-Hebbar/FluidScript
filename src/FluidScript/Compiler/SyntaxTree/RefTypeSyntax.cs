@@ -28,7 +28,7 @@
                 {
                     Type = provider.GetType(string.Concat(Name, '`', GenericPrameters.Count));
                     if (Type == null)
-                        Type = TypeProvider.ObjectType;
+                        Type = TypeProvider.AnyType;
                     Type = Type.MakeGenericType(GenericPrameters.Map(p => p.ResolveType(provider)));
                 }
             }

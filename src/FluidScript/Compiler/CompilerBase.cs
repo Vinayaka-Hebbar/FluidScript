@@ -42,14 +42,14 @@ namespace FluidScript.Compiler
         public virtual object VisitAnonymousObject(AnonymousObjectExpression node)
         {
             var members = node.Members;
-            var obj = new Runtime.DynamicObject(members.Count);
+            var obj = new DynamicObject(members.Count);
             for (int index = 0; index < members.Count; index++)
             {
                 AnonymousObjectMember item = members[index];
                 var value = item.Expression.Accept(this);
                 obj.Add(item.Name, value);
             }
-            node.Type = typeof(Runtime.DynamicObject);
+            node.Type = typeof(DynamicObject);
             return obj;
         }
 
@@ -143,10 +143,7 @@ namespace FluidScript.Compiler
         #region Binary Visitor
         public virtual object VisitBinary(BinaryExpression node)
         {
-            // todo compatible for system type
-            string opName;
-            ExpressionType nodeType = node.NodeType;
-            switch (nodeType)
+            switch (node.NodeType)
             {
                 case ExpressionType.Plus:
                     return InvokeAddition(node);
@@ -159,11 +156,8 @@ namespace FluidScript.Compiler
                     return VisitLogical(node);
                 case ExpressionType.StarStar:
                     return VisitExponentiation(node);
-                default:
-                    opName = node.MethodName;
-                    break;
             }
-            return Invoke(node, opName);
+            return Invoke(node, node.MethodName);
         }
 
         private object InvokeAddition(BinaryExpression node)
@@ -553,6 +547,8 @@ namespace FluidScript.Compiler
             object obj = node.Method.Invoke(null, args);
             if (modified)
             {
+                if (node.Operand.NodeType == ExpressionType.Literal)
+                    ExecutionException.ThrowNotSupported(node);
                 var exp = new AssignmentExpression(node.Operand, new LiteralExpression(obj));
                 exp.Accept(this);
             }

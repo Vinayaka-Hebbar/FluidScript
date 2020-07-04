@@ -79,7 +79,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitUnary(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
             if (NodeType == ExpressionType.Parenthesized)
             {
@@ -107,13 +107,13 @@ namespace FluidScript.Compiler.SyntaxTree
                 case ExpressionType.PostfixPlusPlus:
                     if (binder.CanEmitThis)
                         generator.LoadArgument(0);
-                    operand.GenerateCode(generator, MethodGenerateOption.Dupplicate);
+                    operand.GenerateCode(generator, MethodCompileOption.Dupplicate);
                     if (binder.IsMember)
                     {
                         CallPostFixMember(generator, binder, option);
                         return;
                     }
-                    if ((option & MethodGenerateOption.Dupplicate) != 0)
+                    if ((option & MethodCompileOption.Dupplicate) != 0)
                         generator.Duplicate();
                     // call the operator
                     generator.CallStatic(Method);
@@ -124,7 +124,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 case ExpressionType.PrefixPlusPlus:
                     if (binder.CanEmitThis)
                         generator.LoadArgument(0);
-                    operand.GenerateCode(generator, MethodGenerateOption.Dupplicate);
+                    operand.GenerateCode(generator, MethodCompileOption.Dupplicate);
                     // call the operator
                     generator.CallStatic(Method);
                     if (binder.IsMember)
@@ -132,24 +132,24 @@ namespace FluidScript.Compiler.SyntaxTree
                         CallPreFixMember(generator, binder, option);
                         return;
                     }
-                    if ((option & MethodGenerateOption.Dupplicate) != 0)
+                    if ((option & MethodCompileOption.Dupplicate) != 0)
                         generator.Duplicate();
                     // update value
                     binder.GenerateSet(generator);
                     break;
                 default:
                     // call the operator
-                    operand.GenerateCode(generator, MethodGenerateOption.Dupplicate);
+                    operand.GenerateCode(generator, MethodCompileOption.Dupplicate);
                     generator.CallStatic(Method);
                     break;
             }
 
         }
 
-        void CallPreFixMember(MethodBodyGenerator generator, IBinder binder, MethodGenerateOption option)
+        void CallPreFixMember(MethodBodyGenerator generator, IBinder binder, MethodCompileOption option)
         {
             // if no duplicate ex: i++ single line 
-            if ((option & MethodGenerateOption.Dupplicate) == 0)
+            if ((option & MethodCompileOption.Dupplicate) == 0)
             {
                 binder.GenerateSet(generator);
                 return;
@@ -167,10 +167,10 @@ namespace FluidScript.Compiler.SyntaxTree
             generator.LoadVariable(temp);
         }
 
-        void CallPostFixMember(MethodBodyGenerator generator, IBinder binder, MethodGenerateOption option)
+        void CallPostFixMember(MethodBodyGenerator generator, IBinder binder, MethodCompileOption option)
         {
             // if no duplicate ex: i++ single line 
-            if ((option & MethodGenerateOption.Dupplicate) == 0)
+            if ((option & MethodCompileOption.Dupplicate) == 0)
             {
                 binder.GenerateSet(generator);
                 return;

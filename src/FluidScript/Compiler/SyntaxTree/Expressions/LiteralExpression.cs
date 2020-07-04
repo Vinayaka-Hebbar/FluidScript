@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using System;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -64,7 +65,7 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption options)
         {
             //todo unsigned to signed
             switch (Value)

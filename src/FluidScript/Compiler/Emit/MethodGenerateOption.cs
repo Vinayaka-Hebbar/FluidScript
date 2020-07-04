@@ -1,6 +1,6 @@
 ﻿namespace FluidScript.Compiler.Emit
 {
-    public enum MethodGenerateOption
+    public enum MethodCompileOption
     {
         None = 0,
         /// <summary>
@@ -14,6 +14,12 @@
         /// <summary>
         /// Calling Argument has this
         /// </summary>
-        HasThis
+        HasThis = 4,
+        /// <summary>
+        /// Emit address of start
+        /// </summary>
+        EmitStartAddress = 8
+
+
     }
 }

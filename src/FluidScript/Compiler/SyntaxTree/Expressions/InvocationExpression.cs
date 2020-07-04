@@ -8,7 +8,7 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly Expression Target;
 
-        public readonly INodeList<Expression> Arguments;
+        public readonly NodeList<Expression> Arguments;
 
         public System.Reflection.MethodBase Method { get; set; }
 
@@ -29,13 +29,13 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitCall(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
             Target.GenerateCode(generator);
             EmitArguments(generator, Arguments, Conversions);
             generator.Call(Method);
             // if current value must not be returned for assigment
-            if ((option & MethodGenerateOption.Return) == 0 && Type is object && Type != TypeProvider.VoidType)
+            if ((option & MethodCompileOption.Return) == 0 && Type is object && Type != TypeProvider.VoidType)
                 generator.Pop();
         }
 

@@ -85,11 +85,6 @@ namespace FluidScript.Compiler.SyntaxTree
                             generator.ReturnTarget = generator.CreateLabel();
                         }
                     }
-                    else if (Value.NodeType == ExpressionType.Invocation && Value.Type != TypeProvider.VoidType)
-                    {
-                        // discard the return result
-                        generator.Pop();
-                    }
                 }
                 //last statement is not a return
                 if (!lastStatement)
