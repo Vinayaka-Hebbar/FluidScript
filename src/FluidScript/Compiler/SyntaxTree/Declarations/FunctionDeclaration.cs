@@ -8,15 +8,25 @@ namespace FluidScript.Compiler.SyntaxTree
     {
         public readonly string Name;
         public readonly NodeList<TypeParameter> Parameters;
-        public readonly BlockStatement Body;
+        public readonly Statement Body;
         public readonly TypeSyntax ReturnType;
 
-        public FunctionDeclaration(string name, NodeList<TypeParameter> parameters, TypeSyntax returnType, BlockStatement body) : base(DeclarationType.Function)
+        public FunctionDeclaration(string name, NodeList<TypeParameter> parameters, TypeSyntax returnType, Statement body) : base(DeclarationType.Function)
         {
             Name = name;
             Parameters = parameters;
             ReturnType = returnType;
             Body = body;
+        }
+
+        public static FunctionDeclaration Create(string name, System.Type returnType, ParameterInfo[] parameters, Statement body)
+        {
+            return new FunctionDeclaration(name, new NodeList<TypeParameter>(parameters.Map(p => new TypeParameter(p))), TypeSyntax.Create(returnType), body);
+        }
+
+        public static FunctionDeclaration Create(string name, System.Type returnType, ParameterInfo[] parameters, NodeList<Statement> body)
+        {
+            return Create(name, returnType, parameters, new BlockStatement(body));
         }
 
         public override System.Collections.Generic.IEnumerable<Node> ChildNodes() => Childs(Body);
@@ -29,9 +39,9 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             System.Type returnType;
             if (ReturnType != null)
-                returnType = ReturnType.ResolveType((ITypeContext)generator.Context);
+                returnType = ReturnType.ResolveType(generator.Context);
             else
-                returnType = TypeProvider.ObjectType;
+                returnType = TypeProvider.AnyType;
             var parameters = Parameters.Map(para => para.GetParameterInfo(generator.Context));
             if (IsGetter || IsSetter)
                 CreateProperty(generator, returnType, parameters);
@@ -108,26 +118,6 @@ namespace FluidScript.Compiler.SyntaxTree
             generator.Add(methodGen);
         }
 
-        public System.Reflection.MethodInfo CreateMethod()
-        {
-            var context = TypeContext.Default;
-            System.Type returnType;
-            if (ReturnType != null)
-                returnType = ReturnType.ResolveType((ITypeContext)context);
-            else
-                returnType = TypeProvider.ObjectType;
-            var parameters = Parameters.Map(para => para.GetParameterInfo(context));
-            var parameterTypes = parameters.Map(para => para.Type);
-            var method = new System.Reflection.Emit.DynamicMethod(Name, returnType, parameterTypes);
-            IMember methodOpt = new Generators.DynamicMethodGenerator(method, parameters, null)
-            {
-                SyntaxBody = Body,
-                Context = context
-            };
-            methodOpt.Compile();
-            return method;
-        }
-
         public virtual System.Reflection.MethodAttributes GetAttributes()
         {
             System.Reflection.MethodAttributes attributes = System.Reflection.MethodAttributes.Public;
@@ -142,26 +132,43 @@ namespace FluidScript.Compiler.SyntaxTree
             return attributes;
         }
 
+        public TDelegate CompileAs<TDelegate>() where TDelegate : System.Delegate
+        {
+            // pass scoped arguments // refer System.Linq.Expression.Compiler folder
+            var context = TypeContext.Default;
+            System.Type returnType = GetReturnType(context);
+            // resolve parameter types
+            ResolveParameters(context, out ParameterInfo[] parameters, out System.Type[] types);
+            return (TDelegate)Compile(context, returnType, types, parameters, typeof(TDelegate));
+        }
+
         public System.Delegate Compile()
         {
             // pass scoped arguments // refer System.Linq.Expression.Compiler folder
             var context = TypeContext.Default;
-            System.Type returnType;
-            if (ReturnType != null)
-                returnType = ReturnType.ResolveType((ITypeContext)context);
-            else
-                returnType = typeof(object);
-            var names = Parameters.Map(para => para.Name).AddFirst("closure");
+            System.Type returnType = GetReturnType(context);
+            // resolve parameter types
+            ResolveParameters(context, out ParameterInfo[] parameters, out System.Type[] types);
+            return Compile(context, returnType, types, parameters, DelegateGen.MakeNewDelegate(types, returnType));
+        }
+
+        void ResolveParameters(TypeContext context, out ParameterInfo[] parameters, out System.Type[] types)
+        {
             int length = Parameters.Count;
-            System.Type[] types = new System.Type[length];
-            var parameters = new ParameterInfo[length];
+            parameters = new ParameterInfo[length];
+            types = new System.Type[length];
             for (int i = 0; i < Parameters.Count; i++)
             {
                 var para = Parameters[i];
-                System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.ResolveType((ITypeContext)context);
+                System.Type type = para.Type == null ? TypeProvider.AnyType : para.Type.ResolveType(context);
                 parameters[i] = new ParameterInfo(para.Name, i + 1, type);
                 types[i] = type;
             }
+        }
+
+        System.Delegate Compile(TypeContext context, System.Type returnType, System.Type[] types, ParameterInfo[] parameters, System.Type delType)
+        {
+            var names = Parameters.Map(para => para.Name).AddFirst("closure");
             // Emit First Argument
             var lamdaVisit = new LamdaVisitor(names);
             Body.Accept(lamdaVisit);
@@ -196,7 +203,17 @@ namespace FluidScript.Compiler.SyntaxTree
                 }
             }
             bodyGen.Compile();
-            return method.CreateDelegate(DelegateGen.MakeNewDelegate(types, returnType), new Runtime.Closure(values));
+            return method.CreateDelegate(delType, new Runtime.Closure(values));
+        }
+
+        System.Type GetReturnType(TypeContext context)
+        {
+            System.Type returnType;
+            if (ReturnType != null)
+                returnType = ReturnType.ResolveType(context);
+            else
+                returnType = TypeProvider.AnyType;
+            return returnType;
         }
 
         public override string ToString()

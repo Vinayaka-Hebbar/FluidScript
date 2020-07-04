@@ -54,7 +54,7 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption options)
         {
             if (Arguments != null)
             {

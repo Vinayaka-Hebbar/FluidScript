@@ -27,7 +27,7 @@ namespace FluidScript.Compiler
 
         internal static void ThrowNotSupported(params Node[] tree)
         {
-            new ExecutionException(NotSupported, tree, "Not suppored");
+           throw new ExecutionException(NotSupported, tree, "Not suppored");
         }
 
         internal static System.Exception ThrowMissingMethod(System.Type target, string name, params Node[] tree)

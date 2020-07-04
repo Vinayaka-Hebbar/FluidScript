@@ -1,5 +1,7 @@
-﻿using FluidScript.Compiler;
+﻿using FluidScript.Collections;
+using FluidScript.Compiler;
 using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Extensions;
 using System;
 using System.Reflection;
@@ -21,10 +23,18 @@ namespace FluidScript.ConsoleApp
         {
             try
             {
+                //Integer x = 0;
                 var code = ScriptParser.ParseProgram("source.fls");
                 var assembly = new AssemblyGen("FluidTest", "1.0");
                 code.Compile(assembly);
-                assembly.Save("FluidTest.dll");
+                // assembly.Save("FluidTest.dll");
+                var type = assembly.Context.GetType("Sample");
+                if(type is IType)
+                {
+                    type = type.ReflectedType;
+                }
+                Any instance = Activator.CreateInstance(type);
+               var res = (String)instance.Call("add");
                 Console.WriteLine();
             }
             catch (TargetInvocationException ex)
@@ -32,13 +42,11 @@ namespace FluidScript.ConsoleApp
                 throw ex;
             }
         }
-
-        public void Compile(object s)
+        static Any val;
+        public void Compile()
         {
-            dynamic value = 10;
-            object x = value.Equals(2);
-            object y = value.ToString();
-            Console.WriteLine(x);
+            val.Call("Equals",new Integer(0));
+            return;
         }
 
         public int GetInt(int i) => ++i;
@@ -77,6 +85,9 @@ namespace FluidScript.ConsoleApp
             return () => Console.WriteLine();
         }
 
-
+        struct TestClass
+        {
+            internal int x;
+        }
     }
 }

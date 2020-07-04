@@ -27,12 +27,19 @@ namespace FluidScript.Compiler
             {
                 if (importedTypes == null)
                 {
-                    importedTypes = new Dictionary<string, Type>(TypeProvider.Inbuilts)
+                    if (parent == null)
                     {
+                        importedTypes = new Dictionary<string, Type>(TypeProvider.Inbuilts)
+                        {
                           {"Array",typeof(Collections.List<>) },
                           {"Date", typeof(Date) },
                           {"Math", typeof(Math) }
-                    };
+                        };
+                    }
+                    else
+                    {
+                        importedTypes = new Dictionary<string, Type>();
+                    }
                 }
                 return importedTypes;
             }

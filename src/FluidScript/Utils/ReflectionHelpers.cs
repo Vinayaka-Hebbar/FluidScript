@@ -1,12 +1,12 @@
 ﻿using FluidScript.Compiler;
 using FluidScript.Extensions;
+using System;
 using System.Reflection;
 
 namespace FluidScript.Utils
 {
     public static class ReflectionHelpers
     {
-
         #region Members
 
         internal static readonly ConstructorInfo Double_New;
@@ -31,6 +31,19 @@ namespace FluidScript.Utils
                 if (m_register_ctor == null)
                     m_register_ctor = typeof(Runtime.RegisterAttribute).GetInstanceCtor(typeof(string));
                 return m_register_ctor;
+            }
+        }
+        #endregion
+
+        #region ToString
+        private static MethodInfo m_AnytoString;
+        internal static MethodInfo AnyToString
+        {
+            get
+            {
+                if (m_AnytoString == null)
+                    m_AnytoString = typeof(FSConvert).GetStaticMethod(nameof(FSConvert.ToString), TypeProvider.ObjectType);
+                return m_AnytoString;
             }
         }
         #endregion
@@ -157,9 +170,6 @@ namespace FluidScript.Utils
 
             Bool_True = TypeProvider.BooleanType.GetField(nameof(Boolean.True), BindingFlags.Public | BindingFlags.Static);
             Bool_False = TypeProvider.BooleanType.GetField(nameof(Boolean.False), BindingFlags.Public | BindingFlags.Static);
-
         }
-
-        
     }
 }

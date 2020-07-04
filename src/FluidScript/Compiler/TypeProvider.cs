@@ -10,6 +10,8 @@ namespace FluidScript.Compiler
         internal static readonly Type FSType;
         internal static readonly Type ObjectType;
 
+        internal static readonly Type AnyType;
+
         internal static readonly Type DoubleType;
         internal static readonly Type FloatType;
         internal static readonly Type LongType;
@@ -38,11 +40,12 @@ namespace FluidScript.Compiler
             StringType = typeof(String);
             CharType = typeof(Char);
             BooleanType = typeof(Boolean);
+            AnyType = typeof(Any);
             VoidType = typeof(void);
 
             Inbuilts = new Dictionary<string, Type>()
             {
-                {"any", ObjectType },
+                {"any", AnyType },
                 {"object", ObjectType },
                 {"void", VoidType },
                 {"byte", ByteType },

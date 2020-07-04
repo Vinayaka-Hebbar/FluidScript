@@ -1,7 +1,6 @@
 ﻿using FluidScript.Compiler.Emit;
 using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Extensions;
-using FluidScript.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,12 +9,10 @@ using System.Reflection;
 
 namespace FluidScript.Compiler.Generators
 {
-    public sealed class TypeGenerator : Type, IMember
+    public sealed class TypeGenerator : Type, IType
     {
-        private const BindingFlags PublicInstanceOrStatic = PublicInstance | BindingFlags.Static;
-        private const BindingFlags PublicInstance = BindingFlags.Public | BindingFlags.Instance;
-        private const MethodAttributes DefaultStaticCtor = MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.HideBySig;
-        private const MethodAttributes DefaultCtor = MethodAttributes.Public | MethodAttributes.HideBySig;
+        const MethodAttributes DefaultStaticCtor = MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.HideBySig;
+        const MethodAttributes DefaultCtor = MethodAttributes.Public | MethodAttributes.HideBySig;
 
         internal readonly IList<IMember> Members = new List<IMember>();
         private readonly System.Reflection.Emit.TypeBuilder _builder;
@@ -28,11 +25,11 @@ namespace FluidScript.Compiler.Generators
 
         public override string Name { get; }
 
-        public Type Type => _builder;
+        public override Type ReflectedType => _builder;
 
         public ITypeContext Context { get; }
 
-        public override System.Type BaseType { get; }
+        public override Type BaseType { get; }
 
         public ITextSource Source
         {
@@ -42,7 +39,7 @@ namespace FluidScript.Compiler.Generators
 
         internal bool TryGetProperty(string name, out PropertyGenerator property)
         {
-            var member = Members.FirstOrDefault(mem => mem.MemberType == MemberTypes.Property && string.Equals(mem.Name, name, System.StringComparison.OrdinalIgnoreCase));
+            var member = Members.FirstOrDefault(mem => mem.MemberType == MemberTypes.Property && string.Equals(mem.Name, name, StringComparison.OrdinalIgnoreCase));
             if (member != null)
             {
                 property = (PropertyGenerator)member;
@@ -396,7 +393,7 @@ namespace FluidScript.Compiler.Generators
             }
             if ((flags & BindingFlags.DeclaredOnly) == 0)
             {
-                for (Type type = this.BaseType; type != null; type = type.BaseType)
+                for (Type type = BaseType; type != null; type = type.BaseType)
                 {
                     foreach (var member in type.GetMembers(flags))
                     {

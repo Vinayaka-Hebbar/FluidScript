@@ -1,5 +1,6 @@
 ﻿using FluidScript.Compiler.Emit;
 using System;
+using System.Reflection;
 
 namespace FluidScript.Compiler.Binders
 {
@@ -10,9 +11,9 @@ namespace FluidScript.Compiler.Binders
 #endif
         struct FieldBinder : IBinder
     {
-        readonly System.Reflection.FieldInfo field;
+        readonly FieldInfo field;
 
-        public FieldBinder(System.Reflection.FieldInfo field)
+        public FieldBinder(FieldInfo field)
         {
             this.field = field;
         }
@@ -23,7 +24,7 @@ namespace FluidScript.Compiler.Binders
 
         public bool IsMember => true;
 
-        public void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
         {
             var field = this.field;
             if (field.FieldType == null)
@@ -33,12 +34,12 @@ namespace FluidScript.Compiler.Binders
             generator.LoadField(field);
         }
 
-        public void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
         {
             var field = this.field;
-            if (field.IsInitOnly && !(generator.Method is Generators.ConstructorGenerator))
+            if (field.IsInitOnly && !(generator.Method is ConstructorInfo))
                 throw new FieldAccessException("A readonly field cannot be assigned to (except in a constructor of the class in which the field is defined or a variable initializer))");
-                if (field is Generators.FieldGenerator)
+            if (field is Generators.FieldGenerator)
                 field = ((Generators.FieldGenerator)field).FieldInfo;
             generator.StoreField(field);
         }

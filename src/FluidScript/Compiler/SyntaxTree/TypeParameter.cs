@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Compiler.Emit;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class TypeParameter : Node
     {
@@ -20,16 +22,24 @@
             IsVarArgs = isVarArgs;
         }
 
+        public TypeParameter(ParameterInfo parameter)
+        {
+            Name = parameter.Name;
+            Type = TypeSyntax.Create(parameter.Type);
+            Index = parameter.Index;
+            IsVarArgs = parameter.IsVarArgs;
+        }
+
         public override string ToString()
         {
             return string.Concat(Name, ":", Type == null ? "any" : Type.ToString());
         }
 
-        public Emit.ParameterInfo GetParameterInfo(ITypeContext provider)
+        public ParameterInfo GetParameterInfo(ITypeContext provider)
         {
             if (Type == null)
-                return new Emit.ParameterInfo(Name, Index, TypeProvider.ObjectType, IsVarArgs);
-            return new Emit.ParameterInfo(Name, Index, Type.ResolveType(provider), IsVarArgs);
+                return new ParameterInfo(Name, Index, TypeProvider.AnyType, IsVarArgs);
+            return new ParameterInfo(Name, Index, Type.ResolveType(provider), IsVarArgs);
 
         }
     }

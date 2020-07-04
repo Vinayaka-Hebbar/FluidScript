@@ -267,9 +267,9 @@ namespace FluidScript.Compiler
                 {
                     obj = Target;
                     var type = GlobalType;
-                    if (m_target != null && TypeHelpers.TryFindMethod(name, m_target.GetType(), args, out method, out conversions))
+                    if (m_target != null && TypeUtils.TryFindMethod(m_target.GetType(), name, args, out method, out conversions))
                         exp.Binder = new Binders.FieldBinder(ClassTargetField);
-                    else if (TypeHelpers.TryFindMethod(name, type, args, out method, out conversions))
+                    else if (TypeUtils.TryFindMethod(type, name, args, out method, out conversions))
                         exp.Binder = new Binders.FieldBinder(GlobalTargetField);
                     else
                         ExecutionException.ThrowMissingMethod(type, name, node);
@@ -281,7 +281,7 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)target;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                if (TypeHelpers.TryFindMethod(name, exp.Target.Type, args, out method, out conversions) == false)
+                if (TypeUtils.TryFindMethod(exp.Target.Type, name, args, out method, out conversions) == false)
                 {
                     if (obj is IMetaObjectProvider runtime)
                     {

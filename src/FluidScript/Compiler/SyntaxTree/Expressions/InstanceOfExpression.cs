@@ -19,7 +19,7 @@
             return visitor.VisitInstanceOf(this);
         }
 
-        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodGenerateOption option)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption option)
         {
             Target.GenerateCode(generator);
             if (TypeSyntax is null || (TypeSyntax is RefTypeSyntax refType && refType.Name.Equals(LiteralExpression.NullString)))

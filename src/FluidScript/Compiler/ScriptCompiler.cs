@@ -141,12 +141,12 @@ namespace FluidScript.Compiler
                 var exp = (NameExpression)target;
                 name = exp.Name;
                 obj = locals;
-                if (obj == null || TypeHelpers.TryFindMethod(name, obj.GetType(), args, out method, out conversions) == false)
+                if (obj == null || TypeUtils.TryFindMethod(obj.GetType(), name, args, out method, out conversions) == false)
                 {
                     // find in target
                     obj = Target;
                     // if not methods
-                    if (TypeHelpers.TryFindMethod(name, obj.GetType(), args, out method, out conversions) == false)
+                    if (TypeUtils.TryFindMethod(obj.GetType(), name, args, out method, out conversions) == false)
                         ExecutionException.ThrowMissingMethod(obj.GetType(), name, node);
                 }
             }
@@ -155,7 +155,7 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)target;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                if (TypeHelpers.TryFindMethod(name, exp.Target.Type, args, out method, out conversions) == false)
+                if (TypeUtils.TryFindMethod(exp.Target.Type,name, args, out method, out conversions) == false)
                 {
                     if (obj is IMetaObjectProvider runtime)
                     {
@@ -210,7 +210,7 @@ namespace FluidScript.Compiler
         public override object VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
-            if (node.Target.Type.TryFindMember( node.Name, ReflectionUtils.AnyPublic, out Binders.IBinder binder) == false)
+            if (node.Target.Type.TryFindMember(node.Name, ReflectionUtils.AnyPublic, out Binders.IBinder binder) == false)
             {
                 if (target is IMetaObjectProvider runtime)
                 {

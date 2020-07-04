@@ -54,14 +54,14 @@ namespace FluidScript.Compiler.SyntaxTree
         /// Generate Compiled code
         /// </summary>
         /// <param name="generator"></param>
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
             // for static no binder
             if (Binder != null)
             {
                 if (Binder.CanEmitThis)
                     generator.LoadArgument(0);
-                Binder.GenerateGet(generator);
+                Binder.GenerateGet(generator, option);
             }
         }
 

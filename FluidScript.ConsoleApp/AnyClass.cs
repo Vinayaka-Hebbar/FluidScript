@@ -77,7 +77,10 @@ namespace FluidScript.ConsoleApp
 
             methodGen.SyntaxBody = new BlockStatement(new NodeList<Statement>
                 {
-                    Statement.Return(Expression.SystemLiteral(0))
+                    Statement.Return(Expression.Custom((e, g)=> {
+                        e.Type = typeof(int);
+                        g.LoadInt32(10);
+                    }))
                 });
         }
     }

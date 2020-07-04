@@ -1408,6 +1408,12 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:FluidScript.Runtime.TypeUtils.FindGetIndexer(System.Type,System.Object[],FluidScript.Runtime.ArgumentConversions@)">
+            Current Declared Indexer can get
+        </member>
+        <member name="M:FluidScript.Runtime.TypeUtils.FindSetIndexer(System.Type,System.Object[],FluidScript.Runtime.ArgumentConversions@)">
+            Current Declared Indexer can get
+        </member>
         <member name="T:FluidScript.String">
             <summary>
             Represents text as a series of Unicode characters.

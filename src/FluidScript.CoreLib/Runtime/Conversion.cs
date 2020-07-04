@@ -26,8 +26,6 @@ namespace FluidScript.Runtime
             Index = index;
         }
 
-        public bool HasNext => next != this;
-
         public Conversion Next => next;
 
         public abstract object Invoke(params object[] args);

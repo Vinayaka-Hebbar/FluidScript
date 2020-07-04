@@ -9,9 +9,9 @@ namespace FluidScript.Compiler.Binders
     /// </summary>
     public interface IBinder
     {
-        void GenerateGet(MethodBodyGenerator generator);
+        void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option = 0);
 
-        void GenerateSet(MethodBodyGenerator generator);
+        void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option = 0);
 
         Type Type { get; }
 
@@ -55,12 +55,12 @@ namespace FluidScript.Compiler.Binders
 
         public bool IsMember => false;
 
-        public void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
         {
 
         }
 
-        public void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
         {
 
         }
@@ -97,12 +97,12 @@ namespace FluidScript.Compiler.Binders
 
         public bool IsMember => false;
 
-        public void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
         {
             generator.DeclareVariable(variable.Type, variable.Name);
         }
 
-        public void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
         {
             var iLVariable = generator.GetLocalVariable(variable.Name);
             if (iLVariable != null)
@@ -146,12 +146,12 @@ namespace FluidScript.Compiler.Binders
 
         public bool IsMember => false;
 
-        public void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
         {
             throw new NotImplementedException();
         }
 
-        public void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
         {
             throw new NotImplementedException();
         }
@@ -166,47 +166,6 @@ namespace FluidScript.Compiler.Binders
             variables[variable.Index] = variable;
         }
     }
-    #endregion
 
-    #region Variable Binder
-    public
-#if LATEST_VS
-        readonly
-#endif
-        struct VariableBinder : IBinder
-    {
-        readonly ILLocalVariable variable;
-
-        public VariableBinder(ILLocalVariable variable)
-        {
-            this.variable = variable;
-        }
-
-        public Type Type => variable.Type;
-
-        public bool CanEmitThis => false;
-
-        public bool IsMember => false;
-
-        public void GenerateGet(MethodBodyGenerator generator)
-        {
-            generator.LoadVariable(variable);
-        }
-
-        public void GenerateSet(MethodBodyGenerator generator)
-        {
-            generator.StoreVariable(variable);
-        }
-
-        public object Get(object obj)
-        {
-            throw new NotSupportedException(nameof(Get));
-        }
-
-        public void Set(object obj, object value)
-        {
-            throw new NotSupportedException(nameof(Set));
-        }
-    }
-    #endregion
+#endregion
 }

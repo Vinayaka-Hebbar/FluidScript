@@ -231,6 +231,12 @@ namespace FluidScript.Compiler.Emit
         public abstract void LoadArgument(int argumentIndex);
 
         /// <summary>
+        /// Pushes the address of the given argument onto the stack.
+        /// </summary>
+        /// <param name="argumentIndex"> The parameter index whose address will be pushed. </param>
+        public abstract void LoadAddressOfArgument(int argumentIndex);
+
+        /// <summary>
         /// Pops a value from the stack and stores it in the method argument with the given index.
         /// </summary>
         /// <param name="argumentIndex"> The index of the argument to store into. </param>

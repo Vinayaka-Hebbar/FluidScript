@@ -434,9 +434,9 @@ namespace FluidScript.Compiler
                 }
             }
             //default label statment
-            //restore to prev
+            // restore to prev
             Source.SeekTo(start - 1);
-            //skips if new line
+            // skips if new line
             MoveNext();
             return VisitExpressionStatement();
         }

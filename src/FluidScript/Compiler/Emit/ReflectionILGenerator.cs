@@ -443,6 +443,16 @@ namespace FluidScript.Compiler.Emit
         }
 
         ///<inheritdoc/>
+        public override void LoadAddressOfArgument(int argumentIndex)
+        {
+            if (argumentIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(argumentIndex));
+            if (argumentIndex < 256)
+                Generator.Emit(OpCodes.Ldarga_S, (byte)argumentIndex);
+            else
+                Generator.Emit(OpCodes.Ldarga, (short)argumentIndex);
+        }
+        ///<inheritdoc/>
         public override void LoadArrayElement(Type type)
         {
             switch (Type.GetTypeCode(type))

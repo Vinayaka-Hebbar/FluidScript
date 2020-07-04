@@ -7,7 +7,7 @@ namespace FluidScript.Compiler.SyntaxTree
     public sealed class AssignmentExpression : Expression
     {
         #region GenerateOption
-        const MethodGenerateOption Option = MethodGenerateOption.Dupplicate | MethodGenerateOption.Return;
+        const MethodCompileOption Option = MethodCompileOption.Dupplicate | MethodCompileOption.Return;
         #endregion
 
         public readonly Expression Left;
@@ -24,7 +24,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitAssignment(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption option)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
             //todo index implementation pending
             if (Left.NodeType == ExpressionType.Identifier)
@@ -56,7 +56,7 @@ namespace FluidScript.Compiler.SyntaxTree
                         if (arg.Type == typeof(Integer))
                             generator.CallStatic(ReflectionHelpers.IntegerToInt32);
                     });
-                    Right.GenerateCode(generator, MethodGenerateOption.Dupplicate);
+                    Right.GenerateCode(generator, MethodCompileOption.Dupplicate);
                     System.Type elementType = type.GetElementType();
                     generator.StoreArrayElement(elementType);
                 }

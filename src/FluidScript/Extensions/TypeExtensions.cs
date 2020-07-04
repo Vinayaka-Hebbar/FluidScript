@@ -58,6 +58,32 @@ namespace FluidScript.Extensions
             return result;
         }
 
+        public static System.TypeCode FindTypeCode(this System.Type type)
+        {
+            switch (type.Name)
+            {
+                case "Byte":
+                    return System.TypeCode.SByte;
+                case "Char":
+                    return System.TypeCode.Char;
+                case "Short":
+                case "Int16":
+                    return System.TypeCode.Int16;
+                case "Int32":
+                case "Integer":
+                    return System.TypeCode.Int32;
+                case "Float":
+                case "Single":
+                    return System.TypeCode.Single;
+                case "Double":
+                    return System.TypeCode.Double;
+                case "Boolean":
+                    return System.TypeCode.Boolean;
+                default:
+                    return System.Type.GetTypeCode(type);
+            }
+        }
+
         public static MethodInfo FindMethod(this System.Type type, string name, System.Type[] types, out Runtime.ArgumentConversions conversions)
         {
             conversions = new Runtime.ArgumentConversions(types.Length);

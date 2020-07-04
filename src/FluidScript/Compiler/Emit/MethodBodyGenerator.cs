@@ -283,12 +283,15 @@ namespace FluidScript.Compiler.Emit
         #region Emit Convert
         public void EmitConvert(Conversion c)
         {
-            if (c is BoxConversion)
-                Box(c.Type);
-            else if (c is ParamConversion p)
-                CallStatic(p.Method);
-            if (c.HasNext)
-                EmitConvert(c.Next);
+            var n = c;
+            do
+            {
+                n = n.Next;
+                if (n is BoxConversion)
+                    Box(n.Type);
+                else if (n is ParamConversion p)
+                    CallStatic(p.Method);
+            } while (n != c);
         }
 
         public void EmitConvert(ParamArrayConversion c, Expression[] expressions)
@@ -306,8 +309,6 @@ namespace FluidScript.Compiler.Emit
                     LoadInt32(i);
                     Expression exp = expressions[i];
                     exp.GenerateCode(this);
-                    if (exp.Type.IsValueType && c.Type.IsValueType == false)
-                        Box(exp.Type);
                     if (conversions != null)
                     {
                         var group = conversions[i];
@@ -408,50 +409,90 @@ namespace FluidScript.Compiler.Emit
         /// <inheritdoc/>
         Expression IExpressionVisitor<Expression>.VisitBinary(BinaryExpression node)
         {
-            var opName = node.MethodName;
             //todo like rutime compiler
             var left = node.Left.Accept(this);
             var right = node.Right.Accept(this);
-            System.Reflection.MethodInfo method = null;
-            ArgumentConversions conversions = null;
-            if (opName != null)
+            ArgumentConversions conversions = new ArgumentConversions(2);
+            System.Reflection.MethodInfo method;
+            switch (node.NodeType)
             {
-                var types = new Type[2] { left.Type, right.Type };
-                conversions = new ArgumentConversions(2);
-                if (left.Type.IsPrimitive == true || right.Type.IsPrimitive == true)
-                {
-                    Utils.ReflectionUtils.FromSystemType(conversions, ref types);
-                }
-                method = Utils.ReflectionUtils.
-                   GetOperatorOverload(opName, conversions, types);
-            }
-            else if (node.NodeType == ExpressionType.AndAnd || node.NodeType == ExpressionType.OrOr)
-            {
-                conversions = new ArgumentConversions(2);
-                System.Reflection.MethodInfo convertLeft = ReflectionUtils.GetBooleanOveraload(left.Type);
-                if (convertLeft != null)
-                    conversions.Add(new ParamConversion(0, convertLeft));
-                var convertRight = Utils.ReflectionUtils.GetBooleanOveraload(right.Type);
-                if (convertRight != null)
-                    conversions.Add(new ParamConversion(1, convertRight));
-                method = node.NodeType == ExpressionType.AndAnd ? ReflectionHelpers.LogicalAnd : ReflectionHelpers.LogicalOr;
-            }
-            else if (node.NodeType == ExpressionType.StarStar)
-            {
-                var types = new Type[2] { left.Type, right.Type };
-                conversions = new ArgumentConversions(2);
-                if (left.Type.IsPrimitive == true || right.Type.IsPrimitive == true)
-                {
-                    Utils.ReflectionUtils.FromSystemType(conversions, ref types);
-                }
-                method = ReflectionHelpers.MathPow;
-                if (!Utils.ReflectionUtils.MatchesTypes(method, types, conversions))
-                    ExecutionException.ThrowArgumentMisMatch(node);
+                case ExpressionType.Plus:
+                    method = VisitAddition(left, right, conversions);
+                    break;
+                case ExpressionType.AndAnd:
+                case ExpressionType.OrOr:
+                    System.Reflection.MethodInfo convertLeft = ReflectionUtils.GetBooleanOveraload(left.Type);
+                    if (convertLeft != null)
+                        conversions.Add(new ParamConversion(0, convertLeft));
+                    var convertRight = ReflectionUtils.GetBooleanOveraload(right.Type);
+                    if (convertRight != null)
+                        conversions.Add(new ParamConversion(1, convertRight));
+                    method = node.NodeType == ExpressionType.AndAnd ? ReflectionHelpers.LogicalAnd : ReflectionHelpers.LogicalOr;
+                    break;
+                case ExpressionType.StarStar:
+                    method = VisitPow(node, left, right, conversions);
+                    break;
+                default:
+                    method = VisitBinary(left, right, node.MethodName, conversions);
+                    break;
             }
             node.Conversions = conversions;
             node.Method = method ?? throw new OperationCanceledException(string.Concat("Invalid Operation ", node.ToString()));
             node.Type = method.ReturnType;
             return node;
+        }
+
+        static System.Reflection.MethodInfo VisitAddition(Expression left, Expression right, ArgumentConversions conversions)
+        {
+            if(left.Type.Name.Equals("String"))
+            {
+                if (right.Type.Name.Equals("String"))
+                {
+                    return VisitBinary(left, right, "op_Addition", conversions);
+                }
+                if (right.Type.IsValueType)
+                    conversions.Add(new BoxConversion(1, right.Type));
+                conversions.Add(new ParamConversion(1, ReflectionHelpers.AnyToString));
+                right.Type = TypeProvider.StringType;
+                return VisitBinary(left, right, "op_Addition", conversions);
+            }
+            if (right.Type.Name.Equals("String"))
+            {
+                if (left.Type.Name.Equals("String"))
+                {
+                    return VisitBinary(left, right, "op_Addition", conversions);
+                }
+                if (right.Type.IsValueType)
+                    conversions.Add(new BoxConversion(1, left.Type));
+                conversions.Add(new ParamConversion(0, ReflectionHelpers.AnyToString));
+                left.Type = TypeProvider.StringType;
+                return VisitBinary(left, right, "op_Addition", conversions);
+            }
+            return VisitBinary(left, right, "op_Addition", conversions);
+        }
+
+        static System.Reflection.MethodInfo VisitPow(BinaryExpression node, Expression left, Expression right, ArgumentConversions conversions)
+        {
+            var types = new Type[2] { left.Type, right.Type };
+            if (left.Type.IsPrimitive == true || right.Type.IsPrimitive == true)
+            {
+                ReflectionUtils.FromSystemType(conversions, ref types);
+            }
+            var method = ReflectionHelpers.MathPow;
+            if (!ReflectionUtils.MatchesTypes(method, types, conversions))
+                ExecutionException.ThrowArgumentMisMatch(node);
+            return method;
+        }
+
+        static System.Reflection.MethodInfo VisitBinary(Expression left, Expression right, string opName, ArgumentConversions conversions)
+        {
+            var types = new Type[2] { left.Type, right.Type };
+            if (left.Type.IsPrimitive == true || right.Type.IsPrimitive == true)
+            {
+                ReflectionUtils.FromSystemType(conversions, ref types);
+            }
+            return ReflectionUtils.
+               GetOperatorOverload(opName, conversions, types);
         }
 
         /// <inheritdoc/>
@@ -577,6 +618,14 @@ namespace FluidScript.Compiler.Emit
                     conversions = new ArgumentConversions(types.Length);
                     if (!ReflectionUtils.MatchesTypes(method, types, conversions))
                         ExecutionException.ThrowArgumentMisMatch(node.Target, node);
+                    goto done;
+                }
+                if (resultType.IsValueType && resultType == TypeProvider.AnyType)
+                {
+                    types = types.AddFirst(typeof(string));
+                    node.Arguments.Insert(0, Expression.SystemLiteral(name));
+                    conversions = new ArgumentConversions(types.Length);
+                    method = resultType.FindSystemMethod(nameof(Any.Call), types, conversions);
                     goto done;
                 }
                 method = resultType.FindMethod(name, types, out conversions);

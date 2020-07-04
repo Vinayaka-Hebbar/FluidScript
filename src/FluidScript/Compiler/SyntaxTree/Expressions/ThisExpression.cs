@@ -13,7 +13,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitThis(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption options)
         {
             if (generator.Method is Generators.DynamicMethodGenerator)
             {

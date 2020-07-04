@@ -15,7 +15,7 @@ namespace FluidScript.Compiler
         Debugging.TextPosition LineInfo { get; }
 
         /// <summary>
-        /// Read next char
+        /// Read next char and advance pos to next
         /// </summary>
         char ReadChar();
 

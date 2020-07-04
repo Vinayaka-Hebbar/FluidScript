@@ -32,7 +32,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitIndex(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption options)
         {
             Target.GenerateCode(generator);
             System.Type type = Target.Type;

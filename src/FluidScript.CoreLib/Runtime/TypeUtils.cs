@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace FluidScript.Runtime
 {
     public static class TypeUtils
     {
-        internal const BindingFlags PublicStatic = BindingFlags.Public | BindingFlags.Static; 
-        internal const BindingFlags AnyPublic = PublicStatic | BindingFlags.Instance; 
+        internal const BindingFlags PublicStatic = BindingFlags.Public | BindingFlags.Static;
+        internal const BindingFlags AnyPublic = PublicStatic | BindingFlags.Instance;
         internal const BindingFlags PublicInstance = BindingFlags.Public | BindingFlags.Instance;
         internal const string ImplicitConversionName = "op_Implicit";
         internal const string ExplicitConviersionName = "op_Explicit";
@@ -56,7 +55,7 @@ namespace FluidScript.Runtime
             return null;
         }
 
-        public static bool MatchesTypes(MethodBase method, object[] args, ArgumentConversions conversions)
+        public static bool MatchesTypes(this MethodBase method, object[] args, ArgumentConversions conversions)
         {
             var parameters = method.GetParameters();
             // arg length
@@ -108,11 +107,11 @@ namespace FluidScript.Runtime
 
         static bool ParamArrayMatchs(System.Collections.IList args, int index, Type dest, ArgumentConversions conversions)
         {
-            var binder = new ArgumentConversions(args.Count);
+            var binder = new ArgumentConversions(args.Count - index);
             // check first parameter type matches
-            for (var i = index; i < args.Count; i++)
+            for (int i = 0, current = index; current < args.Count; i++, current++)
             {
-                var arg = args[i];
+                var arg = args[current];
                 if (arg is null)
                 {
                     if (dest.IsValueType && !IsNullableType(dest))
@@ -143,7 +142,7 @@ namespace FluidScript.Runtime
         /// argument types.
         /// </summary>
         /// <returns></returns>
-        public static bool MatchesArgumentTypes(MethodInfo m, params Type[] argTypes)
+        public static bool MatchesArgumentTypes(this MethodInfo m, params Type[] argTypes)
         {
             if (m == null || argTypes == null)
             {
@@ -245,17 +244,17 @@ namespace FluidScript.Runtime
         }
 
         #region Find Method
-        public static bool TryFindMethod(string name, Type type, object[] args, out MethodInfo method, out ArgumentConversions conversions)
+        public static bool TryFindMethod(this Type type, string name, object[] args, out MethodInfo method, out ArgumentConversions conversions)
         {
             conversions = new ArgumentConversions(args.Length);
             return type.IsInterface
-                ? TryFindInterfaceMethod(name, type, args, out method, conversions)
+                ? TryFindInterfaceMethod(type, name, args, out method, conversions)
                 : type.IsDefined(typeof(RegisterAttribute), false)
-                ? FindMethods(name, type, AnyPublic, args, out method, conversions)
+                ? FindMethods(type, name, AnyPublic, args, out method, conversions)
                 : TryFindSystemMethod(name, type, AnyPublic, args, out method, conversions);
         }
 
-        private static bool FindMethods(string name, Type type, BindingFlags flags, object[] args, out MethodInfo method, ArgumentConversions conversions)
+        static bool FindMethods(Type type, string name, BindingFlags flags, object[] args, out MethodInfo method, ArgumentConversions conversions)
         {
             if (type != null)
             {
@@ -271,13 +270,13 @@ namespace FluidScript.Runtime
                         return true;
                     }
                 }
-                return FindMethods(name, type.BaseType, PublicStatic, args, out method, conversions);
+                return FindMethods(type.BaseType, name, PublicStatic, args, out method, conversions);
             }
             method = null;
             return false;
         }
 
-        static bool TryFindInterfaceMethod(string name, Type type, object[] args, out MethodInfo method, ArgumentConversions conversions)
+        static bool TryFindInterfaceMethod(Type type, string name, object[] args, out MethodInfo method, ArgumentConversions conversions)
         {
             if (TryFindSystemMethod(name, type, PublicInstance, args, out method, conversions))
                 return true;
@@ -307,6 +306,70 @@ namespace FluidScript.Runtime
 
             method = null;
             return false;
+        }
+        #endregion
+
+        #region Indexer
+        /// Current Declared Indexer can get
+        public static MethodInfo FindGetIndexer(this Type type, object[] args, out ArgumentConversions conversions)
+        {
+            conversions = new ArgumentConversions(args.Length);
+            if (type.IsArray)
+            {
+                //for array no indexer
+                var m = type.GetMethod("Get", PublicInstance);
+                if (MatchesTypes(m, args, conversions))
+                {
+                    return m;
+                }
+            }
+            foreach (var item in type.GetDefaultMembers())
+            {
+                if (item.MemberType == MemberTypes.Property)
+                {
+                    var p = (PropertyInfo)item;
+                    if (p.CanRead)
+                    {
+                        var m = p.GetGetMethod(true);
+                        if (MatchesTypes(m, args, conversions))
+                        {
+                            return m;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// Current Declared Indexer can get
+        public static MethodInfo FindSetIndexer(this Type type, object[] args, out ArgumentConversions conversions)
+        {
+            conversions = new ArgumentConversions(args.Length);
+            if (type.IsArray)
+            {
+                //for array no indexer
+                var m = type.GetMethod("Set", PublicInstance);
+                if (MatchesTypes(m, args, conversions))
+                {
+                    return m;
+                }
+            }
+            foreach (var item in type.GetDefaultMembers())
+            {
+                if (item.MemberType == MemberTypes.Property)
+                {
+                    var p = (PropertyInfo)item;
+                    if (p.CanWrite)
+                    {
+                        var m = p.GetSetMethod(true);
+                        if (MatchesTypes(m, args, conversions))
+                        {
+                            return m;
+                        }
+                    }
+                }
+            }
+            return null;
         }
         #endregion
     }

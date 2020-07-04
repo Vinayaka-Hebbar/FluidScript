@@ -51,20 +51,14 @@ namespace FluidScript.Compiler.Binders
 
         public bool IsMember => true;
 
-        public void GenerateGet(MethodBodyGenerator generator)
+        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
         {
-            var get = Getter;
-            if (get is IMethodBase)
-                get = (System.Reflection.MethodInfo)((IMethodBase)get).MethodBase;
-            generator.Call(get);
+            generator.Call(Getter);
         }
 
-        public void GenerateSet(MethodBodyGenerator generator)
+        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
         {
-            var set = Setter;
-            if (set is IMethodBase)
-                set = (System.Reflection.MethodInfo)((IMethodBase)set).MethodBase;
-            generator.Call(set);
+            generator.Call(Setter);
         }
 
         public object Get(object obj)

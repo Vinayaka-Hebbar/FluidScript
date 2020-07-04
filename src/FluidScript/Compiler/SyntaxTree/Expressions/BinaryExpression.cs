@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using System;
 using System.Collections.Generic;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -23,6 +24,8 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
         public override IEnumerable<Node> ChildNodes() => Childs(Left, Right);
+
+        
 
         public string MethodName
         {
@@ -89,26 +92,30 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitBinary(this);
         }
 
-        public override void GenerateCode(MethodBodyGenerator generator, MethodGenerateOption options)
+        public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption options)
         {
-            //todo conversion 
-            if (Method == null)
-                throw new System.NullReferenceException(nameof(Method));
-            var conversions = Conversions;
-            Left.GenerateCode(generator);
-            var first = conversions[0];
-            if (first != null)
+            if (Method != null)
             {
-                generator.EmitConvert(first);
+                var conversions = Conversions;
+                Left.GenerateCode(generator);
+                var first = conversions[0];
+                if (first != null)
+                {
+                    generator.EmitConvert(first);
+                }
+                Right.GenerateCode(generator);
+                var second = conversions[1];
+                if (second != null)
+                {
+                    generator.EmitConvert(second);
+                }
+                generator.Call(Method);
+                return;
             }
-            Right.GenerateCode(generator);
-            var second = conversions[1];
-            if (second != null)
-            {
-                generator.EmitConvert(second); 
-            }
-            generator.Call(Method);
+            throw new InvalidOperationException("Operator method missing");
         }
+
+
 
         public override string ToString()
         {
