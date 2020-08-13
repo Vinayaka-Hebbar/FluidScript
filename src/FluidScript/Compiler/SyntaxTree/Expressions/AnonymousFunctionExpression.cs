@@ -41,11 +41,19 @@ namespace FluidScript.Compiler.SyntaxTree
             var target = generator.Method.DeclaringType;
             IExpressionVisitor<object> visitor = ScriptCompiler.Instance;
             //pass scoped arguments // refer System.Linq.Expression.Compiler folder
-            var names = Parameters.Map(para => para.Name).AddFirst("closure");
+            var names = Parameters.Map(para => para.Name);
             // Emit First Argument
             var lamdaVisit = new LamdaVisitor(names);
             Body.Accept(lamdaVisit);
-            var lamdaGen = LamdaGen.DefineAnonymousMethod(Types, ReturnType);
+            LamdaGen lamdaGen;
+            if(generator.Method.DeclaringType is Generators.TypeGenerator typeGen)
+            {
+                lamdaGen = typeGen.DefineAnonymousMethod(Types, ReturnType);
+            }
+            else
+            {
+                lamdaGen = AssemblyGen.DynamicAssembly.DefineAnonymousMethod(Types, ReturnType);
+            }
             var methodGen = new Generators.MethodGenerator(lamdaGen.Method, ParameterInfos, lamdaGen.Type)
             {
                 SyntaxBody = Body,
@@ -77,8 +85,16 @@ namespace FluidScript.Compiler.SyntaxTree
             bodyGen.Compile();
             var type = lamdaGen.CreateType();
             generator.LoadVariable(valVar);
-            generator.NewObject(type.GetConstructors()[0]);
-            generator.LoadFunction(type.GetInstanceMethod("Invoke", Types), Type);
+            if (generator.Method is Generators.DynamicMethodGenerator)
+            {
+                generator.NewObject(type.GetConstructor(LamdaGen.CtorSignature));
+                generator.LoadFunction(type.GetMethod("Invoke", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic), Type);
+            }
+            else
+            {
+                generator.NewObject(lamdaGen.Constructor);
+                generator.LoadFunction(lamdaGen.Method, Type);
+            }
         }
 
         //todo working on scope for better emit

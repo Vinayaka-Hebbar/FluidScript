@@ -14,7 +14,9 @@
             System.Reflection.FieldAttributes attrs = GetAttribute();
             foreach (var field in Declarations)
             {
-                generator.Add(new Generators.FieldGenerator(generator, attrs, field));
+                Generators.FieldGenerator fieldGen = new Generators.FieldGenerator(generator, attrs, field);
+                fieldGen.SetCustomAttribute(typeof(Runtime.RegisterAttribute), Utils.ReflectionHelpers.Register_Attr_Ctor, new[] { field.Name });
+                generator.Add(fieldGen);
             }
         }
 

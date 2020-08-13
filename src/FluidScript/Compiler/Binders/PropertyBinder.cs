@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.SyntaxTree;
 using System;
 
 namespace FluidScript.Compiler.Binders
@@ -37,28 +38,44 @@ namespace FluidScript.Compiler.Binders
 
         public Type Type => property.PropertyType;
 
-        public bool CanEmitThis
+        public BindingAttributes Attributes
         {
             get
             {
                 if (Getter != null)
-                    return Getter.IsStatic == false;
+                    return BindingAttributes.Member | (Getter.IsStatic ? BindingAttributes.None : BindingAttributes.HasThis);
                 if (Setter != null)
-                    return Setter.IsStatic == false;
-                return false;
+                    return BindingAttributes.Member | (Setter.IsStatic ? BindingAttributes.None : BindingAttributes.HasThis);
+                return BindingAttributes.Member;
+                
             }
         }
 
-        public bool IsMember => true;
-
-        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
+            if ((option & MethodCompileOption.EmitStartAddress) == MethodCompileOption.EmitStartAddress && property.PropertyType.IsValueType)
+            {
+                var temp = generator.CreateTemporaryVariable(Type);
+                generator.Call(Getter);
+                generator.StoreVariable(temp);
+                generator.LoadAddressOfVariable(temp);
+                return;
+            }
             generator.Call(Getter);
         }
 
-        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option)
         {
+            if ((option & MethodCompileOption.Dupplicate) == 0)
+            {
+                generator.Call(Setter);
+                return;
+            }
+            generator.Duplicate();
+            var temp = generator.CreateTemporaryVariable(value.Type);
+            generator.StoreVariable(temp);
             generator.Call(Setter);
+            generator.LoadVariable(temp);
         }
 
         public object Get(object obj)

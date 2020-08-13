@@ -590,6 +590,15 @@ namespace FluidScript.Compiler.Emit
         }
 
         /// <summary>
+        /// Call delegate method
+        /// </summary>
+        /// <param name="del"> The delegate to call. </param>
+        public void Call(Delegate del)
+        {
+            Call(del.Method);
+        }
+
+        /// <summary>
         /// Pops the method arguments off the stack, calls the given method, then pushes the result
         /// to the stack (if there was one).  This operation can be used to call instance methods,
         /// but virtual overrides will not be called and a null check will not be performed at the
@@ -612,6 +621,12 @@ namespace FluidScript.Compiler.Emit
         /// </summary>
         /// <param name="field"> The field whose value will be pushed. </param>
         public abstract void LoadField(System.Reflection.FieldInfo field);
+
+        /// <summary>
+        /// Pushes the value of the given field address onto the stack.
+        /// </summary>
+        /// <param name="field"> The field whose value will be pushed. </param>
+        public abstract void LoadFieldAddress(System.Reflection.FieldInfo field);
 
         /// <summary>
         /// Pops a value off the stack and stores it in the given field.

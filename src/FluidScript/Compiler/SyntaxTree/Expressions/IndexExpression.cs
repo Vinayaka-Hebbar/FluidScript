@@ -34,25 +34,18 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption options)
         {
-            Target.GenerateCode(generator);
-            System.Type type = Target.Type;
-            if (type.IsArray)
+            if (Target.Type.IsValueType)
             {
-                Arguments.Iterate((arg) =>
-                {
-                    arg.GenerateCode(generator);
-                    generator.CallStatic(Utils.ReflectionHelpers.IntegerToInt32);
-                });
-                System.Type elementType = type.GetElementType();
-                generator.LoadArrayElement(elementType);
+                options |= MethodCompileOption.EmitStartAddress;
             }
-            else
+            Target.GenerateCode(generator, options);
+            Arguments.Iterate((arg, index) =>
             {
-
-                Arguments.Iterate((arg) => arg.GenerateCode(generator));
-                //todo indexer argument convert
-                generator.Call(Getter);
-            }
+                arg.GenerateCode(generator);
+                generator.EmitConvert(Conversions[index]);
+            });
+            // todo indexer parmas argument convert
+            generator.Call(Getter);
         }
 
         public override string ToString()

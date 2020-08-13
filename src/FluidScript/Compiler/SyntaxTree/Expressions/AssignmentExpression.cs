@@ -31,17 +31,23 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 var exp = (NameExpression)Left;
                 var binder = exp.Binder;
-                if (binder.CanEmitThis)
+                // binder is null create new local variable
+                if(binder is null)
+                    exp.Binder = binder = new Binders.VariableBinder(generator.DeclareVariable(Right.Type, exp.Name));
+                if ((binder.Attributes & Binders.BindingAttributes.HasThis) != 0)
                     generator.LoadArgument(0);
                 Right.GenerateCode(generator, Option);
-                binder.GenerateSet(generator);
+                binder.GenerateSet(Right, generator, option);
             }
             else if (Left.NodeType == ExpressionType.MemberAccess)
             {
                 var exp = (MemberExpression)Left;
                 exp.Target.GenerateCode(generator);
+                // member assign for dynamic to be Any
+                if ((exp.Binder.Attributes & Binders.BindingAttributes.Dynamic) == Binders.BindingAttributes.Dynamic)
+                    generator.Box(TypeProvider.AnyType);
                 Right.GenerateCode(generator, Option);
-                exp.Binder.GenerateSet(generator);
+                exp.Binder.GenerateSet(Right, generator, option);
             }
             else if (Left.NodeType == ExpressionType.Indexer)
             {

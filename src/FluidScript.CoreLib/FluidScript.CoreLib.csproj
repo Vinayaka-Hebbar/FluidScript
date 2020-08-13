@@ -5,7 +5,7 @@
     <TargetFrameworks>net40;netcoreapp2.0;netstandard2.0;</TargetFrameworks>
     <RootNamespace>FluidScript</RootNamespace>
     <AssemblyName>FluidScript.CoreLib</AssemblyName>
-    <Version>1.0.11</Version>
+    <Version>1.0.14</Version>
     <Authors>Vinayaka Hebbar</Authors>
   </PropertyGroup>
 
@@ -19,10 +19,14 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>ProjectAssemblyKey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,7 +37,7 @@
     <Compile Remove="Collections\KeyValuePair.cs" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

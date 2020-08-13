@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace FluidScript
@@ -9,7 +8,7 @@ namespace FluidScript
     [StructLayout(LayoutKind.Auto)]
     public struct Date : IFSObject, IFormattable
     {
-        [System.Diagnostics.DebuggerBrowsable(0)]
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         private DateTime m_date;
 
         public Date(Long ticks) : this()
@@ -50,19 +49,19 @@ namespace FluidScript
         }
 
         [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(object obj)
+        public Boolean Equals(Date date)
         {
-            return obj is Date date ? date.m_date == m_date : false;
+            return date.m_date == m_date;
         }
 
         [Runtime.Register("toString")]
-        Integer IFSObject.GetHashCode()
+        public Integer HashCode()
         {
             return GetHashCode();
         }
 
         [Runtime.Register("toString")]
-        String IFSObject.ToString()
+        public String StringValue()
         {
             return m_date.ToString();
         }

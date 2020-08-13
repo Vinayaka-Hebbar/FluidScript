@@ -28,24 +28,16 @@ namespace FluidScript
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        String IFSObject.ToString()
+        public String StringValue()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.GetHashCode()
+        public Integer HashCode()
         {
             return m_value.GetHashCode();
-        }
-
-        /// <inheritdoc/>
-        [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(object obj)
-        {
-            return obj is Long l &&
-                  m_value == l.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>
@@ -61,6 +53,7 @@ namespace FluidScript
         /// <param name="obj"> The object to compare with the current instance.</param>
         /// <returns>true if obj and this instance are the same type and represent the same value;
         ///  otherwise, false.</returns>
+        [Runtime.Register("equals")]
         public Boolean Equals(Long obj)
         {
             return m_value == obj.m_value ? Boolean.True : Boolean.False;

@@ -9,14 +9,9 @@
             Binder for variable or member
             </summary>
         </member>
-        <member name="P:FluidScript.Compiler.Binders.IBinder.CanEmitThis">
+        <member name="P:FluidScript.Compiler.Binders.IBinder.Attributes">
             <summary>
             From this you can identify whether Binder is a Variable or Static Member 
-            </summary>
-        </member>
-        <member name="P:FluidScript.Compiler.Binders.IBinder.IsMember">
-            <summary>
-             From this you can identify whether Binder is a Variable or Member 
             </summary>
         </member>
         <member name="T:FluidScript.Compiler.Binders.RuntimeVariableBinder">
@@ -103,6 +98,14 @@
             <summary>
             Gets the document type GUID for the symbol store.
             </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.AssemblyGen.DefineAnonymousMethod(System.Type[],System.Type)">
+            <summary>
+            Define Anonymous class
+            </summary>
+            <param name="types">Ctor types</param>
+            <param name="returnType">Return Type of Lamda</param>
+            <returns>Type builder</returns>
         </member>
         <member name="T:FluidScript.Compiler.Emit.ILGenerator">
             <summary>
@@ -637,6 +640,12 @@
             </summary>
             <param name="method"> The method to call. </param>
         </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.Call(System.Delegate)">
+            <summary>
+            Call delegate method
+            </summary>
+            <param name="del"> The delegate to call. </param>
+        </member>
         <member name="M:FluidScript.Compiler.Emit.ILGenerator.CallStatic(System.Reflection.MethodBase)">
             <summary>
             Pops the method arguments off the stack, calls the given method, then pushes the result
@@ -658,6 +667,12 @@
         <member name="M:FluidScript.Compiler.Emit.ILGenerator.LoadField(System.Reflection.FieldInfo)">
             <summary>
             Pushes the value of the given field onto the stack.
+            </summary>
+            <param name="field"> The field whose value will be pushed. </param>
+        </member>
+        <member name="M:FluidScript.Compiler.Emit.ILGenerator.LoadFieldAddress(System.Reflection.FieldInfo)">
+            <summary>
+            Pushes the value of the given field address onto the stack.
             </summary>
             <param name="field"> The field whose value will be pushed. </param>
         </member>
@@ -881,14 +896,6 @@
             <summary>
             Member Builder
             </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.Emit.LamdaGen.DefineAnonymousMethod(System.Type[],System.Type)">
-            <summary>
-            Define Anonymous class
-            </summary>
-            <param name="types">Ctor types</param>
-            <param name="returnType">Return Type of Lamda</param>
-            <returns>Type builder</returns>
         </member>
         <member name="T:FluidScript.Compiler.Emit.MethodBodyGenerator">
             <summary>
@@ -2028,9 +2035,10 @@
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.Expression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator,FluidScript.Compiler.Emit.MethodCompileOption)">
             <summary>
-            Generates IL code for <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/>
+            Generates compiled IL code for <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/>
             </summary>
-            <param name="generator"></param>
+            <param name="generator">IL Generator for method body</param>
+            <param name="option">Compiler option's for generating <see cref="T:FluidScript.Compiler.SyntaxTree.Expression"/></param>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.Expression.Custom(System.Action{FluidScript.Compiler.SyntaxTree.Expression,FluidScript.Compiler.Emit.MethodBodyGenerator})">
             <summary>
@@ -2180,10 +2188,7 @@
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.GenerateCode(FluidScript.Compiler.Emit.MethodBodyGenerator,FluidScript.Compiler.Emit.MethodCompileOption)">
-            <summary>
-            Generate Compiled code
-            </summary>
-            <param name="generator"></param>
+            <inheritdoc/>
         </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.NullExpression">
             <summary>
@@ -2584,7 +2589,7 @@
             <summary>
             Instance of 
             </summary>
-            <param name="instanceOfExpression"></param>
+            <param name="node"></param>
             <returns></returns>
         </member>
         <member name="M:FluidScript.Compiler.IExpressionVisitor`1.VisitConvert(FluidScript.Compiler.SyntaxTree.ConvertExpression)">
@@ -2778,26 +2783,6 @@
             Passing Runtime arguments of bounded functions for lamda
             </summary>
         </member>
-        <member name="T:FluidScript.Runtime.DynamicObject">
-            <summary>
-            Dynamic Runtime Object
-            </summary>
-        </member>
-        <member name="P:FluidScript.Runtime.DynamicObject.Item(FluidScript.String)">
-            <summary>
-            Getter and Setter of variables
-            </summary>
-        </member>
-        <member name="M:FluidScript.Runtime.DynamicObject.TryGetMember(System.String,FluidScript.Runtime.LocalVariable@)">
-            <summary>
-            Get current context variable
-            </summary>
-        </member>
-        <member name="M:FluidScript.Runtime.DynamicObject.Add(System.String,System.Object)">
-            <summary>
-            Replaces specific value if key exist
-            </summary>
-        </member>
         <member name="T:FluidScript.Runtime.ICompileProvider">
             <summary>
             Compile provider for Expression
@@ -2869,9 +2854,9 @@
             <summary>
             Matches generating argument 
             </summary>
-            <param name="member"></param>
-            <param name="name"></param>
-            <param name="flags"></param>
+            <param name="member">Member to check</param>
+            <param name="name">Name to match</param>
+            <param name="flags">Binding flag to match</param>
             <returns></returns>
         </member>
         <member name="M:FluidScript.Extensions.MemberExtensions.BindingFlagsMatch(FluidScript.Compiler.Emit.IMember,System.Reflection.BindingFlags)">
@@ -2879,9 +2864,11 @@
             Matches generating argument 
             </summary>
             <param name="member"></param>
-            <param name="name"></param>
-            <param name="flags"></param>
+            <param name="flags">Binding flags to match</param>
             <returns></returns>
+        </member>
+        <member name="M:FluidScript.Extensions.TypeExtensions.FindGetIndexer(System.Type,System.Type[],FluidScript.Runtime.ArgumentConversions@)">
+            Current Declared Indexer can get
         </member>
     </members>
 </doc>

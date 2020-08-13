@@ -42,7 +42,7 @@ namespace FluidScript
         /// returns the hashCode() for the instance
         /// </summary>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.GetHashCode()
+        public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
@@ -51,22 +51,13 @@ namespace FluidScript
         /// converts to string
         /// </summary>
         [Runtime.Register("toString")]
-        String IFSObject.ToString()
+        public String StringValue()
         {
             return m_value.ToString();
         }
 
-        /// <summary>
-        /// checks <paramref name="obj"/> and <see cref="Integer"/> are equals
-        /// </summary>
-        [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(object obj)
-        {
-            return obj is Char c &&
-                  m_value == c.m_value;
-        }
-
         /// <inheritdoc/>
+        [Runtime.Register("equals")]
         public override bool Equals(object obj)
         {
             return obj is Char c &&
@@ -235,6 +226,16 @@ namespace FluidScript
         public static Integer operator -(Char left, Integer right)
         {
             return new Integer(left.m_value - right.m_value);
+        }
+
+        public static Boolean operator ==(Char left, Char right)
+        {
+            return left.Equals(right);
+        }
+
+        public static Boolean operator !=(Char left, Char right)
+        {
+            return !left.Equals(right);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Runtime;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -61,7 +62,7 @@ namespace FluidScript.Compiler.SyntaxTree
                         System.Type src = exp.Type;
                         if (!dest.IsAssignableFrom(src))
                         {
-                            if (Runtime.TypeUtils.TryImplicitConvert(src, dest, out System.Reflection.MethodInfo method))
+                            if (src.TryImplicitConvert(dest, out System.Reflection.MethodInfo method))
                             {
                                 var para = method.GetParameters().First();
                                 if (src.IsValueType && para.ParameterType.IsValueType == false)
@@ -92,6 +93,16 @@ namespace FluidScript.Compiler.SyntaxTree
                     //if iniside try finally block 
                     generator.EmitLongJump(generator, generator.ReturnTarget);
                 }
+            }
+            else if (NodeType == StatementType.Throw)
+            {
+                if (Value == null)
+                {
+                    throw new System.ArgumentNullException("Value", "throw expression missing argument");
+                }
+                var exp = Value.Accept(generator);
+                exp.GenerateCode(generator, Expression.AssignOption);
+                generator.Throw();
             }
             GenerateEndOfStatement(generator, statementLocals);
         }

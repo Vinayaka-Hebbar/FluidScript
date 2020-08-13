@@ -1,11 +1,11 @@
 ﻿using FluidScript.Compiler;
 using FluidScript.Extensions;
-using System;
+using FluidScript.Runtime;
 using System.Reflection;
 
 namespace FluidScript.Utils
 {
-    public static class ReflectionHelpers
+    internal static class ReflectionHelpers
     {
         #region Members
 
@@ -56,7 +56,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_booleanToBool == null)
-                    m_booleanToBool = TypeProvider.BooleanType.GetStaticMethod(ReflectionUtils.ImplicitConversionName, TypeProvider.BooleanType);
+                    m_booleanToBool = TypeProvider.BooleanType.GetStaticMethod(TypeUtils.ImplicitConversionName, TypeProvider.BooleanType);
                 return m_booleanToBool;
             }
         }
@@ -67,7 +67,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_intergerToInt32 == null)
-                    m_intergerToInt32 = TypeProvider.IntType.GetImplicitConversion(ReflectionUtils.ImplicitConversionName, typeof(int), TypeProvider.IntType);
+                    m_intergerToInt32 = TypeProvider.IntType.GetImplicitConversion(TypeUtils.ImplicitConversionName, typeof(int), TypeProvider.IntType);
                 return m_intergerToInt32;
             }
         }
@@ -93,7 +93,7 @@ namespace FluidScript.Utils
             get
             {
                 if (m_logicalOr == null)
-                    m_logicalOr = TypeProvider.BooleanType.GetStaticMethod( "OpLogicalOr", TypeProvider.BooleanType, TypeProvider.BooleanType);
+                    m_logicalOr = TypeProvider.BooleanType.GetStaticMethod("OpLogicalOr", TypeProvider.BooleanType, TypeProvider.BooleanType);
                 return m_logicalOr;
             }
         }
@@ -153,6 +153,48 @@ namespace FluidScript.Utils
             }
         }
 
+        static ConstructorInfo anonymousObj;
+        internal static ConstructorInfo AnonymousObj
+        {
+            get
+            {
+                if (anonymousObj == null)
+                    anonymousObj = typeof(Runtime.DynamicObject).GetInstanceCtor();
+                return anonymousObj;
+            }
+        }
+
+        static MethodBase anonymousObj_SetItem;
+        public static MethodBase AnonymousObj_SetItem
+        {
+            get
+            {
+                if (anonymousObj_SetItem == null)
+                    anonymousObj_SetItem = typeof(Runtime.DynamicObject).GetInstanceMethod("set_Item", typeof(string), TypeProvider.ObjectType);
+                return anonymousObj_SetItem;
+            }
+        }
+
+        static ConstructorInfo any_New;
+        public static ConstructorInfo Any_New
+        {
+            get
+            {
+                if (any_New == null)
+                    any_New = TypeProvider.AnyType.GetInstanceCtor(TypeProvider.ObjectType);
+                return any_New;
+            }
+        }
+        static MethodBase implicitAny;
+        public static MethodBase ImplicitAny
+        {
+            get
+            {
+                if (implicitAny == null)
+                    implicitAny = TypeProvider.AnyType.GetStaticMethod(TypeUtils.ImplicitConversionName, TypeProvider.ObjectType);
+                return implicitAny;
+            }
+        }
         #endregion
 
         #endregion

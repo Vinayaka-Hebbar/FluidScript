@@ -7,7 +7,7 @@ namespace FluidScript.Compiler
 {
     public class Parser : System.IDisposable
     {
-        static readonly string[] Empty = new string[0];
+        public static readonly string[] Empty = new string[0];
 
         public const char OpenBrace = '{';
         public const char CloseBrace = '}';
@@ -648,26 +648,14 @@ namespace FluidScript.Compiler
         public NodeList<Statement> VisitStatementList()
         {
             var list = new NodeList<Statement>();
-            while (MoveNextThenIfNot(TokenType.RightBrace))
+            MoveNext();
+            for (; ; )
             {
-                list.Add(VisitStatement());
-                if (TokenType == TokenType.RightBrace)
+                // next token if newline and semicolon or return if right brace
+                if ((TokenType == TokenType.SemiColon || TokenType == TokenType.NewLine) && !MoveNext() || TokenType == TokenType.RightBrace)
                     break;
-                CheckSyntaxExpected(TokenType.SemiColon, TokenType.NewLine);
+                list.Add(VisitStatement());
             }
-            return list;
-        }
-
-        public NodeList<Statement> VisitStatementList(TokenType splitToken, TokenType endToken)
-        {
-            var list = new NodeList<Statement>();
-            do
-            {
-                list.Add(VisitStatement());
-                if (TokenType == endToken)
-                    break;
-                CheckSyntaxExpected(splitToken, TokenType.NewLine);
-            } while (MoveNext());
             return list;
         }
 
@@ -693,7 +681,10 @@ namespace FluidScript.Compiler
                 statement = VisitAnonymousBlock();
             }
             else
+            {
                 throw new System.Exception("Invalid Function declaration");
+            }
+
             statement.Span = new TextSpan(start, Source.LineInfo);
             return statement;
         }

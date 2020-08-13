@@ -25,11 +25,11 @@ namespace FluidScript.Compiler.Generators
 
         public override FieldAttributes Attributes { get; }
 
-        public SyntaxTree.Expression DefaultValue { get; set; }
+        public Expression DefaultValue { get; set; }
 
         public override string Name { get; }
 
-        public SyntaxTree.VariableDeclarationExpression DeclarationExpression { get; }
+        public VariableDeclarationExpression DeclarationExpression { get; }
 
         public MemberInfo MemberInfo => this;
 
@@ -58,7 +58,7 @@ namespace FluidScript.Compiler.Generators
         {
             if (_customAttributes != null)
                 return _customAttributes.Select(att => att.Instance).ToArray();
-            return new object[0];
+            return new Attribute[0];
         }
 
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
@@ -67,7 +67,7 @@ namespace FluidScript.Compiler.Generators
             {
                 return _customAttributes.Where(att => att.Type == attributeType).Select(att => att.Instance).ToArray();
             }
-            return new object[0];
+            return new Attribute[0];
         }
 
         public override object GetValue(object obj)
@@ -99,7 +99,7 @@ namespace FluidScript.Compiler.Generators
                         return;
                     if (MethodBody is null && DefaultValue == Expression.Null)
                     {
-                        type = TypeProvider.ObjectType;
+                        type = TypeProvider.AnyType;
                     }
                     else
                     {

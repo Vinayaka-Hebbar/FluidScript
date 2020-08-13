@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace FluidScript.Compiler.Generators
 {
@@ -18,6 +19,8 @@ namespace FluidScript.Compiler.Generators
         private readonly System.Reflection.Emit.TypeBuilder _builder;
         IList<AttributeGenerator> _customAttributes;
         Type[] interfaces;
+
+        int nestedTypes;
 
         public override Module Module => _builder.Module;
 
@@ -70,7 +73,7 @@ namespace FluidScript.Compiler.Generators
         public override string Namespace => _builder.Namespace;
 
         /// <inheritdoc/>
-        public override Type UnderlyingSystemType => this;
+        public override Type UnderlyingSystemType => _builder;
 
         public TypeGenerator(System.Reflection.Emit.TypeBuilder builder, AssemblyGen assemblyGen)
         {
@@ -172,9 +175,8 @@ namespace FluidScript.Compiler.Generators
             var selected = BaseType.FindMethod(name, types, BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
             if (selected != null)
             {
-                returnType = selected.ReturnType;
                 // if can be overiden
-                if (selected.IsVirtual)
+                if (selected.IsVirtual && selected.IsAssembly == false)
                 {
                     // is not hidden method
                     if ((selected.Attributes & MethodAttributes.NewSlot) == MethodAttributes.NewSlot
@@ -189,6 +191,7 @@ namespace FluidScript.Compiler.Generators
                         attrs |= MethodAttributes.ReuseSlot;
                     }
                     newName = selected.Name;
+                    returnType = selected.ReturnType;
                     return;
                 }
                 throw new InvalidOperationException($"Method {name} does not support impl");
@@ -514,6 +517,30 @@ namespace FluidScript.Compiler.Generators
             FieldGenerator fieldGen = new FieldGenerator(this, attrs, new VariableDeclarationExpression(name, TypeSyntax.Create(type), null));
             Members.Add(fieldGen);
             return fieldGen;
+        }
+
+        public LamdaGen DefineAnonymousMethod(Type[] types, Type returnType)
+        {
+            // todo: Anonomous type name
+            var builder = _builder.DefineNestedType("DisplayClass_" + nestedTypes,  LamdaGen.Attributes | TypeAttributes.NestedPrivate, typeof(object));
+            nestedTypes++;
+            var values = builder.DefineField("Values", LamdaGen.ObjectArray, FieldAttributes.Private);
+            var ctor = builder.DefineConstructor(DelegateGen.CtorAttributes, CallingConventions.Standard, LamdaGen.CtorSignature);
+            var method = builder.DefineMethod("Invoke", MethodAttributes.HideBySig, CallingConventions.Standard, returnType, types);
+            var iLGen = ctor.GetILGenerator();
+            iLGen.Emit(OpCodes.Ldarg_0);
+            iLGen.Emit(OpCodes.Call, typeof(object).GetConstructor(EmptyTypes));
+            iLGen.Emit(OpCodes.Ldarg_0);
+            iLGen.Emit(OpCodes.Ldarg_1);
+            iLGen.Emit(OpCodes.Stfld, values);
+            iLGen.Emit(OpCodes.Ret);
+
+            // Values = values;
+            return new LamdaGen(builder, method)
+            {
+                Constructor = ctor,
+                Values = values
+            };
         }
     }
 }

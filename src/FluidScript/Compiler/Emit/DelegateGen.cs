@@ -18,7 +18,7 @@ namespace FluidScript.Compiler.Emit
         private static Type MakeNewCustomDelegate(Type[] types, Type returnType)
         {
             TypeBuilder builder = AssemblyGen.DynamicAssembly
-                .DefineDynamicType("Delegate" + types.Length, typeof(MulticastDelegate), TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass);
+                .DefineDynamicType("Delegate" + types.Length, TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass, typeof(MulticastDelegate));
             builder.DefineConstructor(CtorAttributes, CallingConventions.Standard, _DelegateCtorSignature).SetImplementationFlags(ImplAttributes);
             builder.DefineMethod("Invoke", InvokeAttributes, returnType, types);
 #if NETFRAMEWORK || MONOANDROID

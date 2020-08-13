@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace FluidScript
+﻿namespace FluidScript
 {
     /// <inheritdoc/>
     [Runtime.Register(nameof(System.Object))]
@@ -8,21 +6,21 @@ namespace FluidScript
     {
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.GetHashCode()
+        public virtual Integer HashCode()
         {
             return base.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        String IFSObject.ToString()
+        public virtual String StringValue()
         {
             return base.ToString();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(object obj)
+        public virtual Boolean Equals(Any obj)
         {
             return Equals(obj);
         }
@@ -38,17 +36,14 @@ namespace FluidScript
             return base.GetHashCode();
         }
 
-        public override string ToString()
-        {
-            return ((IFSObject)this).ToString().m_value;
-        }
+        public override string ToString() => StringValue().m_value;
 
         /// <summary>
         /// Equal Implementation
         /// </summary>
         public static Boolean operator ==(FSObject left, FSObject right)
         {
-            return ((IFSObject)left).Equals(right);
+            return left.Equals(right);
         }
 
         /// <summary>
@@ -56,7 +51,7 @@ namespace FluidScript
         /// </summary>
         public static Boolean operator !=(FSObject left, FSObject right)
         {
-            return ((IFSObject)left).Equals(right);
+            return left.Equals(right);
         }
 
         [Runtime.Register("isEquals")]

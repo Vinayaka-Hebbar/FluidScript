@@ -83,7 +83,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             if (NodeType == ExpressionType.Parenthesized)
             {
-                Operand.GenerateCode(generator);
+                Operand.GenerateCode(generator, option);
                 return;
             }
             var operand = Operand;
@@ -105,10 +105,10 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 case ExpressionType.PostfixMinusMinus:
                 case ExpressionType.PostfixPlusPlus:
-                    if (binder.CanEmitThis)
+                    if ((binder.Attributes & BindingAttributes.HasThis) != 0)
                         generator.LoadArgument(0);
                     operand.GenerateCode(generator, MethodCompileOption.Dupplicate);
-                    if (binder.IsMember)
+                    if ((binder.Attributes & BindingAttributes.Member) != 0)
                     {
                         CallPostFixMember(generator, binder, option);
                         return;
@@ -118,16 +118,16 @@ namespace FluidScript.Compiler.SyntaxTree
                     // call the operator
                     generator.CallStatic(Method);
                     // update value
-                    binder.GenerateSet(generator);
+                    binder.GenerateSet(operand, generator);
                     break;
                 case ExpressionType.PrefixMinusMinus:
                 case ExpressionType.PrefixPlusPlus:
-                    if (binder.CanEmitThis)
+                    if ((binder.Attributes & BindingAttributes.HasThis) != 0)
                         generator.LoadArgument(0);
                     operand.GenerateCode(generator, MethodCompileOption.Dupplicate);
                     // call the operator
                     generator.CallStatic(Method);
-                    if (binder.IsMember)
+                    if ((binder.Attributes & BindingAttributes.Member) != 0)
                     {
                         CallPreFixMember(generator, binder, option);
                         return;
@@ -135,7 +135,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     if ((option & MethodCompileOption.Dupplicate) != 0)
                         generator.Duplicate();
                     // update value
-                    binder.GenerateSet(generator);
+                    binder.GenerateSet(Operand, generator);
                     break;
                 default:
                     // call the operator
@@ -151,7 +151,7 @@ namespace FluidScript.Compiler.SyntaxTree
             // if no duplicate ex: i++ single line 
             if ((option & MethodCompileOption.Dupplicate) == 0)
             {
-                binder.GenerateSet(generator);
+                binder.GenerateSet(Operand, generator);
                 return;
             }
             // ++i where i is member
@@ -162,7 +162,7 @@ namespace FluidScript.Compiler.SyntaxTree
             // then load the variable
             generator.LoadVariable(temp);
             // store the variable result to member
-            binder.GenerateSet(generator);
+            binder.GenerateSet(Operand, generator);
             // load the temp variable
             generator.LoadVariable(temp);
         }
@@ -172,7 +172,7 @@ namespace FluidScript.Compiler.SyntaxTree
             // if no duplicate ex: i++ single line 
             if ((option & MethodCompileOption.Dupplicate) == 0)
             {
-                binder.GenerateSet(generator);
+                binder.GenerateSet(Operand, generator);
                 return;
             }
             // i++ where i is member
@@ -185,7 +185,7 @@ namespace FluidScript.Compiler.SyntaxTree
             // call operator
             generator.CallStatic(Method);
             // store operation result to member
-            binder.GenerateSet(generator);
+            binder.GenerateSet(Operand, generator);
             //load the temp variable
             generator.LoadVariable(temp);
 

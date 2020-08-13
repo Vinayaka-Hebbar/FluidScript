@@ -7,9 +7,9 @@ namespace FluidScript.Extensions
         /// <summary>
         /// Matches generating argument 
         /// </summary>
-        /// <param name="member"></param>
-        /// <param name="name"></param>
-        /// <param name="flags"></param>
+        /// <param name="member">Member to check</param>
+        /// <param name="name">Name to match</param>
+        /// <param name="flags">Binding flag to match</param>
         /// <returns></returns>
         internal static bool IsEquals(this Compiler.Emit.IMember member, string name, BindingFlags flags)
         {
@@ -33,8 +33,7 @@ namespace FluidScript.Extensions
         /// Matches generating argument 
         /// </summary>
         /// <param name="member"></param>
-        /// <param name="name"></param>
-        /// <param name="flags"></param>
+        /// <param name="flags">Binding flags to match</param>
         /// <returns></returns>
         internal static bool BindingFlagsMatch(this Compiler.Emit.IMember member, BindingFlags flags)
         {

@@ -1,5 +1,4 @@
-﻿using FluidScript.Extensions;
-using System;
+﻿using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -8,9 +7,10 @@ namespace FluidScript.Compiler.Emit
     public class LamdaGen
     {
         internal static readonly Type ObjectArray = typeof(object[]);
-        static readonly Type[] _CtorSignature = new Type[] { ObjectArray };
+        internal static readonly Type[] CtorSignature = new Type[] { ObjectArray };
+        internal const TypeAttributes Attributes = TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass;
 
-        private LamdaGen(TypeBuilder type, MethodBuilder method)
+        internal LamdaGen(TypeBuilder type, MethodBuilder method)
         {
             Type = type;
             Method = method;
@@ -18,7 +18,7 @@ namespace FluidScript.Compiler.Emit
 
         public TypeBuilder Type { get; }
         public MethodBuilder Method { get; }
-        public FieldInfo Values { get; private set; }
+        public FieldInfo Values { get; internal set; }
 
         public Type CreateType()
         {
@@ -29,35 +29,8 @@ namespace FluidScript.Compiler.Emit
 #endif
         }
 
-        public ConstructorInfo Constructor { get; private set; }
+        public ConstructorInfo Constructor { get; internal set; }
 
-        /// <summary>
-        /// Define Anonymous class
-        /// </summary>
-        /// <param name="types">Ctor types</param>
-        /// <param name="returnType">Return Type of Lamda</param>
-        /// <returns>Type builder</returns>
-        public static LamdaGen DefineAnonymousMethod(Type[] types, Type returnType)
-        {
-            TypeBuilder builder = AssemblyGen.DynamicAssembly
-                .DefineDynamicType("DisplayClass_" + types.Length, typeof(object), TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.AutoClass);
-            var values = builder.DefineField("Values", ObjectArray, FieldAttributes.Private);
-            ConstructorBuilder ctor = builder.DefineConstructor(DelegateGen.CtorAttributes, CallingConventions.Standard, _CtorSignature);
-            var method = builder.DefineMethod("Invoke", MethodAttributes.HideBySig, CallingConventions.Standard, returnType, types);
-            var iLGen = ctor.GetILGenerator();
-            iLGen.Emit(OpCodes.Ldarg_0);
-            iLGen.Emit(OpCodes.Call, typeof(object).GetInstanceCtor());
-            iLGen.Emit(OpCodes.Ldarg_0);
-            iLGen.Emit(OpCodes.Ldarg_1);
-            iLGen.Emit(OpCodes.Stfld, values);
-            iLGen.Emit(OpCodes.Ret);
 
-            // Values = values;
-            return new LamdaGen(builder, method)
-            {
-                Constructor = ctor,
-                Values = values
-            };
-        }
     }
 }

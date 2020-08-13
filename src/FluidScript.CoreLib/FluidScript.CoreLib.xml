@@ -4,13 +4,10 @@
         <name>FluidScript.CoreLib</name>
     </assembly>
     <members>
-        <member name="M:FluidScript.Collections.Dictionary`2.FluidScript#IFSObject#GetHashCode">
+        <member name="M:FluidScript.Collections.Dictionary`2.HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Collections.Dictionary`2.FluidScript#IFSObject#ToString">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Collections.Dictionary`2.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Collections.Dictionary`2.StringValue">
             <inheritdoc/>
         </member>
         <member name="T:FluidScript.Collections.List`1">
@@ -193,7 +190,7 @@
             the enumerator has passed the end of the collection.
             </returns>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Iterator.FluidScript#IFSObject#GetHashCode">
+        <member name="M:FluidScript.Collections.List`1.Iterator.HashCode">
             <summary>
             Returns the hash code for this instance.
             </summary>
@@ -201,22 +198,12 @@
             A 32-bit signed integer that is the hash code for this instance.
             </returns>
         </member>
-        <member name="M:FluidScript.Collections.List`1.Iterator.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.Collections.List`1.Iterator.StringValue">
             <summary>
             Returns the fully qualified type name of this instance.
             </summary>
             <returns>
             A System.String containing a fully qualified type name.
-            </returns>
-        </member>
-        <member name="M:FluidScript.Collections.List`1.Iterator.FluidScript#IFSObject#Equals(System.Object)">
-            <summary>
-            Determines whether the specified System.Object is equal to the current System.Object.
-            </summary>
-            <param name="obj">The object to compare with the current object.</param>
-            <returns>
-            true if the specified System.Object is equal to the current System.Object; otherwise,
-            false.
             </returns>
         </member>
         <member name="M:FluidScript.Date.AddTicks(FluidScript.Long)">
@@ -231,16 +218,21 @@
              The resulting System.DateTime is less than System.DateTime.MinValue or greater
              than System.DateTime.MaxValue.</exception>
         </member>
+        <member name="T:FluidScript.FSConvert">
+            <summary>
+            Converts a base data type to another base data type.
+            </summary>
+        </member>
         <member name="T:FluidScript.FSObject">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.FSObject.FluidScript#IFSObject#GetHashCode">
+        <member name="M:FluidScript.FSObject.HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.FSObject.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.FSObject.StringValue">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.FSObject.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.FSObject.Equals(FluidScript.Any)">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.FSObject.Equals(System.Object)">
@@ -261,23 +253,13 @@
             Supports all classes in the FluidScipt
             </summary>
         </member>
-        <member name="M:FluidScript.IFSObject.ToString">
+        <member name="M:FluidScript.IFSObject.StringValue">
             <summary>
             Returns a string that represents the current object.
             </summary>
             <returns>A string that represents the current object.</returns>
         </member>
-        <member name="M:FluidScript.IFSObject.Equals(System.Object)">
-            <summary>
-            Determines whether the specified <see cref="T:FluidScript.IFSObject"/> is equal to the current <see cref="T:FluidScript.IFSObject"/>.
-            </summary>
-            <param name="obj">The object to compare with the current object.</param>
-            <returns>
-            true if the specified System.Object is equal to the current System.Object; otherwise,
-            false.
-            </returns>
-        </member>
-        <member name="M:FluidScript.IFSObject.GetHashCode">
+        <member name="M:FluidScript.IFSObject.HashCode">
             <summary>
             Serves as a hash function for a particular type.
             </summary>
@@ -571,13 +553,10 @@
             </summary>
             <param name="value"></param>
         </member>
-        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#GetHashCode">
+        <member name="M:FluidScript.Boolean.HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#ToString">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Boolean.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Boolean.StringValue">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Boolean.Equals(System.Object)">
@@ -680,13 +659,10 @@
             Initializes a new instance of the <see cref="T:FluidScript.Byte"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Byte.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.Byte.StringValue">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Byte.FluidScript#IFSObject#GetHashCode">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Byte.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Byte.HashCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Byte.Equals(System.Object)">
@@ -774,19 +750,14 @@
             Initializes a new instance of the <see cref="T:FluidScript.Char"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Char.FluidScript#IFSObject#GetHashCode">
+        <member name="M:FluidScript.Char.HashCode">
             <summary>
             returns the hashCode() for the instance
             </summary>
         </member>
-        <member name="M:FluidScript.Char.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.Char.StringValue">
             <summary>
             converts to string
-            </summary>
-        </member>
-        <member name="M:FluidScript.Char.FluidScript#IFSObject#Equals(System.Object)">
-            <summary>
-            checks <paramref name="obj"/> and <see cref="T:FluidScript.Integer"/> are equals
             </summary>
         </member>
         <member name="M:FluidScript.Char.Equals(System.Object)">
@@ -884,13 +855,10 @@
             Initializes a new instance of the <see cref="T:FluidScript.Double"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Double.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.Double.StringValue">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Double.FluidScript#IFSObject#GetHashCode">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Double.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Double.HashCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Double.Equals(System.Object)">
@@ -968,13 +936,10 @@
             Initializes a new instance of the <see cref="T:FluidScript.Float"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Float.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.Float.StringValue">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Float.FluidScript#IFSObject#GetHashCode">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Float.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Float.HashCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Float.Equals(System.Object)">
@@ -1052,13 +1017,10 @@
             Initializes a new instance of the <see cref="T:FluidScript.Integer"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Integer.FluidScript#IFSObject#GetHashCode">
+        <member name="M:FluidScript.Integer.HashCode">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Integer.FluidScript#IFSObject#ToString">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Integer.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Integer.StringValue">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Integer.Equals(System.Object)">
@@ -1141,13 +1103,10 @@
             Initializes a new instance of the <see cref="T:FluidScript.Long"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Long.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.Long.StringValue">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Long.FluidScript#IFSObject#GetHashCode">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Long.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Long.HashCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Long.Equals(System.Object)">
@@ -1225,13 +1184,10 @@
             Initializes a new instance of the <see cref="T:FluidScript.Short"/>
             </summary>
         </member>
-        <member name="M:FluidScript.Short.FluidScript#IFSObject#ToString">
+        <member name="M:FluidScript.Short.StringValue">
             <inheritdoc/>
         </member>
-        <member name="M:FluidScript.Short.FluidScript#IFSObject#GetHashCode">
-            <inheritdoc/>
-        </member>
-        <member name="M:FluidScript.Short.FluidScript#IFSObject#Equals(System.Object)">
+        <member name="M:FluidScript.Short.HashCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.Short.Equals(System.Object)">
@@ -1299,16 +1255,41 @@
         <member name="M:FluidScript.Short.System#IConvertible#ToType(System.Type,System.IFormatProvider)">
             <internalonly/>
         </member>
-        <member name="M:FluidScript.Runtime.ArgumentConversions.Backup">
+        <member name="T:FluidScript.Runtime.ArgumentConversions">
             <summary>
-            Save the position
+            Conversion before passing arguments
+            </summary>
+        </member>
+        <member name="F:FluidScript.Runtime.ArgumentConversions.limit">
+            max argument index
+        </member>
+        <member name="M:FluidScript.Runtime.ArgumentConversions.#ctor(System.Int32)">
+            <summary>
+            Initalizes Conversions for arguments
+            </summary>
+            <param name="capacity">Initial capacity</param>
+        </member>
+        <member name="P:FluidScript.Runtime.ArgumentConversions.Count">
+            <summary>
+            Current conversion limit
+            </summary>
+        </member>
+        <member name="M:FluidScript.Runtime.ArgumentConversions.SetInitial(FluidScript.Runtime.Conversion[])">
+            <summary>
+            Set Inital conversions
             </summary>
         </member>
         <member name="M:FluidScript.Runtime.ArgumentConversions.Recycle">
             <summary>
-            Revert back to last backup position <see cref="M:FluidScript.Runtime.ArgumentConversions.Backup"/>
+            Revert back to last backup position <see cref="M:FluidScript.Runtime.ArgumentConversions.SetInitial(FluidScript.Runtime.Conversion[])"/>
             </summary>
             <returns></returns>
+        </member>
+        <member name="M:FluidScript.Runtime.ArgumentConversions.Invoke(System.Object[]@)">
+            <summary>
+            Convert arguments to pass to method
+            </summary>
+            <param name="values">Parametres to convert</param>
         </member>
         <member name="T:FluidScript.Runtime.Conversion">
             <summary>
@@ -1330,11 +1311,49 @@
             Conversion method
             </summary>
         </member>
+        <member name="T:FluidScript.Runtime.DynamicObject">
+            <summary>
+            Dynamic Runtime Object
+            </summary>
+        </member>
+        <member name="P:FluidScript.Runtime.DynamicObject.Item(FluidScript.String)">
+            <summary>
+            Getter and Setter of variables
+            </summary>
+        </member>
+        <member name="M:FluidScript.Runtime.DynamicObject.Add(System.String,System.Object)">
+            <summary>
+            Replaces specific value if key exist
+            </summary>
+        </member>
+        <member name="M:FluidScript.Runtime.DynamicObject.FluidScript#Runtime#IDynamicObject#TryGetMember(System.String,FluidScript.Runtime.MemberKey@)">
+            <summary>
+            Get current context variable
+            </summary>
+        </member>
         <member name="T:FluidScript.Runtime.IValueBox`1">
             <summary>
             Primitive Value will be wrapped
             </summary>
             <typeparam name="T">Type</typeparam>
+        </member>
+        <member name="M:FluidScript.Runtime.ReflectionExtensions.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
+            <summary>
+            Returns true if the method's parameter types are reference assignable from
+            the argument types, otherwise false.
+            
+            An example that can make the method return false is that 
+            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
+            returns a method with two double parameters, which doesn't match the provided
+            argument types.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FluidScript.Runtime.ReflectionExtensions.FindGetIndexer(System.Type,System.Object[],FluidScript.Runtime.ArgumentConversions@)">
+            Current Declared Indexer can get
+        </member>
+        <member name="M:FluidScript.Runtime.ReflectionExtensions.FindSetIndexer(System.Type,System.Object[],System.Object,FluidScript.Runtime.ArgumentConversions@,System.Object[]@)">
+            Current Declared Indexer can get
         </member>
         <member name="T:FluidScript.Runtime.RegisterAttribute">
             <summary>
@@ -1396,24 +1415,6 @@
             Todo serialization support
             </summary>
         </member>
-        <member name="M:FluidScript.Runtime.TypeUtils.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
-            <summary>
-            Returns true if the method's parameter types are reference assignable from
-            the argument types, otherwise false.
-            
-            An example that can make the method return false is that 
-            typeof(double).GetMethod("op_Equality", ..., new[] { typeof(double), typeof(int) })
-            returns a method with two double parameters, which doesn't match the provided
-            argument types.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:FluidScript.Runtime.TypeUtils.FindGetIndexer(System.Type,System.Object[],FluidScript.Runtime.ArgumentConversions@)">
-            Current Declared Indexer can get
-        </member>
-        <member name="M:FluidScript.Runtime.TypeUtils.FindSetIndexer(System.Type,System.Object[],FluidScript.Runtime.ArgumentConversions@)">
-            Current Declared Indexer can get
-        </member>
         <member name="T:FluidScript.String">
             <summary>
             Represents text as a series of Unicode characters.
@@ -1434,6 +1435,12 @@
         </member>
         <member name="M:FluidScript.String.GetHashCode">
             <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.String.HashCode">
+            <summary>
+            Serves as a hash function for a particular type.
+            </summary>
+            <returns>A hash code for the current System.Object.</returns>
         </member>
         <member name="M:FluidScript.String.Equals(FluidScript.String)">
             <summary>

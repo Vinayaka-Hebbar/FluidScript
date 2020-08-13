@@ -1,36 +1,42 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Runtime;
 using System;
 
 namespace FluidScript.Compiler.Binders
 {
     #region Binder
+
     /// <summary>
     /// Binder for variable or member
     /// </summary>
     public interface IBinder
     {
-        void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option = 0);
+        void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option = 0);
 
-        void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option = 0);
-
-        Type Type { get; }
+        void GenerateSet(Expression value,  MethodBodyGenerator generator, MethodCompileOption option = 0);
 
         /// <summary>
         /// From this you can identify whether Binder is a Variable or Static Member 
         /// </summary>
-        bool CanEmitThis { get; }
+        BindingAttributes Attributes { get; }
 
-        /// <summary>
-        ///  From this you can identify whether Binder is a Variable or Member 
-        /// </summary>
-        bool IsMember { get; }
+        Type Type { get; }
 
         object Get(object obj);
 
         void Set(object obj, object value);
     }
 
-    public interface IBinderProvider
+    public enum BindingAttributes
+    {
+        None,
+        HasThis = 1,
+        Member = 2,
+        Dynamic = 4,
+    }
+
+    public interface IBindable
     {
         IBinder Binder { get; }
     }
@@ -53,14 +59,14 @@ namespace FluidScript.Compiler.Binders
 
         public bool CanEmitThis => false;
 
-        public bool IsMember => false;
+        public BindingAttributes Attributes => BindingAttributes.None;
 
-        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
 
         }
 
-        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option)
         {
 
         }
@@ -82,41 +88,63 @@ namespace FluidScript.Compiler.Binders
 #endif
         struct DynamicVariableBinder : IBinder
     {
-        readonly ILocalVariable variable;
+        readonly MemberKey key;
         readonly System.Runtime.CompilerServices.IRuntimeVariables target;
 
-        public DynamicVariableBinder(ILocalVariable variable, System.Runtime.CompilerServices.IRuntimeVariables target)
+        public DynamicVariableBinder(MemberKey key, System.Runtime.CompilerServices.IRuntimeVariables target)
         {
-            this.variable = variable;
+            this.key = key;
             this.target = target;
         }
 
-        public Type Type => variable.Type;
+        public Type Type => key.Type;
 
         public bool CanEmitThis => false;
 
-        public bool IsMember => false;
+        public BindingAttributes Attributes => BindingAttributes.None;
 
-        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
-            generator.DeclareVariable(variable.Type, variable.Name);
+            generator.DeclareVariable(key.Type, key.Name);
         }
 
-        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option)
         {
-            var iLVariable = generator.GetLocalVariable(variable.Name);
+            var iLVariable = generator.GetLocalVariable(key.Name);
             if (iLVariable != null)
                 generator.LoadVariable(iLVariable);
         }
 
         public object Get(object obj)
         {
-            return target[variable.Index];
+            return target[key.Index];
         }
 
         public void Set(object obj, object value)
         {
-            target[variable.Index] = value;
+            Type dest = key.Type;
+            if (value == null)
+            {
+                if (dest.IsNullAssignable())
+                    target[key.Index] = value;
+                else
+                    throw new Exception(string.Concat("Can't assign null value to type ", dest));
+                return;
+            }
+            Type type = value.GetType();
+            if (TypeUtils.AreReferenceAssignable(dest, type))
+            {
+                target[key.Index] = value;
+            }
+            else if (type.TryImplicitConvert(dest, out System.Reflection.MethodInfo implConvert))
+            {
+                value = implConvert.Invoke(null, new object[1] { value });
+                target[key.Index] = value;
+            }
+            else
+            {
+                throw new System.InvalidCastException(string.Concat(type, " to ", dest));
+            }
         }
     }
     #endregion
@@ -142,16 +170,14 @@ namespace FluidScript.Compiler.Binders
 
         public Type Type => variable.Type;
 
-        public bool CanEmitThis => false;
+        public BindingAttributes Attributes => BindingAttributes.None;
 
-        public bool IsMember => false;
-
-        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
             throw new NotImplementedException();
         }
 
-        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option)
         {
             throw new NotImplementedException();
         }

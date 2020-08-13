@@ -6,7 +6,7 @@ namespace FluidScript.Compiler.SyntaxTree
     /// <summary>
     /// Identfier Expression
     /// </summary>
-    public sealed class NameExpression : Expression, Binders.IBinderProvider
+    public sealed class NameExpression : Expression, Binders.IBindable
     {
         /// <summary>
         /// Name of the Identifier
@@ -50,18 +50,15 @@ namespace FluidScript.Compiler.SyntaxTree
             return visitor.VisitMember(this);
         }
 
-        /// <summary>
-        /// Generate Compiled code
-        /// </summary>
-        /// <param name="generator"></param>
+        /// <inheritdoc/>
         public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
             // for static no binder
             if (Binder != null)
             {
-                if (Binder.CanEmitThis)
+                if ((Binder.Attributes & Binders.BindingAttributes.HasThis) != 0)
                     generator.LoadArgument(0);
-                Binder.GenerateGet(generator, option);
+                Binder.GenerateGet(null, generator, option);
             }
         }
 

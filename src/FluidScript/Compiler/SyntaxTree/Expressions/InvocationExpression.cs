@@ -23,7 +23,6 @@ namespace FluidScript.Compiler.SyntaxTree
             Arguments = arguments;
         }
 
-
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
             return visitor.VisitCall(this);
@@ -31,7 +30,32 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
-            Target.GenerateCode(generator);
+            if (Method.IsAbstract && Method.DeclaringType == typeof(IDynamicInvocable))
+            {
+                Target.GenerateCode(generator);
+                if (Target.Type.IsValueType)
+                    generator.Box(Target.Type);
+            }
+            else
+            {
+                Target.GenerateCode(generator, MethodCompileOption.EmitStartAddress);
+            }
+            if (Target.NodeType == ExpressionType.MemberAccess)
+            {
+                MemberExpression target = (MemberExpression)Target;
+                if (target.Target.Type.IsValueType)
+                {
+                    switch (target.Target.NodeType)
+                    {
+                        case ExpressionType.Indexer:
+                        case ExpressionType.MemberAccess:
+                            var temp = generator.DeclareVariable(target.Target.Type);
+                            generator.StoreVariable(temp);
+                            generator.LoadAddressOfVariable(temp);
+                            break;
+                    }
+                }
+            }
             EmitArguments(generator, Arguments, Conversions);
             generator.Call(Method);
             // if current value must not be returned for assigment

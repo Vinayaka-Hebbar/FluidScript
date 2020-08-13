@@ -1,14 +1,17 @@
 ﻿using FluidScript.Runtime;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace FluidScript
 {
-    public struct Any : IConvertible
+    [Register("Any")]
+    [Serializable]
+    public struct Any : IConvertible, IFSObject, IDynamicInvocable, System.Dynamic.IDynamicMetaObjectProvider
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        object m_value;
+        internal readonly object m_value;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         Type m_type;
 
@@ -29,13 +32,53 @@ namespace FluidScript
             get
             {
                 if (m_type == null)
-                {
-                    if (m_value is null)
-                        m_type = typeof(object);
-                    m_type = m_value.GetType();
-                }
+                    m_type = m_value is null ? typeof(object) : m_value.GetType();
                 return m_type;
             }
+        }
+
+        ICollection<string> IRuntimeMetadata.Keys
+        {
+            get
+            {
+                if (m_value == null)
+                    return new string[0];
+                if (m_value is IRuntimeMetadata)
+                    return ((IRuntimeMetadata)m_value).Keys;
+                var members = Type.FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, TypeUtils.AnyPublic, null, null);
+                var names = new string[members.Length];
+                for (int i = 0; i < members.Length; i++)
+                {
+                    names[i] = members[i].Name;
+                }
+                return names;
+            }
+        }
+
+        [Register("toString")]
+        public String StringValue()
+        {
+            if (m_value is null)
+                return String.Empty;
+            return m_value.ToString();
+        }
+
+        [Register("hashCode")]
+        public Integer HashCode()
+        {
+            if (m_value is null)
+                return default(Integer);
+            return m_value.GetHashCode();
+        }
+
+        [Register("equals")]
+        public Boolean Equals(Any other)
+        {
+            if (other.m_value is null)
+                return m_value is null;
+            if (m_value is null)
+                return Boolean.False;
+            return m_value.Equals(other.m_value);
         }
 
         public Any this[Any key]
@@ -43,18 +86,18 @@ namespace FluidScript
             get
             {
                 object[] args = new object[] { key.m_value };
-                var indexer = TypeUtils.FindGetIndexer(Type, args, out ArgumentConversions conversions);
+                var indexer = ReflectionExtensions.FindGetIndexer(Type, args, out ArgumentConversions conversions);
                 if (indexer != null)
                 {
                     conversions.Invoke(ref args);
-                    return new Any(indexer.Invoke(m_value, args));
+                    return op_Implicit(indexer.Invoke(m_value, args));
                 }
                 return default(Any);
             }
             set
             {
-                object[] args = new object[] { key.m_value, value.m_value };
-                var indexer = TypeUtils.FindSetIndexer(Type, args, out ArgumentConversions conversions);
+                object[] args = new object[] { key.m_value };
+                var indexer = ReflectionExtensions.FindSetIndexer(Type, args, value.m_value, out ArgumentConversions conversions, out args);
                 if (indexer != null)
                 {
                     conversions.Invoke(ref args);
@@ -63,35 +106,38 @@ namespace FluidScript
             }
         }
 
-        public Any this[Any[] keys]
+        public Any this[params Any[] keys]
         {
             get
             {
                 object[] args = GetArgs(keys);
-                var indexer = TypeUtils.FindGetIndexer(Type, args, out ArgumentConversions conversions);
+                var indexer = ReflectionExtensions.FindGetIndexer(Type, args, out ArgumentConversions conversions);
                 if (indexer != null)
                 {
                     conversions.Invoke(ref args);
-                    return new Any(indexer.Invoke(m_value, args));
+                    return op_Implicit(indexer.Invoke(m_value, args));
                 }
                 return default(Any);
             }
             set
             {
-                object[] args = new object[keys.Length + 1];
-                int i;
-                for (i = 0; i < keys.Length; i++)
-                {
-                    args[i] = keys[i].m_value;
-                }
-                args[i] = value.m_value;
-                var indexer = TypeUtils.FindSetIndexer(Type, args, out ArgumentConversions conversions);
+                object[] args = GetArgs(keys);
+                var indexer = ReflectionExtensions.FindSetIndexer(Type, args, value.m_value, out ArgumentConversions conversions, out args);
                 if (indexer != null)
                 {
                     conversions.Invoke(ref args);
                     indexer.Invoke(m_value, args);
                 }
             }
+        }
+
+        Boolean IsNull()
+        {
+            if (m_value is null)
+                return Boolean.True;
+            if (m_value is Boolean)
+                return m_value.Equals(Boolean.False);
+            return Boolean.False;
         }
 
         public override string ToString()
@@ -112,25 +158,21 @@ namespace FluidScript
             return false;
         }
 
-        public Any Call(string name)
+        public Any Invoke(string name)
         {
-            var args = new object[0];
-            if (TypeUtils.TryFindMethod(Type, name, args, out System.Reflection.MethodInfo method, out ArgumentConversions conversions))
-            {
-                conversions.Invoke(ref args);
-                return op_Implicit(method.Invoke(m_value, args));
-            }
-            return default(Any);
+            return Invoke(name, new Any[0]);
         }
 
-        public Any Call(string name, params Any[] args)
+        public Any Invoke(string name, params Any[] args)
         {
             var actualArgs = GetArgs(args);
-            if (TypeUtils.TryFindMethod(Type, name, actualArgs, out System.Reflection.MethodInfo method, out ArgumentConversions conversions))
+            if (ReflectionExtensions.TryFindMethod(Type, name, actualArgs, out System.Reflection.MethodInfo method, out ArgumentConversions conversions))
             {
                 conversions.Invoke(ref actualArgs);
-                return new Any(method.Invoke(m_value, actualArgs));
+                return op_Implicit(method.Invoke(m_value, actualArgs));
             }
+            if (m_value is IDynamicInvocable)
+                return ((IDynamicInvocable)m_value).Invoke(name, args);
             return default(Any);
         }
 
@@ -141,7 +183,7 @@ namespace FluidScript
             return m_value.GetHashCode();
         }
 
-        static object[] GetArgs(Any[] keys)
+        internal static object[] GetArgs(Any[] keys)
         {
             object[] args = new object[keys.Length];
             for (int i = 0; i < keys.Length; i++)
@@ -164,7 +206,7 @@ namespace FluidScript
         {
             if (m_value is IConvertible)
                 return ((IConvertible)m_value).ToBoolean(provider);
-            return false;
+            return m_value is object;
         }
 
         byte IConvertible.ToByte(IFormatProvider provider)
@@ -251,7 +293,7 @@ namespace FluidScript
             var valueType = m_value.GetType();
             if (TypeUtils.AreReferenceAssignable(conversionType, valueType))
                 return m_value;
-            if (TypeUtils.TryImplicitConvert(valueType, conversionType, out System.Reflection.MethodInfo conversion))
+            if (valueType.TryImplicitConvert(conversionType, out System.Reflection.MethodInfo conversion))
                 return conversion.Invoke(null, new object[] { m_value });
             throw new InvalidCastException($"Unable to cast object of type {valueType} to {conversionType}");
         }
@@ -317,9 +359,9 @@ namespace FluidScript
         public static Boolean operator ==(Any left, Any right)
         {
             if (left.m_value is null)
-                return right.m_value is null;
+                return right.IsNull();
             if (right.m_value is null)
-                return left.m_value is null;
+                return left.IsNull();
             return left.m_value.Equals(right.m_value);
         }
 
@@ -849,5 +891,71 @@ namespace FluidScript
         {
             return value.m_value;
         }
+
+        Any IDynamicInvocable.SafeSetValue(Any value, string name, Type type)
+        {
+            if (Type.TryFindMember(name, TypeUtils.AnyPublic, out IMemberBinder binder))
+            {
+                if (TypeUtils.AreReferenceAssignable(binder.Type, type) == false)
+                {
+                    if (type.TryImplicitConvert(binder.Type, out System.Reflection.MethodInfo op_Implicit) == false)
+                        throw new InvalidCastException($"object of type {type} cannot be assigned to type {binder.Type}");
+                    value = Any.op_Implicit(op_Implicit.Invoke(null, new object[] { value.m_value }));
+                }
+                binder.Set(m_value, value.m_value);
+                return value;
+            }
+            if (m_value is IDynamicInvocable)
+            {
+                return ((IDynamicInvocable)m_value).SafeSetValue(value, name, type);
+            }
+            return default(Any);
+        }
+
+        Any IDynamicInvocable.SafeGetValue(string name)
+        {
+            if (Type.TryFindMember(name, TypeUtils.AnyPublic, out IMemberBinder binder))
+            {
+                return op_Implicit(binder.Get(m_value));
+            }
+            if (m_value is IDynamicInvocable)
+            {
+                return ((IDynamicInvocable)m_value).SafeGetValue(name);
+            }
+            return default(Any);
+        }
+
+        bool IRuntimeMetadata.GetOrCreateBinder(string name, object value, Type type, out IMemberBinder binder)
+        {
+            if (Type.TryFindMember(name, TypeUtils.AnyPublic, out binder))
+            {
+                return true;
+            }
+            if (m_value is IRuntimeMetadata)
+            {
+                return ((IRuntimeMetadata)m_value).GetOrCreateBinder(name, value, type, out binder);
+            }
+            return false;
+        }
+
+        bool IRuntimeMetadata.TryGetBinder(string name, out IMemberBinder binder)
+        {
+            if (Type.TryFindMember(name, TypeUtils.AnyPublic, out binder))
+            {
+                return true;
+            }
+            if (m_value is IRuntimeMetadata)
+            {
+                return ((IRuntimeMetadata)m_value).TryGetBinder(name, out binder);
+            }
+            return false;
+        }
+
+        #region Dynamic Metadata
+        System.Dynamic.DynamicMetaObject System.Dynamic.IDynamicMetaObjectProvider.GetMetaObject(System.Linq.Expressions.Expression parameter)
+        {
+            return new MetaObject(parameter, this);
+        }
+        #endregion
     }
 }

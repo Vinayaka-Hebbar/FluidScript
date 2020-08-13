@@ -1,11 +1,20 @@
-﻿namespace FluidScript.Runtime
+﻿using System.Collections.Generic;
+
+namespace FluidScript.Runtime
 {
+    /// <summary>
+    /// Conversion before passing arguments
+    /// </summary>
     public sealed class ArgumentConversions
     {
         Conversion[] items;
+        /// max argument index
         int limit;
-        int start;
 
+        /// <summary>
+        /// Initalizes Conversions for arguments
+        /// </summary>
+        /// <param name="capacity">Initial capacity</param>
         public ArgumentConversions(int capacity)
         {
             items = new Conversion[capacity];
@@ -16,25 +25,41 @@
             Append(conversion.Index, conversion);
         }
 
+        public void AddRange(int index, params Conversion[] conversions)
+        {
+            for (int i = 0; i < conversions.Length; i++)
+            {
+                Append(index, conversions[i]);
+            }
+        }
+
+        /// <summary>
+        /// Current conversion limit
+        /// </summary>
         public int Count => limit;
 
         public void Append(int index, Conversion c)
         {
+            // checking array limit
             if (index == items.Length)
             {
                 Resize(2 * index);
             }
 
-            // add to next node
+            // last conversion for the index
             Conversion last = items[index];
-            if (last == null)
+            // should not cross the limit 
+            if (last == null || index > limit)
             {
-                /// empty next node
+                // empty next node
                 c.next = c;
                 items[index] = c;
+                // index should not be more
                 limit = index + 1;
                 return;
             }
+            
+            // add to next node if exist
             c.next = last;
             last.next = c;
             items[index] = c;
@@ -54,21 +79,51 @@
         }
 
         /// <summary>
-        /// Save the position
+        /// Set Inital conversions
         /// </summary>
-        public void Backup()
+        public void SetInitial(Conversion[] items)
         {
-            start = limit;
+            for (int i = 0; i < items.Length; i++)
+            {
+                AddFirst(items[i]);
+            }
+        }
+
+        public void AddFirst(Conversion item)
+        {
+            if (item != null)
+            {
+                var index = item.Index;
+                if (index < limit)
+                {
+                    var last = items[index];
+                    if (last == null)
+                    {
+                        item.next = item;
+                        items[index] = item;
+                    }
+                    else
+                    {
+                        item.next = last;
+                        last.next = item;
+                    }
+                }
+                else
+                {
+                    // deep clone required
+                    Append(index, item);
+                }
+            }
         }
 
         /// <summary>
-        /// Revert back to last backup position <see cref="Backup"/>
+        /// Revert back to last backup position <see cref="SetInitial"/>
         /// </summary>
         /// <returns></returns>
         public bool Recycle()
         {
-            // Reset the array values length
-            limit = start;
+            // Reset the array values length if any backup
+            limit = 0;
             return false;
         }
 
@@ -79,6 +134,10 @@
             items = newItems;
         }
 
+        /// <summary>
+        /// Convert arguments to pass to method
+        /// </summary>
+        /// <param name="values">Parametres to convert</param>
         public void Invoke(ref object[] values)
         {
             if (limit > 0)
@@ -86,6 +145,7 @@
                 for (int i = 0; i < limit; i++)
                 {
                     var c = items[i];
+                    // if conversion is null i.e, no conversions
                     if (c == null)
                         continue;
                     Conversion n = c;

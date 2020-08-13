@@ -13,7 +13,7 @@ namespace FluidScript
 #if LATEST_VS
         readonly
 #endif
-        struct Short : IFSObject, IConvertible,IFormattable, Runtime.IValueBox<short>
+        struct Short : IFSObject, IConvertible, IFormattable, Runtime.IValueBox<short>
     {
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         internal readonly short m_value;
@@ -28,24 +28,16 @@ namespace FluidScript
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        String IFSObject.ToString()
+        public String StringValue()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.GetHashCode()
+        public Integer HashCode()
         {
             return m_value.GetHashCode();
-        }
-
-        /// <inheritdoc/>
-        [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(object obj)
-        {
-            return obj is Short s &&
-                  m_value == s.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>
@@ -61,6 +53,7 @@ namespace FluidScript
         /// <param name="obj"> The object to compare with the current instance.</param>
         /// <returns>true if obj and this instance are the same type and represent the same value;
         ///  otherwise, false.</returns>
+        [Runtime.Register("equals")]
         public Boolean Equals(Short obj)
         {
             return m_value == obj.m_value ? Boolean.True : Boolean.False;
@@ -199,5 +192,15 @@ namespace FluidScript
         public static implicit operator Short(Byte value) => new Short(value.m_value);
 
         public static implicit operator short(Short value) => value.m_value;
+
+        public static Boolean operator ==(Short left, Short right)
+        {
+            return left.Equals(right);
+        }
+
+        public static Boolean operator !=(Short left, Short right)
+        {
+            return !left.Equals(right);
+        }
     }
 }

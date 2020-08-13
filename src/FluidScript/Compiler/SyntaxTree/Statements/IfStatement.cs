@@ -1,4 +1,7 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Runtime;
+using System.Reflection;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     /// <summary>
     /// If condition syntax 
@@ -51,8 +54,19 @@
             var condition = Condition.Accept(generator);
             // Generate code for condition convert to System.Boolean
             condition.GenerateCode(generator);
-            if (condition.Type == typeof(Boolean))
+            if (condition.Type == TypeProvider.BooleanType)
+            {
                 generator.CallStatic(Utils.ReflectionHelpers.BoooleanToBool);
+            }
+            else if (condition.Type.TryImplicitConvert(TypeProvider.BooleanType, out MethodInfo op_Implicit))
+            {
+                generator.CallStatic(op_Implicit);
+                generator.CallStatic(Utils.ReflectionHelpers.BoooleanToBool);
+            }
+            else
+            {
+                throw new System.InvalidCastException($"Unable to cast object of type {condition.Type} to {TypeProvider.BooleanType}");
+            }
             // We will need a label at the end of the if statement.
             var endOfEverything = generator.CreateLabel();
             if (Else == null)

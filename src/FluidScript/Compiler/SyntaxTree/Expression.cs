@@ -82,10 +82,11 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
         /// <summary>
-        /// Generates IL code for <see cref="Expression"/>
+        /// Generates compiled IL code for <see cref="Expression"/>
         /// </summary>
-        /// <param name="generator"></param>
-        public virtual void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option = 0)
+        /// <param name="generator">IL Generator for method body</param>
+        /// <param name="option">Compiler option's for generating <see cref="Expression"/></param>
+        public virtual void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option = MethodCompileOption.None)
         {
             generator.NoOperation();
         }
@@ -99,8 +100,8 @@ namespace FluidScript.Compiler.SyntaxTree
                 Method = method,
                 Conversions = new Runtime.ArgumentConversions(args.Count)
             };
-            if (!Utils.ReflectionUtils.MatchesTypes(method, args.Map(ex => ex.Type), exp.Conversions))
-                throw new System.InvalidOperationException("argument miss match");
+            if (!method.MatchesArgumentTypes(args.Map(ex => ex.Type), exp.Conversions))
+                throw new InvalidOperationException("argument miss match");
             return exp;
         }
 
@@ -113,8 +114,8 @@ namespace FluidScript.Compiler.SyntaxTree
                 Conversions = new Runtime.ArgumentConversions(args.Count),
                 Type = method.ReturnType
             };
-            if (!Utils.ReflectionUtils.MatchesTypes(method, args.Map(ex => ex.Type), exp.Conversions))
-                throw new System.InvalidOperationException("argument miss match");
+            if (!method.MatchesArgumentTypes(args.Map(ex => ex.Type), exp.Conversions))
+                throw new InvalidOperationException("argument miss match");
             return exp;
         }
 

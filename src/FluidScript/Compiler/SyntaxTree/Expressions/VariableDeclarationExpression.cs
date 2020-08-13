@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Runtime;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public sealed class VariableDeclarationExpression : DeclarationExpression
     {
@@ -20,14 +22,14 @@
         /// <inheritdoc/>
         public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption options)
         {
-            Type = VariableType != null ? VariableType.ResolveType((ITypeContext)generator.Context) : TypeProvider.ObjectType;
+            Type = VariableType != null ? VariableType.ResolveType(generator.Context) : TypeProvider.ObjectType;
             if (Value != null)
             {
                 var defValue = Value.Accept(generator);
                 defValue.GenerateCode(generator);
                 if (VariableType == null)
                     Type = defValue.Type;
-                else if (!Runtime.TypeUtils.AreReferenceAssignable(Type, defValue.Type) && Runtime.TypeUtils.TryImplicitConvert(defValue.Type, Type, out System.Reflection.MethodInfo opConvert))
+                else if (!TypeUtils.AreReferenceAssignable(Type, defValue.Type) && defValue.Type.TryImplicitConvert(Type, out System.Reflection.MethodInfo opConvert))
                     generator.CallStatic(opConvert);
                 else if (defValue.Type.IsValueType && !Type.IsValueType)
                     generator.Box(defValue.Type);

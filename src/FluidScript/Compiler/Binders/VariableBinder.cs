@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.SyntaxTree;
 using System;
 
 namespace FluidScript.Compiler.Binders
@@ -19,16 +20,17 @@ namespace FluidScript.Compiler.Binders
 
         public Type Type => variable.Type;
 
-        public bool CanEmitThis => false;
+        public BindingAttributes Attributes => BindingAttributes.None;
 
-        public bool IsMember => false;
-
-        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
-            generator.LoadVariable(variable);
+            if ((option & MethodCompileOption.EmitStartAddress) == 0)
+                generator.LoadVariable(variable);
+            else
+                generator.LoadAddressOfVariable(variable);
         }
 
-        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option)
         {
             generator.StoreVariable(variable);
         }

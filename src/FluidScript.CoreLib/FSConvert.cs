@@ -2,13 +2,19 @@
 
 namespace FluidScript
 {
+    /// <summary>
+    /// Converts a base data type to another base data type.
+    /// </summary>
     [Runtime.Register(nameof(Convert))]
     public class FSConvert
     {
         [Runtime.Register("toBoolean")]
         public static Boolean ToBoolean(object value)
         {
-            return Convert.ToBoolean(value) ? Boolean.True : Boolean.False;
+            if (value == null)
+                return Boolean.False;
+            var c = value as IConvertible;
+            return c == null || (c.GetTypeCode() != TypeCode.Boolean) || c.ToBoolean(null) ? Boolean.True : Boolean.False;
         }
 
         [Runtime.Register("toNumber")]

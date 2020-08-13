@@ -7,7 +7,7 @@ namespace FluidScript.Compiler.SyntaxTree
     /// <summary>
     /// Member access expression
     /// </summary>
-    public class MemberExpression : Expression, Binders.IBinderProvider
+    public class MemberExpression : Expression, Binders.IBindable
     {
         public readonly Expression Target;
         public readonly string Name;
@@ -45,8 +45,16 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
-            Target.GenerateCode(generator, MethodCompileOption.EmitStartAddress);
-            Binder?.GenerateGet(generator);
+            if (Binder != null)
+            {
+                // for dynamic sometime address not to be emitted since IDynamicInvocable is class
+                Target.GenerateCode(generator, (Binder.Attributes & Binders.BindingAttributes.Dynamic) == 0 ? MethodCompileOption.EmitStartAddress : MethodCompileOption.None);
+                Binder.GenerateGet(Target, generator);
+            }
+            else
+            {
+                Target.GenerateCode(generator, option);
+            }
         }
     }
 }

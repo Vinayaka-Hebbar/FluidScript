@@ -7,10 +7,13 @@ namespace FluidScript
     [System.Serializable]
     [Runtime.Register(nameof(String))]
     [System.Runtime.InteropServices.ComVisible(true)]
-    public sealed class String : FSObject, System.IConvertible, System.IEquatable<string>
+    public sealed class String : IFSObject, System.IConvertible, System.IEquatable<string>
     {
         [System.Diagnostics.DebuggerBrowsable(0)]
         internal readonly string m_value;
+
+        [Runtime.Register("Empty")]
+        public static readonly String Empty = new String(string.Empty);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="String"/>
@@ -106,8 +109,24 @@ namespace FluidScript
             return m_value;
         }
 
+        [Runtime.Register("toString")]
+        public String StringValue()
+        {
+            return m_value;
+        }
+
         /// <inheritdoc/>
         public override int GetHashCode()
+        {
+            return m_value.GetHashCode();
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type.
+        /// </summary>
+        /// <returns>A hash code for the current System.Object.</returns>
+        [Runtime.Register("hashCode")]
+        public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
@@ -150,6 +169,7 @@ namespace FluidScript
             return System.TypeCode.String;
         }
 
+        #region IConvertible
         /// <internalonly/>
         bool System.IConvertible.ToBoolean(System.IFormatProvider provider)
         {
@@ -243,7 +263,8 @@ namespace FluidScript
         string System.IConvertible.ToString(System.IFormatProvider provider)
         {
             return m_value;
-        }
+        } 
+        #endregion
 
         /// <summary>
         /// Implict conversion from <see cref="string"/> to <see cref="String"/>
@@ -260,7 +281,7 @@ namespace FluidScript
         /// </summary>
         public static String operator +(String left, String right)
         {
-            return new String(string.Concat(left.m_value, right.m_value));
+            return new String(string.Concat(left?.m_value, right?.m_value));
         }
 
         /// <summary>

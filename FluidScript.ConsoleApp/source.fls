@@ -1,13 +1,27 @@
-﻿class Sample {
+﻿import {Console} from mscorlib;
+
+class Sample {
+	var value = 1;
+	var x = null;
 	func add()  {
-		return 'H' + 1;
+		var res = a+b;
+		Console.WriteLine('Result = ' + res);
+		return res;
 	}
 
-	get a():int {
+	func create() {
+		return x&&x==0;
+	}
+
+	get a() {
 	  return 10;
 	}
 
-	get b():int {
+	get b() {
 	  return 10;
+	}
+
+	impl func toString(){
+		return 'My Sample';
 	}
 }

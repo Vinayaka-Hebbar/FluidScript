@@ -197,13 +197,9 @@ namespace FluidScript.Compiler
                 {
                     exp.Binder = binder;
                 }
-                else if (obj is IMetaObjectProvider runtime)
+                else if (obj is IRuntimeMetadata runtime && runtime.GetOrCreateBinder(name, value, type, out IMemberBinder member))
                 {
-                    //todo binder for dynamic
-                    var result = runtime.GetMetaObject().BindSetMember(name, node.Right.Type, value).Value;
-                    value = result.Value;
-                    node.Type = result.Type;
-                    return value;
+                    exp.Binder = new Binders.RuntimeMemberBinder(member);
                 }
                 binder = exp.Binder;
 
@@ -219,7 +215,7 @@ namespace FluidScript.Compiler
             }
             if (!TypeUtils.AreReferenceAssignable(binder.Type, type))
             {
-                if (TypeUtils.TryImplicitConvert(type, binder.Type, out System.Reflection.MethodInfo method))
+                if (type.TryImplicitConvert(binder.Type, out System.Reflection.MethodInfo method))
                     // implicit casting
                     value = method.Invoke(null, new object[] { value });
                 else
@@ -255,7 +251,7 @@ namespace FluidScript.Compiler
                     var refer = locals[variable.Index] as Delegate;
                     if (refer is null)
                         ExecutionException.ThrowInvalidOp(node);
-                    method = TypeHelpers.GetDelegateMethod(refer, args, out conversions);
+                    method = ReflectionUtils.GetDelegateMethod(refer, args, out conversions);
                     // only static method can allowed
                     if (method == null)
                         ExecutionException.ThrowInvalidOp(node.Target, node);
@@ -266,14 +262,13 @@ namespace FluidScript.Compiler
                 else
                 {
                     obj = Target;
-                    var type = GlobalType;
-                    if (m_target != null && TypeUtils.TryFindMethod(m_target.GetType(), name, args, out method, out conversions))
+                    if (m_target != null && m_target.GetType().TryFindMethod(name, args, out method, out conversions))
                         exp.Binder = new Binders.FieldBinder(ClassTargetField);
-                    else if (TypeUtils.TryFindMethod(type, name, args, out method, out conversions))
+                    else if (GlobalType.TryFindMethod(name, args, out method, out conversions))
                         exp.Binder = new Binders.FieldBinder(GlobalTargetField);
                     else
-                        ExecutionException.ThrowMissingMethod(type, name, node);
-                    // exp.Type not resolved
+                        ExecutionException.ThrowMissingMethod(GlobalType, name, node);
+                    exp.Type = method.ReturnType;
                 }
             }
             else if (nodeType == ExpressionType.MemberAccess)
@@ -281,18 +276,17 @@ namespace FluidScript.Compiler
                 var exp = (MemberExpression)target;
                 obj = exp.Target.Accept(this);
                 name = exp.Name;
-                if (TypeUtils.TryFindMethod(exp.Target.Type, name, args, out method, out conversions) == false)
+                exp.Type = exp.Target.Type;
+                if (exp.Type.TryFindMethod(name, args, out method, out conversions) == false)
                 {
-                    if (obj is IMetaObjectProvider runtime)
+                    if (obj is IRuntimeMetadata runtime && runtime.TryGetBinder(name, out IMemberBinder member))
                     {
-                        exp.Binder = runtime.GetMetaObject().BindGetMember(name);
-                        var value = exp.Binder.Get(obj);
-                        if (value is Delegate del)
+                        if (member.Get(obj) is Delegate del)
                         {
                             conversions = new ArgumentConversions(args.Length);
                             name = nameof(Action.Invoke);
                             method = del.GetType().GetMethod(name);
-                            if (TypeUtils.MatchesTypes(method, args, conversions))
+                            if (method.MatchesArguments(args, conversions))
                             {
                                 obj = del;
                             }
@@ -303,7 +297,6 @@ namespace FluidScript.Compiler
                         ExecutionException.ThrowMissingMethod(exp.Target.Type, name, node);
                     }
                 }
-                // exp.Type not resolved
             }
             else
             {
@@ -317,7 +310,7 @@ namespace FluidScript.Compiler
                 //Multi Delegate Invoke()
                 System.Reflection.MethodInfo invoke = res.GetType().GetMethod(name);
                 conversions = new ArgumentConversions(args.Length);
-                if (!TypeUtils.MatchesTypes(invoke, args, conversions))
+                if (!invoke.MatchesArguments(args, conversions))
                     ExecutionException.ThrowArgumentMisMatch(node.Target, node);
                 method = invoke;
                 obj = res;
@@ -336,21 +329,23 @@ namespace FluidScript.Compiler
         public override object VisitMember(MemberExpression node)
         {
             var target = node.Target.Accept(this);
+            if (target is null)
+                // target null member cannot be invoked
+                ExecutionException.ThrowNullError(node);
             if (node.Binder == null)
             {
-                if (node.Target.Type.TryFindMember(node.Name, ReflectionUtils.AnyPublic, out Binders.IBinder binder) == false
-                    && target is IMetaObjectProvider runtime)
+                if (node.Target.Type.TryFindMember(node.Name, ReflectionUtils.AnyPublic, out Binders.IBinder binder) == false)
                 {
-                    binder = runtime.GetMetaObject().BindGetMember(node.Name);
-                    if (binder is null)
+                    if (target is IRuntimeMetadata runtime && runtime.TryGetBinder(node.Name, out IMemberBinder member))
+                    {
+                        binder = new Binders.RuntimeMemberBinder(member);
+                    }
+                    else
                     {
                         node.Type = TypeProvider.ObjectType;
                         return null;
                     }
                 }
-                if (binder is null)
-                    // target null member cannot be invoked
-                    ExecutionException.ThrowNullError(node);
                 node.Binder = binder;
                 node.Type = binder.Type;
             }

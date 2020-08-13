@@ -1,5 +1,4 @@
-﻿using FluidScript.Compiler;
-using FluidScript.Compiler.Emit;
+﻿using FluidScript.Compiler.Emit;
 using FluidScript.Compiler.Generators;
 using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Extensions;
@@ -33,7 +32,7 @@ namespace FluidScript.ConsoleApp
             assembly.Context.Register("Console", typeof(Console));
             // code.Compile(assembly);
             valueField = typeGen.DefineField("value", typeof(object), FieldAttributes.Private);
-             valueField.SetCustomAttribute(typeof(DebuggerBrowsableAttribute), typeof(DebuggerBrowsableAttribute).GetInstanceCtor(typeof(DebuggerBrowsableState)), DebuggerBrowsableState.Never);
+            valueField.SetCustomAttribute(typeof(DebuggerBrowsableAttribute), typeof(DebuggerBrowsableAttribute).GetInstanceCtor(typeof(DebuggerBrowsableState)), DebuggerBrowsableState.Never);
             // ctor
             var ctorParams = new ParameterInfo[] { new ParameterInfo("val", 0, typeof(object)) };
             ConstructorGenerator ctorGen = typeGen.DefineCtor(ctorParams, MethodAttributes.Public);
