@@ -668,7 +668,7 @@ namespace FluidScript.Collections
             /// A 32-bit signed integer that is the hash code for this instance.
             /// </returns>
             [Runtime.Register("hashCode")]
-            Integer IFSObject.GetHashCode()
+            public Integer HashCode()
             {
                 return GetHashCode();
             }
@@ -680,23 +680,9 @@ namespace FluidScript.Collections
             /// A System.String containing a fully qualified type name.
             /// </returns>
             [Runtime.Register("toString")]
-            String IFSObject.ToString()
+            public String StringValue()
             {
                 return ToString();
-            }
-
-            /// <summary>
-            /// Determines whether the specified System.Object is equal to the current System.Object.
-            /// </summary>
-            /// <param name="obj">The object to compare with the current object.</param>
-            /// <returns>
-            /// true if the specified System.Object is equal to the current System.Object; otherwise,
-            /// false.
-            /// </returns>
-            [Runtime.Register("equals")]
-            Boolean IFSObject.Equals(object obj)
-            {
-                return ReferenceEquals(this, obj);
             }
 
             void System.Collections.IEnumerator.Reset()

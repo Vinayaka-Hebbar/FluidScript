@@ -28,7 +28,10 @@ namespace FluidScript.Compiler
                     if (node == null)
                         return VisitStatement();
                     return node;
+                case TokenType.LeftBrace:
+                    return VisitBlock();
                 case TokenType.Numeric:
+                case TokenType.LeftParenthesis:
                     return VisitStatement();
                 default:
                     throw new System.Exception(string.Format("Invalid Token type {0} at {1}", TokenType, Source.LineInfo));
@@ -295,7 +298,7 @@ namespace FluidScript.Compiler
                 BlockStatement body = VisitBlock();
                 return new FunctionDeclaration(name, parameterList, returnType, body);
             }
-            throw new System.Exception("syntax error");
+            throw new System.Exception($"syntax error at line {Source.LineInfo}");
         }
 
         #region Static

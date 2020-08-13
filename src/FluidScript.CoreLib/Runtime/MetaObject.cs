@@ -1,25 +1,23 @@
-﻿using FluidScript.Extensions;
-using System.Dynamic;
+﻿using System.Dynamic;
 using System.Linq.Expressions;
 
 namespace FluidScript.Runtime
 {
     internal sealed class MetaObject : DynamicMetaObject
     {
-        private readonly MetaObjectProvider m_value;
+        private readonly IDynamicInvocable m_value;
 
-        public MetaObject(Expression expression, IMetaObjectProvider runtime) : base(expression, BindingRestrictions.Empty, runtime)
+        public MetaObject(Expression expression, IDynamicInvocable obj) : base(expression, BindingRestrictions.Empty, obj)
         {
-            m_value = runtime.GetMetaObject();
+            m_value = obj;
         }
 
         public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
         {
-            var result = m_value.BindGetMember(binder.Name);
-            if (result != null)
+            if (m_value.TryGetBinder(binder.Name, out IMemberBinder member))
             {
-                var value = result.Get(Value);
-                var expression = Expression.Convert(Expression.Constant(value, result.Type), binder.ReturnType);
+                var value = member.Get(m_value);
+                var expression = Expression.Convert(Expression.Constant(value, member.Type), binder.ReturnType);
                 return new DynamicMetaObject(expression, GetTypeRestriction(this), value);
             }
             else
@@ -32,21 +30,21 @@ namespace FluidScript.Runtime
 
         public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject obj)
         {
-            m_value.BindSetMember(binder.Name, obj.LimitType, obj.Value);
+            m_value.SafeSetValue(Any.op_Implicit(obj.Value), binder.Name, obj.LimitType);
             var expression = Expression.Convert(Expression.Constant(obj.Value, obj.LimitType), binder.ReturnType);
             return new DynamicMetaObject(expression, GetTypeRestriction(this));
         }
 
         public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
         {
-            var name = binder.Name;
-            var arguments = args.Map(arg => arg.Value);
-            var del = m_value.GetDelegate(name, arguments, out ArgumentConversions conversions);
-            var method = del.Method;
+            Any[] arguments = new Any[args.Length];
+            for (int i = 0; i < args.Length; i++)
+            {
+                arguments[i] = Any.op_Implicit(args[i].Value);
+            }
+            var value = m_value.Invoke(binder.Name, arguments);
             // todo check whether target is correct
-            conversions.Invoke(ref arguments);
-            var result = method.Invoke(del.Target, arguments);
-            var expression = Expression.Convert(Expression.Constant(result, method.ReturnType), binder.ReturnType);
+            var expression = Expression.Convert(Expression.Constant(value.m_value, binder.ReturnType), binder.ReturnType);
             return new DynamicMetaObject(expression, GetTypeRestriction(this));
         }
 

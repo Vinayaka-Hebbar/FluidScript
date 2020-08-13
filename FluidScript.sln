@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript.CoreLib", "src\FluidScript.CoreLib\FluidScript.CoreLib.csproj", "{FA033C78-DCF9-460A-BFD7-026149653456}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluidScript.ConsoleApp", "FluidScript.ConsoleApp\FluidScript.ConsoleApp.csproj", "{AAB7651E-C51F-4BF1-A59F-BD881C887E6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript.ConsoleApp", "FluidScript.ConsoleApp\FluidScript.ConsoleApp.csproj", "{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +28,10 @@ Global
 		{FA033C78-DCF9-460A-BFD7-026149653456}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA033C78-DCF9-460A-BFD7-026149653456}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA033C78-DCF9-460A-BFD7-026149653456}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AAB7651E-C51F-4BF1-A59F-BD881C887E6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AAB7651E-C51F-4BF1-A59F-BD881C887E6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AAB7651E-C51F-4BF1-A59F-BD881C887E6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AAB7651E-C51F-4BF1-A59F-BD881C887E6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

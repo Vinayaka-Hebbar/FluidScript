@@ -5,21 +5,33 @@ using System.Runtime.Serialization;
 
 namespace FluidScript.Runtime
 {
-    // todo create Object.Keys
+    public interface IDynamicObject : IDynamicInvocable, IRuntimeMetadata
+    {
+        object GetValue(MemberKey key);
+        void SetValue(MemberKey key, object value);
+        object GetValue(string name);
+        void SetValue(string name, object value);
+        bool TryGetMember(string key, out MemberKey member);
+        MemberKey Add(string name, System.Type type, object value);
+    }
+
+    // todo move this to coreLib
     /// <summary>
     /// Dynamic Runtime Object
     /// </summary>
     [Register(nameof(DynamicObject))]
     [System.Serializable]
-    public class DynamicObject : Collections.DictionaryBase<LocalVariable, object>,
+    public class DynamicObject : Collections.DictionaryBase<MemberKey, object>,
         IDictionary<string, object>,
         ISerializable,
         IDynamicMetaObjectProvider,
-        IMetaObjectProvider,
-        System.Runtime.CompilerServices.IRuntimeVariables
+        IDynamicObject
     {
-        static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
+        #region Static
+        static readonly IEqualityComparer<MemberKey> DefaultComparer = EqualityComparer<MemberKey>.Default; 
+        #endregion
 
+        #region Constructors
         public DynamicObject(int capacity) : base(capacity, DefaultComparer)
         {
 
@@ -39,7 +51,8 @@ namespace FluidScript.Runtime
             {
                 Add(item.Key, item.Value);
             }
-        }
+        } 
+        #endregion
 
         #region List And Dictionary
         public ICollection<string> Keys
@@ -85,44 +98,30 @@ namespace FluidScript.Runtime
             }
         }
 
-        object System.Runtime.CompilerServices.IRuntimeVariables.this[int index]
-        {
-            get
-            {
-                if (index >= 0) return entries[index].Value;
-                throw new System.IndexOutOfRangeException(index.ToString());
-            }
-            set
-            {
-                entries[index].Value = value;
-                version++;
-            }
-        }
-
         public void SetValue(string name, object value)
         {
             var i = FindEntry(name);
-            if (i >= 0)
+            if (i < 0)
             {
-                entries[i].Value = value;
+                Add(name, value);
             }
             else
             {
-                Add(name, value);
+                entries[i].Value = value;
             }
         }
 
         public object GetValue(string name)
         {
             var i = FindEntry(name);
-            if (i >= 0)
+            if (i < 0)
             {
-                return entries[i].Value;
+                return null;
             }
-            return null;
+            return entries[i].Value;
         }
 
-        private int FindEntry(string key)
+        int FindEntry(string key)
         {
             if (key == null)
             {
@@ -147,52 +146,21 @@ namespace FluidScript.Runtime
         }
 
         /// <summary>
-        /// Get current context variable
-        /// </summary>
-        public bool TryGetMember(string key, out LocalVariable value)
-        {
-            int i = FindEntry(key);
-            if (i >= 0)
-            {
-                value = entries[i].Key;
-                return true;
-            }
-            value = LocalVariable.Empty;
-            return false;
-        }
-
-        /// <summary>
         /// Replaces specific value if key exist
         /// </summary>
         public void Add(string key, object value)
         {
-            Add(key, value == null ? Compiler.TypeProvider.ObjectType : value.GetType(), value);
+            Add(key, value == null ? typeof(object) : value.GetType(), value);
         }
 
-        internal LocalVariable Add(string key, System.Type type, object value)
+        public MemberKey Add(string key, System.Type type, object value)
         {
             if (key == null)
                 throw new System.ArgumentNullException(nameof(key));
-            return Insert(key, type, value);
+            return Insert(key, value, type);
         }
 
-        internal void Update(LocalVariable local, object value)
-        {
-            int hashCode = local.GetHashCode();
-            int targetBucket = hashCode % buckets.Length;
-            for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
-            {
-                if (entries[i].HashCode == hashCode && Comparer.Equals(entries[i].Key, local))
-                {
-                    entries[i].Value = value;
-                    version++;
-                    return;
-                }
-            }
-            throw new KeyNotFoundException(local.Name);
-        }
-
-        internal LocalVariable Insert(string name, System.Type type, object value)
+        internal MemberKey Insert(string name, object value, System.Type type)
         {
             if (buckets == null) Initialize(0);
             int hashCode = name.GetHashCode() & 0x7FFFFFFF;
@@ -221,7 +189,7 @@ namespace FluidScript.Runtime
                 index = count;
                 count++;
             }
-            var variable = new LocalVariable(name, type, index, hashCode);
+            var variable = new MemberKey(name, type, index, hashCode);
             entries[index].HashCode = hashCode;
             entries[index].Next = buckets[targetBucket];
             entries[index].Key = variable;
@@ -231,11 +199,6 @@ namespace FluidScript.Runtime
         }
 
         #endregion
-
-        public Enumerator GetEnumerator()
-        {
-            return new Enumerator(this, Enumerator.KeyValuePair);
-        }
 
         #region Runtime Support
 
@@ -426,19 +389,38 @@ namespace FluidScript.Runtime
         }
         #endregion
 
-        #region DynamicMetaObjectProvider
+        #region MetaObjectProvider
         DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(System.Linq.Expressions.Expression parameter)
         {
             return new MetaObject(parameter, this);
         }
 
-        private MetaObjectProvider _runtime;
-        MetaObjectProvider IMetaObjectProvider.GetMetaObject()
+        bool IRuntimeMetadata.GetOrCreateBinder(string name, object value, System.Type type, out IMemberBinder binder)
         {
-            if (_runtime == null)
-                _runtime = new MetaObjectProvider(this);
-            return _runtime;
+            var i = FindEntry(name);
+            if (i >= 0)
+            {
+                binder = new DynamicBinder(entries[i].Key);
+                return true;
+            }
+            binder = new DynamicBinder(Insert(name, value, type));
+            return true;
         }
+
+        bool IRuntimeMetadata.TryGetBinder(string name, out IMemberBinder binder)
+        {
+            var i = FindEntry(name);
+            if (i >= 0)
+            {
+                binder = new DynamicBinder(entries[i].Key);
+                return true;
+            }
+            binder = null;
+            return false;
+        }
+        #endregion
+
+        #region IDictionary
 
         IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()
         {
@@ -450,7 +432,12 @@ namespace FluidScript.Runtime
             return new Enumerator(this, Enumerator.KeyValuePair);
         }
 
-        public object this[string key]
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this, Enumerator.KeyValuePair);
+        }
+
+        object IDictionary<string, object>.this[string key]
         {
             get
             {
@@ -542,6 +529,106 @@ namespace FluidScript.Runtime
                     return Remove(entry.Key);
             }
             return false;
+        }
+        #endregion
+
+        #region IRuntimeMetadata
+
+        object IDynamicObject.GetValue(MemberKey key)
+        {
+            var i = FindEntry(key);
+            if (i < 0)
+            {
+                return null;
+            }
+            return entries[i].Value;
+        }
+
+        void IDynamicObject.SetValue(MemberKey key, object value)
+        {
+            var i = FindEntry(key);
+            if (i < 0)
+            {
+                throw new KeyNotFoundException(key.Name);
+            }
+            entries[i].Value = value;
+            return;
+        }
+
+        /// <summary>
+        /// Get current context variable
+        /// </summary>
+        bool IDynamicObject.TryGetMember(string key, out MemberKey member)
+        {
+            int i = FindEntry(key);
+            if (i >= 0)
+            {
+                member = entries[i].Key;
+                return true;
+            }
+            member = default(MemberKey);
+            return false;
+        }
+
+        Any IDynamicInvocable.SafeSetValue(Any value, string name, System.Type type)
+        {
+            var i = FindEntry(name);
+            if (i < 0)
+            {
+                Insert(name, value.m_value, type);
+            }
+            else
+            {
+                var member = entries[i].Key;
+                System.Type dest = member.Type;
+                if (value.m_value == null)
+                {
+                    if (dest.IsNullAssignable())
+                        entries[i].Value = value.m_value;
+                    else
+                        throw new System.Exception(string.Concat("Can't assign null value to type ", dest));
+                }
+                else if (TypeUtils.AreReferenceAssignable(dest, type))
+                {
+                    entries[i].Value = value.m_value;
+                }
+                else if (type.TryImplicitConvert(dest, out System.Reflection.MethodInfo implConvert))
+                {
+                    value = Any.op_Implicit(implConvert.Invoke(null, new object[1] { value.m_value }));
+                    entries[i].Value = value.m_value;
+                }
+                else
+                {
+                    throw new System.InvalidCastException(string.Concat(type, " to ", dest));
+                }
+            }
+            return value;
+        }
+
+        Any IDynamicInvocable.Invoke(string name, params Any[] args)
+        {
+            var actualArgs = Any.GetArgs(args);
+            var i = FindEntry(name);
+            if (i >= 0 && entries[i].Value is System.Delegate del)
+            {
+                var conversions = new ArgumentConversions(args.Length);
+                var method = del.GetType().GetMethod(nameof(System.Action.Invoke));
+                if (method.MatchesArguments(actualArgs, conversions))
+                {
+                    return Any.op_Implicit(del.DynamicInvoke(actualArgs));
+                }
+            }
+            return default(Any);
+        }
+
+        Any IDynamicInvocable.SafeGetValue(string name)
+        {
+            var i = FindEntry(name);
+            if (i >= 0)
+            {
+                return Any.op_Implicit(entries[i].Value);
+            }
+            return default(Any);
         }
         #endregion
     }

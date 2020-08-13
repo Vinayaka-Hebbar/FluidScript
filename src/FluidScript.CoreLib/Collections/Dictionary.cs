@@ -160,23 +160,16 @@ namespace FluidScript.Collections
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.GetHashCode()
+        public Integer HashCode()
         {
             return base.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        String IFSObject.ToString()
+        public String StringValue()
         {
             return ToString();
-        }
-
-        /// <inheritdoc/>
-        [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(object obj)
-        {
-            return Equals(obj);
         }
 
         public bool TryGetValue(TKey key, out TValue value)

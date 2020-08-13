@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.SyntaxTree;
 using System;
 
 namespace FluidScript.Compiler.Binders
@@ -19,13 +20,11 @@ namespace FluidScript.Compiler.Binders
 
         public Type Type => parameter.Type;
 
-        public bool CanEmitThis => false;
+        public BindingAttributes Attributes => BindingAttributes.None;
 
-        public bool IsMember => false;
-
-        public void GenerateGet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
-            if((option & MethodCompileOption.EmitStartAddress) == MethodCompileOption.EmitStartAddress)
+            if((option & MethodCompileOption.EmitStartAddress) == MethodCompileOption.EmitStartAddress && parameter.Type.IsValueType)
             {
                 if (generator.Method.IsStatic)
                     generator.LoadAddressOfArgument(parameter.Index);
@@ -41,7 +40,7 @@ namespace FluidScript.Compiler.Binders
             }
         }
 
-        public void GenerateSet(MethodBodyGenerator generator, MethodCompileOption option)
+        public void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option)
         {
             if (generator.Method.IsStatic)
                 generator.StoreArgument(parameter.Index);

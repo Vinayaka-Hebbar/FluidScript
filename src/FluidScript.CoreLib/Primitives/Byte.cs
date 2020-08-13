@@ -28,24 +28,16 @@ namespace FluidScript
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        String IFSObject.ToString()
+        public String StringValue()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.GetHashCode()
+        public Integer HashCode()
         {
             return m_value.GetHashCode();
-        }
-
-        /// <inheritdoc/>
-        [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(object obj)
-        {
-            return obj is Byte b &&
-                  m_value == b.m_value;
         }
 
         /// <inheritdoc/>
@@ -61,6 +53,7 @@ namespace FluidScript
         /// <param name="obj"> The object to compare with the current instance.</param>
         /// <returns>true if obj and this instance are the same type and represent the same value;
         ///  otherwise, false.</returns>
+        [Runtime.Register("equals")]
         public Boolean Equals(Byte obj)
         {
             return m_value == obj.m_value ? Boolean.True : Boolean.False;
@@ -197,5 +190,15 @@ namespace FluidScript
         public static implicit operator Byte(sbyte value) => new Byte(value);
         
         public static implicit operator sbyte(Byte value) => value.m_value;
+
+        public static Boolean operator ==(Byte left, Byte right)
+        {
+            return left.Equals(right);
+        }
+
+        public static Boolean operator !=(Byte left, Byte right)
+        {
+            return !left.Equals(right);
+        }
     }
 }

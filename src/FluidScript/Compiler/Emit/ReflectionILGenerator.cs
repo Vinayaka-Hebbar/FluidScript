@@ -543,6 +543,16 @@ namespace FluidScript.Compiler.Emit
                 Generator.Emit(OpCodes.Ldfld, field);
         }
 
+        public override void LoadFieldAddress(FieldInfo field)
+        {
+            if (field == null)
+                throw new ArgumentNullException(nameof(field));
+            if (field.IsStatic)
+                Generator.Emit(OpCodes.Ldsflda, field);
+            else
+                Generator.Emit(OpCodes.Ldflda, field);
+        }
+
         ///<inheritdoc/>
         public override void LoadInt16(short value)
         {
@@ -729,11 +739,7 @@ namespace FluidScript.Compiler.Emit
         public override void NewObject(ConstructorInfo constructor)
         {
             if (constructor is Generators.ConstructorGenerator)
-            {
-                Generator.Emit(OpCodes.Newobj, (ConstructorInfo)((Generators.ConstructorGenerator)constructor).MethodBase);
-                return;
-            }
-
+                constructor = (ConstructorInfo)((Generators.ConstructorGenerator)constructor).MethodBase;
             Generator.Emit(OpCodes.Newobj, constructor);
         }
 

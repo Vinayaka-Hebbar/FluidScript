@@ -20,7 +20,7 @@ namespace FluidScript.Compiler
         /// <summary>
         /// Instance of 
         /// </summary>
-        /// <param name="instanceOfExpression"></param>
+        /// <param name="node"></param>
         /// <returns></returns>
         TResult VisitInstanceOf(InstanceOfExpression node);
 

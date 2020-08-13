@@ -79,7 +79,7 @@ namespace FluidScript.Compiler.Emit
             return generator;
         }
 
-        public TypeBuilder DefineDynamicType(string name, System.Type parent, TypeAttributes attr)
+        public TypeBuilder DefineDynamicType(string name, TypeAttributes attr, System.Type parent)
         {
             int index = System.Threading.Interlocked.Increment(ref dynamicCount);
             return Module.DefineType(string.Concat(name, "$", index), attr, parent);
@@ -96,5 +96,33 @@ namespace FluidScript.Compiler.Emit
             Assembly.Save(path, System.Reflection.PortableExecutableKinds.ILOnly, System.Reflection.ImageFileMachine.I386);
         }
 #endif
+
+        /// <summary>
+        /// Define Anonymous class
+        /// </summary>
+        /// <param name="types">Ctor types</param>
+        /// <param name="returnType">Return Type of Lamda</param>
+        /// <returns>Type builder</returns>
+        public LamdaGen DefineAnonymousMethod(System.Type[] types, System.Type returnType)
+        {
+            TypeBuilder builder = DefineDynamicType("DisplayClass_" + types.Length, LamdaGen.Attributes, typeof(object));
+            var values = builder.DefineField("Values", LamdaGen.ObjectArray, FieldAttributes.Private);
+            ConstructorBuilder ctor = builder.DefineConstructor(DelegateGen.CtorAttributes, CallingConventions.Standard, LamdaGen.CtorSignature);
+            var method = builder.DefineMethod("Invoke", MethodAttributes.HideBySig, CallingConventions.Standard, returnType, types);
+            var iLGen = ctor.GetILGenerator();
+            iLGen.Emit(OpCodes.Ldarg_0);
+            iLGen.Emit(OpCodes.Call, typeof(object).GetConstructor(System.Type.EmptyTypes));
+            iLGen.Emit(OpCodes.Ldarg_0);
+            iLGen.Emit(OpCodes.Ldarg_1);
+            iLGen.Emit(OpCodes.Stfld, values);
+            iLGen.Emit(OpCodes.Ret);
+
+            // Values = values;
+            return new LamdaGen(builder, method)
+            {
+                Constructor = ctor,
+                Values = values
+            };
+        }
     }
 }

@@ -17,9 +17,6 @@
     <Reference Include="FluidTest">
       <HintPath>bin\Debug\net45\FluidTest.dll</HintPath>
     </Reference>
-    <Reference Include="Json.Serialization, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Json.Serialization.1.0.0\lib\net45\Json.Serialization.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
@@ -30,9 +27,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\FluidScript\FluidScript.csproj">
-      <Project>{5c87c041-8ced-49dd-b944-2140ab787745}</Project>
-      <Name>FluidScript</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\src\FluidScript\FluidScript.csproj" />
   </ItemGroup>
 </Project>

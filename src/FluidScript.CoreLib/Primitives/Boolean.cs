@@ -1,4 +1,6 @@
-﻿namespace FluidScript
+﻿using System.Runtime.CompilerServices;
+
+namespace FluidScript
 {
     /// <summary>
     /// Represents a Boolean value.
@@ -36,24 +38,16 @@
 
         /// <inheritdoc/>
         [Runtime.Register("hashCode")]
-        Integer IFSObject.GetHashCode()
+        public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
         /// <inheritdoc/>
         [Runtime.Register("toString")]
-        String IFSObject.ToString()
+        public String StringValue()
         {
             return m_value.ToString();
-        }
-
-        /// <inheritdoc/>
-        [Runtime.Register("equals")]
-        Boolean IFSObject.Equals(object obj)
-        {
-            return obj is Boolean b &&
-                  m_value == b.m_value ? True : False;
         }
 
         /// <inheritdoc/>
@@ -71,7 +65,7 @@
         ///  otherwise, false.</returns>
         public Boolean Equals(Boolean obj)
         {
-            return m_value == obj.m_value? True : False;
+            return m_value == obj.m_value ? True : False;
         }
 
         /// <inheritdoc/>
@@ -220,15 +214,17 @@
         /// </summary>
         public static Boolean operator !(Boolean value)
         {
-            return !value.m_value ? True : False;
+            return value.m_value ? False : True;
         }
 
-        internal static Boolean OpLogicalAnd(Boolean left, Boolean right)
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public static Boolean OpLogicalAnd(Boolean left, Boolean right)
         {
             return left.m_value && right.m_value ? True : False;
         }
 
-        internal static Boolean OpLogicalOr(Boolean left, Boolean right)
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public static Boolean OpLogicalOr(Boolean left, Boolean right)
         {
             return left.m_value && right.m_value ? True : False;
         }

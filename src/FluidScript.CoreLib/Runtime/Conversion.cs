@@ -85,17 +85,17 @@ namespace FluidScript.Runtime
     {
         public override Type Type { get; }
 
-        public ArgumentConversions ParamBinders { get; }
+        public ArgumentConversions Conversions { get; }
 
         public ParamArrayConversion(int index, Type type) : base(index)
         {
             Type = type;
         }
 
-        public ParamArrayConversion(int index, Type type, ArgumentConversions paramBinders) : base(index)
+        public ParamArrayConversion(int index, Type type, ArgumentConversions conversions) : base(index)
         {
             Type = type;
-            ParamBinders = paramBinders;
+            Conversions = conversions;
         }
 
         public override ConversionType ConversionType => ConversionType.ParamArray;
@@ -107,9 +107,9 @@ namespace FluidScript.Runtime
             var size = count - Index;
             var newArgs = new object[Index + 1];
             var paramArray = Array.CreateInstance(Type, size);
-            if (ParamBinders != null)
+            if (Conversions != null)
             {
-                ParamBinders.Invoke(ref args);
+                Conversions.Invoke(ref args);
             }
             Array.Copy(args, newArgs, Index);
             Array.Copy(args, Index, paramArray, 0, size);

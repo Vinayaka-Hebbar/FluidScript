@@ -132,7 +132,8 @@ namespace FluidScript.Compiler.SyntaxTree
             return attributes;
         }
 
-        public TDelegate CompileAs<TDelegate>() where TDelegate : System.Delegate
+#if LATEST_VS
+         public TDelegate CompileAs<TDelegate>() where TDelegate : System.Delegate
         {
             // pass scoped arguments // refer System.Linq.Expression.Compiler folder
             var context = TypeContext.Default;
@@ -141,6 +142,7 @@ namespace FluidScript.Compiler.SyntaxTree
             ResolveParameters(context, out ParameterInfo[] parameters, out System.Type[] types);
             return (TDelegate)Compile(context, returnType, types, parameters, typeof(TDelegate));
         }
+#endif
 
         public System.Delegate Compile()
         {
@@ -191,6 +193,9 @@ namespace FluidScript.Compiler.SyntaxTree
                 {
                     var value = item.Value;
                     values[index] = value.Accept(ScriptCompiler.Instance);
+                    // if binder is null variable or member may not exist
+                    if (value.NodeType == ExpressionType.Identifier && ((NameExpression)value).Binder is null)
+                        continue;
                     var variable = bodyGen.DeclareVariable(value.Type, item.Key);
                     // load closure argument
                     bodyGen.LoadArgument(0);
