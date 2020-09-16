@@ -109,7 +109,7 @@ namespace FluidScript.Compiler.Generators
                         bodyGen.LoadArgument(0);
                     generator.MethodBody = bodyGen;
                     ((IMember)generator).Compile();
-                    generator.DefaultValue.GenerateCode(bodyGen);
+                    generator.DefaultValue.GenerateCode(bodyGen, Expression.AssignOption);
                     bodyGen.StoreField(generator.FieldInfo);
                 }
             }

@@ -8,7 +8,6 @@ namespace FluidScript.Utils
     internal static class ReflectionHelpers
     {
         #region Members
-
         internal static readonly ConstructorInfo Double_New;
         internal static readonly ConstructorInfo Float_New;
         internal static readonly ConstructorInfo Long_New;
@@ -21,6 +20,7 @@ namespace FluidScript.Utils
         internal static readonly FieldInfo Bool_True;
         internal static readonly FieldInfo Bool_False;
 
+        #endregion
         #region Constructors
 
         static ConstructorInfo m_register_ctor;
@@ -197,6 +197,18 @@ namespace FluidScript.Utils
         }
         #endregion
 
+        #region Dynamic Invoke
+        static MethodInfo dynamicInvoke;
+        internal static MethodInfo DynamicInvoke
+        {
+            get
+            {
+                if (dynamicInvoke == null)
+                    dynamicInvoke = typeof(IDynamicInvocable).GetInstanceMethod(nameof(IDynamicInvocable.Invoke),
+                        typeof(string), typeof(Any[]));
+                return dynamicInvoke;
+            }
+        }
         #endregion
 
         static ReflectionHelpers()

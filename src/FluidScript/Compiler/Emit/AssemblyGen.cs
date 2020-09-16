@@ -16,7 +16,7 @@ namespace FluidScript.Compiler.Emit
         private int dynamicCount;
 
         public string Namespace { get; }
-        public TypeContext Context { get; }
+        public ITypeContext Context { get; }
 
 #if NETFRAMEWORK || MONOANDROID
 
@@ -71,12 +71,17 @@ namespace FluidScript.Compiler.Emit
             Context = new TypeContext(null);
         }
 
-        public TypeGenerator DefineType(string name, System.Type parent, TypeAttributes attr)
+        public TypeGenerator DefineType(string name, System.Type parent, TypeAttributes attr, ITypeContext context)
         {
             TypeBuilder builder = Module.DefineType(string.Concat(Namespace, ".", name), attr, parent);
-            var generator = new TypeGenerator(builder, this);
+            var generator = new TypeGenerator(builder, this, context);
             Context.Register(name, generator);
             return generator;
+        }
+
+        public string NewDynamicType()
+        {
+            return string.Concat("DisplayClass_$", System.Threading.Interlocked.Increment(ref dynamicCount));
         }
 
         public TypeBuilder DefineDynamicType(string name, TypeAttributes attr, System.Type parent)

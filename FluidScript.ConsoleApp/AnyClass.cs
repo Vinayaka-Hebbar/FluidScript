@@ -19,7 +19,7 @@ namespace FluidScript.ConsoleApp
         internal AnyClass()
         {
             assembly = new AssemblyGen("FluidScript.Runtime", "1.0");
-            typeGen = assembly.DefineType("Any", typeof(ValueType), TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit);
+            typeGen = assembly.DefineType("Any", typeof(ValueType), TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, null);
         }
         internal static void Run()
         {

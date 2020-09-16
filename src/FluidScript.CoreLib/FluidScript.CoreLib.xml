@@ -532,6 +532,13 @@
             The minimum value in the sequence.
             </returns>
         </member>
+        <member name="M:FluidScript.Any.Invoke(System.String)">
+            <summary>
+            Invoke a method
+            </summary>
+            <param name="name">name of the method</param>
+            <returns>result of the invocation</returns>
+        </member>
         <member name="T:FluidScript.Boolean">
             <summary>
             Represents a Boolean value.
@@ -1260,7 +1267,7 @@
             Conversion before passing arguments
             </summary>
         </member>
-        <member name="F:FluidScript.Runtime.ArgumentConversions.limit">
+        <member name="F:FluidScript.Runtime.ArgumentConversions.size">
             max argument index
         </member>
         <member name="M:FluidScript.Runtime.ArgumentConversions.#ctor(System.Int32)">
@@ -1330,6 +1337,15 @@
             <summary>
             Get current context variable
             </summary>
+        </member>
+        <member name="M:FluidScript.Runtime.IDynamicInvocable.SafeSetValue(FluidScript.Any,System.String,System.Type)">
+            <summary>
+            Safe set value for dynamic property
+            </summary>
+            <param name="value">First argument from right side</param>
+            <param name="name">name of member</param>
+            <param name="type">type of member</param>
+            <returns>Updated value</returns>
         </member>
         <member name="T:FluidScript.Runtime.IValueBox`1">
             <summary>

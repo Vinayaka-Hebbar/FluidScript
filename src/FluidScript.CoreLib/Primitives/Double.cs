@@ -59,7 +59,7 @@ namespace FluidScript
         [Runtime.Register("equals")]
         public Boolean Equals(Double obj)
         {
-            return m_value == obj.m_value? Boolean.True : Boolean.False;
+            return m_value == obj.m_value ? Boolean.True : Boolean.False;
         }
 
         /// <inheritdoc/>

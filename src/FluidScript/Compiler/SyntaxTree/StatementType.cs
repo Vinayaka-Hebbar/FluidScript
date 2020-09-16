@@ -21,5 +21,6 @@
 
         Block = 53,
         Function = 54,
+        Import = 55
     }
 }

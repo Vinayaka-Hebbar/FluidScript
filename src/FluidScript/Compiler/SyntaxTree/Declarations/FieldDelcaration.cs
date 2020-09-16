@@ -4,7 +4,7 @@
     {
         public readonly NodeList<VariableDeclarationExpression> Declarations;
 
-        public FieldDelcaration(NodeList<VariableDeclarationExpression> declarations):base(DeclarationType.Field)
+        public FieldDelcaration(NodeList<VariableDeclarationExpression> declarations) : base(DeclarationType.Field)
         {
             Declarations = declarations;
         }

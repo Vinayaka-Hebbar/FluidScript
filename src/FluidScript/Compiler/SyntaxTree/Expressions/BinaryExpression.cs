@@ -6,6 +6,8 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public sealed class BinaryExpression : Expression
     {
+        internal const string OpAddition = "op_Addition";
+
         public readonly Expression Left;
         public readonly Expression Right;
 
@@ -35,7 +37,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 switch (NodeType)
                 {
                     case ExpressionType.Plus:
-                        opName = "op_Addition";
+                        opName = OpAddition;
                         break;
                     case ExpressionType.Minus:
                         opName = "op_Subtraction";

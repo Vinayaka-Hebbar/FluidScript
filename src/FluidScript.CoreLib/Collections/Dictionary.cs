@@ -65,7 +65,8 @@ namespace FluidScript.Collections
             get
             {
                 int i = FindEntry(key);
-                if (i >= 0) return entries[i].Value;
+                if (i >= 0)
+                    return entries[i].Value;
                 return default(TValue);
             }
             set
@@ -92,7 +93,8 @@ namespace FluidScript.Collections
                 throw new KeyNotFoundException(nameof(key));
             }
 
-            if (buckets == null) Initialize(0);
+            if (buckets == null)
+                Initialize(0);
             int hashCode = Comparer.GetHashCode(key) & 0x7FFFFFFF;
             int targetBucket = hashCode % buckets.Length;
 

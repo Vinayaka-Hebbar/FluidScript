@@ -2,7 +2,7 @@
 {
     public abstract class MemberDeclaration : Node
     {
-        public Modifiers Modifiers { get; internal set; }
+        public Modifiers Modifiers { get; set; }
 
         public DeclarationType DeclarationType { get; }
 

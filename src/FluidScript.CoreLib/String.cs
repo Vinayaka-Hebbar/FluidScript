@@ -263,7 +263,7 @@ namespace FluidScript
         string System.IConvertible.ToString(System.IFormatProvider provider)
         {
             return m_value;
-        } 
+        }
         #endregion
 
         /// <summary>
@@ -290,7 +290,8 @@ namespace FluidScript
         public static Boolean operator ==(String left, String right)
         {
             // If value is null
-            if (left is null) return right is null || right.m_value is null;
+            if (left is null)
+                return right is null || right.m_value is null;
             return left.Equals(right);
         }
 

@@ -1,6 +1,9 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Compiler.SyntaxTree;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace FluidScript.Compiler
 {
@@ -79,6 +82,36 @@ namespace FluidScript.Compiler
         public void Register(string name, Type type)
         {
             ImportedTypes[name] = type;
+        }
+
+        public void Register(ImportStatement importStatement)
+        {
+            Register(this, importStatement.Library, importStatement.Imports);
+        }
+
+        internal static void Register(ITypeContext context, string lib, INodeList<TypeImport> imports)
+        {
+#if NETCOREAPP
+            // todo not supported getTypes for netcoreapp
+            var assemblyImport = Assembly.Load(lib);
+#else
+            var assemblyImport = Assembly.ReflectionOnlyLoad(lib);
+#endif
+            foreach (var import in imports)
+            {
+                TypeName typeName = import.TypeName;
+                Type type;
+                if (typeName.Namespace == null)
+                {
+                    Type[] types = assemblyImport.GetExportedTypes();
+                    type = types.FirstOrDefault(t => t.Name == typeName.Name);
+                }
+                else
+                {
+                    type = assemblyImport.GetType(typeName.FullName);
+                }
+                context.Register(import.ToString(), type);
+            }
         }
 
         public bool TryGetType(string name, out Type type)

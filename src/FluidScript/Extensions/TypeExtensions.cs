@@ -13,6 +13,9 @@ namespace FluidScript.Extensions
         private const BindingFlags DeclaredInstance = DeclaredPublic | BindingFlags.Instance;
         private const BindingFlags DeclaredPublic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.ExactBinding;
 
+        private static readonly System.Type DelegateType = typeof(System.Delegate);
+        private static readonly System.Type DynamicInvocableType = typeof(IDynamicInvocable);
+
         public static ConstructorInfo GetInstanceCtor(this System.Type type, params System.Type[] parameterTypes)
         {
             var result = type.GetConstructor(DeclaredInstance, null, parameterTypes, null);
@@ -243,6 +246,24 @@ namespace FluidScript.Extensions
                 }
             }
             return null;
+        }
+        #endregion
+
+        #region Delegate Type
+        public static bool IsDelegate(this System.Type type)
+        {
+            if (type == null)
+                return false;
+            return DelegateType.IsAssignableFrom(type);
+        }
+        #endregion
+
+        #region Dynamic Invocable Type
+        public static bool IsDynamicInvocable(this System.Type type)
+        {
+            if (type == null)
+                return false;
+            return DynamicInvocableType.IsAssignableFrom(type);
         }
         #endregion
 

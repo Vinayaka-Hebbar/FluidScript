@@ -39,21 +39,7 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 foreach (var lib in Imports)
                 {
-                    var assemblyImport = Assembly.ReflectionOnlyLoad(lib.Key);
-                    foreach (var import in lib.Value)
-                    {
-                        TypeName name = import.Name;
-                        Type type;
-                        if (name.Namespace == null)
-                        {
-                            type = assemblyImport.GetTypes().FirstOrDefault(t => t.Name == import.Name);
-                        }
-                        else
-                        {
-                            type = assemblyImport.GetType(name.FullName);
-                        }
-                        assembly.Context.Register(import.ToString(), type);
-                    }
+                    TypeContext.Register(assembly.Context, lib.Key, lib.Value);
                 }
             }
             foreach (var member in Members)
@@ -67,7 +53,7 @@ namespace FluidScript.Compiler.SyntaxTree
             }
         }
 
-        internal void Import(string lib, TypeImport[] imports)
+        internal void Import(string lib, NodeList<TypeImport> imports)
         {
             if (Imports.TryGetValue(lib, out NodeList<TypeImport> types))
             {
@@ -78,8 +64,7 @@ namespace FluidScript.Compiler.SyntaxTree
             }
             else
             {
-                types = new NodeList<TypeImport>(imports);
-                Imports.Add(lib, types);
+                Imports.Add(lib, imports);
             }
         }
     }

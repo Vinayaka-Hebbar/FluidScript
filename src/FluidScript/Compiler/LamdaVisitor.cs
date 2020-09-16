@@ -228,5 +228,9 @@ namespace FluidScript.Compiler
             node.Operand.Accept(this);
             return node;
         }
+
+        public void VisitImport(ImportStatement node)
+        {
+        }
     }
 }

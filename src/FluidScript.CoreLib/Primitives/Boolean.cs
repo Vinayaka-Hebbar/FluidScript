@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace FluidScript
+﻿namespace FluidScript
 {
     /// <summary>
     /// Represents a Boolean value.

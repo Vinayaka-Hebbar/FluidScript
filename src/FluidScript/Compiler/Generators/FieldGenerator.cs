@@ -94,10 +94,10 @@ namespace FluidScript.Compiler.Generators
                 {
                     if (DefaultValue == null)
                         throw new ArgumentNullException(nameof(DefaultValue));
-                    // literal ok
-                    if (DefaultValue.NodeType != ExpressionType.Literal && MethodBody == null)
+                    // must have a Body gen
+                    if (MethodBody == null)
                         return;
-                    if (MethodBody is null && DefaultValue == Expression.Null)
+                    if (DefaultValue == Expression.Null)
                     {
                         type = TypeProvider.AnyType;
                     }

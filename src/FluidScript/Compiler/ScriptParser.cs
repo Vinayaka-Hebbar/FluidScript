@@ -1,7 +1,5 @@
 ﻿using FluidScript.Compiler.Lexer;
 using FluidScript.Compiler.SyntaxTree;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace FluidScript.Compiler
 {
@@ -29,13 +27,24 @@ namespace FluidScript.Compiler
                         return VisitStatement();
                     return node;
                 case TokenType.LeftBrace:
-                    return VisitBlock();
                 case TokenType.Numeric:
                 case TokenType.LeftParenthesis:
                     return VisitStatement();
                 default:
                     throw new System.Exception(string.Format("Invalid Token type {0} at {1}", TokenType, Source.LineInfo));
             }
+        }
+
+        public NodeList<Node> VisitNodes()
+        {
+            var list = new NodeList<Node>();
+            for (; ; )
+            {
+                if (MoveNext() && (TokenType == TokenType.End))
+                    break;
+                list.Add(VisitNode());
+            }
+            return list;
         }
 
         public ParsedProgram Parse()
@@ -56,7 +65,7 @@ namespace FluidScript.Compiler
                                 break;
                             case IdentifierType.Import:
                                 MoveNextThenIf(TokenType.LeftBrace);
-                                var imports = VisitTypeImports().ToArray();
+                                var imports = VisitTypeImports();
                                 MoveNextIf(TokenType.RightBrace);
                                 ReadVariableName(out string s);
                                 if (s.Equals(Keywords.From, System.StringComparison.OrdinalIgnoreCase))
@@ -109,11 +118,11 @@ namespace FluidScript.Compiler
         public NodeList<MemberDeclaration> VisitMembers()
         {
             var list = new NodeList<MemberDeclaration>();
-            while (MoveNextThenIfNot(TokenType.RightBrace))
+            for (; ; )
             {
-                list.Add(VisitMember());
-                if (TokenType == TokenType.RightBrace)
+                if (MoveNext() && (TokenType == TokenType.RightBrace || TokenType == TokenType.End))
                     break;
+                list.Add(VisitMember());
             }
             return list;
         }
@@ -168,31 +177,6 @@ namespace FluidScript.Compiler
             Source.SeekTo(start - 1);
             MoveNext();
             return null;
-        }
-
-
-        public IEnumerable<TypeImport> VisitTypeImports()
-        {
-            while (MoveNext())
-            {
-                if (TokenType == TokenType.Identifier)
-                {
-                    ReadTypeName(out string name);
-                    MoveNext();
-                    if (TokenType == TokenType.Equal)
-                    {
-                        ReadTypeName(out string s);
-                        yield return new AliasImport(name, s);
-                    }
-                    else
-                    {
-                        yield return new TypeImport(name);
-                    }
-                }
-                if (TokenType == TokenType.RightBrace)
-                    break;
-                CheckSyntaxExpected(TokenType.Comma);
-            }
         }
 
         /// <summary>

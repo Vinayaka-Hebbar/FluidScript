@@ -26,7 +26,7 @@ namespace FluidScript.Compiler.SyntaxTree
             if (Value != null)
             {
                 var defValue = Value.Accept(generator);
-                defValue.GenerateCode(generator);
+                defValue.GenerateCode(generator, AssignOption);
                 if (VariableType == null)
                     Type = defValue.Type;
                 else if (!TypeUtils.AreReferenceAssignable(Type, defValue.Type) && defValue.Type.TryImplicitConvert(Type, out System.Reflection.MethodInfo opConvert))

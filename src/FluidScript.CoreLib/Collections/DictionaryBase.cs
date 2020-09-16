@@ -14,7 +14,7 @@
 
         protected int[] buckets;
         protected int count;
-        
+
         // todo is it required?
         protected int version;
         protected int freeList;
@@ -22,8 +22,10 @@
 
         protected DictionaryBase(int capacity, System.Collections.Generic.IEqualityComparer<TKey> comparer)
         {
-            if (capacity < 0) throw new System.ArgumentOutOfRangeException(nameof(capacity));
-            if (capacity > 0) Initialize(capacity);
+            if (capacity < 0)
+                throw new System.ArgumentOutOfRangeException(nameof(capacity));
+            if (capacity > 0)
+                Initialize(capacity);
             Comparer = comparer;
         }
 
@@ -35,7 +37,8 @@
         {
             int size = Helpers.GetPrime(capacity);
             buckets = new int[size];
-            for (int i = 0; i < buckets.Length; i++) buckets[i] = -1;
+            for (int i = 0; i < buckets.Length; i++)
+                buckets[i] = -1;
             entries = new Entry[size];
             freeList = -1;
         }
@@ -52,7 +55,8 @@
         {
             //Contract.Assert(newSize >= entries.Length);
             int[] newBuckets = new int[newSize];
-            for (int i = 0; i < newBuckets.Length; i++) newBuckets[i] = -1;
+            for (int i = 0; i < newBuckets.Length; i++)
+                newBuckets[i] = -1;
             Entry[] newEntries = new Entry[newSize];
             System.Array.Copy(entries, 0, newEntries, 0, count);
             if (forceNewHashCodes)
@@ -121,7 +125,8 @@
         {
             if (count > 0)
             {
-                for (int i = 0; i < buckets.Length; i++) buckets[i] = -1;
+                for (int i = 0; i < buckets.Length; i++)
+                    buckets[i] = -1;
                 System.Array.Clear(entries, 0, count);
                 freeList = -1;
                 count = 0;
@@ -137,7 +142,8 @@
                 int hashCode = key.GetHashCode() & 0x7FFFFFFF;
                 for (int i = buckets[hashCode % buckets.Length]; i >= 0; i = entries[i].Next)
                 {
-                    if (entries[i].HashCode == hashCode && Comparer.Equals(entries[i].Key, key)) return i;
+                    if (entries[i].HashCode == hashCode && Comparer.Equals(entries[i].Key, key))
+                        return i;
                 }
             }
             return -1;
@@ -167,7 +173,8 @@
                 for (int i = 0; i < Primes.Length; i++)
                 {
                     int prime = Primes[i];
-                    if (prime >= min) return prime;
+                    if (prime >= min)
+                        return prime;
                 }
 
                 //outside of our predefined table. 

@@ -1,7 +1,13 @@
 ﻿import {Console} from mscorlib;
 
 class Sample {
-	var value = 1;
+	var a = 1, b=2;
+	var fetch = func() => {
+		return a;
+	};
+	var value = func()=> {
+		return a+b;
+	};
 	var x = null;
 	func add()  {
 		var res = a+b;
@@ -10,7 +16,7 @@ class Sample {
 	}
 
 	func create() {
-		return x&&x==0;
+		return value();
 	}
 
 	get a() {

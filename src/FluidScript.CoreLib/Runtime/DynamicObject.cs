@@ -28,7 +28,7 @@ namespace FluidScript.Runtime
         IDynamicObject
     {
         #region Static
-        static readonly IEqualityComparer<MemberKey> DefaultComparer = EqualityComparer<MemberKey>.Default; 
+        static readonly IEqualityComparer<MemberKey> DefaultComparer = EqualityComparer<MemberKey>.Default;
         #endregion
 
         #region Constructors
@@ -51,7 +51,7 @@ namespace FluidScript.Runtime
             {
                 Add(item.Key, item.Value);
             }
-        } 
+        }
         #endregion
 
         #region List And Dictionary
@@ -133,7 +133,8 @@ namespace FluidScript.Runtime
                 int hashCode = key.GetHashCode() & 0x7FFFFFFF;
                 for (int i = buckets[hashCode % buckets.Length]; i >= 0; i = items[i].Next)
                 {
-                    if (items[i].HashCode == hashCode && string.Equals(items[i].Key.Name, key)) return i;
+                    if (items[i].HashCode == hashCode && string.Equals(items[i].Key.Name, key))
+                        return i;
                 }
             }
             return -1;
@@ -162,7 +163,8 @@ namespace FluidScript.Runtime
 
         internal MemberKey Insert(string name, object value, System.Type type)
         {
-            if (buckets == null) Initialize(0);
+            if (buckets == null)
+                Initialize(0);
             int hashCode = name.GetHashCode() & 0x7FFFFFFF;
             int targetBucket = hashCode % buckets.Length;
             for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)

@@ -9,7 +9,6 @@
         {
             FieldType = type;
             Value = value;
-
         }
     }
 }
