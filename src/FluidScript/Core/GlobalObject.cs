@@ -8,7 +8,7 @@ namespace FluidScript
     [Register("Lib")]
     public class GlobalObject : FSObject
     {
-        static readonly GlobalObject instance = new GlobalObject();
+        private static readonly GlobalObject instance = new GlobalObject();
 
         protected GlobalObject()
         {

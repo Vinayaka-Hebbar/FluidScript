@@ -1,8 +1,8 @@
 ﻿using FluidScript.Collections;
 using FluidScript.Compiler;
 using FluidScript.Compiler.Emit;
-using FluidScript.Compiler.Lexer;
 using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Extensions;
 using FluidScript.Runtime;
 using System;
 using System.Reflection;
@@ -22,11 +22,11 @@ namespace FluidScript.ConsoleApp
         {
             try
             {
-                FluidTest.Sample sample = new FluidTest.Sample();
-                var res=  sample.Create();
+                //Runtime();
+                // FluidTest.Sample sample = new FluidTest.Sample();
+                // var res=  sample.Create();
                 //FuncTest();
-                CodeGen();
-                //CodeGen();
+                RunCodeGen();
                 Console.WriteLine();
             }
             catch (TargetInvocationException ex)
@@ -40,7 +40,11 @@ namespace FluidScript.ConsoleApp
             RuntimeCompiler compiler = new RuntimeCompiler();
             compiler.Locals["a"] = 10;
             compiler.Locals["b"] = null;
-            var res = compiler.Invoke(Parser.GetExpression("a+"));
+            var res = (Delegate)compiler.Invoke(Parser.GetStatement(
+                @"{
+                 import {console=System.Console} from mscorlib;
+                console.Write('Value {0}', 2);
+                }"), new object());
         }
 
         static void FuncTest()
@@ -114,9 +118,10 @@ namespace FluidScript.ConsoleApp
                 {
                     type = type.ReflectedType;
                 }
-                Any value = Activator.CreateInstance(type);
+                object obj = Activator.CreateInstance(type);
+                Any value = new Any(obj);
                 var res = value.Invoke("create");
-                Console.WriteLine(res.Invoke("Invoke"));
+                Console.WriteLine(res);
             }
         }
 
@@ -134,12 +139,6 @@ namespace FluidScript.ConsoleApp
             ["a"] = 1,
             ["b"] = 2,
         };
-
-
-        public Any Compile()
-        {
-           
-        }
 
         protected bool IsNull(object x)
         {
@@ -167,30 +166,6 @@ namespace FluidScript.ConsoleApp
         public Action TestFun3()
         {
             return () => Console.WriteLine();
-        }
-
-        internal struct Wrap
-        {
-            internal object Item
-            {
-                get
-                {
-                    return null;
-                }
-                set
-                {
-                }
-            }
-
-            public Any Set(Any item, string name, Type type)
-            {
-                return Item ?? (Item = new Any(10));
-            }
-
-            public static Boolean And(Boolean value1, Boolean value2)
-            {
-                return Boolean.False;
-            }
         }
     }
 }

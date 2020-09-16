@@ -1,17 +1,19 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using FluidScript.Compiler.Emit;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     public class TypeImport : Node
     {
-        public readonly string Name;
+        public readonly TypeName TypeName;
 
         public TypeImport(string typeSyntax)
         {
-            Name = typeSyntax;
+            TypeName = typeSyntax;
         }
 
         public override string ToString()
         {
-            return Name;
+            return TypeName.Name;
         }
     }
 }

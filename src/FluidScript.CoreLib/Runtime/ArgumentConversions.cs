@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FluidScript.Runtime
+﻿namespace FluidScript.Runtime
 {
     /// <summary>
     /// Conversion before passing arguments
@@ -9,7 +7,7 @@ namespace FluidScript.Runtime
     {
         Conversion[] items;
         /// max argument index
-        int limit;
+        int size;
 
         /// <summary>
         /// Initalizes Conversions for arguments
@@ -36,7 +34,7 @@ namespace FluidScript.Runtime
         /// <summary>
         /// Current conversion limit
         /// </summary>
-        public int Count => limit;
+        public int Count => size;
 
         public void Append(int index, Conversion c)
         {
@@ -49,16 +47,16 @@ namespace FluidScript.Runtime
             // last conversion for the index
             Conversion last = items[index];
             // should not cross the limit 
-            if (last == null || index > limit)
+            if (last == null || index >= size)
             {
                 // empty next node
                 c.next = c;
                 items[index] = c;
                 // index should not be more
-                limit = index + 1;
+                size = index + 1;
                 return;
             }
-            
+
             // add to next node if exist
             c.next = last;
             last.next = c;
@@ -70,7 +68,7 @@ namespace FluidScript.Runtime
         {
             get
             {
-                if (index < limit)
+                if (index < size)
                 {
                     return items[index];
                 }
@@ -94,7 +92,7 @@ namespace FluidScript.Runtime
             if (item != null)
             {
                 var index = item.Index;
-                if (index < limit)
+                if (index < size)
                 {
                     var last = items[index];
                     if (last == null)
@@ -123,7 +121,7 @@ namespace FluidScript.Runtime
         public bool Recycle()
         {
             // Reset the array values length if any backup
-            limit = 0;
+            size = 0;
             return false;
         }
 
@@ -140,9 +138,9 @@ namespace FluidScript.Runtime
         /// <param name="values">Parametres to convert</param>
         public void Invoke(ref object[] values)
         {
-            if (limit > 0)
+            if (size > 0)
             {
-                for (int i = 0; i < limit; i++)
+                for (int i = 0; i < size; i++)
                 {
                     var c = items[i];
                     // if conversion is null i.e, no conversions

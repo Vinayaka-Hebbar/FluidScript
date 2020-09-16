@@ -42,9 +42,8 @@ namespace FluidScript.Runtime
             {
                 arguments[i] = Any.op_Implicit(args[i].Value);
             }
-            var value = m_value.Invoke(binder.Name, arguments);
             // todo check whether target is correct
-            var expression = Expression.Convert(Expression.Constant(value.m_value, binder.ReturnType), binder.ReturnType);
+            var expression = Expression.Convert(Expression.Constant(m_value.Invoke(binder.Name, arguments).m_value, binder.ReturnType), binder.ReturnType);
             return new DynamicMetaObject(expression, GetTypeRestriction(this));
         }
 

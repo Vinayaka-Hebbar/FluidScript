@@ -12,11 +12,11 @@ namespace FluidScript.Compiler
     /// </summary>
     public sealed class RuntimeCompiler : CompilerBase, IStatementVisitor, ICompileProvider
     {
-        readonly BranchContext context = new BranchContext();
-        readonly RuntimeVariables locals;
+        private readonly BranchContext context = new BranchContext();
+        private readonly RuntimeVariables locals;
 
-        readonly object m_global;
-        object m_target;
+        private readonly object m_global;
+        private object m_target;
         /// <summary>
         /// New runtime evaluation with <see cref="GlobalObject"/> target
         /// </summary>
@@ -52,7 +52,7 @@ namespace FluidScript.Compiler
         }
 
         static System.Reflection.FieldInfo gField;
-        static System.Reflection.FieldInfo GlobalTargetField
+        private static System.Reflection.FieldInfo GlobalTargetField
         {
             get
             {
@@ -63,7 +63,7 @@ namespace FluidScript.Compiler
         }
 
         static System.Reflection.FieldInfo cField;
-        static System.Reflection.FieldInfo ClassTargetField
+        private static System.Reflection.FieldInfo ClassTargetField
         {
             get
             {
@@ -72,8 +72,6 @@ namespace FluidScript.Compiler
                 return cField;
             }
         }
-
-
 
         Type globalType;
         public Type GlobalType
@@ -253,11 +251,8 @@ namespace FluidScript.Compiler
                         ExecutionException.ThrowInvalidOp(node);
                     method = ReflectionUtils.GetDelegateMethod(refer, args, out conversions);
                     // only static method can allowed
-                    if (method == null)
-                        ExecutionException.ThrowInvalidOp(node.Target, node);
-                    obj = refer.Target;
+                    obj = refer;
                     exp.Binder = new Binders.RuntimeVariableBinder(variable, locals);
-                    exp.Type = variable.Type;
                 }
                 else
                 {
@@ -283,13 +278,8 @@ namespace FluidScript.Compiler
                     {
                         if (member.Get(obj) is Delegate del)
                         {
-                            conversions = new ArgumentConversions(args.Length);
-                            name = nameof(Action.Invoke);
-                            method = del.GetType().GetMethod(name);
-                            if (method.MatchesArguments(args, conversions))
-                            {
-                                obj = del;
-                            }
+                            method = ReflectionUtils.GetDelegateMethod(del, args, out conversions);
+                            obj = del;
                         }
                     }
                     else
@@ -378,6 +368,13 @@ namespace FluidScript.Compiler
                 if (GlobalType.TryFindMember(name, ReflectionUtils.AnyPublic, out binder))
                 {
                     node.Target = m_global;
+                }
+                else if (TypeContext.TryGetType(name, out Type type))
+                {
+                    node.Target = null;
+                    node.Type = type;
+                    node.Binder = new Binders.EmptyBinder(type);
+                    return null;
                 }
                 else
                 {
@@ -535,6 +532,12 @@ namespace FluidScript.Compiler
         void IStatementVisitor.VisitContinue(ContinueStatement node)
         {
             context.Continue();
+        }
+
+        /// <inheritdoc/>
+        void IStatementVisitor.VisitImport(ImportStatement node)
+        {
+            TypeContext.Register(node);
         }
 
         #endregion

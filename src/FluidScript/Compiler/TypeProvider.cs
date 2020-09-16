@@ -7,6 +7,8 @@ namespace FluidScript.Compiler
 
     public class TypeProvider 
     {
+        internal const string String = nameof(String);
+
         internal static readonly Type FSType;
         internal static readonly Type ObjectType;
 

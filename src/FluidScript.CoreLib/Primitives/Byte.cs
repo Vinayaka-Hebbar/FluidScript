@@ -13,7 +13,7 @@ namespace FluidScript
 #if LATEST_VS
         readonly
 #endif
-        struct Byte : IFSObject, IConvertible, IFormattable,  Runtime.IValueBox<sbyte>
+        struct Byte : IFSObject, IConvertible, IFormattable, Runtime.IValueBox<sbyte>
     {
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         internal readonly sbyte m_value;
@@ -188,7 +188,7 @@ namespace FluidScript
         #endregion
 
         public static implicit operator Byte(sbyte value) => new Byte(value);
-        
+
         public static implicit operator sbyte(Byte value) => value.m_value;
 
         public static Boolean operator ==(Byte left, Byte right)

@@ -84,21 +84,6 @@
             Gets the ending column number of this range.
             </summary>
         </member>
-        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.LanguageType">
-            <summary>
-            Gets the language type GUID for the symbol store.
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.LanguageVendor">
-            <summary>
-            Gets the language vendor GUID for the symbol store.
-            </summary>
-        </member>
-        <member name="F:FluidScript.Compiler.Emit.AssemblyGen.DocumentType">
-            <summary>
-            Gets the document type GUID for the symbol store.
-            </summary>
-        </member>
         <member name="M:FluidScript.Compiler.Emit.AssemblyGen.DefineAnonymousMethod(System.Type[],System.Type)">
             <summary>
             Define Anonymous class
@@ -910,11 +895,6 @@
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.#ctor(FluidScript.Compiler.Emit.IMethodBase,System.Reflection.Emit.ILGenerator,System.Boolean)">
             <summary>
             Initializes new instance of <see cref="T:FluidScript.Compiler.Emit.MethodBodyGenerator"/>
-            </summary>
-        </member>
-        <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.DebugDoument">
-            <summary>
-            Debug Document writter
             </summary>
         </member>
         <member name="P:FluidScript.Compiler.Emit.MethodBodyGenerator.Source">
@@ -1941,6 +1921,9 @@
         <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitContinue(FluidScript.Compiler.SyntaxTree.ContinueStatement)">
             <inheritdoc/>
         </member>
+        <member name="M:FluidScript.Compiler.RuntimeCompiler.FluidScript#Compiler#IStatementVisitor#VisitImport(FluidScript.Compiler.SyntaxTree.ImportStatement)">
+            <inheritdoc/>
+        </member>
         <member name="T:FluidScript.Compiler.RuntimeCompiler.BranchContext">
             <summary>
             for long jump or break and continue
@@ -2261,11 +2244,6 @@
         <member name="M:FluidScript.Compiler.SyntaxTree.Node.ChildNodes">
             <summary>
             Child node iterator
-            </summary>
-        </member>
-        <member name="M:FluidScript.Compiler.SyntaxTree.Node.ContainsNodeOfType``1">
-            <summary>
-            Contains a specified node <typeparamref name="T"/>
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.Node.Childs(FluidScript.Compiler.SyntaxTree.Node[])">
@@ -2710,7 +2688,12 @@
         </member>
         <member name="M:FluidScript.Compiler.IStatementVisitor.VisitBlock(FluidScript.Compiler.SyntaxTree.BlockStatement)">
             <summary>
-            Visit block
+            Visit block statement
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IStatementVisitor.VisitImport(FluidScript.Compiler.SyntaxTree.ImportStatement)">
+            <summary>
+            Visit Import statement
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.IStatementVisitor.VisitDeclaration(FluidScript.Compiler.SyntaxTree.LocalDeclarationStatement)">
@@ -2866,6 +2849,16 @@
             <param name="member"></param>
             <param name="flags">Binding flags to match</param>
             <returns></returns>
+        </member>
+        <member name="M:FluidScript.Extensions.NodeExtensions.ContainsNodeOfType``1(FluidScript.Compiler.SyntaxTree.Node)">
+            <summary>
+            Contains a specified node <typeparamref name="T"/>
+            </summary>
+        </member>
+        <member name="M:FluidScript.Extensions.NodeExtensions.ContainsNodeOfType``1(FluidScript.Compiler.SyntaxTree.Node,System.Predicate{``0})">
+            <summary>
+            Contains a specified node <typeparamref name="T"/>
+            </summary>
         </member>
         <member name="M:FluidScript.Extensions.TypeExtensions.FindGetIndexer(System.Type,System.Type[],FluidScript.Runtime.ArgumentConversions@)">
             Current Declared Indexer can get

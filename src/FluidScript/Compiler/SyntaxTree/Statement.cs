@@ -1,4 +1,6 @@
-﻿namespace FluidScript.Compiler.SyntaxTree
+﻿using System;
+
+namespace FluidScript.Compiler.SyntaxTree
 {
     /// <summary>
     /// Statement like declarion, return etc
@@ -156,6 +158,11 @@
         public static ReturnOrThrowStatement Return(Expression value = null)
         {
             return new ReturnOrThrowStatement(value, StatementType.Return);
+        }
+
+        public static Statement Block(params Statement[] statements)
+        {
+            return new BlockStatement(new NodeList<Statement>(statements));
         }
 
         public static IfStatement If(Expression condition, Statement then, Statement other = null)

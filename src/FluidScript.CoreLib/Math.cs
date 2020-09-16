@@ -325,7 +325,8 @@
                     count++;
                 }
             }
-            if (count > 0) return new Double(sum / count);
+            if (count > 0)
+                return new Double(sum / count);
             throw new System.Exception("No Elements");
         }
 
@@ -347,7 +348,8 @@
             {
                 if (hasValue)
                 {
-                    if (x > value) value = x;
+                    if (x > value)
+                        value = x;
                 }
                 else
                 {
@@ -355,7 +357,8 @@
                     hasValue = true;
                 }
             }
-            if (hasValue) return new Integer(value);
+            if (hasValue)
+                return new Integer(value);
             throw new System.Exception("No Elements");
         }
 
@@ -378,7 +381,8 @@
                 double x = System.Convert.ToDouble(v);
                 if (hasValue)
                 {
-                    if (x > value) value = x;
+                    if (x > value)
+                        value = x;
                 }
                 else
                 {
@@ -386,7 +390,8 @@
                     hasValue = true;
                 }
             }
-            if (hasValue) return new Double(value);
+            if (hasValue)
+                return new Double(value);
             throw new System.Exception("No Elements");
         }
 
@@ -408,7 +413,8 @@
             {
                 if (hasValue)
                 {
-                    if (x < value) value = x;
+                    if (x < value)
+                        value = x;
                 }
                 else
                 {
@@ -416,7 +422,8 @@
                     hasValue = true;
                 }
             }
-            if (hasValue) return new Integer(value);
+            if (hasValue)
+                return new Integer(value);
             throw new System.Exception("No Elements");
         }
 
@@ -439,7 +446,8 @@
                 double x = System.Convert.ToDouble(v);
                 if (hasValue)
                 {
-                    if (x < value || double.IsNaN(x)) value = x;
+                    if (x < value || double.IsNaN(x))
+                        value = x;
                 }
                 else
                 {
@@ -447,7 +455,8 @@
                     hasValue = true;
                 }
             }
-            if (hasValue) return new Double(value);
+            if (hasValue)
+                return new Double(value);
             throw new System.Exception("No Elements");
         }
     }

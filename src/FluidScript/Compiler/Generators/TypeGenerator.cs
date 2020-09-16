@@ -14,9 +14,10 @@ namespace FluidScript.Compiler.Generators
     {
         const MethodAttributes DefaultStaticCtor = MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.HideBySig;
         const MethodAttributes DefaultCtor = MethodAttributes.Public | MethodAttributes.HideBySig;
+        const TypeAttributes NestedTypeAttr = TypeAttributes.NestedPrivate | TypeAttributes.Class;
 
         internal readonly IList<IMember> Members = new List<IMember>();
-        private readonly System.Reflection.Emit.TypeBuilder _builder;
+        private readonly TypeBuilder _builder;
         IList<AttributeGenerator> _customAttributes;
         Type[] interfaces;
 
@@ -75,13 +76,22 @@ namespace FluidScript.Compiler.Generators
         /// <inheritdoc/>
         public override Type UnderlyingSystemType => _builder;
 
-        public TypeGenerator(System.Reflection.Emit.TypeBuilder builder, AssemblyGen assemblyGen)
+        public TypeGenerator(TypeBuilder builder, AssemblyGen assemblyGen)
         {
             this.assemblyGen = assemblyGen;
             Name = builder.Name;
             _builder = builder;
             BaseType = _builder.BaseType;
             Context = new TypeContext(assemblyGen.Context);
+        }
+
+        public TypeGenerator(TypeBuilder builder, AssemblyGen assemblyGen, ITypeContext context)
+        {
+            this.assemblyGen = assemblyGen;
+            Name = builder.Name;
+            _builder = builder;
+            BaseType = _builder.BaseType;
+            Context = context;
         }
 
         public void SetInterfaces(Type[] interfaces)
@@ -109,7 +119,7 @@ namespace FluidScript.Compiler.Generators
             {
                 foreach (var attr in _customAttributes)
                 {
-                    var cuAttr = new System.Reflection.Emit.CustomAttributeBuilder(attr.Ctor, attr.Parameters);
+                    var cuAttr = new CustomAttributeBuilder(attr.Ctor, attr.Parameters);
                     _builder.SetCustomAttribute(cuAttr);
                 }
             }
@@ -151,7 +161,7 @@ namespace FluidScript.Compiler.Generators
         }
 #endif
 
-        internal System.Reflection.Emit.TypeBuilder Builder
+        internal TypeBuilder Builder
         {
             get
             {
@@ -519,10 +529,18 @@ namespace FluidScript.Compiler.Generators
             return fieldGen;
         }
 
+        public TypeGenerator DefineNestedType(string name, Type parent, TypeAttributes attr)
+        {
+            TypeBuilder builder = this._builder.DefineNestedType(string.Concat(Namespace, ".", name), attr | NestedTypeAttr, parent);
+            var generator = new TypeGenerator(builder, assemblyGen, Context);
+            Context.Register(name, generator);
+            return generator;
+        }
+
         public LamdaGen DefineAnonymousMethod(Type[] types, Type returnType)
         {
             // todo: Anonomous type name
-            var builder = _builder.DefineNestedType("DisplayClass_" + nestedTypes,  LamdaGen.Attributes | TypeAttributes.NestedPrivate, typeof(object));
+            var builder = _builder.DefineNestedType("DisplayClass_" + nestedTypes, LamdaGen.Attributes | TypeAttributes.NestedPrivate, typeof(object));
             nestedTypes++;
             var values = builder.DefineField("Values", LamdaGen.ObjectArray, FieldAttributes.Private);
             var ctor = builder.DefineConstructor(DelegateGen.CtorAttributes, CallingConventions.Standard, LamdaGen.CtorSignature);

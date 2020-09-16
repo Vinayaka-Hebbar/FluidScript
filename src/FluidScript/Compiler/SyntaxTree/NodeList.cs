@@ -9,7 +9,7 @@ namespace FluidScript.Compiler.SyntaxTree
 #endif
         where T : Node
     {
-        static readonly T[] EmptyNodeList = new T[0];
+        private static readonly T[] EmptyNodeList = new T[0];
         int size;
         T[] items;
 
@@ -56,7 +56,8 @@ namespace FluidScript.Compiler.SyntaxTree
             int newCapacity = items.Length == 0 ? 4 : items.Length * 2;
             // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
             // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
-            if (newCapacity > int.MaxValue) newCapacity = int.MaxValue;
+            if (newCapacity > int.MaxValue)
+                newCapacity = int.MaxValue;
             T[] newItems = new T[newCapacity];
             // srcPtr and destPtr are IntPtr's pointing to valid memory locations
             // size is the number of long (normally 4 bytes) to copy
@@ -72,7 +73,8 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 throw new System.ArgumentOutOfRangeException(nameof(index));
             }
-            if (size == items.Length) EnsureCapacity();
+            if (size == items.Length)
+                EnsureCapacity();
             if (index < size)
             {
                 System.Array.Copy(items, (int)index, items, (int)index + 1, size - (int)index);
@@ -87,6 +89,19 @@ namespace FluidScript.Compiler.SyntaxTree
             for (int i = 0; i < size; i++)
             {
                 res[i] = predicate(items[i]);
+            }
+            return res;
+        }
+
+        public NodeList<TElement> OfType<TElement>() where TElement : Node
+        {
+            var res = new NodeList<TElement>(size);
+            for (int i = 0; i < size; i++)
+            {
+                if (items[i] is TElement e)
+                {
+                    res.Add(e);
+                }
             }
             return res;
         }
@@ -123,7 +138,7 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             return new Enumerator(this);
         }
-        
+
         /// <summary>
         /// Enumerates the elements of a <see cref="NodeList{T}"/>.
         /// </summary>
@@ -203,6 +218,14 @@ namespace FluidScript.Compiler.SyntaxTree
                 index = 0;
                 current = null;
             }
+        }
+    }
+
+    public static class NodeList
+    {
+        public static NodeList<T> Items<T>(params T[] items) where T : Node
+        {
+            return new NodeList<T>(items);
         }
     }
 }

@@ -12,11 +12,11 @@ namespace FluidScript.Compiler
         public const char OpenBrace = '{';
         public const char CloseBrace = '}';
 
-        const char DotChar = '.';
-        const char EscapeChar = '\\';
-        const char QuoatedChar = '`';
-        const char QuoatedCharString = '\'';
-        readonly Utils.CharBuilder cb;
+        private const char DotChar = '.',
+            EscapeChar = '\\',
+            QuoatedChar = '`',
+            QuoatedCharString = '\'';
+        private readonly Utils.CharBuilder cb;
 
         /// <summary>
         /// Source text
@@ -431,6 +431,9 @@ namespace FluidScript.Compiler
                         }
 
                         return new ContinueStatement(target);
+                    case IdentifierType.Import:
+                        return VisitImportStatement();
+
                 }
             }
             //default label statment
@@ -551,6 +554,25 @@ namespace FluidScript.Compiler
             MoveNext();
             //Todo for labeled Node
             return Expression.Empty;
+        }
+
+        public ImportStatement VisitImportStatement()
+        {
+            CheckSyntaxExpected(TokenType.LeftBrace);
+            var imports = VisitTypeImports();
+            MoveNextIf(TokenType.RightBrace);
+            ReadVariableName(out string s);
+            if (s.Equals(Keywords.From, System.StringComparison.OrdinalIgnoreCase))
+            {
+                MoveNextThenIf(TokenType.Identifier);
+                ReadVariableName(out string lib);
+                MoveNextThenIf(TokenType.SemiColon);
+                return new ImportStatement(lib, imports);
+            }
+            else
+            {
+                throw new System.Exception(string.Format("Invalid Token type {0} at {1}", TokenType, Source.LineInfo));
+            }
         }
 
         /// <summary>
@@ -1268,6 +1290,34 @@ namespace FluidScript.Compiler
                 if (TokenType == end)
                     break;
                 CheckSyntaxExpected(seperator);
+            }
+            return list;
+        }
+
+        public NodeList<TypeImport> VisitTypeImports()
+        {
+            var list = new NodeList<TypeImport>();
+            while (MoveNext())
+            {
+                if (TokenType == TokenType.Identifier)
+                {
+                    ReadTypeName(out string name);
+                    MoveNext();
+                    if (TokenType == TokenType.Equal)
+                    {
+                        MoveNext();
+                        ReadTypeName(out string s);
+                        list.Add(new AliasImport(name, s));
+                        MoveNext();
+                    }
+                    else
+                    {
+                        list.Add(new TypeImport(name));
+                    }
+                }
+                if (TokenType == TokenType.RightBrace)
+                    break;
+                CheckSyntaxExpected(TokenType.Comma);
             }
             return list;
         }

@@ -158,9 +158,35 @@ namespace FluidScript
             return false;
         }
 
+        /// <summary>
+        /// Invoke a method
+        /// </summary>
+        /// <param name="name">name of the method</param>
+        /// <returns>result of the invocation</returns>
         public Any Invoke(string name)
         {
             return Invoke(name, new Any[0]);
+        }
+
+        public Any GetValue(string name)
+        {
+            if (ReflectionExtensions.TryFindMember(Type, name, TypeUtils.AnyPublic, out IMemberBinder binder))
+            {
+                return op_Implicit(binder.Get(m_value));
+            }
+            if (m_value is IDynamicInvocable)
+                return ((IDynamicInvocable)m_value).SafeGetValue(name);
+            return default(Any);
+        }
+
+        public void SetValue(string name, Any value)
+        {
+            if (ReflectionExtensions.TryFindMember(Type, name, TypeUtils.AnyPublic, out IMemberBinder binder))
+            {
+                binder.Set(m_value, value.m_value);
+            }
+            if (m_value is IDynamicInvocable)
+                ((IDynamicInvocable)m_value).SafeSetValue(value, name, value.Type);
         }
 
         public Any Invoke(string name, params Any[] args)
@@ -356,6 +382,7 @@ namespace FluidScript
             return ((IConvertible)value).ToDouble(null);
         }
 
+        #region Operators
         public static Boolean operator ==(Any left, Any right)
         {
             if (left.m_value is null)
@@ -837,6 +864,7 @@ namespace FluidScript
 
             }
         }
+        #endregion
 
         [SpecialName]
         public static Any op_Implicit(object value)

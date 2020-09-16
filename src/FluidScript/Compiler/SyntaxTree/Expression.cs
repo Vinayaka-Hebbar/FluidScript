@@ -129,7 +129,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return new SuperExpression();
         }
 
-        public static InstanceOfExpression IsInstanceOf(Expression target, System.Type type)
+        public static InstanceOfExpression IsInstanceOf(Expression target, Type type)
         {
             return new InstanceOfExpression(target, TypeSyntax.Create(type));
         }
@@ -147,7 +147,7 @@ namespace FluidScript.Compiler.SyntaxTree
             }
             else
             {
-                throw new System.InvalidOperationException("Invalid member type " + member.MemberType);
+                throw new InvalidOperationException("Invalid member type " + member.MemberType);
             }
             return exp;
         }
@@ -177,17 +177,17 @@ namespace FluidScript.Compiler.SyntaxTree
             return new SystemLiternalExpression(value);
         }
 
-        public static NewExpression New(System.Type type, params Expression[] args)
+        public static NewExpression New(Type type, params Expression[] args)
         {
             return new NewExpression(TypeSyntax.Create(type), new NodeList<Expression>(args));
         }
 
-        public static ConvertExpression Convert(System.Type type, Expression target)
+        public static ConvertExpression Convert(Type type, Expression target)
         {
             return new ConvertExpression(TypeSyntax.Create(type), target);
         }
 
-        public static Expression Parameter(System.Type type, string name)
+        public static Expression Parameter(Type type, string name)
         {
             return new NameExpression(name, ExpressionType.Identifier) { Type = type };
         }

@@ -27,11 +27,11 @@ namespace FluidScript.Runtime
                     int i;
                     for (i = 0; i < paramters.Length; i++)
                     {
-                        var param = paramters[i];
-                        var dest = param.ParameterType;
-                        // matches current index
+                        // if exceeds index
                         if (i >= length)
                             continue;
+                        var param = paramters[i];
+                        var dest = param.ParameterType;
                         var src = types[i];
                         if (!AreReferenceAssignable(dest, src))
                         {

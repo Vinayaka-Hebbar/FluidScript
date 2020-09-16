@@ -17,11 +17,15 @@ namespace FluidScript.Collections
 
         public static Dictionary<TKey, TElement> ToDictionary<TSource, TKey, TElement>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-            if (elementSelector == null) throw new ArgumentNullException(nameof(elementSelector));
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+            if (elementSelector == null)
+                throw new ArgumentNullException(nameof(elementSelector));
             Dictionary<TKey, TElement> d = new Dictionary<TKey, TElement>(0, comparer);
-            foreach (TSource element in source) d.Add(keySelector(element), elementSelector(element));
+            foreach (TSource element in source)
+                d.Add(keySelector(element), elementSelector(element));
             return d;
         }
 

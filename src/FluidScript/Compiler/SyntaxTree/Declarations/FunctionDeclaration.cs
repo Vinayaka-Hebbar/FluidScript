@@ -39,9 +39,18 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             System.Type returnType;
             if (ReturnType != null)
+            {
                 returnType = ReturnType.ResolveType(generator.Context);
-            else
+            }
+            else if(Body.ContainsNodeOfType<ReturnOrThrowStatement>(s=> s.NodeType == StatementType.Return))
+            {
+
                 returnType = TypeProvider.AnyType;
+            }
+            else 
+            {
+                returnType = TypeProvider.VoidType;
+            }
             var parameters = Parameters.Map(para => para.GetParameterInfo(generator.Context));
             if (IsGetter || IsSetter)
                 CreateProperty(generator, returnType, parameters);
@@ -133,7 +142,7 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
 #if LATEST_VS
-         public TDelegate CompileAs<TDelegate>() where TDelegate : System.Delegate
+        public TDelegate CompileAs<TDelegate>() where TDelegate : System.Delegate
         {
             // pass scoped arguments // refer System.Linq.Expression.Compiler folder
             var context = TypeContext.Default;

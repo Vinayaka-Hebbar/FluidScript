@@ -16,9 +16,7 @@
 
         public override void GenerateCode(Emit.MethodBodyGenerator generator)
         {
-            Expression expression = Expression.Accept(generator);
-            expression.GenerateCode(generator);
-                
+            Expression.Accept(generator).GenerateCode(generator); 
         }
 
         public override string ToString()

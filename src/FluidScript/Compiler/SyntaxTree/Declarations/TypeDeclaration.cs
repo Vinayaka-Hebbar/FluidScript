@@ -12,7 +12,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public readonly INodeList<MemberDeclaration> Members;
 
-        public TypeDeclaration(string name, TypeSyntax baseType, INodeList<TypeSyntax> implements, NodeList<MemberDeclaration> members) : base(DeclarationType.Class)
+        public TypeDeclaration(string name, TypeSyntax baseType, INodeList<TypeSyntax> implements, INodeList<MemberDeclaration> members) : base(DeclarationType.Class)
         {
             Name = name;
             BaseType = baseType;
@@ -28,21 +28,48 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void CreateMember(Generators.TypeGenerator generator)
         {
-            throw new System.NotImplementedException();
-        }
-
-        public System.Type Compile(AssemblyGen assembly)
-        {
             System.Type baseType;
             if (BaseType != null)
-                baseType = BaseType.ResolveType(assembly.Context);
+                baseType = BaseType.ResolveType(generator.Context);
             else
                 baseType = typeof(FSObject);
-            var generator = assembly.DefineType(Name, baseType, System.Reflection.TypeAttributes.Public);
+            var type = generator.DefineNestedType(Name, baseType, System.Reflection.TypeAttributes.Public);
             System.Type[] types = null;
             if (Implements != null)
             {
                 types = Implements.Map(impl => impl.ResolveType(generator.Context)).AddLast(typeof(IFSObject));
+            }
+            else
+            {
+                types = new System.Type[1] { typeof(IFSObject) };
+            }
+            type.SetInterfaces(types);
+            type.Source = Source;
+            type.SetCustomAttribute(typeof(Runtime.RegisterAttribute), Utils.ReflectionHelpers.Register_Attr_Ctor, new object[] { Name });
+            foreach (var member in Members)
+            {
+                member.CreateMember(type);
+            }
+            generator.Add(type);
+        }
+
+        public System.Type Compile(AssemblyGen assembly)
+        {
+            return Compile(assembly, assembly.Context);
+        }
+
+        public System.Type Compile(AssemblyGen assembly, ITypeContext context)
+        {
+            System.Type baseType;
+            if (BaseType != null)
+                baseType = BaseType.ResolveType(context);
+            else
+                baseType = typeof(FSObject);
+            var generator = assembly.DefineType(Name, baseType, System.Reflection.TypeAttributes.Public, context);
+            System.Type[] types = null;
+            if (Implements != null)
+            {
+                types = Implements.Map(impl => impl.ResolveType(context)).AddLast(typeof(IFSObject));
             }
             else
             {

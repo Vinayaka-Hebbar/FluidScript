@@ -11,10 +11,11 @@ namespace FluidScript.Runtime
             // arg length
             var length = args.Length;
             // no arg
-            if (parameters.Length == 0 && length > 0)
+            int argCount = parameters.Length;
+            if (argCount == 0 && length > 0)
                 return false;
             int i;
-            for (i = 0; i < parameters.Length; i++)
+            for (i = 0; i < argCount; i++)
             {
                 var param = parameters[i];
                 var dest = param.ParameterType;
@@ -22,7 +23,7 @@ namespace FluidScript.Runtime
                 {
                     // parameters is extra example print(string, params string[] args) and print('hello')
                     // in this case 2 and 1
-                    if (parameters.Length > length)
+                    if (argCount > length)
                     {
                         conversions.Add(new ParamArrayConversion(i, dest.GetElementType()));
                         return true;
@@ -32,12 +33,16 @@ namespace FluidScript.Runtime
                 }
                 // matches current index
                 if (i >= length)
-                    break;
+                {
+                    // method has one more parameter so skip
+                    return conversions.Recycle();
+                }
+
                 var arg = args[i];
                 if (arg is null)
                 {
                     if (dest.IsValueType && !IsNullableType(dest))
-                        break;
+                        return conversions.Recycle();
                 }
                 else
                 {
@@ -45,7 +50,7 @@ namespace FluidScript.Runtime
                     if (!TypeUtils.AreReferenceAssignable(dest, src))
                     {
                         if (TryImplicitConvert(src, dest, out MethodInfo opImplict) == false)
-                            break;
+                            return conversions.Recycle();
                         conversions.Add(new ParamConversion(i, opImplict));
                     }
                 }

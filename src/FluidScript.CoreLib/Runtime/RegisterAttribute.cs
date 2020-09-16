@@ -31,7 +31,7 @@
             ImplOption = implOption;
         }
 
-        public RegisterImplOption ImplOption { get;}
+        public RegisterImplOption ImplOption { get; }
 
         /// <summary>
         /// Should Method can be used

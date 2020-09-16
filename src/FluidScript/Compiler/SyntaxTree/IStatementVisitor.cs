@@ -16,9 +16,13 @@ namespace FluidScript.Compiler
         /// </summary>
         void VisitReturn(ReturnOrThrowStatement node);
         /// <summary>
-        /// Visit block
+        /// Visit block statement
         /// </summary>
         void VisitBlock(BlockStatement node);
+        /// <summary>
+        /// Visit Import statement
+        /// </summary>
+        void VisitImport(ImportStatement node);
         /// <summary>
         /// Visit variable declaration
         /// </summary>
@@ -27,13 +31,11 @@ namespace FluidScript.Compiler
         /// Visit Continue statement
         /// </summary>
         void VisitContinue(ContinueStatement node);
-
         /// <summary>
         /// Visit break statement
         /// </summary>
         /// <param name="node"></param>
         void VisitBreak(BreakStatement node);
-
         /// <summary>
         /// Visit loop
         /// </summary>

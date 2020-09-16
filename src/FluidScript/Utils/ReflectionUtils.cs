@@ -9,6 +9,7 @@ namespace FluidScript.Utils
     public static class ReflectionUtils
     {
         internal const string ParseMethod = "Parse";
+        internal const string InvokeMethod = "Invoke";
 
         #region Types
         internal const string ConvertibleType = "System.IConvertible";
@@ -154,13 +155,27 @@ namespace FluidScript.Utils
         internal static MethodInfo GetDelegateMethod(Delegate del, object[] args, out ArgumentConversions conversions)
         {
             conversions = new ArgumentConversions(args.Length);
-            MethodInfo m = del.Method;
+            MethodInfo m = del.GetType().GetMethod(InvokeMethod, PublicInstance);
             // only static method can allowed
             if (m.MatchesArguments(args, conversions))
             {
                 return m;
             }
             return null;
+        }
+
+        public static bool TryGetDelegateMethod(Type type, Type[] args, out MethodInfo method, out ArgumentConversions conversions)
+        {
+            conversions = new ArgumentConversions(args.Length);
+            MethodInfo m = type.GetMethod(InvokeMethod, PublicInstance);
+            // only static method can allowed
+            if (m.MatchesArgumentTypes(args, conversions))
+            {
+                method = m;
+                return true;
+            }
+            method = null;
+            return false;
         }
         #endregion
     }

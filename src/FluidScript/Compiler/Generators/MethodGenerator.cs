@@ -74,8 +74,7 @@ namespace FluidScript.Compiler.Generators
         {
             if (SyntaxBody != null)
             {
-                MethodBodyGenerator bodyGen = GetMethodBodyGenerator();
-                bodyGen.Compile();
+                GetMethodBodyGenerator().Compile();
             }
         }
 
@@ -156,7 +155,7 @@ namespace FluidScript.Compiler.Generators
         public MethodGenerator(System.Reflection.Emit.MethodBuilder builder, ParameterInfo[] parameters, TypeGenerator declaring) : base(builder, parameters, declaring)
         {
             _builder = builder;
-            Context = declaring.Context;
+            Context = new TypeContext(declaring.Context);
         }
 
         public override void EmitParameterInfo()

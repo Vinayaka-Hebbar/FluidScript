@@ -13,6 +13,6 @@ namespace FluidScript.Compiler.Emit
 
         CallingConventions CallingConvention { get; }
 
-        ITypeContext Context { get; set; }
+        ITypeContext Context { get; }
     }
 }

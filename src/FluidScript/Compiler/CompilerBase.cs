@@ -3,7 +3,6 @@ using FluidScript.Extensions;
 using FluidScript.Runtime;
 using FluidScript.Utils;
 using System;
-using System.Linq;
 
 namespace FluidScript.Compiler
 {
@@ -447,15 +446,15 @@ namespace FluidScript.Compiler
         {
             var condition = node.First.Accept(this);
             bool result;
-            if(condition is Boolean)
+            if (condition is Boolean)
             {
                 result = (Boolean)condition;
             }
-            else if(condition is bool)
+            else if (condition is bool)
             {
                 result = (bool)condition;
             }
-            else if(condition is null)
+            else if (condition is null)
             {
                 result = false;
             }
