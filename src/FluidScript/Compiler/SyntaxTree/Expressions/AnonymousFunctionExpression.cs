@@ -46,7 +46,7 @@ namespace FluidScript.Compiler.SyntaxTree
             var lamdaVisit = new LamdaVisitor(names);
             Body.Accept(lamdaVisit);
             LamdaGen lamdaGen;
-            if(generator.Method.DeclaringType is Generators.TypeGenerator typeGen)
+            if (generator.Method.DeclaringType is Generators.TypeGenerator typeGen)
             {
                 lamdaGen = typeGen.DefineAnonymousMethod(Types, ReturnType);
             }

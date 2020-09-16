@@ -49,7 +49,7 @@ namespace FluidScript.Compiler.Binders
                 throw new FieldAccessException("A readonly field cannot be assigned to (except in a constructor of the class in which the field is defined or a variable initializer))");
             if (field is Generators.FieldGenerator)
                 field = ((Generators.FieldGenerator)field).FieldInfo;
-            if((option & MethodCompileOption.Dupplicate) == 0)
+            if ((option & MethodCompileOption.Dupplicate) == 0)
             {
                 generator.StoreField(field);
                 return;

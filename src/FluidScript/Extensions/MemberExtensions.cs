@@ -21,7 +21,7 @@ namespace FluidScript.Extensions
                 {
                     return attrs[0].Match(name);
                 }
-                else if(member.IsSpecialName)
+                else if (member.IsSpecialName)
                 {
                     return member.Name.Equals(name);
                 }

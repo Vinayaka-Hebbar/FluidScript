@@ -27,7 +27,7 @@ namespace FluidScript.Compiler
 
         internal static void ThrowNotSupported(params Node[] tree)
         {
-           throw new ExecutionException(NotSupported, tree, "Not suppored");
+            throw new ExecutionException(NotSupported, tree, "Not suppored");
         }
 
         internal static System.Exception ThrowMissingMethod(System.Type target, string name, params Node[] tree)
@@ -46,7 +46,7 @@ namespace FluidScript.Compiler
 
         internal static System.Exception ThrowMissingIndexer(System.Type target, string type, params Node[] tree)
         {
-            throw new ExecutionException( MissingIndexer, tree, target == null
+            throw new ExecutionException(MissingIndexer, tree, target == null
                            ? string.Concat("cannot find '", type, "' indexer from null")
                            : string.Concat("indexer '", type, "' not found in ", target.Name));
         }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     public class SuperExpression : Expression
     {

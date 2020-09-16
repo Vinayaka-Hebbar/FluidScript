@@ -24,7 +24,7 @@ namespace FluidScript.Compiler.Binders
 
         public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
-            if((option & MethodCompileOption.EmitStartAddress) == MethodCompileOption.EmitStartAddress && parameter.Type.IsValueType)
+            if ((option & MethodCompileOption.EmitStartAddress) == MethodCompileOption.EmitStartAddress && parameter.Type.IsValueType)
             {
                 if (generator.Method.IsStatic)
                     generator.LoadAddressOfArgument(parameter.Index);

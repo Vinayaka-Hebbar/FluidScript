@@ -42,12 +42,12 @@ namespace FluidScript.Compiler.SyntaxTree
             {
                 returnType = ReturnType.ResolveType(generator.Context);
             }
-            else if(Body.ContainsNodeOfType<ReturnOrThrowStatement>(s=> s.NodeType == StatementType.Return))
+            else if (Body.ContainsNodeOfType<ReturnOrThrowStatement>(s => s.NodeType == StatementType.Return))
             {
 
                 returnType = TypeProvider.AnyType;
             }
-            else 
+            else
             {
                 returnType = TypeProvider.VoidType;
             }

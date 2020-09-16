@@ -1,5 +1,4 @@
-﻿using FluidScript.Extensions;
-using FluidScript.Utils;
+﻿using FluidScript.Utils;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree

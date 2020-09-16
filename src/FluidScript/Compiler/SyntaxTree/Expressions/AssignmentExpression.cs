@@ -32,7 +32,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 var exp = (NameExpression)Left;
                 var binder = exp.Binder;
                 // binder is null create new local variable
-                if(binder is null)
+                if (binder is null)
                     exp.Binder = binder = new Binders.VariableBinder(generator.DeclareVariable(Right.Type, exp.Name));
                 if ((binder.Attributes & Binders.BindingAttributes.HasThis) != 0)
                     generator.LoadArgument(0);

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace FluidScript.Compiler
 {
 
-    public class TypeProvider 
+    public class TypeProvider
     {
         internal const string String = nameof(String);
 
