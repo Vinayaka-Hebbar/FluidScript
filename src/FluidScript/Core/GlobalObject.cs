@@ -65,7 +65,8 @@ namespace FluidScript
             System.Collections.IEnumerator e = value.GetEnumerator();
             checked
             {
-                while (e.MoveNext()) count++;
+                while (e.MoveNext())
+                    count++;
             }
             return count;
         }
@@ -100,8 +101,10 @@ namespace FluidScript
             int len = count;
             int s = start;
             long max = ((long)s) + len - 1;
-            if (count < 0 || max > int.MaxValue) throw new System.ArgumentOutOfRangeException("count");
-            for (int i = 0; i < len; i += inc) yield return new Integer(s + i);
+            if (count < 0 || max > int.MaxValue)
+                throw new System.ArgumentOutOfRangeException("count");
+            for (int i = 0; i < len; i += inc)
+                yield return new Integer(s + i);
         }
 
         /// <summary>

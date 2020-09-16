@@ -2,7 +2,7 @@
 
 namespace FluidScript.Runtime
 {
-    public interface ILocalVariables : 
+    public interface ILocalVariables :
         IDictionary<string, object>, System.Runtime.CompilerServices.IRuntimeVariables, IEnumerable<KeyValuePair<string, object>>
     {
         LocalVariable DeclareVariable(string name, System.Type type, object value);

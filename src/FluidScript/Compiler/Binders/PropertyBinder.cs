@@ -47,7 +47,7 @@ namespace FluidScript.Compiler.Binders
                 if (Setter != null)
                     return BindingAttributes.Member | (Setter.IsStatic ? BindingAttributes.None : BindingAttributes.HasThis);
                 return BindingAttributes.Member;
-                
+
             }
         }
 

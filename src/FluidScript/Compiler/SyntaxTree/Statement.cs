@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FluidScript.Compiler.SyntaxTree
+﻿namespace FluidScript.Compiler.SyntaxTree
 {
     /// <summary>
     /// Statement like declarion, return etc

@@ -14,7 +14,7 @@ namespace FluidScript.Compiler.Binders
     {
         void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option = 0);
 
-        void GenerateSet(Expression value,  MethodBodyGenerator generator, MethodCompileOption option = 0);
+        void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option = 0);
 
         /// <summary>
         /// From this you can identify whether Binder is a Variable or Static Member 
@@ -193,5 +193,5 @@ namespace FluidScript.Compiler.Binders
         }
     }
 
-#endregion
+    #endregion
 }

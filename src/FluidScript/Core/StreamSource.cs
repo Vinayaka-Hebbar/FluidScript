@@ -272,7 +272,8 @@ namespace FluidScript.Compiler
         {
             if (charPos == charLen)
             {
-                if (_isBlocked || ReadBuffer() == 0) return char.MinValue;
+                if (_isBlocked || ReadBuffer() == 0)
+                    return char.MinValue;
             }
             return charBuffer[charPos];
         }

@@ -69,7 +69,8 @@ namespace FluidScript.Compiler
         {
             get
             {
-                if (index >= 0 && index < count) return entries[index].Value;
+                if (index >= 0 && index < count)
+                    return entries[index].Value;
                 throw new System.IndexOutOfRangeException(index.ToString());
             }
             set
@@ -133,7 +134,8 @@ namespace FluidScript.Compiler
 
         internal LocalVariable Create(string name, System.Type type, object value)
         {
-            if (buckets == null) Initialize(0);
+            if (buckets == null)
+                Initialize(0);
             int hashCode = name.GetHashCode() & 0x7FFFFFFF;
             int targetBucket = hashCode % buckets.Length;
             for (int i = buckets[targetBucket]; i >= 0; i = entries[i].Next)
@@ -177,7 +179,8 @@ namespace FluidScript.Compiler
                 int hashCode = key.GetHashCode() & 0x7FFFFFFF;
                 for (int i = buckets[hashCode % buckets.Length]; i >= 0; i = entries[i].Next)
                 {
-                    if (entries[i].HashCode == hashCode && string.Equals(entries[i].Key.Name, key)) return i;
+                    if (entries[i].HashCode == hashCode && string.Equals(entries[i].Key.Name, key))
+                        return i;
                 }
             }
             return -1;
@@ -225,7 +228,7 @@ namespace FluidScript.Compiler
         }
 
         #region IDictionary
-        
+
         public void Add(string key, object value)
         {
             var type = value == null ? TypeProvider.ObjectType : value.GetType();

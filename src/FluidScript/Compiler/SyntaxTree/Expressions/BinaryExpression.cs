@@ -27,7 +27,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override IEnumerable<Node> ChildNodes() => Childs(Left, Right);
 
-        
+
 
         public string MethodName
         {
