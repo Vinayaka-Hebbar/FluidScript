@@ -9,9 +9,11 @@
             Alias = alias;
         }
 
+        public override string Name => Alias;
+
         public override string ToString()
         {
-            return Alias;
+            return $"{Alias}={TypeName}";
         }
     }
 }

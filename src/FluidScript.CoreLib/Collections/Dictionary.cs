@@ -252,6 +252,7 @@ namespace FluidScript.Collections
         }
 
         #endregion
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return new Enumerator(this, Enumerator.KeyValuePair);

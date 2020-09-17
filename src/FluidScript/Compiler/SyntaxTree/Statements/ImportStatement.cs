@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -21,6 +22,11 @@ namespace FluidScript.Compiler.SyntaxTree
         public override void GenerateCode(MethodBodyGenerator generator)
         {
             TypeContext.Register(generator.Context, Library, Imports);
+        }
+
+        public override string ToString()
+        {
+            return $"import {string.Join(",", Imports.Map(m => m.ToString()))} from {Library}";
         }
     }
 }

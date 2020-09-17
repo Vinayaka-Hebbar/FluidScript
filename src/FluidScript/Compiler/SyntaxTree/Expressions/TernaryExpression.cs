@@ -10,7 +10,9 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public readonly Expression Third;
 
-        public System.Reflection.MethodInfo ImplicitCall { get; internal set; }
+        public Runtime.ArgumentConversions Conversions { get; set; }
+
+        public System.Reflection.MethodInfo ExpressionConversion { get; set; }
 
         public TernaryExpression(Expression first, Expression second, Expression third) : base(ExpressionType.Question)
         {
@@ -30,24 +32,28 @@ namespace FluidScript.Compiler.SyntaxTree
             var resultType = Type;
             var firstType = Second.Type;
             var secondType = Third.Type;
-            First.GenerateCode(generator);
+            First.GenerateCode(generator, MethodCompileOption.Return);
+            if(Conversions != null && Conversions.Count > 0)
+            {
+                generator.EmitConvert(Conversions[0]);
+            }
             // Branch if the condition is false.
             var startOfElse = generator.CreateLabel();
             generator.BranchIfFalse(startOfElse);
-            Second.GenerateCode(generator);
+            Second.GenerateCode(generator, options);
             if (resultType != firstType)
             {
-                generator.Call(ImplicitCall);
+                generator.Call(ExpressionConversion);
             }
             // Branch to the end.
             var end = generator.CreateLabel();
             generator.Branch(end);
             generator.DefineLabelPosition(startOfElse);
 
-            Third.GenerateCode(generator);
+            Third.GenerateCode(generator, options);
             if (resultType != secondType)
             {
-                generator.Call(ImplicitCall);
+                generator.Call(ExpressionConversion);
             }
             generator.DefineLabelPosition(end);
         }

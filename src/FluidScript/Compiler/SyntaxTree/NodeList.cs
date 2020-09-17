@@ -98,10 +98,18 @@ namespace FluidScript.Compiler.SyntaxTree
             var res = new NodeList<TElement>(size);
             for (int i = 0; i < size; i++)
             {
+#if LASTEST_VS
                 if (items[i] is TElement e)
                 {
                     res.Add(e);
                 }
+#else
+                var e = items[i] as TElement;
+                if (e != null)
+                {
+                    res.Add(e);
+                }
+#endif
             }
             return res;
         }

@@ -46,26 +46,29 @@ namespace FluidScript.Compiler.SyntaxTree
         }
 
         /// <inheritdoc/>
-        public override void GenerateCode(Compiler.Emit.MethodBodyGenerator generator)
+        public override void GenerateCode(Emit.MethodBodyGenerator generator)
         {
             // Generate code for the start of the statement.
             var statementLocals = new StatementLocals();
             GenerateStartOfStatement(generator, statementLocals);
             var condition = Condition.Accept(generator);
             // Generate code for condition convert to System.Boolean
-            condition.GenerateCode(generator);
-            if (condition.Type == TypeProvider.BooleanType)
+            condition.GenerateCode(generator, Emit.MethodCompileOption.Return);
+            if (condition.Type != typeof(bool))
             {
-                generator.CallStatic(Utils.ReflectionHelpers.BoooleanToBool);
-            }
-            else if (condition.Type.TryImplicitConvert(TypeProvider.BooleanType, out MethodInfo op_Implicit))
-            {
-                generator.CallStatic(op_Implicit);
-                generator.CallStatic(Utils.ReflectionHelpers.BoooleanToBool);
-            }
-            else
-            {
-                throw new System.InvalidCastException($"Unable to cast object of type {condition.Type} to {TypeProvider.BooleanType}");
+                if (condition.Type == TypeProvider.BooleanType)
+                {
+                    generator.CallStatic(Utils.ReflectionHelpers.BoooleanToBool);
+                }
+                else if (condition.Type.TryImplicitConvert(TypeProvider.BooleanType, out MethodInfo op_Implicit))
+                {
+                    generator.CallStatic(op_Implicit);
+                    generator.CallStatic(Utils.ReflectionHelpers.BoooleanToBool);
+                }
+                else
+                {
+                    throw new System.InvalidCastException($"Unable to cast object of type {condition.Type} to {TypeProvider.BooleanType}");
+                }
             }
             // We will need a label at the end of the if statement.
             var endOfEverything = generator.CreateLabel();

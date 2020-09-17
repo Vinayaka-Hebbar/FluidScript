@@ -310,12 +310,11 @@ namespace FluidScript.Compiler.Emit
                     Duplicate();
                     LoadInt32(i);
                     Expression exp = expressions[i];
-                    exp.GenerateCode(this);
+                    // do not pop the value
+                    exp.GenerateCode(this, Expression.AssignOption);
                     if (conversions != null)
                     {
-                        var group = conversions[i];
-                        if (group != null)
-                            EmitConvert(group);
+                        EmitConvert(conversions[i]);
                     }
                     StoreArrayElement(c.Type);
                 }
@@ -371,6 +370,24 @@ namespace FluidScript.Compiler.Emit
                 return LocalVariables.FirstOrDefault(item => item.Name == name);
             }
             return null;
+        }
+
+        /// <summary>
+        /// Get Declared local variable
+        /// </summary>
+        /// Problem when scope
+        public bool TryGetLocalVariable(string name, out IBinder binder)
+        {
+            var variable = GetLocalVariable(name);
+            if (variable != null)
+            {
+                if (variable.Type == null)
+                    throw new Exception(string.Concat("Use of undeclared variable ", variable));
+                binder = new VariableBinder(variable);
+                return true;
+            }
+            binder = null;
+            return false;
         }
 
         ///<summary>Creates IL Code</summary>
@@ -628,7 +645,8 @@ namespace FluidScript.Compiler.Emit
                     resultType = Method.DeclaringType;
                     bindingAttr = ReflectionUtils.AnyPublic;
                     name = exp.Name;
-                    if (resultType.TryFindMember(name, bindingAttr, out IBinder binder))
+                    if (TryGetLocalVariable(name, out IBinder binder) ||
+                        resultType.TryFindMember(name, bindingAttr, out binder))
                     {
                         // this type used for invoke
                         exp.Type = resultType = binder.Type;
@@ -654,7 +672,7 @@ namespace FluidScript.Compiler.Emit
                     }
                     member.Type = resultType = exp.Type;
                     name = member.Name;
-                    if(resultType.TryFindMember(name, bindingAttr, out IBinder binder)
+                    if (resultType.TryFindMember(name, bindingAttr, out IBinder binder)
                         && binder.Type.IsDelegate()
                         && ReflectionUtils.TryGetDelegateMethod(binder.Type, types, out method, out conversions))
                     {
@@ -732,28 +750,42 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitTernary(TernaryExpression node)
         {
             var conditionType = node.First.Accept(this).Type;
-            if (conditionType == typeof(Boolean) || conditionType == typeof(bool))
+            if(conditionType != typeof(bool))
             {
-                var first = node.Second.Accept(this);
-                var second = node.Third.Accept(this);
-                if (first.Type == second.Type)
+                node.Conversions = new ArgumentConversions(1);
+                if (conditionType == TypeProvider.BooleanType)
                 {
-                    node.Type = second.Type;
+                    node.Conversions.Add(new ParamConversion(0, ReflectionHelpers.BoooleanToBool));
                 }
-                else if (first.Type.TryImplicitConvert(second.Type, out System.Reflection.MethodInfo method))
+                else if (conditionType.TryImplicitConvert(TypeProvider.BooleanType, out System.Reflection.MethodInfo op_Implicit))
                 {
-                    node.Type = method.ReturnType;
-                    node.ImplicitCall = method;
+                    node.Conversions.Add(new ParamConversion(0, op_Implicit));
+                    node.Conversions.Add(new ParamConversion(0, ReflectionHelpers.BoooleanToBool));
                 }
-                else if (second.Type.TryImplicitConvert(first.Type, out method))
+                else
                 {
-                    node.Type = method.ReturnType;
-                    node.ImplicitCall = method;
+                    throw new InvalidCastException($"Unable to cast object of type {conditionType} to {TypeProvider.BooleanType}");
                 }
+            }
+            var first = node.Second.Accept(this);
+            var second = node.Third.Accept(this);
+            if (first.Type == second.Type)
+            {
+                node.Type = second.Type;
+            }
+            else if (first.Type.TryImplicitConvert(second.Type, out System.Reflection.MethodInfo method))
+            {
+                node.Type = method.ReturnType;
+                node.ExpressionConversion = method;
+            }
+            else if (second.Type.TryImplicitConvert(first.Type, out method))
+            {
+                node.Type = method.ReturnType;
+                node.ExpressionConversion = method;
             }
             else
             {
-                throw new Exception("expected bool type");
+                throw new InvalidCastException($"Unable to cast object of type {first.Type} to {second.Type}");
             }
             return node;
         }
@@ -782,34 +814,28 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitMember(NameExpression node)
         {
             var name = node.Name;
-            var variable = GetLocalVariable(name);
-            if (variable != null)
+            if (TryGetLocalVariable(name, out IBinder binder) == false)
             {
-                if (variable.Type == null)
-                    throw new Exception(string.Concat("Use of undeclared variable ", variable));
-                node.Type = variable.Type;
-                node.Binder = new VariableBinder(variable);
-                return node;
+                var arg = Method.Parameters.FirstOrDefault(para => para.Name == name);
+                if (arg.Name != null)
+                {
+                    node.Type = arg.Type;
+                    node.Binder = new ParameterBinder(arg);
+                    return node;
+                }
+                //find in the class level
+                if (Method.DeclaringType.TryFindMember(name, ReflectionUtils.Any, out binder) == false
+                    && Context.TryGetType(name, out Type type))
+                {
+                    // if static type name
+                    node.Type = type;
+                    node.Binder = new EmptyBinder(type);
+                    return node;
+                }
             }
-            var arg = Method.Parameters.FirstOrDefault(para => para.Name == name);
-            if (arg.Name != null)
-            {
-                node.Type = arg.Type;
-                node.Binder = new ParameterBinder(arg);
-                return node;
-            }
-            //find in the class level
-            if (Method.DeclaringType.TryFindMember(name, ReflectionUtils.Any, out IBinder binder))
-            {
-                node.Type = binder.Type;
-                node.Binder = binder;
-            }
-            else if (Context.TryGetType(name, out Type type))
-            {
-                // if static type name
-                node.Type = type;
-                node.Binder = new EmptyBinder(type);
-            }
+            // if static type name
+            node.Type = binder.Type;
+            node.Binder = binder;
             return node;
         }
 

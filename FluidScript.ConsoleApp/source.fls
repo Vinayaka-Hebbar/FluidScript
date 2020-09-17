@@ -5,8 +5,9 @@ class Sample {
 	var fetch = func() => {
 		return a;
 	};
-	var value = func()=> {
-		return a+b;
+	var items = {};
+	var value = func(key:string)=> {
+		return items.ContainsKey(key.toString());
 	};
 	var x = null;
 	func add()  {
@@ -19,7 +20,9 @@ class Sample {
 	}
 
 	func create() {
-		return value();
+		return func(key:string)=> {
+			return items.ContainsKey(key)?items[key]:0;
+		};
 	}
 
 	get a() {

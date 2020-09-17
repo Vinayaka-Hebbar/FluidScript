@@ -107,7 +107,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     Conversion conv = conversions[i];
                     if (conv.ConversionType == ConversionType.Normal)
                     {
-                        arguments[i].GenerateCode(generator);
+                        arguments[i].GenerateCode(generator, AssignOption);
                         generator.EmitConvert(conv);
                     }
                     else if (conv.ConversionType == ConversionType.ParamArray)
