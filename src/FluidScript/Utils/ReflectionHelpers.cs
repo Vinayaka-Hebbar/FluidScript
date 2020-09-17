@@ -170,7 +170,7 @@ namespace FluidScript.Utils
             get
             {
                 if (anonymousObj_SetItem == null)
-                    anonymousObj_SetItem = typeof(Runtime.DynamicObject).GetInstanceMethod("set_Item", typeof(string), TypeProvider.ObjectType);
+                    anonymousObj_SetItem = typeof(DynamicObject).GetInstanceMethod("set_Item", typeof(string), TypeProvider.ObjectType);
                 return anonymousObj_SetItem;
             }
         }

@@ -22,7 +22,7 @@ namespace FluidScript.Compiler.SyntaxTree
         /// <inheritdoc/>
         public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption options)
         {
-            Type = VariableType != null ? VariableType.ResolveType(generator.Context) : TypeProvider.ObjectType;
+            Type = VariableType != null ? VariableType.ResolveType(generator.Context) : TypeProvider.AnyType;
             if (Value != null)
             {
                 var defValue = Value.Accept(generator);

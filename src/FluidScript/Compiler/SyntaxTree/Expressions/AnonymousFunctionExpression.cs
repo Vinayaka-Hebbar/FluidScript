@@ -62,6 +62,7 @@ namespace FluidScript.Compiler.SyntaxTree
             methodGen.EmitParameterInfo();
             var bodyGen = new MethodBodyGenerator(methodGen, lamdaGen.Method.GetILGenerator());
             var values = lamdaVisit.HoistedLocals.Values;
+            // new object[] {}
             var valVar = generator.DeclareVariable(LamdaGen.ObjectArray);
             ArrayListExpression.MakeObjectArray(generator, values);
             generator.StoreVariable(valVar);
@@ -76,7 +77,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     bodyGen.LoadArgument(0);
                     bodyGen.LoadField(field);
                     bodyGen.LoadInt32(index);
-                    bodyGen.LoadArrayElement(typeof(object));
+                    bodyGen.LoadArrayElement(TypeProvider.ObjectType);
                     bodyGen.UnboxObject(value.Type);
                     bodyGen.StoreVariable(variable);
                     index++;
@@ -104,7 +105,7 @@ namespace FluidScript.Compiler.SyntaxTree
             var context = TypeContext.Default;
             System.Type returnType;
             if (ReturnSyntax != null)
-                returnType = ReturnSyntax.ResolveType((ITypeContext)context);
+                returnType = ReturnSyntax.ResolveType(context);
             else
                 returnType = typeof(object);
             var names = Parameters.Map(para => para.Name).AddFirst("closure");
@@ -114,7 +115,7 @@ namespace FluidScript.Compiler.SyntaxTree
             for (int i = 0; i < Parameters.Count; i++)
             {
                 var para = Parameters[i];
-                System.Type type = para.Type == null ? TypeProvider.ObjectType : para.Type.ResolveType((ITypeContext)context);
+                System.Type type = para.Type == null ? TypeProvider.AnyType : para.Type.ResolveType(context);
                 parameters[i] = new ParameterInfo(para.Name, i + 1, type, para.IsVarArgs);
                 types[i] = type;
             }

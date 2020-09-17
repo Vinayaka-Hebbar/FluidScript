@@ -8,7 +8,6 @@ namespace FluidScript.Compiler.Emit
 #endif
         struct Primitive
     {
-        public static readonly Primitive Any = new Primitive("any", typeof(object));
         public readonly string Name;
         public readonly Type Type;
 

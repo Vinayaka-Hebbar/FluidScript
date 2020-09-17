@@ -56,6 +56,13 @@ namespace FluidScript.Compiler.SyntaxTree
                     }
                 }
             }
+            else if(Target.NodeType == ExpressionType.Identifier)
+            {
+                // if it an identifier expression this might be local member call
+                var exp = (NameExpression)Target;
+                if (exp.Binder == null && Method.IsStatic == false)
+                    generator.LoadArgument(0);
+            }
             EmitArguments(generator, Arguments, Conversions);
             generator.Call(Method);
             // if current value must not be returned for assigment
