@@ -24,10 +24,11 @@ namespace FluidScript.Compiler.Binders
 
         public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
-            if ((option & MethodCompileOption.EmitStartAddress) == 0)
-                generator.LoadVariable(variable);
-            else
+            if ((option & MethodCompileOption.EmitStartAddress) == MethodCompileOption.EmitStartAddress
+                && variable.Type.IsValueType)
                 generator.LoadAddressOfVariable(variable);
+            else
+                generator.LoadVariable(variable);
         }
 
         public void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option)

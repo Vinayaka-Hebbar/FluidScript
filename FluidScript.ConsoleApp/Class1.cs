@@ -5,7 +5,9 @@ using FluidScript.Compiler.SyntaxTree;
 using FluidScript.Extensions;
 using FluidScript.Runtime;
 using System;
+using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace FluidScript.ConsoleApp
 {
@@ -24,11 +26,11 @@ namespace FluidScript.ConsoleApp
         {
             try
             {
-                //Runtime();
+                // Runtime();
                 // FluidTest.Sample sample = new FluidTest.Sample();
                 // var res=  sample.Create();
                 //FuncTest();
-                CodeGen();
+                //CodeGen();
                 Console.WriteLine();
             }
             catch (TargetInvocationException ex)
@@ -39,14 +41,13 @@ namespace FluidScript.ConsoleApp
 
         private static void Runtime()
         {
+            System.Collections.Generic.IDictionary<string, double> items = new System.Collections.Generic.Dictionary<string, double>();
+            Any key = "name";
             RuntimeCompiler compiler = new RuntimeCompiler();
-            compiler.Locals["a"] = 10;
-            compiler.Locals["b"] = null;
-            var res = (Delegate)compiler.Invoke(Parser.GetStatement(
-                @"{
-                 import {console=System.Console} from mscorlib;
-                console.Write('Value {0}', 2);
-                }"), new object());
+            compiler.Locals["items"] = items;
+            var res = compiler.Invoke(Parser.GetExpression(
+                @"func(key:string)=> items.ContainsKey(key)?items[key]:0"), new object());
+            Console.WriteLine(res);
         }
 
         static void FuncTest()

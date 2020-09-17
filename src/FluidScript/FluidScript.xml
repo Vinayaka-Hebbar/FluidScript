@@ -1009,6 +1009,12 @@
             </summary>
             Problem when scope
         </member>
+        <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.TryGetLocalVariable(System.String,FluidScript.Compiler.Binders.IBinder@)">
+            <summary>
+            Get Declared local variable
+            </summary>
+            Problem when scope
+        </member>
         <member name="M:FluidScript.Compiler.Emit.MethodBodyGenerator.Compile">
             <summary>Creates IL Code</summary>
         </member>

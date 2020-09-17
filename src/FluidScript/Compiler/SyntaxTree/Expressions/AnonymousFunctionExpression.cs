@@ -108,7 +108,7 @@ namespace FluidScript.Compiler.SyntaxTree
             if (ReturnSyntax != null)
                 returnType = ReturnSyntax.ResolveType(context);
             else
-                returnType = typeof(object);
+                returnType = TypeProvider.AnyType;
             var names = Parameters.Map(para => para.Name).AddFirst("closure");
             int length = Parameters.Count;
             System.Type[] types = new System.Type[length];

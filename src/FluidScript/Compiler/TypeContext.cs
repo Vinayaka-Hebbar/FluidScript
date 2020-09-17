@@ -110,7 +110,7 @@ namespace FluidScript.Compiler
                 {
                     type = assemblyImport.GetType(typeName.FullName);
                 }
-                context.Register(import.ToString(), type);
+                context.Register(import.Name, type);
             }
         }
 

@@ -8,11 +8,13 @@ namespace FluidScript
 {
     [Register("Any")]
     [Serializable]
-    public struct Any : IConvertible, IFSObject, IDynamicInvocable, System.Dynamic.IDynamicMetaObjectProvider
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    public struct Any : IConvertible, IFSObject, IDynamicInvocable
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         internal readonly object m_value;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [NonSerialized]
         Type m_type;
 
         public Any(object value)
@@ -158,16 +160,6 @@ namespace FluidScript
             return false;
         }
 
-        /// <summary>
-        /// Invoke a method
-        /// </summary>
-        /// <param name="name">name of the method</param>
-        /// <returns>result of the invocation</returns>
-        public Any Invoke(string name)
-        {
-            return Invoke(name, new Any[0]);
-        }
-
         public Any GetValue(string name)
         {
             if (ReflectionExtensions.TryFindMember(Type, name, TypeUtils.AnyPublic, out IMemberBinder binder))
@@ -187,6 +179,16 @@ namespace FluidScript
             }
             if (m_value is IDynamicInvocable)
                 ((IDynamicInvocable)m_value).SafeSetValue(value, name, value.Type);
+        }
+
+        /// <summary>
+        /// Invoke a method
+        /// </summary>
+        /// <param name="name">name of the method</param>
+        /// <returns>result of the invocation</returns>
+        public Any Invoke(string name)
+        {
+            return Invoke(name, new Any[0]);
         }
 
         public Any Invoke(string name, params Any[] args)
@@ -978,12 +980,5 @@ namespace FluidScript
             }
             return false;
         }
-
-        #region Dynamic Metadata
-        System.Dynamic.DynamicMetaObject System.Dynamic.IDynamicMetaObjectProvider.GetMetaObject(System.Linq.Expressions.Expression parameter)
-        {
-            return new MetaObject(parameter, this);
-        }
-        #endregion
     }
 }

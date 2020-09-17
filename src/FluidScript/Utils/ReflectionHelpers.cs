@@ -159,7 +159,7 @@ namespace FluidScript.Utils
             get
             {
                 if (anonymousObj == null)
-                    anonymousObj = typeof(Runtime.DynamicObject).GetInstanceCtor();
+                    anonymousObj = typeof(DynamicObject).GetInstanceCtor();
                 return anonymousObj;
             }
         }
@@ -170,7 +170,7 @@ namespace FluidScript.Utils
             get
             {
                 if (anonymousObj_SetItem == null)
-                    anonymousObj_SetItem = typeof(DynamicObject).GetInstanceMethod("set_Item", typeof(string), TypeProvider.ObjectType);
+                    anonymousObj_SetItem = typeof(System.Collections.Generic.IDictionary<string,object>).GetInstanceMethod("set_Item", typeof(string), TypeProvider.ObjectType);
                 return anonymousObj_SetItem;
             }
         }
@@ -204,7 +204,8 @@ namespace FluidScript.Utils
             get
             {
                 if (dynamicInvoke == null)
-                    dynamicInvoke = typeof(IDynamicInvocable).GetInstanceMethod(nameof(IDynamicInvocable.Invoke),
+                    dynamicInvoke = Extensions.
+                        TypeExtensions.DynamicInvocableType.GetInstanceMethod(nameof(IDynamicInvocable.Invoke),
                         typeof(string), typeof(Any[]));
                 return dynamicInvoke;
             }

@@ -11,9 +11,11 @@ namespace FluidScript.Compiler.SyntaxTree
             TypeName = typeSyntax;
         }
 
+        public virtual string Name => TypeName.Name;
+
         public override string ToString()
         {
-            return TypeName.Name;
+            return TypeName.FullName;
         }
     }
 }

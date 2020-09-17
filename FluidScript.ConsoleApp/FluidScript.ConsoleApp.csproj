@@ -27,6 +27,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\src\FluidScript\FluidScript.csproj" />
   </ItemGroup>
 </Project>

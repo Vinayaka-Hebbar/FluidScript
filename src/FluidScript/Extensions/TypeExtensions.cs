@@ -14,7 +14,7 @@ namespace FluidScript.Extensions
         private const BindingFlags DeclaredPublic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.ExactBinding;
 
         private static readonly System.Type DelegateType = typeof(System.Delegate);
-        private static readonly System.Type DynamicInvocableType = typeof(IDynamicInvocable);
+        internal static readonly System.Type DynamicInvocableType = typeof(IDynamicInvocable);
 
         public static ConstructorInfo GetInstanceCtor(this System.Type type, params System.Type[] parameterTypes)
         {
