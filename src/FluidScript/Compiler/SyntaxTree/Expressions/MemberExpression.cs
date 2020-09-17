@@ -47,8 +47,15 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             if (Binder != null)
             {
-                // for dynamic sometime address not to be emitted since IDynamicInvocable is class
-                Target.GenerateCode(generator, (Binder.Attributes & Binders.BindingAttributes.Dynamic) == 0 ? MethodCompileOption.EmitStartAddress : MethodCompileOption.None);
+                if (Target.Type.IsValueType && (Binder.Attributes & Binders.BindingAttributes.Dynamic) == 0)
+                {
+                    option = MethodCompileOption.EmitStartAddress;
+                }
+                else
+                {
+                    option = 0;
+                }
+                Target.GenerateCode(generator, option);
                 Binder.GenerateGet(Target, generator);
             }
             else

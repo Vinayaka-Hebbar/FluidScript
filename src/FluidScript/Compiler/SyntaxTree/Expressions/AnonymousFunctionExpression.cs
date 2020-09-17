@@ -1,6 +1,7 @@
 ﻿using FluidScript.Compiler.Emit;
 using FluidScript.Extensions;
 using FluidScript.Runtime;
+using FluidScript.Utils;
 using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -89,7 +90,7 @@ namespace FluidScript.Compiler.SyntaxTree
             if (generator.Method is Generators.DynamicMethodGenerator)
             {
                 generator.NewObject(type.GetConstructor(LamdaGen.CtorSignature));
-                generator.LoadFunction(type.GetMethod("Invoke", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic), Type);
+                generator.LoadFunction(type.GetMethod(ReflectionUtils.InvokeMethod, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic), Type);
             }
             else
             {

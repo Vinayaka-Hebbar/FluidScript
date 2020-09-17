@@ -99,12 +99,13 @@ namespace FluidScript.Compiler.SyntaxTree
                 binder = ((MemberExpression)operand).Binder;
             }
             // todo: Conversion if value is short, byte lower data type
-            if (binder == null)
-                throw new NullReferenceException(nameof(binder));
+            
             switch (NodeType)
             {
                 case ExpressionType.PostfixMinusMinus:
                 case ExpressionType.PostfixPlusPlus:
+                    if (binder == null)
+                        throw new NullReferenceException(nameof(binder));
                     if ((binder.Attributes & BindingAttributes.HasThis) != 0)
                         generator.LoadArgument(0);
                     operand.GenerateCode(generator, MethodCompileOption.Dupplicate);
@@ -122,6 +123,8 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 case ExpressionType.PrefixMinusMinus:
                 case ExpressionType.PrefixPlusPlus:
+                    if (binder == null)
+                        throw new NullReferenceException(nameof(binder));
                     if ((binder.Attributes & BindingAttributes.HasThis) != 0)
                         generator.LoadArgument(0);
                     operand.GenerateCode(generator, MethodCompileOption.Dupplicate);
@@ -139,7 +142,7 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
                 default:
                     // call the operator
-                    operand.GenerateCode(generator, MethodCompileOption.Dupplicate);
+                    operand.GenerateCode(generator, AssignOption);
                     generator.CallStatic(Method);
                     break;
             }

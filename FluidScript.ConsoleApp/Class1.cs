@@ -18,6 +18,8 @@ namespace FluidScript.ConsoleApp
             Console.ReadKey();
         }
 
+        Func<Any, Any> value = (s) => s;
+
         public void Test()
         {
             try
@@ -145,15 +147,13 @@ namespace FluidScript.ConsoleApp
             return x is null;
         }
 
-        public void InstanceOf(object x)
-        {
+        Any[] values = { };
 
-            List<Any> values = new List<Any>();
-            values.AddRange(new Any[]
-            {
-                new Any(new Integer(0)),
-                new Any(new Integer(1))
-            });
+        public Any InstanceOf(object x)
+        {
+            var sum = new Any(2) + value(values);
+            sum = 10;
+            return sum;
         }
 
         public override string ToString()

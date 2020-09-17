@@ -99,13 +99,13 @@ namespace FluidScript.Compiler.SyntaxTree
             if (Method != null)
             {
                 var conversions = Conversions;
-                Left.GenerateCode(generator);
+                Left.GenerateCode(generator, options);
                 var first = conversions[0];
                 if (first != null)
                 {
                     generator.EmitConvert(first);
                 }
-                Right.GenerateCode(generator);
+                Right.GenerateCode(generator, options);
                 var second = conversions[1];
                 if (second != null)
                 {
