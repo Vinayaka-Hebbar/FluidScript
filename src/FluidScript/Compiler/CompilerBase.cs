@@ -56,7 +56,7 @@ namespace FluidScript.Compiler
         #region Array Literal
         public virtual object VisitArrayLiteral(ArrayListExpression node)
         {
-            Type type = node.ArrayType != null ? node.ArrayType.ResolveType(TypeContext) : TypeProvider.ObjectType;
+            Type type = node.ArrayType != null ? node.ArrayType.ResolveType(TypeContext) : TypeProvider.AnyType;
             node.Type = typeof(Collections.List<>).MakeGenericType(type);
             node.ElementType = type;
             var items = node.Expressions;
@@ -67,7 +67,7 @@ namespace FluidScript.Compiler
                 args = node.Arguments.Map(arg => arg.Accept(this));
                 if (node.Constructor == null)
                 {
-                    var methods = node.Type.GetConstructors(Utils.ReflectionUtils.PublicInstance);
+                    var methods = node.Type.GetConstructors(ReflectionUtils.PublicInstance);
                     var ctor = ReflectionUtils.BindToMethod(methods, args, out ArgumentConversions conversions);
                     if (ctor == null)
                         ExecutionException.ThrowMissingMethod(node.Type, ".ctor", node);

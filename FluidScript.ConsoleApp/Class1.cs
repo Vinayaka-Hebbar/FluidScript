@@ -26,7 +26,7 @@ namespace FluidScript.ConsoleApp
                 // FluidTest.Sample sample = new FluidTest.Sample();
                 // var res=  sample.Create();
                 //FuncTest();
-                RunCodeGen();
+                CodeGen();
                 Console.WriteLine();
             }
             catch (TargetInvocationException ex)
@@ -145,27 +145,30 @@ namespace FluidScript.ConsoleApp
             return x is null;
         }
 
-        public bool InstanceOf(object x)
+        public void InstanceOf(object x)
         {
-            return x is Integer;
-        }
 
-        public bool TestTry(out object res)
-        {
-            res = 10;
-            return true;
+            List<Any> values = new List<Any>();
+            values.AddRange(new Any[]
+            {
+                new Any(new Integer(0)),
+                new Any(new Integer(1))
+            });
         }
 
         public override string ToString()
         {
             object value = 10;
-            TestTry(out value);
             return value.ToString();
         }
 
+        int i;
         public Action TestFun3()
         {
-            return () => Console.WriteLine();
+            i = Console.Read();
+            Action x = () => Console.WriteLine(i);
+            i = 10;
+            return x;
         }
     }
 }

@@ -283,6 +283,8 @@ namespace FluidScript.Compiler.Emit
         #region Emit Convert
         public void EmitConvert(Conversion c)
         {
+            if (c == null)
+                return;
             var n = c;
             do
             {
@@ -537,7 +539,7 @@ namespace FluidScript.Compiler.Emit
         /// <inheritdoc/>
         Expression IExpressionVisitor<Expression>.VisitArrayLiteral(ArrayListExpression node)
         {
-            var type = node.ArrayType != null ? node.ArrayType.ResolveType(Context) : typeof(object);
+            var type = node.ArrayType != null ? node.ArrayType.ResolveType(Context) : TypeProvider.AnyType;
             node.Type = typeof(Collections.List<>).MakeGenericType(type);
             node.ElementType = type;
             if (node.Arguments != null)
@@ -555,7 +557,7 @@ namespace FluidScript.Compiler.Emit
             }
             else if (node.Constructor == null)
             {
-                node.Constructor = node.Type.GetConstructor(Utils.ReflectionUtils.PublicInstance, null, new Type[0], null);
+                node.Constructor = node.Type.GetConstructor(ReflectionUtils.PublicInstance, null, new Type[0], null);
             }
             var items = node.Expressions;
             if (items.Count > 0)
@@ -563,10 +565,14 @@ namespace FluidScript.Compiler.Emit
                 var arrayConversions = new ArgumentConversions(items.Count);
                 for (int index = 0; index < items.Count; index++)
                 {
-                    Expression expression = items[index];
-                    var value = expression.Accept(this);
+                    var expression = items[index].Accept(this);
                     if (!TypeUtils.AreReferenceAssignable(type, expression.Type) && expression.Type.TryImplicitConvert(type, out System.Reflection.MethodInfo implicitCall))
                     {
+                        if (expression.Type.IsValueType
+                            && implicitCall.GetParameters()[0].ParameterType == TypeProvider.ObjectType)
+                        {
+                            arrayConversions.Append(index, new BoxConversion(index, expression.Type));
+                        }
                         arrayConversions.Append(index, new ParamConversion(index, implicitCall));
                     }
                 }
@@ -638,12 +644,23 @@ namespace FluidScript.Compiler.Emit
                 {
                     MemberExpression member = (MemberExpression)target;
                     var exp = member.Target.Accept(this);
-                    if (exp is IBindable b)
+                    if (exp.NodeType == ExpressionType.This)
+                    {
+                        bindingAttr = ReflectionUtils.PublicInstance;
+                    }
+                    else if (exp is IBindable b)
                     {
                         bindingAttr = (b.Binder.Attributes & BindingAttributes.HasThis) == 0 ? ReflectionUtils.AnyPublic : ReflectionUtils.PublicInstance;
                     }
                     member.Type = resultType = exp.Type;
                     name = member.Name;
+                    if(resultType.TryFindMember(name, bindingAttr, out IBinder binder)
+                        && binder.Type.IsDelegate()
+                        && ReflectionUtils.TryGetDelegateMethod(binder.Type, types, out method, out conversions))
+                    {
+                        member.Binder = binder;
+                        goto done;
+                    }
                 }
                 else if (target.NodeType == ExpressionType.Super || target.NodeType == ExpressionType.This)
                 {
@@ -887,8 +904,8 @@ namespace FluidScript.Compiler.Emit
                 for (int i = 0; i < length; i++)
                 {
                     var para = node.Parameters[i];
-                    Type paramerterType = para.Type == null ? TypeProvider.ObjectType : para.Type.ResolveType((ITypeContext)Context);
-                    parameters[i] = new ParameterInfo(para.Name, i + 1, paramerterType);
+                    Type paramerterType = para.Type == null ? TypeProvider.AnyType : para.Type.ResolveType(Context);
+                    parameters[i] = new ParameterInfo(para.Name, i, paramerterType);
                     types[i] = paramerterType;
                 }
                 var delgateType = DelegateGen.MakeNewDelegate(types, returnType);

@@ -399,7 +399,7 @@ namespace FluidScript.Compiler
         public override object VisitDeclaration(VariableDeclarationExpression node)
         {
             object value = node.Value?.Accept(this);
-            Type varType = value is null ? node.VariableType?.ResolveType(TypeContext) ?? TypeProvider.ObjectType : value.GetType();
+            Type varType = value is null ? node.VariableType?.ResolveType(TypeContext) ?? TypeProvider.AnyType : value.GetType();
             locals.DeclareVariable(node.Name, varType, value);
             return value;
         }

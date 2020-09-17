@@ -11,6 +11,9 @@ class Sample {
 	var x = null;
 	func add()  {
 		var res = a+b;
+		var value = func() => {
+			return a;
+		};
 		Console.WriteLine('Result = ' + res);
 		return res;
 	}
