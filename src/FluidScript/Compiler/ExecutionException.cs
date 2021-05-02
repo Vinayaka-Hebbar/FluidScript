@@ -30,7 +30,7 @@ namespace FluidScript.Compiler
             throw new ExecutionException(NotSupported, tree, "Not suppored");
         }
 
-        internal static System.Exception ThrowMissingMethod(System.Type target, string name, params Node[] tree)
+        public static System.Exception ThrowMissingMethod(System.Type target, string name, params Node[] tree)
         {
             throw new ExecutionException(MissingMethod, tree, target == null
                              ? string.Concat("cannot find method '", name, "' from null")

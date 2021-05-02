@@ -1,8 +1,10 @@
 ﻿namespace FluidScript.Compiler.SyntaxTree
 {
+    /// <summary>
+    /// value <c>instanceof</c> Type
+    /// </summary>
     public class InstanceOfExpression : Expression
     {
-
         public readonly Expression Target;
 
         public readonly TypeSyntax TypeSyntax;

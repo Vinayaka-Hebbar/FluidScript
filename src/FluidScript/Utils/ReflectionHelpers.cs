@@ -28,7 +28,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_register_ctor == null)
+                if (m_register_ctor is null)
                     m_register_ctor = typeof(Runtime.RegisterAttribute).GetInstanceCtor(typeof(string));
                 return m_register_ctor;
             }
@@ -41,7 +41,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_AnytoString == null)
+                if (m_AnytoString is null)
                     m_AnytoString = typeof(FSConvert).GetStaticMethod(nameof(FSConvert.ToString), TypeProvider.ObjectType);
                 return m_AnytoString;
             }
@@ -55,7 +55,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_booleanToBool == null)
+                if (m_booleanToBool is null)
                     m_booleanToBool = TypeProvider.BooleanType.GetStaticMethod(TypeUtils.ImplicitConversionName, TypeProvider.BooleanType);
                 return m_booleanToBool;
             }
@@ -81,7 +81,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_logicalAnd == null)
+                if (m_logicalAnd is null)
                     m_logicalAnd = TypeProvider.BooleanType.GetStaticMethod("OpLogicalAnd", TypeProvider.BooleanType, TypeProvider.BooleanType);
                 return m_logicalAnd;
             }
@@ -92,7 +92,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_logicalOr == null)
+                if (m_logicalOr is null)
                     m_logicalOr = TypeProvider.BooleanType.GetStaticMethod("OpLogicalOr", TypeProvider.BooleanType, TypeProvider.BooleanType);
                 return m_logicalOr;
             }
@@ -114,7 +114,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_mathPow == null)
+                if (m_mathPow is null)
                     m_mathPow = typeof(Math).GetStaticMethod(nameof(Math.Pow), TypeProvider.DoubleType, TypeProvider.DoubleType);
                 return m_mathPow;
             }
@@ -125,7 +125,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_isEquals == null)
+                if (m_isEquals is null)
                     m_isEquals = TypeProvider.FSType.GetStaticMethod(nameof(FSObject.IsEquals), TypeProvider.ObjectType, TypeProvider.ObjectType);
                 return m_isEquals;
             }
@@ -136,7 +136,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_logicalNot == null)
+                if (m_logicalNot is null)
                     m_logicalNot = TypeProvider.BooleanType.GetStaticMethod("op_LogicalNot", TypeProvider.BooleanType);
                 return m_logicalNot;
             }
@@ -147,7 +147,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (m_toAny == null)
+                if (m_toAny is null)
                     m_toAny = typeof(FSConvert).GetStaticMethod(nameof(FSConvert.ToAny), TypeProvider.ObjectType);
                 return m_toAny;
             }
@@ -158,7 +158,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (anonymousObj == null)
+                if (anonymousObj is null)
                     anonymousObj = typeof(DynamicObject).GetInstanceCtor();
                 return anonymousObj;
             }
@@ -169,8 +169,8 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (anonymousObj_SetItem == null)
-                    anonymousObj_SetItem = typeof(System.Collections.Generic.IDictionary<string,object>).GetInstanceMethod("set_Item", typeof(string), TypeProvider.ObjectType);
+                if (anonymousObj_SetItem is null)
+                    anonymousObj_SetItem = typeof(System.Collections.Generic.IDictionary<string, object>).GetInstanceMethod("set_Item", typeof(string), TypeProvider.ObjectType);
                 return anonymousObj_SetItem;
             }
         }
@@ -180,7 +180,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (any_New == null)
+                if (any_New is null)
                     any_New = TypeProvider.AnyType.GetInstanceCtor(TypeProvider.ObjectType);
                 return any_New;
             }
@@ -190,7 +190,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (implicitAny == null)
+                if (implicitAny is null)
                     implicitAny = TypeProvider.AnyType.GetStaticMethod(TypeUtils.ImplicitConversionName, TypeProvider.ObjectType);
                 return implicitAny;
             }
@@ -203,7 +203,7 @@ namespace FluidScript.Utils
         {
             get
             {
-                if (dynamicInvoke == null)
+                if (dynamicInvoke is null)
                     dynamicInvoke = Extensions.
                         TypeExtensions.DynamicInvocableType.GetInstanceMethod(nameof(IDynamicInvocable.Invoke),
                         typeof(string), typeof(Any[]));

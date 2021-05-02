@@ -19,11 +19,6 @@ namespace FluidScript.Compiler.SyntaxTree
         public Binders.IBinder Binder { get; internal set; }
 
         /// <summary>
-        /// Target object 
-        /// </summary>
-        internal object Target { get; set; }
-
-        /// <summary>
         /// Creates Identifier Expression
         /// </summary>
         /// <param name="name">Name of the Identifier</param>

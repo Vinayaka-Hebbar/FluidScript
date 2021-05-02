@@ -5,9 +5,9 @@ using System;
 namespace FluidScript.Compiler.Binders
 {
     #region Property Binder
-    public struct PropertyBinder : IBinder
+    public struct PropertyBinder : IBinder, ITargetBinder
     {
-        readonly System.Reflection.PropertyInfo property;
+        private readonly System.Reflection.PropertyInfo property;
 
         public PropertyBinder(System.Reflection.PropertyInfo property) : this()
         {
@@ -50,6 +50,8 @@ namespace FluidScript.Compiler.Binders
 
             }
         }
+
+        public Type DeclaringType => property.DeclaringType;
 
         public void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option)
         {
@@ -95,5 +97,4 @@ namespace FluidScript.Compiler.Binders
         }
     }
     #endregion
-
 }

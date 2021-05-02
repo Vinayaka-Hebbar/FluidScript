@@ -32,37 +32,37 @@ namespace FluidScript.Compiler.SyntaxTree
                 switch (NodeType)
                 {
                     case ExpressionType.PostfixPlusPlus:
-                        name = "op_Increment";
+                        name = Operators.Increment;
                         break;
                     case ExpressionType.PrefixPlusPlus:
-                        name = "op_Increment";
+                        name = Operators.Increment;
                         break;
                     case ExpressionType.PostfixMinusMinus:
-                        name = "op_Decrement";
+                        name = Operators.Decrement;
                         break;
                     case ExpressionType.PrefixMinusMinus:
-                        name = "op_Decrement";
+                        name = Operators.Decrement;
                         break;
                     case ExpressionType.Bang:
-                        name = "op_LogicalNot";
+                        name = Operators.LogicalNot;
                         break;
                     case ExpressionType.Plus:
-                        name = "op_UnaryPlus";
+                        name = Operators.UnaryPlus;
                         break;
                     case ExpressionType.Minus:
-                        name = "op_UnaryNegation";
+                        name = Operators.UnaryNegation;
                         break;
                     case ExpressionType.Circumflex:
-                        name = "op_ExclusiveOr";
+                        name = Operators.ExclusiveOr;
                         break;
                     case ExpressionType.Or:
-                        name = "op_BitwiseOr";
+                        name = Operators.BitwiseOr;
                         break;
                     case ExpressionType.And:
-                        name = "op_BitwiseAnd";
+                        name = Operators.BitwiseAnd;
                         break;
                     case ExpressionType.Tilda:
-                        name = "op_OnesComplement";
+                        name = Operators.OnesComplement;
                         break;
                 }
                 return name;
@@ -99,7 +99,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 binder = ((MemberExpression)operand).Binder;
             }
             // todo: Conversion if value is short, byte lower data type
-            
+
             switch (NodeType)
             {
                 case ExpressionType.PostfixMinusMinus:

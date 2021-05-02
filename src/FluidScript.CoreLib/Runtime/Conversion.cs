@@ -75,6 +75,13 @@ namespace FluidScript.Runtime
             return Method.Invoke(null, new object[1] { args[0] });
         }
 
+        public Conversion Append(Conversion conversion)
+        {
+            conversion.next = this;
+            next = conversion;
+            return conversion;
+        }
+
         public override string ToString()
         {
             return string.Concat("Convert(", Type, ")");

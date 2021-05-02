@@ -3,14 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 
 namespace FluidScript
 {
-    [Register("Any")]
+    [Register(nameof(Any))]
     [Serializable]
-    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
-    public struct Any : IConvertible, IFSObject, IDynamicInvocable
+    public struct Any : IConvertible, ISerializable, IFSObject, IDynamicInvocable
     {
+        public static readonly Any Empty = new Any(new object(), typeof(object));
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         internal readonly object m_value;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -48,12 +50,28 @@ namespace FluidScript
                 if (m_value is IRuntimeMetadata)
                     return ((IRuntimeMetadata)m_value).Keys;
                 var members = Type.FindMembers(System.Reflection.MemberTypes.Field | System.Reflection.MemberTypes.Property, TypeUtils.AnyPublic, null, null);
-                var names = new string[members.Length];
-                for (int i = 0; i < members.Length; i++)
+                if (Type.IsDefined(typeof(RegisterAttribute), false))
                 {
-                    names[i] = members[i].Name;
+                    var names = new List<string>(members.Length);
+                    for (int i = 0; i < members.Length; i++)
+                    {
+                        var attr = members[i].GetCustomAttributes(typeof(RegisterAttribute), false);
+                        if (attr.Length > 0)
+                        {
+                            names.Add(attr[0].ToString());
+                        }
+                    }
+                    return names;
                 }
-                return names;
+                else
+                {
+                    var names = new string[members.Length];
+                    for (int i = 0; i < members.Length; i++)
+                    {
+                        names[i] = members[i].Name;
+                    }
+                    return names;
+                }
             }
         }
 
@@ -162,23 +180,12 @@ namespace FluidScript
 
         public Any GetValue(string name)
         {
-            if (ReflectionExtensions.TryFindMember(Type, name, TypeUtils.AnyPublic, out IMemberBinder binder))
-            {
-                return op_Implicit(binder.Get(m_value));
-            }
-            if (m_value is IDynamicInvocable)
-                return ((IDynamicInvocable)m_value).SafeGetValue(name);
-            return default(Any);
+            return ((IDynamicInvocable)this).SafeGetValue(name);
         }
 
         public void SetValue(string name, Any value)
         {
-            if (ReflectionExtensions.TryFindMember(Type, name, TypeUtils.AnyPublic, out IMemberBinder binder))
-            {
-                binder.Set(m_value, value.m_value);
-            }
-            if (m_value is IDynamicInvocable)
-                ((IDynamicInvocable)m_value).SafeSetValue(value, name, value.Type);
+            ((IDynamicInvocable)this).SafeSetValue(value, name, value.Type);
         }
 
         /// <summary>
@@ -318,7 +325,10 @@ namespace FluidScript
         {
             if (m_value is null)
                 return null;
+            if (m_value is IConvertible c)
+                return c.ToType(conversionType, provider);
             var valueType = m_value.GetType();
+
             if (TypeUtils.AreReferenceAssignable(conversionType, valueType))
                 return m_value;
             if (valueType.TryImplicitConvert(conversionType, out System.Reflection.MethodInfo conversion))
@@ -979,6 +989,26 @@ namespace FluidScript
                 return ((IRuntimeMetadata)m_value).TryGetBinder(name, out binder);
             }
             return false;
+        }
+
+        void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            if (m_value is IConvertible c)
+            {
+                info.AddValue("value", Convert.ChangeType(m_value, c.GetTypeCode()));
+            }
+            else if (m_value is System.Collections.IEnumerable)
+            {
+                info.Serialize((System.Collections.IEnumerable)m_value);
+            }
+            else
+            {
+                var invocable = (IDynamicInvocable)this;
+                foreach (var key in invocable.Keys)
+                {
+                    info.AddValue(key, invocable.SafeGetValue(key).m_value);
+                }
+            }
         }
     }
 }

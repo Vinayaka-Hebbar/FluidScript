@@ -115,7 +115,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 Type = method.ReturnType
             };
             if (!method.MatchesArgumentTypes(args.Map(ex => ex.Type), exp.Conversions))
-                throw new InvalidOperationException("argument miss match");
+                throw new InvalidOperationException("Arguments miss match");
             return exp;
         }
 

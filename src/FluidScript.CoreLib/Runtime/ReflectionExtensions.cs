@@ -130,6 +130,45 @@ namespace FluidScript.Runtime
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>);
         }
 
+        public static bool ImplementsGenericDefinition(this Type type, Type genericInterfaceDefinition, out Type implementingType)
+        {
+            if (!genericInterfaceDefinition.IsInterface || !genericInterfaceDefinition.IsGenericType)
+            {
+                throw new ArgumentNullException(string.Format("'{0}' is not a generic interface definition.", genericInterfaceDefinition));
+            }
+
+            if (type.IsInterface)
+            {
+                if (type.IsGenericType)
+                {
+                    Type interfaceDefinition = type.GetGenericTypeDefinition();
+
+                    if (genericInterfaceDefinition == interfaceDefinition)
+                    {
+                        implementingType = type;
+                        return true;
+                    }
+                }
+            }
+
+            foreach (Type i in type.GetInterfaces())
+            {
+                if (i.IsGenericType)
+                {
+                    Type interfaceDefinition = i.GetGenericTypeDefinition();
+
+                    if (genericInterfaceDefinition == interfaceDefinition)
+                    {
+                        implementingType = i;
+                        return true;
+                    }
+                }
+            }
+
+            implementingType = null;
+            return false;
+        }
+
         public static bool TryImplicitConvert(this Type src, Type dest, out MethodInfo method)
         {
             // todo base class convert check

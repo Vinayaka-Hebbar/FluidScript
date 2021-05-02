@@ -94,12 +94,12 @@ namespace FluidScript.Compiler
             return TokenType != TokenType.Bad;
         }
 
-        protected bool MoveNextThenIf(TokenType token)
+        public bool MoveNextThenIf(TokenType token)
         {
             return MoveNext() && TokenType == token;
         }
 
-        protected bool MoveNextThenIfNot(TokenType token)
+        public bool MoveNextThenIfNot(TokenType token)
         {
             return MoveNext() && TokenType != token;
         }
@@ -388,7 +388,7 @@ namespace FluidScript.Compiler
             return statement;
         }
 
-        private Statement VisitIdentifierStatement()
+        public Statement VisitIdentifierStatement()
         {
             long start = Source.Position;
             ReadVariableName(out string name);
@@ -429,7 +429,6 @@ namespace FluidScript.Compiler
                             ReadVariableName(out target);
                             MoveNext();
                         }
-
                         return new ContinueStatement(target);
                     case IdentifierType.Import:
                         return VisitImportStatement();
@@ -549,9 +548,10 @@ namespace FluidScript.Compiler
             return Statement.Empty;
         }
 
-        private Node VisitLabeledNode(string name)
+        public Node VisitLabeledNode(string name)
         {
             MoveNext();
+            Labels.Add(name);
             //Todo for labeled Node
             return Expression.Empty;
         }
@@ -579,7 +579,7 @@ namespace FluidScript.Compiler
         /// Visit if statement
         /// </summary>
         /// <returns></returns>
-        protected IfStatement VisitIfStatement()
+        public IfStatement VisitIfStatement()
         {
             if (TokenType == TokenType.LeftParenthesis)
             {
@@ -725,7 +725,7 @@ namespace FluidScript.Compiler
             return exp;
         }
 
-        private Expression VisitAssignmentExpression()
+        public Expression VisitAssignmentExpression()
         {
             Expression exp = VisitConditionalExpression();
             TokenType type = TokenType;
@@ -1160,7 +1160,7 @@ namespace FluidScript.Compiler
         /// <summary>
         /// Visit lamda expression ex:lamda()=>1;
         /// </summary>
-        protected Expression VisitLamdaExpression()
+        public Expression VisitLamdaExpression()
         {
             if (TokenType == TokenType.LeftParenthesis)
             {
@@ -1294,7 +1294,7 @@ namespace FluidScript.Compiler
             return list;
         }
 
-        public NodeList<TypeImport> VisitTypeImports()
+        protected NodeList<TypeImport> VisitTypeImports()
         {
             var list = new NodeList<TypeImport>();
             while (MoveNext())
@@ -1325,7 +1325,7 @@ namespace FluidScript.Compiler
         /// <summary>
         /// Visit Array indexes
         /// </summary>
-        public int VisitArrayRanks()
+        protected int VisitArrayRanks()
         {
             int rank = 0;
             while (TokenType == TokenType.LeftBracket)
@@ -1421,7 +1421,7 @@ namespace FluidScript.Compiler
             return list;
         }
 
-        internal void CheckSyntaxExpected(TokenType type)
+        public void CheckSyntaxExpected(TokenType type)
         {
             if (TokenType == type)
                 return;
@@ -1521,36 +1521,30 @@ namespace FluidScript.Compiler
                     case '7':
                     case '8':
                     case '9':
-                        {
-                            cb.Append(next);
-                            val = val * 16 + next - '0';
-                            Source.ReadChar();
-                            continue;
-                        }
+                        cb.Append(next);
+                        val = val * 16 + next - '0';
+                        Source.ReadChar();
+                        continue;
                     case 'a':
                     case 'b':
                     case 'c':
                     case 'd':
                     case 'e':
                     case 'f':
-                        {
-                            cb.Append(next);
-                            val = val * 16 + next - 'a' + 10;
-                            Source.ReadChar();
-                            continue;
-                        }
+                        cb.Append(next);
+                        val = val * 16 + next - 'a' + 10;
+                        Source.ReadChar();
+                        continue;
                     case 'A':
                     case 'B':
                     case 'C':
                     case 'D':
                     case 'E':
                     case 'F':
-                        {
-                            cb.Append(next);
-                            val = val * 16 + next - 'A' + 10;
-                            Source.ReadChar();
-                            continue;
-                        }
+                        cb.Append(next);
+                        val = val * 16 + next - 'A' + 10;
+                        Source.ReadChar();
+                        continue;
                 }
                 break;
             }
@@ -1597,63 +1591,6 @@ namespace FluidScript.Compiler
                                 break;
                             }
                             Source.ReadChar();
-                            continue;
-                        }
-                        Source.FallBack();
-                        break;
-                    case 'e':
-                    case 'E':
-                        cb.Append(next);
-                        c = Source.ReadChar();
-                        exp++;
-                        if (exp > 1)
-                        {
-                            break;
-                        }
-                        next = Source.PeekChar();
-                        if (next == '+' || next == '-')
-                        {
-                            cb.Append(next);
-                            Source.ReadChar();
-                        }
-                        continue;
-                }
-                break;
-            }
-            while (Source.CanAdvance)
-            {
-                char next = Source.PeekChar();
-                switch (next)
-                {
-                    case '0':
-                    case '1':
-                    case '2':
-                    case '3':
-                    case '4':
-                    case '5':
-                    case '6':
-                    case '7':
-                    case '8':
-                    case '9':
-                        cb.Append(next);
-                        Source.ReadChar();
-                        continue;
-                    case DotChar:
-                        //skip .
-                        Source.ReadChar();
-                        next = Source.PeekChar();
-                        if (char.IsDigit(next))
-                        {
-                            dot++;
-                            //add .
-                            cb.Append(DotChar);
-                            cb.Append(next);
-                            //skip digit
-                            Source.ReadChar();
-                            if (dot > 1)
-                            {
-                                break;
-                            }
                             continue;
                         }
                         Source.FallBack();

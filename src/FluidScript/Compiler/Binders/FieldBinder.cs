@@ -10,9 +10,9 @@ namespace FluidScript.Compiler.Binders
 #if LATEST_VS
         readonly
 #endif
-        struct FieldBinder : IBinder
+        struct FieldBinder : IBinder, ITargetBinder
     {
-        readonly FieldInfo field;
+        private readonly FieldInfo field;
 
         public FieldBinder(FieldInfo field)
         {
@@ -20,6 +20,8 @@ namespace FluidScript.Compiler.Binders
         }
 
         public Type Type => field.FieldType;
+
+        public Type DeclaringType => field.DeclaringType;
 
         public BindingAttributes Attributes
         {
@@ -74,5 +76,4 @@ namespace FluidScript.Compiler.Binders
         }
     }
     #endregion
-
 }

@@ -127,7 +127,7 @@ namespace FluidScript.Compiler
             return list;
         }
 
-        private MemberDeclaration VisitIdentifierMember()
+        public MemberDeclaration VisitIdentifierMember()
         {
             var start = Source.Position;
             ReadVariableName(out string name);
@@ -241,7 +241,7 @@ namespace FluidScript.Compiler
                 BlockStatement body = VisitBlock();
                 return new ConstructorDeclaration(parameterList, body);
             }
-            throw new System.Exception("syntax error at " + Source.LineInfo);
+            throw new System.Exception("Syntax error at " + Source.LineInfo);
         }
 
         /// <summary>
@@ -282,7 +282,7 @@ namespace FluidScript.Compiler
                 BlockStatement body = VisitBlock();
                 return new FunctionDeclaration(name, parameterList, returnType, body);
             }
-            throw new System.Exception($"syntax error at line {Source.LineInfo}");
+            throw new System.Exception($"Syntax error at line {Source.LineInfo}");
         }
 
         #region Static

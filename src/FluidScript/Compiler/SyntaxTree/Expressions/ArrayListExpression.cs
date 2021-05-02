@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace FluidScript.Compiler.SyntaxTree
 {
     /// <summary>
-    /// Array literal &lt;<see cref="ArrayType"/>&gt;[1,2]
+    /// Array literal [1,2]&lt;<see cref="ArrayType"/>&gt;(size)
     /// </summary>
     public sealed class ArrayListExpression : Expression
     {

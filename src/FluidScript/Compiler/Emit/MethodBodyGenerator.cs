@@ -280,6 +280,60 @@ namespace FluidScript.Compiler.Emit
             }
         }
 
+        #region Emit Arguments
+        public void EmitArguments(INodeList<Expression> arguments, ArgumentConversions conversions)
+        {
+            if (arguments.Count > 0)
+            {
+                for (int i = 0; i < arguments.Count; i++)
+                {
+                    var arg = arguments[i];
+                    var conv = conversions[i];
+                    if (conv != null)
+                    {
+                        if (conv.ConversionType == ConversionType.Normal)
+                        {
+                            arg.GenerateCode(this, Expression.AssignOption);
+                            EmitConvert(conv);
+                        }
+                        else if (conv.ConversionType == ConversionType.ParamArray)
+                        {
+                            var args = new Expression[arguments.Count - i];
+                            arguments.CopyTo(args, conv.Index);
+                            EmitConvert((ParamArrayConversion)conv, args);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        arg.GenerateCode(this, Expression.AssignOption);
+                    }
+                }
+            }
+            // remaing Conversions like optional or param array
+            if (arguments.Count < conversions.Count)
+            {
+                for (var i = arguments.Count; i < conversions.Count; i++)
+                {
+                    Conversion conv = conversions[i];
+                    if (conv.ConversionType == ConversionType.Normal)
+                    {
+                        arguments[i].GenerateCode(this, Expression.AssignOption);
+                        EmitConvert(conv);
+                    }
+                    else if (conv.ConversionType == ConversionType.ParamArray)
+                    {
+                        // remaining arguments
+                        var args = new Expression[arguments.Count - i];
+                        arguments.CopyTo(args, conv.Index);
+                        EmitConvert((ParamArrayConversion)conv, args);
+                        break;
+                    }
+                }
+            }
+        }
+        #endregion
+
         #region Emit Convert
         public void EmitConvert(Conversion c)
         {
@@ -493,27 +547,27 @@ namespace FluidScript.Compiler.Emit
             {
                 if (right.Type.Name.Equals(TypeProvider.String))
                 {
-                    return VisitBinary(left, right, BinaryExpression.OpAddition, conversions);
+                    return VisitBinary(left, right, Operators.Addition, conversions);
                 }
                 if (right.Type.IsValueType)
                     conversions.Add(new BoxConversion(1, right.Type));
                 conversions.Add(new ParamConversion(1, ReflectionHelpers.AnyToString));
                 right.Type = TypeProvider.StringType;
-                return VisitBinary(left, right, BinaryExpression.OpAddition, conversions);
+                return VisitBinary(left, right, Operators.Addition, conversions);
             }
             if (right.Type.Name.Equals(TypeProvider.String))
             {
                 if (left.Type.Name.Equals(TypeProvider.String))
                 {
-                    return VisitBinary(left, right, BinaryExpression.OpAddition, conversions);
+                    return VisitBinary(left, right, Operators.Addition, conversions);
                 }
                 if (right.Type.IsValueType)
                     conversions.Add(new BoxConversion(1, left.Type));
                 conversions.Add(new ParamConversion(0, ReflectionHelpers.AnyToString));
                 left.Type = TypeProvider.StringType;
-                return VisitBinary(left, right, BinaryExpression.OpAddition, conversions);
+                return VisitBinary(left, right, Operators.Addition, conversions);
             }
-            return VisitBinary(left, right, BinaryExpression.OpAddition, conversions);
+            return VisitBinary(left, right, Operators.Addition, conversions);
         }
 
         static System.Reflection.MethodInfo VisitPow(BinaryExpression node, Expression left, Expression right, ArgumentConversions conversions)
@@ -601,8 +655,79 @@ namespace FluidScript.Compiler.Emit
         /// <inheritdoc/>
         Expression IExpressionVisitor<Expression>.VisitAssignment(AssignmentExpression node)
         {
-            node.Right.Accept(this);
-            node.Type = node.Left.Accept(this).Type;
+            var right = node.Right.Accept(this);
+            var left = node.Left;
+            string name = null;
+            ExpressionType nodeType = left.NodeType;
+            IBinder binder = null;
+            if (nodeType == ExpressionType.Identifier)
+            {
+                var exp = (NameExpression)left;
+                name = exp.Name;
+                var bindingAttr = ReflectionUtils.AnyPublic;
+                name = exp.Name;
+                if (TryGetLocalVariable(name, out binder) ||
+                    Method.DeclaringType.TryFindMember(name, bindingAttr, out binder))
+                {
+                    exp.Binder = binder;
+                }
+                else
+                {
+                    ExecutionException.ThrowMissingMember(Method.DeclaringType, name, left, node);
+                }
+            }
+            else if (nodeType == ExpressionType.MemberAccess)
+            {
+                var exp = (MemberExpression)left;
+                var target = exp.Target.Accept(this);
+                name = exp.Name;
+                if (exp.Binder is null && target.Type.TryFindMember(name, ReflectionUtils.AnyPublic, out binder))
+                    exp.Binder = binder;
+                else if (target.Type.IsDynamicInvocable())
+                {
+                    binder = new DynamicMemberBinder(name);
+                }
+                else
+                {
+                    throw ExecutionException.ThrowMissingMember(target.Type, name, node);
+                }
+            }
+            else if (nodeType == ExpressionType.Indexer)
+            {
+                var exp = (IndexExpression)node.Left;
+                var target = exp.Target.Accept(this);
+                var types = exp.Arguments.Map(arg => arg.Accept(this).Type).AddLast(right.Type);
+                if (exp.Setter == null)
+                {
+                    var indexer = target.Type
+                        .FindSetIndexer(types, out ArgumentConversions conversions);
+                    if (indexer == null)
+                        ExecutionException.ThrowMissingIndexer(exp.Target.Type, "set", exp.Target, node);
+
+                    exp.Conversions = conversions;
+                    exp.Setter = indexer;
+                    // ok to be node.Right.Type instead of indexer.GetParameters().Last().ParameterType
+                    var valueBind = conversions[types.Length - 1];
+                    node.Type = (valueBind == null) ? node.Right.Type : valueBind.Type;
+                }
+                return node;
+            }
+            if (binder == null)
+            {
+                ExecutionException.ThrowMissingMember(null, name, node.Left, node);
+            }
+            Type type = node.Right.Type;
+            if (!TypeUtils.AreReferenceAssignable(binder.Type, type))
+            {
+                if (type.TryImplicitConvert(binder.Type, out System.Reflection.MethodInfo method))
+                    // implicit casting
+                    node.Conversion = new ParamConversion(0, method);
+                else
+                {
+                    ExecutionException.ThrowInvalidCast(binder.Type, node);
+                }
+            }
+            node.Type = binder.Type;
             return node;
         }
 
@@ -750,7 +875,7 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitTernary(TernaryExpression node)
         {
             var conditionType = node.First.Accept(this).Type;
-            if(conditionType != typeof(bool))
+            if (conditionType != typeof(bool))
             {
                 node.Conversions = new ArgumentConversions(1);
                 if (conditionType == TypeProvider.BooleanType)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using FluidScript.Compiler.SyntaxTree;
+using System.Collections.Generic;
 
 namespace FluidScript.Extensions
 {
@@ -24,6 +25,18 @@ namespace FluidScript.Extensions
             foreach (var item in sources)
             {
                 callback(item, index++);
+            }
+        }
+
+        /// <summary>
+        /// Iterate items
+        /// </summary>
+        public static void ForEach<TSource>(this INodeList<TSource> sources, System.Action<TSource, int> callback) where TSource : Node
+        {
+            int size = sources.Count;
+            for (int i = 0; i < size; i++)
+            {
+                callback(sources[i], i);
             }
         }
     }

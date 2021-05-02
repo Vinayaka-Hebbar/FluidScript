@@ -6,8 +6,8 @@ class Sample {
 		return a;
 	};
 	var items = {};
-	var value = func(key:string)=> {
-		return items.ContainsKey(key.toString());
+	var value = func()=> {
+		items['x'] = 10;
 	};
 	var x = null;
 	func add()  {
@@ -20,13 +20,28 @@ class Sample {
 	}
 
 	func create() {
-		return func(key:string)=> {
-			return items.ContainsKey(key)?items[key]:0;
-		};
+		value();
 	}
 
 	get a() {
 	  return 10;
+	}
+
+	func test() {
+		if(true)
+		{
+			if(false)
+				return 'Ok';
+		}
+		else
+		{
+			return 'Not Ok';
+		}
+		return -1;
+	}
+
+	func cal() {
+		return func(s)=>{var c=s.count;var min:any=0;var f=false;for(var i=0;i<c;i++){var x:any=s[i];if(f){if(x<min)min=x;}else{min=x;f=true;}}return min;};
 	}
 
 	get b() {

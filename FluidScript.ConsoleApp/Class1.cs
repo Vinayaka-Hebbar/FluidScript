@@ -1,13 +1,11 @@
 ﻿using FluidScript.Collections;
 using FluidScript.Compiler;
+using FluidScript.Compiler.Binders;
 using FluidScript.Compiler.Emit;
 using FluidScript.Compiler.SyntaxTree;
-using FluidScript.Extensions;
 using FluidScript.Runtime;
 using System;
-using System.IO;
 using System.Reflection;
-using System.Text;
 
 namespace FluidScript.ConsoleApp
 {
@@ -22,15 +20,56 @@ namespace FluidScript.ConsoleApp
 
         Func<Any, Any> value = (s) => s;
 
+        private struct Resolver : IMemberResolver, IMemberBinder
+        {
+            public Type Type => typeof(int);
+
+            public object Get(object obj)
+            {
+                return 10;
+            }
+
+            public IMemberBinder Resolve(NameExpression node)
+            {
+                return this;
+            }
+
+            public MethodInfo Resolve(InvocationExpression node, string name, object obj, object[] args)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IMemberBinder Resolve(MemberExpression node)
+            {
+                return MemberBinder.Empty;
+            }
+
+            public void Set(object obj, object value)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        void Compile()
+        {
+            Type x = typeof(int);
+            if(x is null)
+            Console.Write(x);
+            if(x == null)
+                Console.WriteLine(x);
+        }
+
         public void Test()
         {
             try
             {
-                // Runtime();
+                var type = typeof(ValueType);
+                Runtime();
+
                 // FluidTest.Sample sample = new FluidTest.Sample();
                 // var res=  sample.Create();
                 //FuncTest();
-                //CodeGen();
+                // RunCodeGen();
                 Console.WriteLine();
             }
             catch (TargetInvocationException ex)
@@ -39,14 +78,16 @@ namespace FluidScript.ConsoleApp
             }
         }
 
-        private static void Runtime()
+        private void Runtime()
         {
-            System.Collections.Generic.IDictionary<string, double> items = new System.Collections.Generic.Dictionary<string, double>();
-            Any key = "name";
             RuntimeCompiler compiler = new RuntimeCompiler();
-            compiler.Locals["items"] = items;
-            var res = compiler.Invoke(Parser.GetExpression(
-                @"func(key:string)=> items.ContainsKey(key)?items[key]:0"), new object());
+            var target = new DynamicObject();
+            compiler["narrowPitchCoils"] = new Double(1);
+            var statement = ScriptParser.ParseText(@"{
+        b=2+3;
+        return b;
+}");
+            var res = compiler.Invoke(Expression.Empty);
             Console.WriteLine(res);
         }
 
@@ -115,6 +156,7 @@ namespace FluidScript.ConsoleApp
             var code = ScriptParser.ParseProgram("source.fls");
             var assembly = new AssemblyGen("FluidTest", "1.0");
             code.Compile(assembly);
+            assembly.Save("FluidTest.dll");
             if (assembly.Context.TryGetType("Sample", out Type type))
             {
                 if (type is IType)
@@ -148,13 +190,10 @@ namespace FluidScript.ConsoleApp
             return x is null;
         }
 
-        Any[] values = { };
-
-        public Any InstanceOf(object x)
+        public void InstanceOf()
         {
-            var sum = new Any(2) + value(values);
-            sum = 10;
-            return sum;
+            var x = this.x;
+            x["a"] = 10;
         }
 
         public override string ToString()
@@ -167,7 +206,7 @@ namespace FluidScript.ConsoleApp
         public Action TestFun3()
         {
             i = Console.Read();
-            Action x = () => Console.WriteLine(i);
+            void x() => Console.WriteLine(i);
             i = 10;
             return x;
         }

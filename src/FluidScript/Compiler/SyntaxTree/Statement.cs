@@ -7,9 +7,9 @@
     {
         private static readonly string[] NoLabels = new string[0];
 
-        internal static readonly Statement Empty = new EmptyStatement();
+        public static readonly Statement Empty = new EmptyStatement();
 
-        internal static readonly Statement Break = new BreakStatement();
+        public static readonly Statement Break = new BreakStatement();
         /// <summary>
         /// Labels associated with the statement
         /// </summary>
