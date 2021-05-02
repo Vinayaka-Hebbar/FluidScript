@@ -5,7 +5,11 @@ using System;
 
 namespace FluidScript.Compiler.Binders
 {
-    internal struct RuntimeMemberBinder : IBinder
+    public
+#if LATEST_VS
+        readonly
+#endif
+        struct RuntimeMemberBinder : IBinder
     {
         private readonly IMemberBinder member;
 

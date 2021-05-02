@@ -39,7 +39,7 @@ namespace FluidScript.Compiler.SyntaxTree
                 options |= MethodCompileOption.EmitStartAddress;
             }
             Target.GenerateCode(generator, options);
-            Arguments.Iterate((arg, index) =>
+            Arguments.ForEach((arg, index) =>
             {
                 arg.GenerateCode(generator);
                 generator.EmitConvert(Conversions[index]);

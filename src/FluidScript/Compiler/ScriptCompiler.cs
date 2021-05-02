@@ -11,8 +11,8 @@ namespace FluidScript.Compiler
     /// </summary>
     public class ScriptCompiler : CompilerBase, ICompileProvider
     {
-        readonly object target;
-        object locals;
+        private readonly object target;
+        private object locals;
 
         public ScriptCompiler() : this(GlobalObject.Instance)
         {
@@ -48,7 +48,13 @@ namespace FluidScript.Compiler
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)]
-        public object Invoke(Expression expression, object target = null)
+        public object Invoke(Expression expression)
+        {
+            return Invoke(expression, NoTarget);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)]
+        public object Invoke(Expression expression, object target)
         {
             locals = target;
             return expression.Accept(this);
@@ -125,11 +131,11 @@ namespace FluidScript.Compiler
         protected override object ResolveCall(InvocationExpression node, object[] args)
         {
             var target = node.Target;
-            System.Reflection.MethodInfo method = null;
             ExpressionType nodeType = node.Target.NodeType;
-            ArgumentConversions conversions = null;
             string name;
             object obj;
+            ArgumentConversions conversions;
+            System.Reflection.MethodInfo method;
             if (nodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)target;
@@ -153,15 +159,10 @@ namespace FluidScript.Compiler
                 {
                     if (obj is IRuntimeMetadata runtime && runtime.TryGetBinder(name, out IMemberBinder member))
                     {
-                        if (member.Get(obj) is Delegate del)
+                        if (member.Get(obj) is Delegate del
+                            && ReflectionUtils.TryGetDelegateMethod(del, args, out method, out conversions))
                         {
-                            conversions = new ArgumentConversions(args.Length);
-                            name = nameof(Action.Invoke);
-                            method = del.GetType().GetMethod(name);
-                            if (method.MatchesArguments(args, conversions))
-                            {
-                                obj = del;
-                            }
+                            obj = del;
                         }
                     }
                     else
@@ -172,20 +173,16 @@ namespace FluidScript.Compiler
             }
             else
             {
-                var res = target.Accept(this);
-                if (res == null)
+                obj = target.Accept(this);
+                if (obj == null)
                     ExecutionException.ThrowNullError(target, node);
-                if (!(res is Delegate))
+                if (!(obj is Delegate))
                     ExecutionException.ThrowInvalidOp(target, node);
-                name = "Invoke";
-                System.Reflection.MethodInfo invoke = res.GetType().GetMethod(name);
-                conversions = new ArgumentConversions(args.Length);
-                if (!invoke.MatchesArguments(args, conversions))
+                name = ReflectionUtils.InvokeMethod;
+                if (!ReflectionUtils.TryGetDelegateMethod(obj, args, out method, out conversions))
                     ExecutionException.ThrowArgumentMisMatch(node.Target, node);
-                method = invoke;
-                obj = res;
             }
-            if (method == null)
+            if (method is null)
                 ExecutionException.ThrowMissingMethod(obj.GetType(), name, node);
             node.Method = method;
             node.Type = method.ReturnType;
@@ -236,7 +233,7 @@ namespace FluidScript.Compiler
                 {
                     // find in the class level
                     obj = Target;
-                    if (obj is IRuntimeMetadata && ((IRuntimeMetadata)obj).TryGetBinder(name, out member))
+                    if (obj is IRuntimeMetadata metadata && metadata.TryGetBinder(name, out member))
                     {
                         binder = new Binders.RuntimeMemberBinder(member);
                     }

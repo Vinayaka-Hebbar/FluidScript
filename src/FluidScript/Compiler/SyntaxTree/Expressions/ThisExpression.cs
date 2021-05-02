@@ -20,7 +20,11 @@ namespace FluidScript.Compiler.SyntaxTree
                 // for annonymous type
                 // if this is used in anonymous function or objects
                 var variable = generator.GetLocalVariable("__value");
-                generator.LoadVariable(variable);
+                if (variable.Type.IsValueType && (options & MethodCompileOption.EmitStartAddress) == MethodCompileOption.EmitStartAddress)
+                    generator.LoadAddressOfVariable(variable);
+                else
+                    generator.LoadVariable(variable);
+
             }
             else
             {

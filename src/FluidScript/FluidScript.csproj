@@ -1,11 +1,12 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFrameworks>net45;netstandard2.0;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0;netcoreapp3.1;netcoreapp2.0</TargetFrameworks>
     <DefineConstants>TRACE;</DefineConstants>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.0.20-release17092020</Version>
+    <Version>1.1.2</Version>
     <Title>FluidScript</Title>
+    <LangVersion>8</LangVersion>
     <PackageId>FluidScript</PackageId>
     <Product>FluidScript</Product>
     <PackageTags>script</PackageTags>
@@ -59,7 +60,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FluidScript.CoreLib\FluidScript.CoreLib.csproj" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.16" />
   </ItemGroup>
 
 </Project>

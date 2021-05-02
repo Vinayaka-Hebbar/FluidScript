@@ -10,7 +10,7 @@ namespace FluidScript.Compiler.Binders
     /// <summary>
     /// Binder for variable or member
     /// </summary>
-    public interface IBinder
+    public interface IBinder : IMemberBinder
     {
         void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option = 0);
 
@@ -20,12 +20,17 @@ namespace FluidScript.Compiler.Binders
         /// From this you can identify whether Binder is a Variable or Static Member 
         /// </summary>
         BindingAttributes Attributes { get; }
+    }
 
-        Type Type { get; }
-
-        object Get(object obj);
-
-        void Set(object obj, object value);
+    /// <summary>
+    /// Target binder which has declaring property
+    /// </summary>
+    public interface ITargetBinder : IBinder
+    {
+        /// <summary>
+        /// Declaring type for property or field
+        /// </summary>
+        Type DeclaringType { get; }
     }
 
     public enum BindingAttributes
@@ -40,6 +45,38 @@ namespace FluidScript.Compiler.Binders
     {
         IBinder Binder { get; }
     }
+
+    /// <summary>
+    /// Abstract Base class implementation for <see cref="IBinder"/>
+    /// </summary>
+    public abstract class MemberBinder : IBinder
+    {
+        public static readonly IBinder Empty = new EmptyBinder(TypeProvider.ObjectType);
+
+        public virtual BindingAttributes Attributes => BindingAttributes.None;
+
+        public abstract Type Type { get; }
+
+        public virtual void GenerateGet(Expression target, MethodBodyGenerator generator, MethodCompileOption option = MethodCompileOption.None)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void GenerateSet(Expression value, MethodBodyGenerator generator, MethodCompileOption option = MethodCompileOption.None)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual object Get(object obj)
+        {
+            return null;
+        }
+
+        public virtual void Set(object obj, object value)
+        {
+        }
+    }
+
     #endregion
 
     #region Dynamic Variable

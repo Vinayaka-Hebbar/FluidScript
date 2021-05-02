@@ -14,6 +14,21 @@
             From this you can identify whether Binder is a Variable or Static Member 
             </summary>
         </member>
+        <member name="T:FluidScript.Compiler.Binders.ITargetBinder">
+            <summary>
+            Target binder which has declaring property
+            </summary>
+        </member>
+        <member name="P:FluidScript.Compiler.Binders.ITargetBinder.DeclaringType">
+            <summary>
+            Declaring type for property or field
+            </summary>
+        </member>
+        <member name="T:FluidScript.Compiler.Binders.MemberBinder">
+            <summary>
+            Abstract Base class implementation for <see cref="T:FluidScript.Compiler.Binders.IBinder"/>
+            </summary>
+        </member>
         <member name="T:FluidScript.Compiler.Binders.RuntimeVariableBinder">
             <summary>
             IL generator for <see cref="T:FluidScript.Compiler.RuntimeVariables"/>
@@ -26,6 +41,16 @@
         </member>
         <member name="M:FluidScript.Compiler.CompilerBase.VisitConvert(FluidScript.Compiler.SyntaxTree.ConvertExpression)">
             <inheritdoc/>
+        </member>
+        <member name="M:FluidScript.Compiler.CompilerBase.SafeInvoke(FluidScript.Compiler.SyntaxTree.Expression,System.Reflection.MethodBase,System.Object,System.Object[])">
+            <summary>
+            Safe compiler invoke for exceptions
+            </summary>
+            <param name="exp">Invoking expression</param>
+            <param name="method">method to Invoke</param>
+            <param name="target">method target</param>
+            <param name="parmeters">parameters for invoke</param>
+            <returns>result of invoke</returns>
         </member>
         <member name="M:FluidScript.Compiler.Debugging.TextPosition.#ctor(System.Int32,System.Int32)">
             <summary>
@@ -1560,6 +1585,35 @@
         <member name="M:FluidScript.Compiler.Generators.TypeGenerator.IsDefined(System.Type,System.Boolean)">
             <inheritdoc/>
         </member>
+        <member name="T:FluidScript.Compiler.IMemberResolver">
+            <summary>
+            Member resolver if fails to find
+            </summary>
+        </member>
+        <member name="M:FluidScript.Compiler.IMemberResolver.Resolve(FluidScript.Compiler.SyntaxTree.NameExpression)">
+            <summary>
+            this will call if compiler fails to find member
+            </summary>
+            <param name="node">node require to resolve</param>
+            <returns>Binder to member</returns>
+        </member>
+        <member name="M:FluidScript.Compiler.IMemberResolver.Resolve(FluidScript.Compiler.SyntaxTree.MemberExpression)">
+            <summary>
+            this will call if compiler fails to find member
+            </summary>
+            <param name="node">node require to resolve</param>
+            <returns>Binder to member</returns>
+        </member>
+        <member name="M:FluidScript.Compiler.IMemberResolver.Resolve(FluidScript.Compiler.SyntaxTree.InvocationExpression,System.String,System.Object,System.Object[])">
+            <summary>
+            this will call if compiler fails to find method
+            </summary>
+            <param name="node">node required to resolve</param>
+            <param name="name">name of the method</param>
+            <param name="obj">instance for the method</param>
+            <param name="args">arguments for the call</param>
+            <returns>MethodInfo for the call</returns>
+        </member>
         <member name="M:FluidScript.Compiler.ITypeContext.GetType(FluidScript.Compiler.Emit.TypeName)">
             <summary>
             Get resolved <see cref="T:System.Type"/>
@@ -1639,6 +1693,121 @@
         <member name="F:FluidScript.Compiler.Lexer.TokenType.ForwardSlash">
             <summary>
             \
+            </summary>
+        </member>
+        <member name="T:FluidScript.Compiler.Operators">
+            <summary>
+            C# operators
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Addition">
+            <summary>
+            operator +
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Subtraction">
+            <summary>
+            operator -
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Multiply">
+            <summary>
+            operator *
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Division">
+            <summary>
+            operator /
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Modulus">
+            <summary>
+            operator %
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Inequality">
+            <summary>
+            operator !=
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Equality">
+            <summary>
+            operator ==
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.GreaterThan">
+            <summary>
+            operator &gt;
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.RightShift">
+            <summary>
+            operator &gt;&gt;
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.GreaterThanOrEqual">
+            <summary>
+            operator &gt;=
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.LessThan">
+            <summary>
+            operator &lt;
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.LeftShift">
+            <summary>
+            operator &lt;&lt;
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.LessThanOrEqual">
+            <summary>
+            operator &lt;=
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.BitwiseAnd">
+            <summary>
+            operator &amp;
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.BitwiseOr">
+            <summary>
+            operator |
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.ExclusiveOr">
+            <summary>
+            operator ^
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Increment">
+            <summary>
+            operator ++
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.Decrement">
+            <summary>
+            operator --
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.LogicalNot">
+            <summary>
+            operator !
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.UnaryPlus">
+            <summary>
+            operator +
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.UnaryNegation">
+            <summary>
+            operator -
+            </summary>
+        </member>
+        <member name="F:FluidScript.Compiler.Operators.OnesComplement">
+            <summary>
+            operator ~
             </summary>
         </member>
         <member name="F:FluidScript.Compiler.Parser.Source">
@@ -1857,6 +2026,11 @@
             New runtime evaluation with local values
             </summary>
         </member>
+        <member name="P:FluidScript.Compiler.RuntimeCompiler.Resolver">
+            <summary>
+            Member resolver if fails to find
+            </summary>
+        </member>
         <member name="P:FluidScript.Compiler.RuntimeCompiler.Item(System.String)">
             <summary>
             Gets or Sets value for execution
@@ -1864,9 +2038,25 @@
             <param name="name">Name to store</param>
             <returns>value stored in it</returns>
         </member>
+        <member name="M:FluidScript.Compiler.RuntimeCompiler.Invoke(FluidScript.Compiler.SyntaxTree.Statement)">
+            <summary>
+            Evaluate the <paramref name="statement"/>
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"/>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.MissingMethodException"/>
+        </member>
         <member name="M:FluidScript.Compiler.RuntimeCompiler.Invoke(FluidScript.Compiler.SyntaxTree.Statement,System.Object)">
             <summary>
             Evaluate the <paramref name="statement"/>
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"/>
+            <exception cref="T:System.NullReferenceException"/>
+            <exception cref="T:System.MissingMethodException"/>
+        </member>
+        <member name="M:FluidScript.Compiler.RuntimeCompiler.Invoke(FluidScript.Compiler.SyntaxTree.Expression)">
+            <summary>
+            Evaluate the <paramref name="expression"/>
             </summary>
             <exception cref="T:System.IndexOutOfRangeException"/>
             <exception cref="T:System.NullReferenceException"/>
@@ -2036,7 +2226,7 @@
         </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.ArrayListExpression">
             <summary>
-            Array literal &lt;<see cref="F:FluidScript.Compiler.SyntaxTree.ArrayListExpression.ArrayType"/>&gt;[1,2]
+            Array literal [1,2]&lt;<see cref="F:FluidScript.Compiler.SyntaxTree.ArrayListExpression.ArrayType"/>&gt;(size)
             </summary>
         </member>
         <member name="F:FluidScript.Compiler.SyntaxTree.ArrayListExpression.Expressions">
@@ -2091,6 +2281,11 @@
         <member name="P:FluidScript.Compiler.SyntaxTree.IndexExpression.Conversions">
             <summary>
             Argument convert list
+            </summary>
+        </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.InstanceOfExpression">
+            <summary>
+            value <c>instanceof</c> Type
             </summary>
         </member>
         <member name="P:FluidScript.Compiler.SyntaxTree.InvocationExpression.Conversions">
@@ -2151,11 +2346,6 @@
         <member name="P:FluidScript.Compiler.SyntaxTree.NameExpression.Binder">
             <summary>
             Binding for compiler generation
-            </summary>
-        </member>
-        <member name="P:FluidScript.Compiler.SyntaxTree.NameExpression.Target">
-            <summary>
-            Target object 
             </summary>
         </member>
         <member name="M:FluidScript.Compiler.SyntaxTree.NameExpression.#ctor(System.String,FluidScript.Compiler.SyntaxTree.ExpressionType)">
@@ -2774,7 +2964,7 @@
         </member>
         <member name="T:FluidScript.Runtime.ICompileProvider">
             <summary>
-            Compile provider for Expression
+            Compile provider for Expression and Statement
             </summary>
         </member>
         <member name="T:FluidScript.GlobalObject">
@@ -2835,6 +3025,11 @@
             </summary>
         </member>
         <member name="M:FluidScript.Extensions.EnumerableExtensions.Iterate``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0,System.Int32})">
+            <summary>
+            Iterate items
+            </summary>
+        </member>
+        <member name="M:FluidScript.Extensions.EnumerableExtensions.ForEach``1(FluidScript.Compiler.SyntaxTree.INodeList{``0},System.Action{``0,System.Int32})">
             <summary>
             Iterate items
             </summary>

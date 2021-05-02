@@ -25,7 +25,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption option = 0)
         {
-            InvocationExpression.EmitArguments(generator, Arguments, Conversions);
+            generator.EmitArguments(Arguments, Conversions);
             generator.NewObject(Constructor);
         }
     }

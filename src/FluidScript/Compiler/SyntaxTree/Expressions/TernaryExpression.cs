@@ -33,7 +33,7 @@ namespace FluidScript.Compiler.SyntaxTree
             var firstType = Second.Type;
             var secondType = Third.Type;
             First.GenerateCode(generator, MethodCompileOption.Return);
-            if(Conversions != null && Conversions.Count > 0)
+            if (Conversions != null && Conversions.Count > 0)
             {
                 generator.EmitConvert(Conversions[0]);
             }

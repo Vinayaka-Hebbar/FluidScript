@@ -55,7 +55,6 @@ namespace FluidScript.Compiler.SyntaxTree
                     // void type no return
                     if (dest != TypeProvider.VoidType)
                     {
-
                         // todo variable name not used
                         if (generator.ReturnVariable == null)
                             generator.ReturnVariable = generator.DeclareVariable(dest);
@@ -64,8 +63,7 @@ namespace FluidScript.Compiler.SyntaxTree
                         {
                             if (src.TryImplicitConvert(dest, out System.Reflection.MethodInfo method))
                             {
-                                var para = method.GetParameters().First();
-                                if (src.IsValueType && para.ParameterType.IsValueType == false)
+                                if (src.IsValueType && method.GetParameters()[0].ParameterType.IsValueType == false)
                                     generator.Box(src);
                                 generator.Call(method);
                                 src = method.ReturnType;

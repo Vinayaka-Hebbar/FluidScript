@@ -1,5 +1,6 @@
 ﻿using FluidScript.Compiler.Emit;
 using FluidScript.Extensions;
+using FluidScript.Runtime;
 using FluidScript.Utils;
 
 namespace FluidScript.Compiler.SyntaxTree
@@ -19,6 +20,8 @@ namespace FluidScript.Compiler.SyntaxTree
             Right = right;
         }
 
+        public ParamConversion Conversion { get; set; }
+
         public override TResult Accept<TResult>(IExpressionVisitor<TResult> visitor)
         {
             return visitor.VisitAssignment(this);
@@ -26,7 +29,6 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
         {
-            //todo index implementation pending
             if (Left.NodeType == ExpressionType.Identifier)
             {
                 var exp = (NameExpression)Left;
@@ -37,6 +39,8 @@ namespace FluidScript.Compiler.SyntaxTree
                 if ((binder.Attributes & Binders.BindingAttributes.HasThis) != 0)
                     generator.LoadArgument(0);
                 Right.GenerateCode(generator, Option);
+                if (Conversion != null)
+                    generator.EmitConvert(Conversion);
                 binder.GenerateSet(Right, generator, option);
             }
             else if (Left.NodeType == ExpressionType.MemberAccess)
@@ -47,33 +51,50 @@ namespace FluidScript.Compiler.SyntaxTree
                 if ((exp.Binder.Attributes & Binders.BindingAttributes.Dynamic) == Binders.BindingAttributes.Dynamic)
                     generator.Box(TypeProvider.AnyType);
                 Right.GenerateCode(generator, Option);
+                if (Conversion != null)
+                    generator.EmitConvert(Conversion);
                 exp.Binder.GenerateSet(Right, generator, option);
             }
             else if (Left.NodeType == ExpressionType.Indexer)
             {
-                var exp = (IndexExpression)Left;
-                exp.Target.GenerateCode(generator);
-                System.Type type = exp.Target.Type;
-                if (type.IsArray)
+                GenerateIndexer(generator);
+            }
+        }
+
+        public void GenerateIndexer(MethodBodyGenerator generator)
+        {
+            var exp = (IndexExpression)Left;
+            var conversions = exp.Conversions;
+            var arguments = exp.Arguments;
+            exp.Target.GenerateCode(generator, MethodCompileOption.EmitStartAddress);
+            var argLength = arguments.Count;
+            for (int index = 0; index < argLength; index++)
+            {
+                var arg = arguments[index];
+                var conv = conversions[index];
+                if (conv != null)
                 {
-                    exp.Arguments.Iterate((arg) =>
+                    if (conv.ConversionType == ConversionType.Normal)
                     {
-                        arg.GenerateCode(generator);
-                        if (arg.Type == typeof(Integer))
-                            generator.CallStatic(ReflectionHelpers.IntegerToInt32);
-                    });
-                    Right.GenerateCode(generator, MethodCompileOption.Dupplicate);
-                    System.Type elementType = type.GetElementType();
-                    generator.StoreArrayElement(elementType);
+                        arg.GenerateCode(generator, AssignOption);
+                        generator.EmitConvert(conv);
+                    }
+                    else if (conv.ConversionType == ConversionType.ParamArray)
+                    {
+                        var args = new Expression[arguments.Count - index];
+                        arguments.CopyTo(args, conv.Index);
+                        generator.EmitConvert((ParamArrayConversion)conv, args);
+                    }
                 }
                 else
                 {
-
-                    exp.Arguments.Iterate((arg) => arg.GenerateCode(generator));
-                    //todo indexer argument convert
-                    generator.Call(exp.Setter);
+                    arg.GenerateCode(generator, AssignOption);
                 }
             }
+            Right.GenerateCode(generator, MethodCompileOption.Dupplicate);
+            // value convert if any
+            generator.EmitConvert(conversions[argLength]);
+            generator.Call(exp.Setter);
         }
 
         public override string ToString()

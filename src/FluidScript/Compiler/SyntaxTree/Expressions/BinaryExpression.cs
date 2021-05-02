@@ -6,8 +6,6 @@ namespace FluidScript.Compiler.SyntaxTree
 {
     public sealed class BinaryExpression : Expression
     {
-        internal const string OpAddition = "op_Addition";
-
         public readonly Expression Left;
         public readonly Expression Right;
 
@@ -37,52 +35,52 @@ namespace FluidScript.Compiler.SyntaxTree
                 switch (NodeType)
                 {
                     case ExpressionType.Plus:
-                        opName = OpAddition;
+                        opName = Operators.Addition;
                         break;
                     case ExpressionType.Minus:
-                        opName = "op_Subtraction";
+                        opName = Operators.Subtraction;
                         break;
                     case ExpressionType.Multiply:
-                        opName = "op_Multiply";
+                        opName = Operators.Multiply;
                         break;
                     case ExpressionType.Divide:
-                        opName = "op_Division";
+                        opName = Operators.Division;
                         break;
                     case ExpressionType.Percent:
-                        opName = "op_Modulus";
+                        opName = Operators.Modulus;
                         break;
                     case ExpressionType.BangEqual:
-                        opName = "op_Inequality";
+                        opName = Operators.Inequality;
                         break;
                     case ExpressionType.EqualEqual:
-                        opName = "op_Equality";
+                        opName = Operators.Equality;
                         break;
                     case ExpressionType.Greater:
-                        opName = "op_GreaterThan";
+                        opName = Operators.GreaterThan;
                         break;
                     case ExpressionType.GreaterGreater:
-                        opName = "op_RightShift";
+                        opName = Operators.RightShift;
                         break;
                     case ExpressionType.GreaterEqual:
-                        opName = "op_GreaterThanOrEqual";
+                        opName = Operators.GreaterThanOrEqual;
                         break;
                     case ExpressionType.Less:
-                        opName = "op_LessThan";
+                        opName = Operators.LessThan;
                         break;
                     case ExpressionType.LessLess:
-                        opName = "op_LeftShift";
+                        opName = Operators.LeftShift;
                         break;
                     case ExpressionType.LessEqual:
-                        opName = "op_LessThanOrEqual";
+                        opName = Operators.LessThanOrEqual;
                         break;
                     case ExpressionType.And:
-                        opName = "op_BitwiseAnd";
+                        opName = Operators.BitwiseAnd;
                         break;
                     case ExpressionType.Or:
-                        opName = "op_BitwiseOr";
+                        opName = Operators.BitwiseOr;
                         break;
                     case ExpressionType.Circumflex:
-                        opName = "op_ExclusiveOr";
+                        opName = Operators.ExclusiveOr;
                         break;
                 }
                 return opName;

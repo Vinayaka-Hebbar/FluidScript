@@ -9,7 +9,7 @@ namespace FluidScript.Compiler
     /// </summary>
     public class RuntimeVariables : Collections.DictionaryBase<LocalVariable, object>, ILocalVariables
     {
-        static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
+        private static readonly IEqualityComparer<LocalVariable> DefaultComparer = EqualityComparer<LocalVariable>.Default;
 
         //keeps track of current locals
         VariableIndexList current;

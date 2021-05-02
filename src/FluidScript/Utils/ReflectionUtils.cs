@@ -152,31 +152,22 @@ namespace FluidScript.Utils
 
         #region Delegate
 
-        internal static MethodInfo GetDelegateMethod(Delegate del, object[] args, out ArgumentConversions conversions)
+        internal static bool TryGetDelegateMethod(object obj, object[] args, out MethodInfo method, out ArgumentConversions conversions)
         {
             conversions = new ArgumentConversions(args.Length);
-            MethodInfo m = del.GetType().GetMethod(InvokeMethod, PublicInstance);
+            method = obj.GetType().GetMethod(InvokeMethod, PublicInstance);
             // only static method can allowed
-            if (m.MatchesArguments(args, conversions))
-            {
-                return m;
-            }
-            return null;
+            return method.MatchesArguments(args, conversions);
         }
 
         public static bool TryGetDelegateMethod(Type type, Type[] args, out MethodInfo method, out ArgumentConversions conversions)
         {
             conversions = new ArgumentConversions(args.Length);
-            MethodInfo m = type.GetMethod(InvokeMethod, PublicInstance);
+            method = type.GetMethod(InvokeMethod, PublicInstance);
             // only static method can allowed
-            if (m.MatchesArgumentTypes(args, conversions))
-            {
-                method = m;
-                return true;
-            }
-            method = null;
-            return false;
+            return method.MatchesArgumentTypes(args, conversions);
         }
         #endregion
+
     }
 }
