@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net45</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <StartupObject>FluidScript.ConsoleApp.Class1</StartupObject>
+    <UserSecretsId>5d1cd3b9-7b42-41d1-b5fb-32474fc89452</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="JsonDictionary.cs" />
+    <Compile Remove="ScriptIndentation.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="sample.fls" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Dynamic.Snippets">
+      <HintPath>bin\Debug\net45\Dynamic.Snippets.dll</HintPath>
+    </Reference>
+    <Reference Include="FluidTest">
+      <HintPath>bin\Debug\net45\FluidTest.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+    <Content Include="sample.fls">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="source.fls">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="FluidScript" Version="1.1.2.0" />
+  </ItemGroup>
+</Project>

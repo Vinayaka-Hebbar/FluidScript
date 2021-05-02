@@ -1,11 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.29215.179
+VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScipt.ConsoleTest", "FluidScipt.ConsoleTest\FluidScipt.ConsoleTest.csproj", "{4209C74E-27C6-4F29-BCC8-82243830BFC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript", "src\FluidScript\FluidScript.csproj", "{5C87C041-8CED-49DD-B944-2140AB787745}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript", "src\FluidScript.csproj", "{A5D8F6DF-189D-48DD-99D5-9D292AE3A09C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4BDA6A2B-56EF-428E-9B80-A60F789177F7}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript.CoreLib", "src\FluidScript.CoreLib\FluidScript.CoreLib.csproj", "{FA033C78-DCF9-460A-BFD7-026149653456}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FluidScript.ConsoleApp", "FluidScript.ConsoleApp\FluidScript.ConsoleApp.csproj", "{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +20,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4209C74E-27C6-4F29-BCC8-82243830BFC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4209C74E-27C6-4F29-BCC8-82243830BFC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4209C74E-27C6-4F29-BCC8-82243830BFC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4209C74E-27C6-4F29-BCC8-82243830BFC6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A5D8F6DF-189D-48DD-99D5-9D292AE3A09C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A5D8F6DF-189D-48DD-99D5-9D292AE3A09C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A5D8F6DF-189D-48DD-99D5-9D292AE3A09C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A5D8F6DF-189D-48DD-99D5-9D292AE3A09C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C87C041-8CED-49DD-B944-2140AB787745}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C87C041-8CED-49DD-B944-2140AB787745}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C87C041-8CED-49DD-B944-2140AB787745}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C87C041-8CED-49DD-B944-2140AB787745}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA033C78-DCF9-460A-BFD7-026149653456}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA033C78-DCF9-460A-BFD7-026149653456}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA033C78-DCF9-460A-BFD7-026149653456}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA033C78-DCF9-460A-BFD7-026149653456}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90D94C7E-52A7-461D-BE8F-22FA7CE4276C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

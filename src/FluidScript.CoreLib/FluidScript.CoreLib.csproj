@@ -1,0 +1,46 @@
+﻿<Project Sdk="MSBuild.Sdk.Extras">
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFrameworks>net40;netcoreapp2.0;netcoreapp3.1;netstandard2.0;</TargetFrameworks>
+    <RootNamespace>FluidScript</RootNamespace>
+    <AssemblyName>FluidScript.CoreLib</AssemblyName>
+    <Version>1.0.16</Version>
+    <Authors>Vinayaka Hebbar</Authors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DocumentationFile>D:\Projects\CSharp\Standard\FluidScript\src\FluidScript.CoreLib\FluidScript.CoreLib.xml</DocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>ProjectAssemblyKey.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Collections\ICollection.cs" />
+    <Compile Remove="Collections\IDictionary.cs" />
+    <Compile Remove="Collections\IEnumerable.cs" />
+    <Compile Remove="Collections\IEnumerator.cs" />
+    <Compile Remove="Collections\KeyValuePair.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+</Project>
