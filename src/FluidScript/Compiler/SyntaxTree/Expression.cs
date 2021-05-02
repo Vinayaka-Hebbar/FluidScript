@@ -172,7 +172,7 @@ namespace FluidScript.Compiler.SyntaxTree
             return new LiteralExpression(value);
         }
 
-        public static Expression SystemLiteral(object value)
+        public static SystemLiternalExpression SystemLiteral(object value)
         {
             return new SystemLiternalExpression(value);
         }
@@ -182,17 +182,17 @@ namespace FluidScript.Compiler.SyntaxTree
             return new NewExpression(TypeSyntax.Create(type), new NodeList<Expression>(args));
         }
 
-        public static ConvertExpression Convert(Type type, Expression target)
+        public static ConvertExpression Convert(Expression target, Type type)
         {
             return new ConvertExpression(TypeSyntax.Create(type), target);
         }
 
-        public static Expression Parameter(Type type, string name)
+        public static NameExpression Parameter(string name, Type type)
         {
             return new NameExpression(name, ExpressionType.Identifier) { Type = type };
         }
 
-        public static Expression Parameter(ParameterInfo parameter)
+        public static NameExpression Parameter(ParameterInfo parameter)
         {
             return new NameExpression(parameter.Name, ExpressionType.Identifier) { Type = parameter.Type, Binder = new Binders.ParameterBinder(parameter) };
         }

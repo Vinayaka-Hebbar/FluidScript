@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.SyntaxTree;
+using FluidScript.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,7 +10,7 @@ namespace FluidScript.Compiler.Generators
 {
     public class FieldGenerator : FieldInfo, Emit.IMember
     {
-        private IList<AttributeGenerator> _customAttributes;
+        private List<AttributeGenerator> _customAttributes;
 
         private readonly TypeGenerator TypeGenerator;
 
@@ -57,7 +58,7 @@ namespace FluidScript.Compiler.Generators
         public override object[] GetCustomAttributes(bool inherit)
         {
             if (_customAttributes != null)
-                return _customAttributes.Select(att => att.Instance).ToArray();
+                return _customAttributes.Map(att => att.Instance);
             return new Attribute[0];
         }
 
@@ -65,7 +66,9 @@ namespace FluidScript.Compiler.Generators
         {
             if (_customAttributes != null)
             {
-                return _customAttributes.Where(att => att.Type == attributeType).Select(att => att.Instance).ToArray();
+                return _customAttributes
+                    .FindAll(att => att.Type == attributeType)
+                    .Map(att => att.Instance);
             }
             return new Attribute[0];
         }
@@ -77,7 +80,7 @@ namespace FluidScript.Compiler.Generators
 
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return _customAttributes != null && _customAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+            return _customAttributes != null && _customAttributes.Exists(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
 
         public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, CultureInfo culture)

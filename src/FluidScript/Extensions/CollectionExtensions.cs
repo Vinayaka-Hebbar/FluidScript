@@ -31,5 +31,27 @@ namespace FluidScript.Extensions
             }
             return result;
         }
+
+        public static U[] Map<T, U>(this IList<T> collection, System.Func<T, U> select)
+        {
+            int count = collection.Count;
+            U[] result = new U[count];
+            for (int i = 0; i < count; i++)
+            {
+                result[i] = select(collection[i]);
+            }
+            return result;
+        }
+
+        public static U[] CastAll<U>(this System.Collections.IList collection)
+        {
+            int count = collection.Count;
+            U[] result = new U[count];
+            for (int i = 0; i < count; i++)
+            {
+                result[i] = (U)collection[i];
+            }
+            return result;
+        }
     }
 }

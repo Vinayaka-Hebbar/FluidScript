@@ -2194,6 +2194,12 @@
             <param name="settings">Parser options if null will be default options</param>
             <returns>Parsed <see cref="T:FluidScript.Compiler.SyntaxTree.Node"/></returns>
         </member>
+        <member name="T:FluidScript.Compiler.SyntaxTree.ConstructorDeclaration">
+            <summary>
+            Constructor declaration 
+            example: ctor() {}
+            </summary>
+        </member>
         <member name="T:FluidScript.Compiler.SyntaxTree.Expression">
             <summary>
             Base Expression

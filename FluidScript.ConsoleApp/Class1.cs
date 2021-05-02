@@ -11,6 +11,19 @@ namespace FluidScript.ConsoleApp
 {
     public class Class1
     {
+        Class1()
+        {
+            person = new Any(new DynamicObject
+            {
+                ["name"] = "Vinayaka",
+                ["age"] = 10,
+            });
+            person["task"] = new Func<Any>(new Display(new object[1]
+             {
+                person
+             }).Invoke);
+            person["age"] = 10;
+        }
         // todo import static class
         static void Main(string[] args)
         {
@@ -53,23 +66,43 @@ namespace FluidScript.ConsoleApp
         void Compile()
         {
             Type x = typeof(int);
-            if(x is null)
-            Console.Write(x);
-            if(x == null)
+            if (x is null)
+                Console.Write(x);
+            if (x == null)
                 Console.WriteLine(x);
         }
+
+        private class Display
+        {
+            Any age;
+            private object[] values;
+            public Display(object[] values)
+            {
+                this.values = values;
+            }
+
+            public Any Invoke()
+            {
+                Any any = (Any)values[0];
+                any[0]++;
+                any[0] = any[0] + 1;
+                return any;
+            }
+        }
+
+        Any person;
 
         public void Test()
         {
             try
             {
                 var type = typeof(ValueType);
-                Runtime();
+                // Runtime();
 
-                // FluidTest.Sample sample = new FluidTest.Sample();
-                // var res=  sample.Create();
-                //FuncTest();
-                // RunCodeGen();
+               //FluidTest.Sample sample = new FluidTest.Sample();
+               // var name = sample.Test();
+                // FuncTest();
+                  RunCodeGen();
                 Console.WriteLine();
             }
             catch (TargetInvocationException ex)
@@ -83,11 +116,8 @@ namespace FluidScript.ConsoleApp
             RuntimeCompiler compiler = new RuntimeCompiler();
             var target = new DynamicObject();
             compiler["narrowPitchCoils"] = new Double(1);
-            var statement = ScriptParser.ParseText(@"{
-        b=2+3;
-        return b;
-}");
-            var res = compiler.Invoke(Expression.Empty);
+            var statement = Parser.GetStatement("{x=func(x)=>x??1;return x(0);}");
+            var res = compiler.Invoke(statement);
             Console.WriteLine(res);
         }
 

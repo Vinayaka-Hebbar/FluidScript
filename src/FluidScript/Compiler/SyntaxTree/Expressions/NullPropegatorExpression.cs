@@ -7,6 +7,12 @@ namespace FluidScript.Compiler.SyntaxTree
         public readonly Expression Left;
         public readonly Expression Right;
 
+        public System.Reflection.MethodInfo Conversion
+        {
+            get;
+            set;
+        }
+
         public NullPropegatorExpression(Expression left, Expression right) : base(ExpressionType.Invocation)
         {
             Left = left;
@@ -25,7 +31,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption option)
         {
-            Left.GenerateCode(generator);
+            Left.GenerateCode(generator, option);
             generator.Duplicate();
             var end = generator.CreateLabel();
             if (Left.Type.IsValueType)
@@ -43,6 +49,13 @@ namespace FluidScript.Compiler.SyntaxTree
             generator.BranchIfTrue(end);
             generator.Pop();
             Right.GenerateCode(generator, Emit.MethodCompileOption.Dupplicate);
+            if (Conversion != null)
+            {
+                if (Right.Type.IsValueType && Conversion.GetParameters()[0].ParameterType.IsValueType == false)
+                    generator.Box(Right.Type);
+                generator.CallStatic(Conversion);
+            }
+
             generator.DefineLabelPosition(end);
         }
     }

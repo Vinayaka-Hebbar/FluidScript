@@ -16,9 +16,10 @@ namespace FluidScript.Compiler.Generators
         const MethodAttributes DefaultCtor = MethodAttributes.Public | MethodAttributes.HideBySig;
         const TypeAttributes NestedTypeAttr = TypeAttributes.NestedPrivate | TypeAttributes.Class;
 
-        internal readonly IList<IMember> Members = new List<IMember>();
+        internal readonly List<IMember> Members = new List<IMember>();
+
         private readonly TypeBuilder _builder;
-        IList<AttributeGenerator> _customAttributes;
+        List<AttributeGenerator> _customAttributes;
         Type[] interfaces;
 
         int nestedTypes;
@@ -43,7 +44,7 @@ namespace FluidScript.Compiler.Generators
 
         internal bool TryGetProperty(string name, out PropertyGenerator property)
         {
-            var member = Members.FirstOrDefault(mem => mem.MemberType == MemberTypes.Property && string.Equals(mem.Name, name, StringComparison.OrdinalIgnoreCase));
+            var member = Members.Find(mem => mem.MemberType == MemberTypes.Property && string.Equals(mem.Name, name, StringComparison.OrdinalIgnoreCase));
             if (member != null)
             {
                 property = (PropertyGenerator)member;
@@ -123,7 +124,7 @@ namespace FluidScript.Compiler.Generators
                     _builder.SetCustomAttribute(cuAttr);
                 }
             }
-            if (Members.Any(mem => mem.MemberType == MemberTypes.Constructor) == false)
+            if (Members.Exists(mem => mem.MemberType == MemberTypes.Constructor) == false)
             {
                 //default ctor
                 IMember ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultCtor, CallingConventions.Standard, new Type[0]), new Emit.ParameterInfo[0], this)
@@ -132,10 +133,10 @@ namespace FluidScript.Compiler.Generators
                 };
                 ctor.Compile();
             }
-            if (Members.Any(mem => mem.MemberType == MemberTypes.Field && mem.IsStatic))
+            if (Members.Exists(mem => mem.MemberType == MemberTypes.Field && mem.IsStatic))
             {
                 //check for static ctor
-                if (Members.Any(mem => mem.MemberType == MemberTypes.Constructor && mem.IsStatic) == false)
+                if (Members.Exists(mem => mem.MemberType == MemberTypes.Constructor && mem.IsStatic) == false)
                 {
                     IMember ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultStaticCtor, CallingConventions.Standard, new Type[0]), new Emit.ParameterInfo[0], this)
                     {
@@ -274,7 +275,7 @@ namespace FluidScript.Compiler.Generators
             if (interfaces == null)
                 return null;
             var comparision = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture;
-            return interfaces.FirstOrDefault(t => t.FullName.Equals(name, comparision));
+            return Array.Find(interfaces, t => t.FullName.Equals(name, comparision));
         }
 
         /// <inheritdoc/>
@@ -304,33 +305,33 @@ namespace FluidScript.Compiler.Generators
         /// <inheritdoc/>
         public override MemberInfo[] GetMember(string name, BindingFlags bindingAttr)
         {
-            var member = Members.Where(m => m.IsEquals(name, bindingAttr)).Select(mem => mem.MemberInfo);
-            if (member.Any())
-                return member.ToArray();
+            var member = Members.FindAll(m => m.IsEquals(name, bindingAttr));
+            if (member.Count > 0)
+                return member.Map(m => m.MemberInfo);
             return BaseType.GetMember(name, bindingAttr);
         }
 
         public override MemberInfo[] GetMember(string name, MemberTypes type, BindingFlags bindingAttr)
         {
-            var member = Members.Where(m => m.MemberType == type && m.IsEquals(name, bindingAttr)).Select(mem => mem.MemberInfo);
-            if (member.Any())
+            var member = Members.FindAll(m => m.MemberType == type && m.IsEquals(name, bindingAttr));
+            if (member.Count > 0)
             {
                 switch (type)
                 {
                     case MemberTypes.Constructor:
-                        return member.Cast<ConstructorInfo>().ToArray();
+                        return member.CastAll<ConstructorInfo>();
                     case MemberTypes.Event:
-                        return member.Cast<EventInfo>().ToArray();
+                        return member.CastAll<EventInfo>();
                     case MemberTypes.Field:
-                        return member.Cast<FieldInfo>().ToArray();
+                        return member.CastAll<FieldInfo>();
                     case MemberTypes.Method:
-                        return member.Cast<MethodInfo>().ToArray();
+                        return member.CastAll<MethodInfo>();
                     case MemberTypes.Property:
-                        return member.Cast<PropertyInfo>().ToArray();
+                        return member.CastAll<PropertyInfo>();
                     case MemberTypes.TypeInfo:
-                        return member.Cast<Type>().ToArray();
+                        return member.CastAll<Type>();
                     default:
-                        return member.ToArray();
+                        return member.Map(mem => mem.MemberInfo);
                 }
             }
 
@@ -358,7 +359,14 @@ namespace FluidScript.Compiler.Generators
         /// <inheritdoc/>
         protected override PropertyInfo GetPropertyImpl(string name, BindingFlags bindingAttr, Binder binder, Type returnType, Type[] types, ParameterModifier[] modifiers)
         {
-            return _builder.GetProperty(name, bindingAttr, binder, returnType, types, modifiers);
+            var properties = GetMembers<PropertyInfo>(MemberTypes.Property, name, bindingAttr);
+            if (types == null || types.Length == 0)
+            {
+                return properties.FirstOrDefault();
+            }
+            if (binder == null)
+                binder = DefaultBinder;
+            return binder.SelectProperty(bindingAttr, properties.ToArray(), returnType, types, modifiers);
         }
 
         /// <inheritdoc/>
@@ -373,35 +381,35 @@ namespace FluidScript.Compiler.Generators
             return _builder.InvokeMember(name, invokeAttr, binder, target, args);
         }
 
-        private IEnumerable<MemberInfo> InternalGetMembers(BindingFlags flags)
+        List<MemberInfo> InternalGetMembers(BindingFlags flags)
         {
+            List<MemberInfo> members = new List<MemberInfo>();
             foreach (var member in Members)
             {
                 if (member.BindingFlagsMatch(flags))
                 {
-                    yield return member.MemberInfo;
+                    members.Add(member.MemberInfo);
                 }
             }
             if ((flags & BindingFlags.DeclaredOnly) == 0)
             {
                 for (Type type = BaseType; type != null; type = type.BaseType)
                 {
-                    foreach (var member in type.GetMembers(flags))
-                    {
-                        yield return member;
-                    }
+                    members.AddRange(type.GetMembers(flags));
                 }
             }
+            return members;
         }
 
-        private IEnumerable<T> GetMembers<T>(MemberTypes memberType, BindingFlags flags)
+        private List<T> GetMembers<T>(MemberTypes memberType, BindingFlags flags)
             where T : MemberInfo
         {
+            List<T> members = new List<T>();
             foreach (var member in Members)
             {
                 if (member.MemberType == memberType && member.BindingFlagsMatch(flags))
                 {
-                    yield return (T)member.MemberInfo;
+                    members.Add((T)member.MemberInfo);
                 }
             }
             if ((flags & BindingFlags.DeclaredOnly) == 0)
@@ -412,21 +420,23 @@ namespace FluidScript.Compiler.Generators
                     {
                         if (member.MemberType == memberType)
                         {
-                            yield return (T)member;
+                            members.Add((T)member);
                         }
                     }
                 }
             }
+            return members;
         }
 
-        private IEnumerable<T> GetMembers<T>(MemberTypes memberType, string name, BindingFlags flags)
+        private List<T> GetMembers<T>(MemberTypes memberType, string name, BindingFlags flags)
             where T : MemberInfo
         {
+            List<T> members = new List<T>();
             foreach (var member in Members)
             {
                 if (member.MemberType == memberType && member.Name == name && member.BindingFlagsMatch(flags))
                 {
-                    yield return (T)member.MemberInfo;
+                    members.Add((T)member.MemberInfo);
                 }
             }
             if ((flags & BindingFlags.DeclaredOnly) == 0)
@@ -437,11 +447,12 @@ namespace FluidScript.Compiler.Generators
                     {
                         if (member.MemberType == memberType && member.Name == name)
                         {
-                            yield return (T)member;
+                            members.Add((T)member);
                         }
                     }
                 }
             }
+            return members;
         }
 
         /// <inheritdoc/>
@@ -478,8 +489,8 @@ namespace FluidScript.Compiler.Generators
         public override object[] GetCustomAttributes(bool inherit)
         {
             if (_customAttributes != null)
-                return _customAttributes.Select(att => att.Instance).ToArray();
-            return new object[0];
+                return _customAttributes.Map(att => att.Instance);
+            return new Attribute[0];
         }
 
         /// <inheritdoc/>
@@ -487,10 +498,11 @@ namespace FluidScript.Compiler.Generators
         {
             if (_customAttributes != null)
             {
-                return _customAttributes.Where(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType))).
-                    Select(att => att.Instance).ToArray();
+                return _customAttributes
+                    .FindAll(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType)))
+                    .Map(att => att.Instance);
             }
-            return new object[0];
+            return new Attribute[0];
         }
 
         public void SetCustomAttribute(Type type, ConstructorInfo ctor, object[] parameters)
@@ -503,7 +515,7 @@ namespace FluidScript.Compiler.Generators
         /// <inheritdoc/>
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return _customAttributes != null && _customAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+            return _customAttributes != null && _customAttributes.Exists(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
 
         public MethodGenerator DefineMethod(string name, MethodAttributes attrs, Emit.ParameterInfo[] parameters, Type returnType)
@@ -554,7 +566,7 @@ namespace FluidScript.Compiler.Generators
             iLGen.Emit(OpCodes.Ret);
 
             // Values = values;
-            return new LamdaGen(builder, method)
+            return new LamdaGen(new TypeGenerator(builder, assemblyGen, Context), method)
             {
                 Constructor = ctor,
                 Values = values

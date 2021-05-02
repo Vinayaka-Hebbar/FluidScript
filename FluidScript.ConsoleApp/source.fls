@@ -2,25 +2,26 @@
 
 class Sample {
 	var a = 1, b=2;
-	var fetch = func() => {
-		return a;
-	};
 	var items = {};
-	var value = func()=> {
-		items['x'] = 10;
-	};
+	var getValue = func (key:string, d) => items[key]?items[key]:d;
 	var x = null;
-	func add()  {
-		var res = a+b;
-		var value = func() => {
-			return a;
-		};
-		Console.WriteLine('Result = ' + res);
-		return res;
+
+	var person:any;
+
+	ctor() {
+		person = {name:'Vinayaka', age:10};
+		person['task'] = getTask;
+	}
+
+	var getTask = func() {
+		if(a==1){
+			return person.age[0]++;
+		}
+		return 1;
 	}
 
 	func create() {
-		value();
+		return items;
 	}
 
 	get a() {
@@ -28,20 +29,7 @@ class Sample {
 	}
 
 	func test() {
-		if(true)
-		{
-			if(false)
-				return 'Ok';
-		}
-		else
-		{
-			return 'Not Ok';
-		}
-		return -1;
-	}
-
-	func cal() {
-		return func(s)=>{var c=s.count;var min:any=0;var f=false;for(var i=0;i<c;i++){var x:any=s[i];if(f){if(x<min)min=x;}else{min=x;f=true;}}return min;};
+		return person.task();
 	}
 
 	get b() {

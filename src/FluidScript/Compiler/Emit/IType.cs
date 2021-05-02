@@ -6,5 +6,7 @@ namespace FluidScript.Compiler.Emit
     {
         Type ReflectedType { get; }
         Type BaseType { get; }
+
+        Type CreateType();
     }
 }

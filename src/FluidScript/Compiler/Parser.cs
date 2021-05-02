@@ -673,8 +673,11 @@ namespace FluidScript.Compiler
             MoveNext();
             for (; ; )
             {
-                // next token if newline and semicolon or return if right brace
-                if ((TokenType == TokenType.SemiColon || TokenType == TokenType.NewLine) && !MoveNext() || TokenType == TokenType.RightBrace)
+                // next token if newline and semicolon
+                if ((TokenType == TokenType.SemiColon || TokenType == TokenType.NewLine) && MoveNext())
+                    continue;
+                // if right brace or end or file
+                if (TokenType == TokenType.RightBrace || TokenType == TokenType.End)
                     break;
                 list.Add(VisitStatement());
             }
@@ -946,6 +949,9 @@ namespace FluidScript.Compiler
                         MoveNext();
                     exp = new ConvertExpression(type, VisitLeftHandSideExpression());
                     break;
+                case TokenType.NewLine:
+                    MoveNext();
+                    return VisitExpression();
                 default:
                     exp = VisitPostfixExpression();
                     break;
@@ -1189,6 +1195,9 @@ namespace FluidScript.Compiler
                 list.Add(VisitAssignmentExpression());
                 if (TokenType == endToken)
                     break;
+                //skip new line
+                if (TokenType == TokenType.NewLine)
+                    continue;
                 CheckSyntaxExpected(splitToken);
             }
             return list;
@@ -1379,12 +1388,13 @@ namespace FluidScript.Compiler
                     if (TokenType == TokenType.Colon)
                     {
                         MoveNext();
-                        Expression exp = TokenType == TokenType.LeftParenthesis ? VisitLamdaExpression() : VisitConditionalExpression();
-                        list.Add(new AnonymousObjectMember(name, exp));
+                        list.Add(new AnonymousObjectMember(name, TokenType == TokenType.LeftParenthesis ? VisitLamdaExpression() : VisitConditionalExpression()));
                     }
                 }
                 if (TokenType == TokenType.RightBrace)
                     break;
+                if (TokenType == TokenType.NewLine)
+                    continue;
                 CheckSyntaxExpected(TokenType.Comma);
             }
             return list;
@@ -1425,6 +1435,8 @@ namespace FluidScript.Compiler
         {
             if (TokenType == type)
                 return;
+            if (c == char.MinValue)
+                throw new System.Exception(string.Concat("end of stream. Expected ", type));
             throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.LineInfo, " expected ", type));
         }
 
@@ -1432,6 +1444,8 @@ namespace FluidScript.Compiler
         {
             if (TokenType == type1 || TokenType == type2)
                 return;
+            if (c == char.MinValue)
+                throw new System.Exception(string.Concat("end of stream. Expected ", type1, " or ", type2));
             throw new System.Exception(string.Concat("Invalid token ", c, " at ", Source.Position));
         }
         #endregion

@@ -1,7 +1,6 @@
 ﻿using FluidScript.Compiler.Emit;
 using FluidScript.Compiler.SyntaxTree;
 using System.Globalization;
-using System.Linq;
 
 namespace FluidScript.Compiler.Generators
 {
@@ -101,7 +100,7 @@ namespace FluidScript.Compiler.Generators
         void IMember.Compile()
         {
             var bodyGen = new MethodBodyGenerator(this, builder.GetILGenerator());
-            foreach (FieldGenerator generator in Declaring.Members.Where(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic == IsStatic))
+            foreach (FieldGenerator generator in Declaring.Members.FindAll(mem => mem.MemberType == System.Reflection.MemberTypes.Field && mem.IsStatic == IsStatic))
             {
                 if (generator.DefaultValue != null)
                 {

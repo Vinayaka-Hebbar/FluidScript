@@ -1,6 +1,6 @@
 ﻿namespace FluidScript.Compiler.SyntaxTree
 {
-    internal class SystemLiternalExpression : LiteralExpression
+    public class SystemLiternalExpression : LiteralExpression
     {
         public SystemLiternalExpression(object value) : base(value)
         {

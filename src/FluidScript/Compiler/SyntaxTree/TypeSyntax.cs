@@ -13,6 +13,17 @@
             }
         }
 
+        private static TypeSyntax m_any;
+        public static TypeSyntax Any
+        {
+            get
+            {
+                if (m_any == null)
+                    m_any = new RefTypeSyntax("any", null) { Type = TypeProvider.AnyType };
+                return m_any;
+            }
+        }
+
         public System.Type Type { get; protected set; }
 
         public static TypeSyntax Create(System.Type type)

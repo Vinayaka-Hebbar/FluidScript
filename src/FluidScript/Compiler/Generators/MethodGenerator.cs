@@ -10,7 +10,7 @@ namespace FluidScript.Compiler.Generators
     // Temporary Method info wrapper
     public abstract class BaseMethodGenerator : System.Reflection.MethodInfo, IMethodBase
     {
-        protected IList<AttributeGenerator> _customAttributes;
+        internal List<AttributeGenerator> _customAttributes;
 
         private readonly System.Reflection.MethodInfo methodInfo;
         private readonly Type declaring;
@@ -94,7 +94,7 @@ namespace FluidScript.Compiler.Generators
         public override object[] GetCustomAttributes(bool inherit)
         {
             if (_customAttributes != null)
-                return _customAttributes.Select(att => att.Instance).ToArray();
+                return _customAttributes.Map(att => att.Instance);
             return new Attribute[0];
         }
 
@@ -102,8 +102,9 @@ namespace FluidScript.Compiler.Generators
         {
             if (_customAttributes != null)
             {
-                return _customAttributes.Where(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType))).
-                    Select(att => att.Instance).ToArray();
+                return _customAttributes
+                    .FindAll(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType)))
+                    .Map(att => att.Instance);
             }
             return new Attribute[0];
         }
@@ -134,7 +135,7 @@ namespace FluidScript.Compiler.Generators
 
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return _customAttributes != null && _customAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+            return _customAttributes != null && _customAttributes.Exists(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
 
         public override string ToString()

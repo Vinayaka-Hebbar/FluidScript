@@ -123,7 +123,7 @@ namespace FluidScript.Compiler.Emit
             iLGen.Emit(OpCodes.Ret);
 
             // Values = values;
-            return new LamdaGen(builder, method)
+            return new LamdaGen(new TypeGenerator(builder, this), method)
             {
                 Constructor = ctor,
                 Values = values

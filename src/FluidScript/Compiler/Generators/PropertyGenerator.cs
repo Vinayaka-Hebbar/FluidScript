@@ -1,4 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
+using FluidScript.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -27,11 +28,12 @@ namespace FluidScript.Compiler.Generators
             }
         }
 
-        private IList<AttributeGenerator> _customAttributes;
+        private List<AttributeGenerator> _customAttributes;
 
         internal readonly TypeGenerator TypeGenerator;
 
         private readonly System.Reflection.Emit.PropertyBuilder _builder;
+        private readonly List<PropertyHolder> accessors;
 
         public PropertyGenerator(TypeGenerator generator, System.Reflection.Emit.PropertyBuilder builder)
         {
@@ -39,6 +41,7 @@ namespace FluidScript.Compiler.Generators
             TypeGenerator = generator;
             Name = builder.Name;
             MemberType = System.Reflection.MemberTypes.Property;
+            accessors = new List<PropertyHolder>(2);
         }
 
         public override string Name { get; }
@@ -69,7 +72,7 @@ namespace FluidScript.Compiler.Generators
             }
         }
 
-        public IList<PropertyHolder> Accessors { get; } = new List<PropertyHolder>(2);
+        public IList<PropertyHolder> Accessors => accessors;
 
         public override Type PropertyType => _builder.PropertyType;
 
@@ -90,12 +93,12 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Reflection.MethodInfo[] GetAccessors(bool nonPublic)
         {
-            return Accessors.Where(acc => acc.IsPublic == nonPublic).Select(acc => acc.Method).ToArray();
+            return accessors.FindAll(acc => acc.IsPublic == nonPublic).Map(acc => acc.Method);
         }
 
         public override System.Reflection.MethodInfo GetGetMethod(bool nonPublic)
         {
-            PropertyHolder item = Accessors.FirstOrDefault(acc => acc.PropertyType == Generators.PropertyType.Get && acc.IsPublic == nonPublic);
+            PropertyHolder item = accessors.FirstOrDefault(acc => acc.PropertyType == Generators.PropertyType.Get && acc.IsPublic == nonPublic);
             if (item != null)
                 return item.Method;
             throw new Exception("Item Not Found");
@@ -103,7 +106,7 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Reflection.MethodInfo GetSetMethod(bool nonPublic)
         {
-            return Accessors.FirstOrDefault(acc => acc.PropertyType == Generators.PropertyType.Set && acc.IsPublic == nonPublic).Method;
+            return accessors.FirstOrDefault(acc => acc.PropertyType == Generators.PropertyType.Set && acc.IsPublic == nonPublic).Method;
         }
 
         public override System.Reflection.ParameterInfo[] GetIndexParameters()
@@ -127,24 +130,24 @@ namespace FluidScript.Compiler.Generators
         public override object[] GetCustomAttributes(bool inherit)
         {
             if (_customAttributes != null)
-                return _customAttributes.Select(att => att.Instance).ToArray();
-            return new object[0];
+                return _customAttributes.Map(att => att.Instance);
+            return new Attribute[0];
         }
 
         public override object[] GetCustomAttributes(Type attributeType, bool inherit)
         {
             if (_customAttributes != null)
             {
-                var enumerable = _customAttributes
-                    .Where(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType)));
-                return enumerable.Select(att => att.Instance).ToArray();
+                _customAttributes
+                   .FindAll(att => att.Type == attributeType || (inherit && att.Type.IsAssignableFrom(attributeType)))
+                    .Map(att => att.Instance);
             }
-            return new object[0];
+            return new Attribute[0];
         }
 
         public override bool IsDefined(Type attributeType, bool inherit)
         {
-            return _customAttributes != null && _customAttributes.Any(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
+            return _customAttributes != null && _customAttributes.Exists(attr => attr.Type == attributeType || (inherit && attr.Type.IsAssignableFrom(attributeType)));
         }
 
         internal System.Reflection.Emit.PropertyBuilder GetBuilder()

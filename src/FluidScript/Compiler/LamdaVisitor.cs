@@ -4,6 +4,7 @@ namespace FluidScript.Compiler
 {
     internal class LamdaVisitor : IExpressionVisitor<Expression>, IStatementVisitor
     {
+        const string Current = "__value";
         private readonly System.Collections.Generic.HashSet<string> Parameters;
 
         private readonly System.Collections.Generic.HashSet<string> LocalVariables;
@@ -209,17 +210,15 @@ namespace FluidScript.Compiler
 
         public Expression VisitThis(ThisExpression node)
         {
-            var name = "__value";
-            if (HoistedLocals.ContainsKey(name) == false)
-                HoistedLocals.Add(name, node);
+            if (HoistedLocals.ContainsKey(Current) == false)
+                HoistedLocals.Add(Current, node);
             return node;
         }
 
         public Expression VisitSuper(SuperExpression node)
         {
-            var name = "__value";
-            if (HoistedLocals.ContainsKey(name) == false)
-                HoistedLocals.Add(name, node);
+            if (HoistedLocals.ContainsKey(Current) == false)
+                HoistedLocals.Add(Current, node);
             return node;
         }
 

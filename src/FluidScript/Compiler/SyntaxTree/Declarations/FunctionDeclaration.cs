@@ -232,7 +232,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            return string.Concat(Name, "(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnType == null ? "any" : ReturnType.ToString());
+            return string.Concat(Name, "(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnType ?? TypeSyntax.Any);
         }
     }
 }

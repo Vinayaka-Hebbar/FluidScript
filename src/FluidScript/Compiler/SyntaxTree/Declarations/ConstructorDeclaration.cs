@@ -3,6 +3,10 @@ using FluidScript.Extensions;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
+    /// <summary>
+    /// Constructor declaration 
+    /// example: ctor() {}
+    /// </summary>
     public class ConstructorDeclaration : FunctionDeclaration
     {
         public ConstructorDeclaration(NodeList<TypeParameter> parameters, BlockStatement body) : base(string.Empty, parameters, null, body)

@@ -34,7 +34,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnSyntax);
+            return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnSyntax ?? TypeSyntax.Any);
         }
 
         public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
@@ -155,7 +155,7 @@ namespace FluidScript.Compiler.SyntaxTree
             bodyGen.Compile();
             var delgateType = DelegateGen.MakeNewDelegate(types, returnType);
             Type = delgateType;
-            return method.CreateDelegate(delgateType, new Runtime.Closure(values));
+            return method.CreateDelegate(delgateType, new Closure(values));
         }
     }
 }

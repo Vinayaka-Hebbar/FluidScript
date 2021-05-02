@@ -24,7 +24,6 @@ namespace FluidScript.Compiler.SyntaxTree
                     generator.LoadAddressOfVariable(variable);
                 else
                     generator.LoadVariable(variable);
-
             }
             else
             {

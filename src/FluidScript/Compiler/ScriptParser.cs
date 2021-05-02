@@ -30,6 +30,11 @@ namespace FluidScript.Compiler
                 case TokenType.Numeric:
                 case TokenType.LeftParenthesis:
                     return VisitStatement();
+                case TokenType.NewLine:
+                    MoveNext();
+                    return VisitNode();
+                case TokenType.End:
+                    throw new System.Exception("End of stream");
                 default:
                     throw new System.Exception(string.Format("Invalid Token type {0} at {1}", TokenType, Source.LineInfo));
             }

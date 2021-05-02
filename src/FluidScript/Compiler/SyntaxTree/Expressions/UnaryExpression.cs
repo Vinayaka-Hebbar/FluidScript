@@ -86,11 +86,11 @@ namespace FluidScript.Compiler.SyntaxTree
                 Operand.GenerateCode(generator, option);
                 return;
             }
+            // todo for Indexer generate x[0]++
             var operand = Operand;
             IBinder binder = null;
             if (operand.NodeType == ExpressionType.Identifier)
             {
-                //todo only for get; set; member
                 //i++ or Member++
                 binder = ((NameExpression)operand).Binder;
             }
@@ -114,10 +114,17 @@ namespace FluidScript.Compiler.SyntaxTree
                         CallPostFixMember(generator, binder, option);
                         return;
                     }
+                    // for dynamic type we have to call safe set
+                    if ((binder.Attributes & BindingAttributes.Dynamic) != 0)
+                    {
+                        CallDynamicPostSet(generator, binder, option);
+                        return;
+                    }
                     if ((option & MethodCompileOption.Dupplicate) != 0)
                         generator.Duplicate();
                     // call the operator
                     generator.CallStatic(Method);
+
                     // update value
                     binder.GenerateSet(operand, generator);
                     break;
@@ -135,6 +142,11 @@ namespace FluidScript.Compiler.SyntaxTree
                         CallPreFixMember(generator, binder, option);
                         return;
                     }
+                    if ((binder.Attributes & BindingAttributes.Dynamic) != 0)
+                    {
+                        CallDynamicPreSet(generator, binder, option);
+                        return;
+                    }
                     if ((option & MethodCompileOption.Dupplicate) != 0)
                         generator.Duplicate();
                     // update value
@@ -147,6 +159,63 @@ namespace FluidScript.Compiler.SyntaxTree
                     break;
             }
 
+        }
+
+        void CallDynamicPostSet(MethodBodyGenerator generator, IBinder binder, MethodCompileOption option)
+        {
+            // store result fron safegetvalue
+            var temp = generator.DeclareVariable(binder.Type);
+            // store the result to variable
+            generator.StoreVariable(temp);
+            var target = Operand;
+            if (target.NodeType == ExpressionType.MemberAccess)
+            {
+                target = ((MemberExpression)target).Target;
+            }
+            else if (target.NodeType == ExpressionType.Indexer)
+            {
+                target = ((IndexExpression)target).Target;
+            }
+            target.GenerateCode(generator);
+            if (target.Type.IsValueType)
+                generator.Box(target.Type);
+            // load the variable
+            generator.LoadVariable(temp);
+            // call operator
+            generator.CallStatic(Method);
+
+            // store operation result to member
+            binder.GenerateSet(Operand, generator);
+
+            if ((option & MethodCompileOption.Return) != 0)
+                generator.LoadVariable(temp);
+        }
+
+        void CallDynamicPreSet(MethodBodyGenerator generator, IBinder binder, MethodCompileOption option)
+        {
+            // store result fron safegetvalue
+            var temp = generator.DeclareVariable(binder.Type);
+            // store the result to variable
+            generator.StoreVariable(temp);
+            var target = Operand;
+            if (target.NodeType == ExpressionType.MemberAccess)
+            {
+                target = ((MemberExpression)target).Target;
+            }
+            else if (target.NodeType == ExpressionType.Indexer)
+            {
+                target = ((IndexExpression)target).Target;
+            }
+            target.GenerateCode(generator);
+            if (target.Type.IsValueType)
+                generator.Box(target.Type);
+            // load the variable
+            generator.LoadVariable(temp);
+            // store operation result to member
+            binder.GenerateSet(Operand, generator);
+
+            if ((option & MethodCompileOption.Dupplicate) != 0)
+                generator.LoadVariable(temp);
         }
 
         void CallPreFixMember(MethodBodyGenerator generator, IBinder binder, MethodCompileOption option)
@@ -172,7 +241,8 @@ namespace FluidScript.Compiler.SyntaxTree
 
         void CallPostFixMember(MethodBodyGenerator generator, IBinder binder, MethodCompileOption option)
         {
-            // if no duplicate ex: i++ single line 
+            // if no duplicate ex: i++ single line or for not dynamic
+            // for dynamic method call safeGetValue(name) which required a variable
             if ((option & MethodCompileOption.Dupplicate) == 0)
             {
                 binder.GenerateSet(Operand, generator);

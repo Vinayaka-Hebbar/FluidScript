@@ -1020,8 +1020,17 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitNullPropegator(NullPropegatorExpression node)
         {
             node.Type = node.Left.Accept(this).Type;
-            node.Right.Accept(this);
-            return node;
+            var other = node.Right.Accept(this);
+            if (node.Type == other.Type || node.Type.IsAssignableFrom(other.Type))
+            {
+                return node;
+            }
+            if (other.Type.TryImplicitConvert(node.Type, out System.Reflection.MethodInfo method))
+            {
+                node.Conversion = method;
+                return node;
+            }
+            throw new InvalidCastException($"Unable to cast object of type {other.Type} to {node.Type}");
         }
 
         Expression IExpressionVisitor<Expression>.VisitAnonymousObject(AnonymousObjectExpression node)

@@ -1,10 +1,10 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFrameworks>net45;netstandard2.0;netcoreapp3.1;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0;netcoreapp3.1</TargetFrameworks>
     <DefineConstants>TRACE;</DefineConstants>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.1.2</Version>
+    <Version>1.1.2.1-alpha</Version>
     <Title>FluidScript</Title>
     <LangVersion>8</LangVersion>
     <PackageId>FluidScript</PackageId>
