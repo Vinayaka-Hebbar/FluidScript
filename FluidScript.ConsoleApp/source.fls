@@ -1,0 +1,54 @@
+﻿import {Console} from mscorlib;
+
+class Sample {
+	var a = 1, b=2;
+	var fetch = func() => {
+		return a;
+	};
+	var items = {};
+	var value = func()=> {
+		items['x'] = 10;
+	};
+	var x = null;
+	func add()  {
+		var res = a+b;
+		var value = func() => {
+			return a;
+		};
+		Console.WriteLine('Result = ' + res);
+		return res;
+	}
+
+	func create() {
+		value();
+	}
+
+	get a() {
+	  return 10;
+	}
+
+	func test() {
+		if(true)
+		{
+			if(false)
+				return 'Ok';
+		}
+		else
+		{
+			return 'Not Ok';
+		}
+		return -1;
+	}
+
+	func cal() {
+		return func(s)=>{var c=s.count;var min:any=0;var f=false;for(var i=0;i<c;i++){var x:any=s[i];if(f){if(x<min)min=x;}else{min=x;f=true;}}return min;};
+	}
+
+	get b() {
+	  return 10;
+	}
+
+	impl func toString(){
+		return 'My Sample';
+	}
+}

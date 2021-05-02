@@ -1,0 +1,32 @@
+﻿class Test {
+	var _x = 12, _y = 5 + 1;
+    val _name = `my first class`;
+
+	get current() : Test {
+		return this;
+	}
+
+	get x():int {
+		return _x;
+	}
+
+	static get name():string {
+		return _name;
+	}
+
+	set x(value:int) {
+		current._x = value;
+	}
+
+	func add():int {
+		var x = _x;
+		if(x==12)
+			return x+_y;
+		else
+			return x;
+	}
+
+    impl func toString() : string {
+		return _name;
+	}
+}

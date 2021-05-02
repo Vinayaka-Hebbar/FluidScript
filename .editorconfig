@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# IDE0023: Use block body for operators
+csharp_style_expression_bodied_operators = false:none
+
+# CS1591: Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1591.severity = silent

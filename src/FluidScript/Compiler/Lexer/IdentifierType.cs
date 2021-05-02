@@ -1,0 +1,40 @@
+﻿namespace FluidScript.Compiler.Lexer
+{
+    public enum IdentifierType
+    {
+        Class,
+        Public,
+        Private,
+        Static,
+        Get,
+        Set,
+        New,
+        This,
+        True,
+        False,
+        NaN,
+        Null,
+        Undefined,
+        Return,
+        Var,
+        Val,
+        Function,
+        Ctor,
+        Super,
+        Import,
+        Implement,
+        Lamda,
+        If,
+        Else,
+        While,
+        Do,
+        For,
+        Loop,
+        Continue,
+        Switch,
+        Break,
+        Throw,
+        SizeOf,
+        From
+    }
+}
