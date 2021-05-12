@@ -24,7 +24,6 @@ namespace FluidScript.ConsoleApp
             try
             {
                 RunCodeGen();
-                Console.WriteLine();
             }
             catch (TargetInvocationException ex)
             {
@@ -42,7 +41,7 @@ namespace FluidScript.ConsoleApp
             {
                 if (type is IType)
                 {
-                    type = type.ReflectedType;
+                    type = type.UnderlyingSystemType;
                 }
                 object obj = Activator.CreateInstance(type);
                 Any value = new Any(obj);
@@ -60,36 +59,5 @@ namespace FluidScript.ConsoleApp
             assembly.Save("FluidTest.dll");
         }
 
-        DynamicObject x = new DynamicObject()
-        {
-            ["a"] = 1,
-            ["b"] = 2,
-        };
-
-        protected bool IsNull(object x)
-        {
-            return x is null;
-        }
-
-        public void InstanceOf()
-        {
-            var x = this.x;
-            x["a"] = 10;
-        }
-
-        public override string ToString()
-        {
-            object value = 10;
-            return value.ToString();
-        }
-
-        int i;
-        public Action TestFun3()
-        {
-            i = Console.Read();
-            void x() => Console.WriteLine(i);
-            i = 10;
-            return x;
-        }
     }
 }
