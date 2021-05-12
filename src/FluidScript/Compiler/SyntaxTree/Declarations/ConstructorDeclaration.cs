@@ -16,8 +16,7 @@ namespace FluidScript.Compiler.SyntaxTree
         public override void CreateMember(TypeGenerator generator)
         {
             var parameters = Parameters.Map(para => para.GetParameterInfo(generator.Context));
-            var parameterTypes = parameters.Map(para => para.Type);
-            var ctor = generator.Builder.DefineConstructor(GetAttributes(), System.Reflection.CallingConventions.Standard, parameterTypes);
+            var ctor = generator.Builder.DefineConstructor(GetAttributes(), System.Reflection.CallingConventions.Standard, parameters.Map(para => para.Type.UnderlyingSystemType));
             var ctorGen = new ConstructorGenerator(ctor, parameters, generator)
             {
                 SyntaxBody = Body

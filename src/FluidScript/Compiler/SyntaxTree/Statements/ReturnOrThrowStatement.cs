@@ -1,6 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
 using FluidScript.Runtime;
-using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {

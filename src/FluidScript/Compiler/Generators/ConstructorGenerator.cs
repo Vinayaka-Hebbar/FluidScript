@@ -108,7 +108,7 @@ namespace FluidScript.Compiler.Generators
                         bodyGen.LoadArgument(0);
                     generator.MethodBody = bodyGen;
                     ((IMember)generator).Compile();
-                    generator.DefaultValue.GenerateCode(bodyGen, Expression.AssignOption);
+                    generator.DefaultValue.Accept(bodyGen).GenerateCode(bodyGen, Expression.AssignOption);
                     bodyGen.StoreField(generator.FieldInfo);
                 }
             }
@@ -123,6 +123,11 @@ namespace FluidScript.Compiler.Generators
                 }
             }
             bodyGen.Compile();
+        }
+
+        public override string ToString()
+        {
+            return $"ctor({string.Join(",", Parameters)})";
         }
     }
 }

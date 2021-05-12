@@ -3,7 +3,6 @@ using FluidScript.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 
 namespace FluidScript.Compiler.Generators
@@ -40,7 +39,14 @@ namespace FluidScript.Compiler.Generators
 
         public override RuntimeFieldHandle FieldHandle => FieldInfo.FieldHandle;
 
-        public override Type FieldType => FieldInfo.FieldType;
+        private Type fieldType;
+        public override Type FieldType
+        {
+            get
+            {
+                return fieldType;
+            }
+        }
 
         public override Type DeclaringType => TypeGenerator;
 
@@ -114,17 +120,17 @@ namespace FluidScript.Compiler.Generators
                 {
                     type = DeclarationExpression.VariableType.ResolveType(TypeGenerator.Context);
                 }
-
-                var fieldBul = TypeGenerator.Builder.DefineField(Name, type, Attributes);
+                fieldType = type;
+                var fieldBuilder = TypeGenerator.Builder.DefineField(Name, type.UnderlyingSystemType, Attributes);
                 if (_customAttributes != null)
                 {
                     foreach (var attr in _customAttributes)
                     {
                         var cuAttr = new System.Reflection.Emit.CustomAttributeBuilder(attr.Ctor, attr.Parameters);
-                        fieldBul.SetCustomAttribute(cuAttr);
+                        fieldBuilder.SetCustomAttribute(cuAttr);
                     }
                 }
-                FieldInfo = fieldBul;
+                FieldInfo = fieldBuilder;
             }
         }
 

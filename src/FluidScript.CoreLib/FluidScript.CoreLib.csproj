@@ -1,17 +1,17 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFrameworks>net40;netcoreapp2.0;netcoreapp3.1;netstandard2.0;</TargetFrameworks>
+    <TargetFrameworks>net40;net45;netcoreapp2.0;netcoreapp3.1;netstandard2.0;</TargetFrameworks>
     <RootNamespace>FluidScript</RootNamespace>
     <AssemblyName>FluidScript.CoreLib</AssemblyName>
-    <Version>1.0.16</Version>
+    <Version>1.0.16.3</Version>
     <Authors>Vinayaka Hebbar</Authors>
   </PropertyGroup>
 
   <PropertyGroup>
     <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RepositoryUrl>https://github.com/Vinayaka-Hebbar/FluidScript</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">

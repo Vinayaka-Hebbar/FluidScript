@@ -1,39 +1,25 @@
 ﻿import {Console} from mscorlib;
 
-class Sample {
-	var a = 1, b=2;
-	var items = {};
-	var getValue = func (key:string, d) => items[key]?items[key]:d;
-	var x = null;
+class User {
+	var name = 'Vinayaka';
+	var items = [10,20];
+}
 
-	var person:any;
+class Sample  {
+	val users:User[];
 
 	ctor() {
-		person = {name:'Vinayaka', age:10};
-		person['task'] = getTask;
+		users = []<User>();
+		users[0] = new User();
+
 	}
 
-	var getTask = func() {
-		if(a==1){
-			return person.age[0]++;
-		}
-		return 1;
+	ctor(users:User[]) {
+		this.users = users;
 	}
 
-	func create() {
-		return items;
-	}
-
-	get a() {
-	  return 10;
-	}
-
-	func test() {
-		return person.task();
-	}
-
-	get b() {
-	  return 10;
+	func test(): any[] {
+		return users[0].items;
 	}
 
 	impl func toString(){

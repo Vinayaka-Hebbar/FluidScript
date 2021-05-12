@@ -1,6 +1,5 @@
 ﻿using FluidScript.Compiler.Emit;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -53,7 +52,7 @@ namespace FluidScript.Compiler.SyntaxTree
         ///<inheritdoc/>
         public override string ToString()
         {
-            return string.Concat("{", string.Join(";", Statements.Select(statement => statement.ToString())), "}");
+            return string.Concat("{", string.Join(";", Statements.Map(statement => statement.ToString())), "}");
         }
     }
 }

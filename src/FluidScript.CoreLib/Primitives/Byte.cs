@@ -1,11 +1,12 @@
-﻿using System;
+﻿using FluidScript.Runtime;
+using System;
 
 namespace FluidScript
 {
     /// <summary>
     ///  Represents an 8-bit signed integer.
     /// </summary>
-    [Runtime.Register(nameof(Byte))]
+    [Register(nameof(Byte))]
     [Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
@@ -13,7 +14,7 @@ namespace FluidScript
 #if LATEST_VS
         readonly
 #endif
-        struct Byte : IFSObject, IConvertible, IFormattable, Runtime.IValueBox<sbyte>
+        struct Byte : IFSObject, IConvertible, IFormattable
     {
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         internal readonly sbyte m_value;
@@ -27,14 +28,14 @@ namespace FluidScript
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("toString")]
+        [Register("toString")]
         public String StringValue()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("hashCode")]
+        [Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
@@ -53,7 +54,7 @@ namespace FluidScript
         /// <param name="obj"> The object to compare with the current instance.</param>
         /// <returns>true if obj and this instance are the same type and represent the same value;
         ///  otherwise, false.</returns>
-        [Runtime.Register("equals")]
+        [Register("equals")]
         public Boolean Equals(Byte obj)
         {
             return m_value == obj.m_value ? Boolean.True : Boolean.False;
@@ -76,7 +77,7 @@ namespace FluidScript
             return m_value.ToString(format, provider);
         }
 
-        [Runtime.Register("parse")]
+        [Register("parse")]
         public static Byte Parse(object value)
         {
             if (!(value is IConvertible c))

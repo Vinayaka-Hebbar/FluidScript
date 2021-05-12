@@ -1,11 +1,12 @@
-﻿using System;
+﻿using FluidScript.Runtime;
+using System;
 
 namespace FluidScript
 {
     /// <summary>
     /// Represents a character as a UTF-16 code unit.
     /// </summary>
-    [Runtime.Register(nameof(Char))]
+    [Register(nameof(Char))]
     [Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
@@ -13,18 +14,18 @@ namespace FluidScript
 #if LATEST_VS
         readonly
 #endif
-        struct Char : IFSObject, IConvertible, Runtime.IValueBox<char>
+        struct Char : IFSObject, IConvertible
     {
         /// <summary>
         /// Min char Value
         /// </summary>
-        [Runtime.Register(nameof(MinValue))]
+        [Register(nameof(MinValue))]
         public static readonly Char MinValue = new Char(char.MinValue);
 
         /// <summary>
         /// Max char Value
         /// </summary>
-        [Runtime.Register(nameof(MinValue))]
+        [Register(nameof(MinValue))]
         public static readonly Char MaxValue = new Char(char.MaxValue);
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -41,7 +42,7 @@ namespace FluidScript
         /// <summary>
         /// returns the hashCode() for the instance
         /// </summary>
-        [Runtime.Register("hashCode")]
+        [Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
@@ -50,14 +51,14 @@ namespace FluidScript
         /// <summary>
         /// converts to string
         /// </summary>
-        [Runtime.Register("toString")]
+        [Register("toString")]
         public String StringValue()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("equals")]
+        [Register("equals")]
         public override bool Equals(object obj)
         {
             return obj is Char c &&
@@ -87,7 +88,7 @@ namespace FluidScript
             return m_value.ToString();
         }
 
-        [Runtime.Register("parse")]
+        [Register("parse")]
         public static Char Parse(object value)
         {
             if (!(value is IConvertible c))
@@ -188,7 +189,7 @@ namespace FluidScript
         /// <internalonly/>
         DateTime IConvertible.ToDateTime(IFormatProvider provider)
         {
-            throw new InvalidCastException("Invalid Cast From Integer To DateTime");
+            throw new InvalidCastException("Invalid Cast From Char To DateTime");
         }
 
         /// <internalonly/>
@@ -196,6 +197,7 @@ namespace FluidScript
         {
             return m_value;
         }
+
         #endregion
 
         /// <summary>

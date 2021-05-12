@@ -141,7 +141,7 @@ namespace FluidScript.Compiler
                 case ']':
                     return TokenType.RightBracket;
                 case '@':
-                    if (char.IsLetterOrDigit(n))
+                    if (char.IsLetter(n))
                     {
                         c = Source.ReadChar();
                         return TokenType.SpecialVariable;
@@ -275,7 +275,7 @@ namespace FluidScript.Compiler
                 case '~':
                     return TokenType.Tilda;
                 case '_':
-                    if (char.IsLetter(n))
+                    if (char.IsLetterOrDigit(n))
                     {
                         return TokenType.Identifier;
                     }
@@ -532,9 +532,6 @@ namespace FluidScript.Compiler
                 {
                     MoveNext();
                     var condition = VisitExpression();
-                    //{
-                    //    Span = new TextSpan(start, Source.CurrentPosition)
-                    //};
                     if (TokenType == TokenType.RightParenthesis)
                         MoveNext();
                     if (TokenType == TokenType.SemiColon)
@@ -623,22 +620,26 @@ namespace FluidScript.Compiler
             {
                 ReadVariableName(out string name);
                 MoveNext();
-                TypeParameter[] parameterList;
-                IEnumerable<TypeParameter> parameters = System.Linq.Enumerable.Empty<TypeParameter>();
+                NodeList<TypeParameter> parameterList;
                 if (TokenType == TokenType.LeftParenthesis)
-                    parameters = VisitFunctionParameters();
-                parameterList = System.Linq.Enumerable.ToArray(parameters);
-                if (TokenType == TokenType.RightParenthesis)
-                    MoveNext();
-                TypeSyntax returnType = null;
-                if (TokenType == TokenType.Colon)
                 {
-                    MoveNext();
-                    returnType = VisitType();
+                    parameterList = VisitFunctionParameters();
+
+                    if (TokenType == TokenType.RightParenthesis)
+                        MoveNext();
+                    TypeSyntax returnType = null;
+                    if (TokenType == TokenType.Colon)
+                    {
+                        MoveNext();
+                        returnType = VisitType();
+                    }
+
+                    //todo abstract, virtual functions
+                    //To avoid block function
+                    return new LocalFunctionStatement(name, parameterList, returnType, VisitBlock());
                 }
-                //todo abstract, virtual functions
-                //To avoid block function
-                return new LocalFunctionStatement(name, parameterList, returnType, VisitBlock());
+
+                return new LocalFunctionStatement(name, new NodeList<TypeParameter>(), TypeSyntax.Any, VisitBlock());
             }
             return Statement.Empty;
 
@@ -1005,7 +1006,7 @@ namespace FluidScript.Compiler
                 case TokenType.SpecialVariable:
                     // char is string
                     ReadVariableName(out s);
-                    exp = new NameExpression(string.Concat("@", s), ExpressionType.Identifier);
+                    exp = new NameExpression(s, ExpressionType.Identifier);
                     break;
                 case TokenType.LeftBrace:
                     var list = VisitAnonymousObjectMembers();
@@ -1273,21 +1274,33 @@ namespace FluidScript.Compiler
         /// </summary>
         public TypeSyntax VisitType()
         {
-            TypeSyntax type = null;
             if (TokenType == TokenType.Identifier)
             {
                 ReadTypeName(out string typeName);
                 //after type name next
                 MoveNext();
-                type = new RefTypeSyntax(typeName, TokenType == TokenType.Less ? VisitTypes(TokenType.Comma, TokenType.GreaterGreater) : null);
+                var type = new RefTypeSyntax(typeName, TokenType == TokenType.Less ? VisitTypes(TokenType.Comma, TokenType.GreaterGreater) : null);
                 // array
                 if (TokenType == TokenType.LeftBracket)
                 {
                     var sizes = VisitArrayRanks();
                     return new ArrayTypeSyntax(type, sizes);
                 }
+                return type;
             }
-            return type;
+            else if (TokenType == TokenType.LeftParenthesis)
+            {
+                var args = VisitFunctionParameters();
+                MoveNextIf(TokenType.RightParenthesis);
+                TypeSyntax returnType = null;
+                if (TokenType == TokenType.AnonymousMethod)
+                {
+                    MoveNext();
+                    returnType = VisitType();
+                }
+                return new FuncTypeSyntax(args, returnType);
+            }
+            return TypeSyntax.Any;
         }
 
         protected INodeList<TypeSyntax> VisitTypes(TokenType seperator, TokenType end)
@@ -1460,7 +1473,8 @@ namespace FluidScript.Compiler
             {
                 if (next == 'x' || next == 'X')
                 {
-                    CreateHexIntegerLiteral(first, out value);
+                    Source.ReadChar();
+                    CreateHexIntegerLiteral(out value);
                     return value;
                 }
                 else
@@ -1475,7 +1489,7 @@ namespace FluidScript.Compiler
                         case '5':
                         case '6':
                         case '7':
-                            CreateOctalIntegerLiteral(first, out value);
+                            CreateOctalIntegerLiteral(out value);
                             return value;
                     }//else continue to make a numerical literal token
                 }
@@ -1484,11 +1498,8 @@ namespace FluidScript.Compiler
             return value;
         }
 
-        private void CreateOctalIntegerLiteral(char first, out object value)
+        private void CreateOctalIntegerLiteral(out object value)
         {
-            cb.Append(first);//0
-            double val = 0;
-
             while (Source.CanAdvance)
             {
                 char next = Source.PeekChar();
@@ -1504,7 +1515,6 @@ namespace FluidScript.Compiler
                     case '7':
                         {
                             cb.Append(next);
-                            val = val * 8 + next - '0';
                             Source.ReadChar();
                             continue;
                         }
@@ -1515,11 +1525,8 @@ namespace FluidScript.Compiler
             cb.Length = 0;
         }
 
-        private void CreateHexIntegerLiteral(char first, out object value)
+        private void CreateHexIntegerLiteral(out object value)
         {
-            cb.Append(first);
-            cb.Append(Source.ReadChar());//x or X (ever tested before)
-            double val = 0;
             while (Source.CanAdvance)
             {
                 char next = Source.PeekChar();
@@ -1536,7 +1543,6 @@ namespace FluidScript.Compiler
                     case '8':
                     case '9':
                         cb.Append(next);
-                        val = val * 16 + next - '0';
                         Source.ReadChar();
                         continue;
                     case 'a':
@@ -1546,7 +1552,6 @@ namespace FluidScript.Compiler
                     case 'e':
                     case 'f':
                         cb.Append(next);
-                        val = val * 16 + next - 'a' + 10;
                         Source.ReadChar();
                         continue;
                     case 'A':
@@ -1556,13 +1561,12 @@ namespace FluidScript.Compiler
                     case 'E':
                     case 'F':
                         cb.Append(next);
-                        val = val * 16 + next - 'A' + 10;
                         Source.ReadChar();
                         continue;
                 }
                 break;
             }
-            value = int.Parse(cb.ToString());
+            value = int.Parse(cb.ToString(), System.Globalization.NumberStyles.HexNumber);
             cb.Length = 0;
         }
 

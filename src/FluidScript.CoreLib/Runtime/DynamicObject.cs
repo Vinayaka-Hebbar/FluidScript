@@ -572,16 +572,17 @@ namespace FluidScript.Runtime
             return false;
         }
 
-        Any IDynamicInvocable.SafeSetValue(Any value, string name, System.Type type)
+        Any IDynamicInvocable.SafeSetValue(Any value, string name)
         {
             var i = FindEntry(name);
             if (i < 0)
             {
-                Insert(name, value.m_value, type);
+                Insert(name, value.m_value, value.Type);
             }
             else
             {
                 var member = entries[i].Key;
+                System.Type src = value.Type;
                 System.Type dest = member.Type;
                 if (value.m_value == null)
                 {
@@ -590,18 +591,18 @@ namespace FluidScript.Runtime
                     else
                         throw new System.Exception(string.Concat("Can't assign null value to type ", dest));
                 }
-                else if (TypeUtils.AreReferenceAssignable(dest, type))
+                else if (TypeUtils.AreReferenceAssignable(dest, src))
                 {
                     entries[i].Value = value.m_value;
                 }
-                else if (type.TryImplicitConvert(dest, out System.Reflection.MethodInfo implConvert))
+                else if (src.TryImplicitConvert(dest, out System.Reflection.MethodInfo implConvert))
                 {
                     value = Any.op_Implicit(implConvert.Invoke(null, new object[1] { value.m_value }));
                     entries[i].Value = value.m_value;
                 }
                 else
                 {
-                    throw new System.InvalidCastException(string.Concat(type, " to ", dest));
+                    throw new System.InvalidCastException(string.Concat(src, " to ", dest));
                 }
             }
             return value;
@@ -609,18 +610,13 @@ namespace FluidScript.Runtime
 
         Any IDynamicInvocable.Invoke(string name, params Any[] args)
         {
-            var actualArgs = Any.GetArgs(args);
             var i = FindEntry(name);
             if (i >= 0 && entries[i].Value is System.Delegate del)
             {
-                var conversions = new ArgumentConversions(args.Length);
-                var method = del.GetType().GetMethod(nameof(System.Action.Invoke));
-                if (method.MatchesArguments(actualArgs, conversions))
-                {
-                    return Any.op_Implicit(del.DynamicInvoke(actualArgs));
-                }
+                var actualArgs = Any.GetArgs(args);
+                return Any.op_Implicit(del.InvokeDelegate(actualArgs));
             }
-            return default(Any);
+            return Any.Empty;
         }
 
         Any IDynamicInvocable.SafeGetValue(string name)
@@ -630,7 +626,7 @@ namespace FluidScript.Runtime
             {
                 return Any.op_Implicit(entries[i].Value);
             }
-            return default(Any);
+            return Any.Empty;
         }
         #endregion
     }

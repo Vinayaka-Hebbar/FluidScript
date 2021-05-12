@@ -25,8 +25,19 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(Emit.MethodBodyGenerator generator, Emit.MethodCompileOption option = 0)
         {
-            generator.EmitArguments(Arguments, Conversions);
+            if (Constructor == null)
+                throw new System.ArgumentNullException(nameof(Constructor));
+            if (Conversions != null)
+            {
+                generator.EmitArguments(Arguments, Conversions);
+            }
+
             generator.NewObject(Constructor);
+        }
+
+        public override string ToString()
+        {
+            return $"{TypeSyntax}({string.Join(",", Arguments)})";
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluidScript.Runtime;
+using System;
 
 namespace FluidScript
 {
@@ -6,14 +7,14 @@ namespace FluidScript
     /// Represents a 64-bit signed integer.
     /// </summary>
     [Serializable]
-    [Runtime.Register(nameof(Long))]
+    [Register(nameof(Long))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Long : IFSObject, IConvertible, IFormattable, Runtime.IValueBox<long>
+        struct Long : IFSObject, IConvertible, IFormattable
     {
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         internal readonly long m_value;
@@ -27,14 +28,14 @@ namespace FluidScript
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("toString")]
+        [Register("toString")]
         public String StringValue()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("hashCode")]
+        [Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
@@ -53,7 +54,7 @@ namespace FluidScript
         /// <param name="obj"> The object to compare with the current instance.</param>
         /// <returns>true if obj and this instance are the same type and represent the same value;
         ///  otherwise, false.</returns>
-        [Runtime.Register("equals")]
+        [Register("equals")]
         public Boolean Equals(Long obj)
         {
             return m_value == obj.m_value ? Boolean.True : Boolean.False;
@@ -76,7 +77,7 @@ namespace FluidScript
             return m_value.ToString(format, provider);
         }
 
-        [Runtime.Register("parse")]
+        [Register("parse")]
         public static Long Parse(object value)
         {
             if (!(value is IConvertible c))
@@ -186,7 +187,6 @@ namespace FluidScript
             return m_value;
         }
         #endregion
-
 
         public static implicit operator Long(long value) => new Long(value);
 

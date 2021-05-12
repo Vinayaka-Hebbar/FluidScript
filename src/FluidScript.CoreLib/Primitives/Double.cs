@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluidScript.Runtime;
+using System;
 
 namespace FluidScript
 {
@@ -6,19 +7,19 @@ namespace FluidScript
     /// Represents a double-precision floating-point number.
     /// </summary>
     [Serializable]
-    [Runtime.Register(nameof(Double))]
+    [Register(nameof(Double))]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Double : IFSObject, IConvertible, IFormattable, Runtime.IValueBox<double>
+        struct Double : IFSObject, IConvertible, IFormattable
     {
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         internal readonly double m_value;
 
-        [Runtime.Register(nameof(NaN))]
+        [Register(nameof(NaN))]
         public static readonly Double NaN = new Double(double.NaN);
 
         /// <summary>
@@ -30,14 +31,14 @@ namespace FluidScript
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("toString")]
+        [Register("toString")]
         public String StringValue()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("hashCode")]
+        [Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();

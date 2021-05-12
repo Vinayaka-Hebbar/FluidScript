@@ -1,0 +1,17 @@
+﻿import {Console} from mscorlib;
+
+class Sample {
+	var person:any;
+
+	ctor() {
+		person = {name:'User1', value:10};
+	}
+
+	func test() : int {
+		return person.value++;
+	}
+
+	impl func toString(){
+		return 'My Sample';
+	}
+}

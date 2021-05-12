@@ -34,9 +34,25 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption options)
         {
-            if (Target.Type.IsValueType)
+            // for exp.item[0] is Dynamic SafeGetValue will call
+            // such case variable address must be emitted
+            if (Target.NodeType == ExpressionType.Identifier)
             {
-                options |= MethodCompileOption.EmitStartAddress;
+                var exp = (NameExpression)Target;
+                if (exp.Type.IsValueType && (exp.Binder.Attributes & Binders.BindingAttributes.Dynamic) != 0)
+                    options |= MethodCompileOption.EmitStartAddress;
+            }
+            else if(Target.NodeType == ExpressionType.MemberAccess)
+            {
+                var exp = (MemberExpression)Target;
+                if (exp.Type.IsValueType && (exp.Binder.Attributes & Binders.BindingAttributes.Dynamic) != 0)
+                    options |= MethodCompileOption.EmitStartAddress;
+            }
+            else 
+            {
+                // todo other cases are valid or not?
+                if (Target.Type.IsValueType)
+                    options |= MethodCompileOption.EmitStartAddress;
             }
             Target.GenerateCode(generator, options);
             Arguments.ForEach((arg, index) =>
@@ -44,13 +60,12 @@ namespace FluidScript.Compiler.SyntaxTree
                 arg.GenerateCode(generator);
                 generator.EmitConvert(Conversions[index]);
             });
-            // todo indexer parmas argument convert
             generator.Call(Getter);
         }
 
         public override string ToString()
         {
-            return string.Concat(Target, "[", string.Join(",", System.Linq.Enumerable.Select(Arguments, arg => arg.ToString())), "]");
+            return string.Concat(Target, "[", string.Join(",", Arguments.Map(arg => arg.ToString())), "]");
         }
     }
 }

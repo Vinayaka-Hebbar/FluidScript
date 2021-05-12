@@ -3,15 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net45</TargetFramework>
     <OutputType>Exe</OutputType>
-    <StartupObject>FluidScript.ConsoleApp.Class1</StartupObject>
+    <StartupObject>FluidScript.ConsoleApp.Program</StartupObject>
     <UserSecretsId>5d1cd3b9-7b42-41d1-b5fb-32474fc89452</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="JsonDictionary.cs" />
     <Compile Remove="ScriptIndentation.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="sample.fls" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Dynamic.Snippets">
@@ -25,15 +22,9 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-    <Content Include="sample.fls">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="source.fls">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\FluidScript\FluidScript.csproj" />

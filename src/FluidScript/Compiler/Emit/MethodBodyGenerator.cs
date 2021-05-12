@@ -5,7 +5,6 @@ using FluidScript.Runtime;
 using FluidScript.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace FluidScript.Compiler.Emit
 {
@@ -41,7 +40,7 @@ namespace FluidScript.Compiler.Emit
 
         public Type ReturnType { get; }
 
-        internal IList<ILLocalVariable> LocalVariables;
+        internal List<ILLocalVariable> LocalVariables;
 
         private readonly Stack<BreakOrContinueInfo> breakOrContinueStack = new Stack<BreakOrContinueInfo>();
 
@@ -109,7 +108,7 @@ namespace FluidScript.Compiler.Emit
         /// encountered.  Can be <c>null</c>. </param>
         /// <param name="labelledOnly"> <c>true</c> if break or continue statements without a label
         /// should ignore this entry; <c>false</c> otherwise. </param>
-        public void PushBreakOrContinueInfo(string[] labels, Emit.ILLabel breakTarget, Emit.ILLabel continueTarget, bool labelledOnly)
+        public void PushBreakOrContinueInfo(string[] labels, ILLabel breakTarget, ILLabel continueTarget, bool labelledOnly)
         {
             if (breakTarget == null)
                 throw new ArgumentNullException(nameof(breakTarget));
@@ -119,7 +118,7 @@ namespace FluidScript.Compiler.Emit
                 {
                     foreach (var info in breakOrContinueStack)
                     {
-                        if (info.LabelNames != null && info.LabelNames.Any(ln => ln.Equals(label)))
+                        if (info.LabelNames != null && Array.Exists(info.LabelNames, label.Equals))
                         {
                             throw new Exception(string.Format("label {0} already present", label));
                         }
@@ -159,7 +158,7 @@ namespace FluidScript.Compiler.Emit
             {
                 foreach (var info in breakOrContinueStack)
                 {
-                    if (info.LabelNames != null && info.LabelNames.Any(ln => ln.Equals(labelName)))
+                    if (info.LabelNames != null && Array.Exists(info.LabelNames, labelName.Equals))
                         return info.BreakTarget;
                 }
                 throw new KeyNotFoundException(string.Format("break label {0} not found", labelName));
@@ -188,7 +187,7 @@ namespace FluidScript.Compiler.Emit
             {
                 foreach (var info in breakOrContinueStack)
                 {
-                    if (info.LabelNames != null && info.LabelNames.Any(ln => ln.Equals(labelName)))
+                    if (info.LabelNames != null && Array.Exists(info.LabelNames, labelName.Equals))
                         return info.ContinueTarget;
                 }
                 throw new KeyNotFoundException(string.Format("continue label {0} not found", labelName));
@@ -339,6 +338,19 @@ namespace FluidScript.Compiler.Emit
         {
             if (c == null)
                 return;
+            if (c.Next == null)
+            {
+                if (c is BoxConversion)
+                {
+                    Box(c.Type);
+                    return;
+                }
+                if (c is ParamConversion p)
+                {
+                    CallStatic(p.Method);
+                    return;
+                }
+            }
             var n = c;
             do
             {
@@ -421,7 +433,7 @@ namespace FluidScript.Compiler.Emit
         {
             if (LocalVariables != null)
             {
-                return LocalVariables.FirstOrDefault(item => item.Name == name);
+                return LocalVariables.Find(item => item.Name == name);
             }
             return null;
         }
@@ -442,6 +454,18 @@ namespace FluidScript.Compiler.Emit
             }
             binder = null;
             return false;
+        }
+
+        public bool TryGetParameter(string name, out IBinder binder)
+        {
+            var parameter = Array.Find(Method.Parameters, p => p.Name == name);
+            if (parameter.Name == null)
+            {
+                binder = null;
+                return false;
+            }
+            binder = new ParameterBinder(parameter);
+            return true;
         }
 
         ///<summary>Creates IL Code</summary>
@@ -611,9 +635,16 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitArrayLiteral(ArrayListExpression node)
         {
             var type = node.ArrayType != null ? node.ArrayType.ResolveType(Context) : TypeProvider.AnyType;
-            node.Type = typeof(Collections.List<>).MakeGenericType(type);
+            if (type is IType)
+            {
+                node.Type = new Generators.TypeBuilderInstantiation(TypeProvider.ArrayType, type);
+            }
+            else
+            {
+                node.Type = TypeProvider.ArrayType.MakeGenericType(type);
+            }
             node.ElementType = type;
-            if (node.Arguments != null)
+            if (node.Arguments != null && node.Arguments.Count > 0)
             {
                 var types = node.Arguments.Map(arg => arg.Accept(this).Type);
                 if (node.Constructor == null)
@@ -629,6 +660,10 @@ namespace FluidScript.Compiler.Emit
             else if (node.Constructor == null)
             {
                 node.Constructor = node.Type.GetConstructor(ReflectionUtils.PublicInstance, null, new Type[0], null);
+                if (type is IType)
+                {
+                    node.Constructor = System.Reflection.Emit.TypeBuilder.GetConstructor(TypeProvider.ArrayType.MakeGenericType(node.ElementType), node.Constructor);
+                }
             }
             var items = node.Expressions;
             if (items.Count > 0)
@@ -686,6 +721,7 @@ namespace FluidScript.Compiler.Emit
                 else if (target.Type.IsDynamicInvocable())
                 {
                     binder = new DynamicMemberBinder(name);
+                    exp.Binder = binder;
                 }
                 else
                 {
@@ -720,8 +756,12 @@ namespace FluidScript.Compiler.Emit
             if (!TypeUtils.AreReferenceAssignable(binder.Type, type))
             {
                 if (type.TryImplicitConvert(binder.Type, out System.Reflection.MethodInfo method))
+                {
                     // implicit casting
                     node.Conversion = new ParamConversion(0, method);
+                    if (type.IsValueType && method.GetParameters()[0].ParameterType == TypeProvider.ObjectType)
+                        node.Conversion.Append(new BoxConversion(0, type));
+                }
                 else
                 {
                     ExecutionException.ThrowInvalidCast(binder.Type, node);
@@ -770,15 +810,26 @@ namespace FluidScript.Compiler.Emit
                     resultType = Method.DeclaringType;
                     bindingAttr = ReflectionUtils.AnyPublic;
                     name = exp.Name;
-                    if (TryGetLocalVariable(name, out IBinder binder) ||
-                        resultType.TryFindMember(name, bindingAttr, out binder))
+                    if (TryGetLocalVariable(name, out IBinder binder)
+                        || TryGetParameter(name, out binder)
+                        || resultType.TryFindMember(name, bindingAttr, out binder))
                     {
+                        exp.Binder = binder;
                         // this type used for invoke
                         exp.Type = resultType = binder.Type;
                         if (resultType.IsDelegate()
                         && ReflectionUtils.TryGetDelegateMethod(resultType, types, out method, out conversions))
                         {
-                            exp.Binder = binder;
+                            goto done;
+                        }
+                        if (resultType.IsDynamicInvocable())
+                        {
+                            types = types.AddFirst(typeof(string));
+                            node.Arguments.Insert(0, Expression.SystemLiteral(ReflectionUtils.InvokeMethod));
+                            conversions = new ArgumentConversions(types.Length);
+                            method = ReflectionHelpers.DynamicInvoke;
+                            if (method.MatchesArgumentTypes(types, conversions) == false)
+                                ExecutionException.ThrowArgumentMisMatch(node.Target, node);
                             goto done;
                         }
                     }
@@ -789,11 +840,15 @@ namespace FluidScript.Compiler.Emit
                     var exp = member.Target.Accept(this);
                     if (exp.NodeType == ExpressionType.This)
                     {
-                        bindingAttr = ReflectionUtils.PublicInstance;
+                        bindingAttr = ReflectionUtils.Any;
                     }
                     else if (exp is IBindable b)
                     {
                         bindingAttr = (b.Binder.Attributes & BindingAttributes.HasThis) == 0 ? ReflectionUtils.AnyPublic : ReflectionUtils.PublicInstance;
+                    }
+                    else
+                    {
+                        bindingAttr = ReflectionUtils.PublicInstance;
                     }
                     member.Type = resultType = exp.Type;
                     name = member.Name;
@@ -813,10 +868,23 @@ namespace FluidScript.Compiler.Emit
                     node.Conversions = conversions;
                     return node;
                 }
-                else if (target.Accept(this).Type.IsDelegate())
+                else
                 {
-                    if (ReflectionUtils.TryGetDelegateMethod(target.Type, types, out method, out conversions))
+                    var expression = target.Accept(this);
+                    resultType = expression.Type;
+                    if (resultType.IsDelegate()
+                        && ReflectionUtils.TryGetDelegateMethod(target.Type, types, out method, out conversions))
                     {
+                        goto done;
+                    }
+                    if (resultType.IsDynamicInvocable())
+                    {
+                        types = types.AddFirst(typeof(string));
+                        node.Arguments.Insert(0, Expression.SystemLiteral(ReflectionUtils.InvokeMethod));
+                        conversions = new ArgumentConversions(types.Length);
+                        method = ReflectionHelpers.DynamicInvoke;
+                        if (method.MatchesArgumentTypes(types, conversions) == false)
+                            ExecutionException.ThrowArgumentMisMatch(node.Target, node);
                         goto done;
                     }
                     ExecutionException.ThrowArgumentMisMatch(node.Target, node);
@@ -929,7 +997,14 @@ namespace FluidScript.Compiler.Emit
         {
             node.Type = node.TypeSyntax.ResolveType(Context);
             var types = node.Arguments.Map(a => a.Accept(this).Type);
-            node.Constructor = ReflectionUtils.BindToMethod(node.Type.GetConstructors(), types, out ArgumentConversions conversions);
+            System.Reflection.ConstructorInfo[] methods = node.Type.GetConstructors(ReflectionUtils.PublicInstanceDeclared);
+            if (methods.Length == 0 && types.Length == 0)
+            {
+                node.Constructor = node.Type.GetConstructor(ReflectionUtils.PublicInstanceDeclared, null, Type.EmptyTypes, null);
+                // find the default constructor
+                return node;
+            }
+            node.Constructor = ReflectionUtils.BindToMethod(methods, types, out ArgumentConversions conversions);
             node.Conversions = conversions;
             return node;
 
@@ -939,28 +1014,23 @@ namespace FluidScript.Compiler.Emit
         Expression IExpressionVisitor<Expression>.VisitMember(NameExpression node)
         {
             var name = node.Name;
-            if (TryGetLocalVariable(name, out IBinder binder) == false)
+            if (TryGetLocalVariable(name, out IBinder binder)
+                || TryGetParameter(name, out binder)
+                || Method.DeclaringType.TryFindMember(name, ReflectionUtils.Any, out binder))
             {
-                var arg = Method.Parameters.FirstOrDefault(para => para.Name == name);
-                if (arg.Name != null)
-                {
-                    node.Type = arg.Type;
-                    node.Binder = new ParameterBinder(arg);
-                    return node;
-                }
-                //find in the class level
-                if (Method.DeclaringType.TryFindMember(name, ReflectionUtils.Any, out binder) == false
-                    && Context.TryGetType(name, out Type type))
-                {
-                    // if static type name
-                    node.Type = type;
-                    node.Binder = new EmptyBinder(type);
-                    return node;
-                }
+                node.Type = binder.Type;
+                node.Binder = binder;
+                return node;
             }
-            // if static type name
-            node.Type = binder.Type;
-            node.Binder = binder;
+            // find in the class level
+            if (Context.TryGetType(name, out Type type))
+            {
+                // if static type name
+                node.Type = type;
+                node.Binder = new EmptyBinder(type);
+                return node;
+            }
+            ExecutionException.ThrowMissingMember(null, name, node);
             return node;
         }
 
@@ -988,6 +1058,23 @@ namespace FluidScript.Compiler.Emit
             //todo binding in array
             node.Getter = indexer ?? throw new Exception("Indexer not found");
             node.Conversions = conversions;
+            if (indexer.ReturnType.IsGenericParameter)
+            {
+                Type[] args = null;
+                if (indexer.IsGenericMethod)
+                {
+                    args = indexer.GetGenericArguments();
+                }
+                else
+                {
+                    args = indexer.ReflectedType.GetGenericArguments();
+                }
+                if (args != null && args.Length > 0)
+                {
+                    node.Type = args[indexer.ReturnType.GenericParameterPosition];
+                    return node;
+                }
+            }
             node.Type = indexer.ReturnType;
             return node;
         }
@@ -1035,7 +1122,7 @@ namespace FluidScript.Compiler.Emit
 
         Expression IExpressionVisitor<Expression>.VisitAnonymousObject(AnonymousObjectExpression node)
         {
-            node.Type = TypeProvider.AnyType;
+            node.Type = TypeProvider.DynamicObject;
             node.Members.ForEach(m => m.Expression.Accept(this));
             return node;
         }

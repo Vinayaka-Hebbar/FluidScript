@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace FluidScript.Compiler
@@ -357,7 +356,7 @@ namespace FluidScript.Compiler
                     }
                 }
                 char n = charBuffer[charPos++];
-                if (!c.Any(value => value == n))
+                if (!Array.Exists(c, value => value == n))
                     break;
                 charPos++;
                 if (n == '\r' && PeekChar() == '\n')

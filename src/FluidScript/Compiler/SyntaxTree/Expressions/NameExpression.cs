@@ -52,7 +52,10 @@ namespace FluidScript.Compiler.SyntaxTree
             if (Binder != null)
             {
                 if ((Binder.Attributes & Binders.BindingAttributes.HasThis) != 0)
+                {
                     generator.LoadArgument(0);
+                }
+
                 Binder.GenerateGet(null, generator, option);
             }
         }

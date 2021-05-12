@@ -31,15 +31,21 @@ namespace FluidScript.Compiler.SyntaxTree
                 {
                     Type = defValue.Type;
                 }
-                else if (!TypeUtils.AreReferenceAssignable(Type, defValue.Type) && defValue.Type.TryImplicitConvert(Type, out System.Reflection.MethodInfo opConvert))
+                else if (!TypeUtils.AreReferenceAssignable(Type, defValue.Type))
                 {
+                    if (defValue.Type.TryImplicitConvert(Type, out System.Reflection.MethodInfo opConvert) == false)
+                    {
+                        throw new System.InvalidCastException($"Unable to cast object of type {defValue.Type} to {Type}");
+                    }
                     // When converting value type to Any, must do Box 
                     if (defValue.Type.IsValueType && opConvert.GetParameters()[0].ParameterType.IsValueType == false)
                         generator.Box(defValue.Type);
                     generator.CallStatic(opConvert);
                 }
                 else if (defValue.Type.IsValueType && !Type.IsValueType)
+                {
                     generator.Box(defValue.Type);
+                }
             }
             //initialize
             var variable = generator.DeclareVariable(Type, Name);

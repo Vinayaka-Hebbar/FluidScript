@@ -47,16 +47,23 @@ namespace FluidScript.Compiler.SyntaxTree
         {
             if (Binder != null)
             {
+                var targetOptions = option;
+                // if target is value type and not Dynamic (Any)
+                // for argument binder, field binder
                 if (Target.Type.IsValueType && (Binder.Attributes & Binders.BindingAttributes.Dynamic) == 0)
                 {
-                    option = MethodCompileOption.EmitStartAddress;
+                    // Binder should not emit address
+                    option = 0;
+                    targetOptions |= MethodCompileOption.EmitStartAddress;
                 }
                 else
                 {
-                    option = 0;
+                    // for dynamic (Any) no need to EmitAddress because of method call SafeGetValue in DynamicBinder
+                    targetOptions &= ~MethodCompileOption.EmitStartAddress;
                 }
-                Target.GenerateCode(generator, option);
-                Binder.GenerateGet(Target, generator);
+
+                Target.GenerateCode(generator, targetOptions);
+                Binder.GenerateGet(Target, generator, option);
             }
             else
             {

@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <StartupObject>ConsoleApp.Program2</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="script.fls" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="script.fls">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluidScript" Version="1.1.2.3-alpha" />
+  </ItemGroup>
+
+</Project>

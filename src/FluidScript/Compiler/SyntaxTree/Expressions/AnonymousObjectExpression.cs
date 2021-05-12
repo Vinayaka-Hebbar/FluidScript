@@ -1,5 +1,4 @@
 ﻿using FluidScript.Utils;
-using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -29,12 +28,11 @@ namespace FluidScript.Compiler.SyntaxTree
                     generator.Box(member.Expression.Type);
                 generator.CallVirtual(ReflectionHelpers.AnonymousObj_SetItem);
             }
-            generator.NewObject(ReflectionHelpers.Any_New);
         }
 
         public override string ToString()
         {
-            return string.Concat("{", string.Join(",", Members.Select(s => s.ToString())), "}");
+            return string.Concat("{", string.Join(",", Members.Map(s => s.ToString())), "}");
         }
     }
 }

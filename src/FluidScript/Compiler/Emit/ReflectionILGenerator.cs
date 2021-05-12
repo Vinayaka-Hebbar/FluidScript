@@ -342,7 +342,7 @@ namespace FluidScript.Compiler.Emit
         ///<inheritdoc/>
         public override ILLocalVariable DeclareVariable(Type type, string name = null, bool pinned = false)
         {
-            var localBuilder = Generator.DeclareLocal(type, pinned);
+            var localBuilder = Generator.DeclareLocal(type.UnderlyingSystemType, pinned);
 #if NETFRAMEWORK
             if (EmitDebugInfo && name != null)
             {

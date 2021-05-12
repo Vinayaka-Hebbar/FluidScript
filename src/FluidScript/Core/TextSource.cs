@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace FluidScript.Compiler
+﻿namespace FluidScript.Compiler
 {
     public class TextSource : ITextSource
     {
@@ -107,7 +105,7 @@ namespace FluidScript.Compiler
                 if (pos >= length)
                     return;
                 char n = _text[pos++];
-                if (!c.Any(value => value == n))
+                if (!System.Array.Exists(c, value => value == n))
                     break;
                 pos++;
                 if (n == '\r' && PeekChar() == '\n')

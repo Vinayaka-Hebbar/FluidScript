@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace FluidScript.Compiler.Generators
 {
-    public sealed class PropertyGenerator : System.Reflection.PropertyInfo, Emit.IMember
+    public sealed class PropertyGenerator : System.Reflection.PropertyInfo, IMember
     {
         public sealed class PropertyHolder
         {
@@ -54,7 +54,7 @@ namespace FluidScript.Compiler.Generators
         {
             get
             {
-                var first = Accessors.FirstOrDefault();
+                var first = accessors.FirstOrDefault();
                 if (first == null)
                     throw new Exception("Can't decide wether property is static or not");
                 return first.IsStatic;
@@ -65,7 +65,7 @@ namespace FluidScript.Compiler.Generators
         {
             get
             {
-                var first = Accessors.FirstOrDefault();
+                var first = accessors.FirstOrDefault();
                 if (first == null)
                     throw new Exception("Can't decide wether property is static or not");
                 return first.IsPublic;
@@ -98,15 +98,18 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Reflection.MethodInfo GetGetMethod(bool nonPublic)
         {
-            PropertyHolder item = accessors.FirstOrDefault(acc => acc.PropertyType == Generators.PropertyType.Get && acc.IsPublic == nonPublic);
-            if (item != null)
-                return item.Method;
-            throw new Exception("Item Not Found");
+            PropertyHolder property = accessors.Find(acc => acc.PropertyType == Generators.PropertyType.Get && acc.IsPublic == nonPublic);
+            if (property == null)
+                throw new Exception("get property not found");
+            return property.Method;
         }
 
         public override System.Reflection.MethodInfo GetSetMethod(bool nonPublic)
         {
-            return accessors.FirstOrDefault(acc => acc.PropertyType == Generators.PropertyType.Set && acc.IsPublic == nonPublic).Method;
+            PropertyHolder property = accessors.Find(acc => acc.PropertyType == Generators.PropertyType.Set && acc.IsPublic == nonPublic);
+            if (property == null)
+                throw new Exception("get property not found");
+            return property.Method;
         }
 
         public override System.Reflection.ParameterInfo[] GetIndexParameters()

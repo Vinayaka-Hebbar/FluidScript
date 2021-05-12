@@ -1,5 +1,4 @@
 ﻿using FluidScript.Compiler.Emit;
-using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -28,7 +27,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            return string.Concat("var ", string.Join(",", DeclarationExpressions.Select(e => e.ToString())));
+            return string.Concat("var ", string.Join(",", DeclarationExpressions.Map(e => e.ToString())));
         }
     }
 }

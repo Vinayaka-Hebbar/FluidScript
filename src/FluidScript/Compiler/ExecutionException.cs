@@ -23,7 +23,7 @@ namespace FluidScript.Compiler
             Reason = reason;
         }
 
-        public override string StackTrace => string.Join("\nin ", System.Linq.Enumerable.Select(NodeTree, node => node.ToString()));
+        public override string StackTrace => string.Join("\nin ", System.Array.ConvertAll(NodeTree, node => node.ToString()));
 
         internal static void ThrowNotSupported(params Node[] tree)
         {

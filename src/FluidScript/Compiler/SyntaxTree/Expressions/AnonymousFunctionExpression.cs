@@ -2,7 +2,6 @@
 using FluidScript.Extensions;
 using FluidScript.Runtime;
 using FluidScript.Utils;
-using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -34,7 +33,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            return string.Concat("(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnSyntax ?? TypeSyntax.Any);
+            return string.Concat("(", string.Join(",", Parameters.Map(arg => arg.ToString())), "):", ReturnSyntax ?? TypeSyntax.Any);
         }
 
         public override void GenerateCode(MethodBodyGenerator generator, MethodCompileOption option)
@@ -126,7 +125,7 @@ namespace FluidScript.Compiler.SyntaxTree
             var parameterTypes = types.AddFirst(typeof(Closure));
             var method = new System.Reflection.Emit.DynamicMethod("lambda_method", returnType, parameterTypes, true);
 
-            var methodGen = new Generators.DynamicMethodGenerator(method, parameters, target)
+            var methodGen = new Generators.DynamicMethodGenerator(method, parameters, returnType, target)
             {
                 SyntaxBody = Body,
                 Context = context

@@ -65,7 +65,7 @@ namespace FluidScript.Compiler.SyntaxTree
             Generators.PropertyGenerator.PropertyHolder accessor = null;
             System.Type type = null;
             var name = string.Concat(char.ToUpper(Name.First()), Name.Substring(1));
-            var builder = generator.Builder;
+
             System.Reflection.MethodAttributes attributes = GetAttributes();
             if (IsGetter)
             {
@@ -73,21 +73,16 @@ namespace FluidScript.Compiler.SyntaxTree
                 string hiddenName = string.Concat("get_", name);
                 if ((attributes & System.Reflection.MethodAttributes.Virtual) == System.Reflection.MethodAttributes.Virtual)
                     generator.CheckImplementMethod(Name, parameterTypes, ref hiddenName, ref returnType, ref attributes);
-                System.Reflection.Emit.MethodBuilder getBul = builder.DefineMethod(hiddenName, attributes, returnType, parameterTypes);
                 accessor = new Generators.PropertyGenerator.PropertyHolder(Generators.PropertyType.Get,
-                    new Generators.MethodGenerator(getBul, parameters, generator)
-                    {
-                        SyntaxBody = Body
-                    });
+                    generator.DefineAccessor(hiddenName, attributes, parameters, parameterTypes, returnType)
+                    .SetBody(Body));
             }
             if (IsSetter)
             {
                 type = parameterTypes.FirstOrDefault();
                 accessor = new Generators.PropertyGenerator.PropertyHolder(Generators.PropertyType.Set,
-                    new Generators.MethodGenerator(builder.DefineMethod(string.Concat("set_", name), attributes, returnType, parameterTypes), parameters, generator)
-                    {
-                        SyntaxBody = Body
-                    });
+                    generator.DefineAccessor(string.Concat("set_", name), attributes, parameters, parameterTypes, returnType)
+                    .SetBody(Body));
             }
             if (generator.TryGetProperty(Name, out Generators.PropertyGenerator property) == false)
             {
@@ -117,14 +112,10 @@ namespace FluidScript.Compiler.SyntaxTree
             if ((attributes & System.Reflection.MethodAttributes.Virtual) == System.Reflection.MethodAttributes.Virtual)
                 generator.CheckImplementMethod(Name, parameterTypes, ref name, ref returnType, ref attributes);
             // create method
-            var method = generator.Builder.DefineMethod(name, attributes, returnType, parameterTypes);
             //set runtime method name
-            Generators.MethodGenerator methodGen = new Generators.MethodGenerator(method, parameters, generator)
-            {
-                SyntaxBody = Body
-            };
-            methodGen.SetCustomAttribute(typeof(Runtime.RegisterAttribute), Utils.ReflectionHelpers.Register_Attr_Ctor, new object[] { Name });
-            generator.Add(methodGen);
+            generator.DefineMethod(name, attributes, parameters, parameterTypes, returnType)
+                .SetBody(Body)
+                .SetCustomAttribute(typeof(Runtime.RegisterAttribute), Utils.ReflectionHelpers.Register_Attr_Ctor, new object[] { Name });
         }
 
         public virtual System.Reflection.MethodAttributes GetAttributes()
@@ -186,7 +177,7 @@ namespace FluidScript.Compiler.SyntaxTree
             var parameterTypes = types.AddFirst(typeof(Runtime.Closure));
             var method = new System.Reflection.Emit.DynamicMethod(Name, returnType, parameterTypes, true);
 
-            var methodGen = new Generators.DynamicMethodGenerator(method, parameters, null)
+            var methodGen = new Generators.DynamicMethodGenerator(method, parameters, returnType, null)
             {
                 SyntaxBody = Body,
                 Context = context
@@ -232,7 +223,7 @@ namespace FluidScript.Compiler.SyntaxTree
 
         public override string ToString()
         {
-            return string.Concat(Name, "(", string.Join(",", Parameters.Select(arg => arg.ToString())), "):", ReturnType ?? TypeSyntax.Any);
+            return string.Concat(Name, "(", string.Join(",", Parameters.Map(arg => arg.ToString())), "):", ReturnType ?? TypeSyntax.Any);
         }
     }
 }

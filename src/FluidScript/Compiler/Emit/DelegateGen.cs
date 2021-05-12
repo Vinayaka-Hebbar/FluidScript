@@ -1,6 +1,5 @@
 ﻿using FluidScript.Extensions;
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -30,7 +29,7 @@ namespace FluidScript.Compiler.Emit
 
         internal static Type MakeNewDelegate(Type[] types, Type returnType)
         {
-            if (types.Length > MaximumArity || types.Any(t => t.IsByRef))
+            if (types.Length > MaximumArity || Array.Exists(types, t => t.IsByRef))
             {
                 return MakeNewCustomDelegate(types, returnType);
             }

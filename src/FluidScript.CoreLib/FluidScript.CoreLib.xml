@@ -1338,20 +1338,18 @@
             Get current context variable
             </summary>
         </member>
-        <member name="M:FluidScript.Runtime.IDynamicInvocable.SafeSetValue(FluidScript.Any,System.String,System.Type)">
+        <member name="M:FluidScript.Runtime.IDynamicInvocable.SafeSetValue(FluidScript.Any,System.String)">
             <summary>
             Safe set value for dynamic property
             </summary>
             <param name="value">First argument from right side</param>
             <param name="name">name of member</param>
-            <param name="type">type of member</param>
             <returns>Updated value</returns>
         </member>
-        <member name="T:FluidScript.Runtime.IValueBox`1">
+        <member name="T:FluidScript.Runtime.IValueBox">
             <summary>
             Primitive Value will be wrapped
             </summary>
-            <typeparam name="T">Type</typeparam>
         </member>
         <member name="M:FluidScript.Runtime.ReflectionExtensions.MatchesArgumentTypes(System.Reflection.MethodInfo,System.Type[])">
             <summary>
@@ -1477,7 +1475,7 @@
             <returns>true if obj and this instance are the same type and represent the same value;
              otherwise, false.</returns>
         </member>
-        <member name="M:FluidScript.String.GetTypeCode">
+        <member name="M:FluidScript.String.System#IConvertible#GetTypeCode">
             <inheritdoc/>
         </member>
         <member name="M:FluidScript.String.System#IConvertible#ToBoolean(System.IFormatProvider)">

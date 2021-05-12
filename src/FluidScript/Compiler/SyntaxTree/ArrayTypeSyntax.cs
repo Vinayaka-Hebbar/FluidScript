@@ -14,7 +14,10 @@
 
         public override System.Type ResolveType(ITypeContext provider)
         {
-            return ElementType.ResolveType(provider).MakeArrayType(Rank);
+            System.Type elementType = ElementType.ResolveType(provider);
+            if (elementType is Emit.IType)
+                return new Generators.TypeBuilderInstantiation(TypeProvider.ArrayType, elementType);
+            return TypeProvider.ArrayType.MakeGenericType(elementType);
         }
 
         public override string ToString()

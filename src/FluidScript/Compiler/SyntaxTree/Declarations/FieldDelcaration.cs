@@ -32,5 +32,10 @@
             //todo invalid modifier handle
             return attributes;
         }
+
+        public override string ToString()
+        {
+            return string.Join(",", Declarations);
+        }
     }
 }

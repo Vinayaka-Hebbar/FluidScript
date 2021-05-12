@@ -1,16 +1,18 @@
-﻿namespace FluidScript
+﻿using FluidScript.Runtime;
+
+namespace FluidScript
 {
     /// <summary>
     /// Represents a Boolean value.
     /// </summary>
-    [Runtime.Register(nameof(Boolean))]
+    [Register(nameof(Boolean))]
     [System.Serializable]
     [System.Runtime.InteropServices.ComVisible(true)]
     public
 #if LATEST_VS
         readonly
 #endif
-        struct Boolean : IFSObject, System.IConvertible, Runtime.IValueBox<bool>
+        struct Boolean : IFSObject, System.IConvertible
     {
         /// <summary>
         /// True
@@ -35,14 +37,14 @@
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("hashCode")]
+        [Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("toString")]
+        [Register("toString")]
         public String StringValue()
         {
             return m_value.ToString();
@@ -61,6 +63,7 @@
         /// <param name="obj"> The object to compare with the current instance.</param>
         /// <returns>true if obj and this instance are the same type and represent the same value;
         ///  otherwise, false.</returns>
+        [Register("equals")]
         public Boolean Equals(Boolean obj)
         {
             return m_value == obj.m_value ? True : False;

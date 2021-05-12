@@ -3,7 +3,6 @@ using FluidScript.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 
 namespace FluidScript.Compiler.Generators
 {
@@ -15,13 +14,15 @@ namespace FluidScript.Compiler.Generators
         private readonly System.Reflection.MethodInfo methodInfo;
         private readonly Type declaring;
 
-        public BaseMethodGenerator(System.Reflection.MethodInfo method, ParameterInfo[] parameters, Type declaring)
+        private SyntaxTree.Statement syntaxBody;
+
+        public BaseMethodGenerator(System.Reflection.MethodInfo method, ParameterInfo[] parameters, Type returnType, Type declaring)
         {
             this.declaring = declaring;
             Name = method.Name;
             methodInfo = method;
             Parameters = parameters;
-            ReturnType = method.ReturnType;
+            ReturnType = returnType;
             Attributes = method.Attributes;
             MemberType = System.Reflection.MemberTypes.Method;
         }
@@ -53,7 +54,11 @@ namespace FluidScript.Compiler.Generators
 
         public override System.Reflection.MemberTypes MemberType { get; }
 
-        public SyntaxTree.Statement SyntaxBody { get; set; }
+        public SyntaxTree.Statement SyntaxBody
+        {
+            get => syntaxBody;
+            set => syntaxBody = value;
+        }
 
         public System.Reflection.MethodBase MethodBase => methodInfo;
 
@@ -148,15 +153,27 @@ namespace FluidScript.Compiler.Generators
     {
         private readonly System.Reflection.Emit.MethodBuilder _builder;
 
-        public MethodGenerator(System.Reflection.Emit.MethodBuilder builder, ParameterInfo[] parameters, Type declaring) : base(builder, parameters, declaring)
+        public MethodGenerator(System.Reflection.Emit.MethodBuilder builder, ParameterInfo[] parameters, Type returnType, Type declaring) : base(builder, parameters, returnType, declaring)
         {
             _builder = builder;
         }
 
-        public MethodGenerator(System.Reflection.Emit.MethodBuilder builder, ParameterInfo[] parameters, TypeGenerator declaring) : base(builder, parameters, declaring)
+        public MethodGenerator(System.Reflection.Emit.MethodBuilder builder, ParameterInfo[] parameters, Type returnType, TypeGenerator declaring) : base(builder, parameters, returnType, declaring)
         {
             _builder = builder;
             Context = new TypeContext(declaring.Context);
+        }
+
+        public MethodGenerator(System.Reflection.Emit.MethodBuilder builder, ParameterInfo[] parameters, TypeGenerator declaring) : base(builder, parameters, builder.ReturnType, declaring)
+        {
+            _builder = builder;
+            Context = new TypeContext(declaring.Context);
+        }
+
+        public MethodGenerator SetBody(SyntaxTree.Statement body)
+        {
+            SyntaxBody = body;
+            return this;
         }
 
         public override void EmitParameterInfo()
@@ -215,10 +232,11 @@ namespace FluidScript.Compiler.Generators
     public sealed class DynamicMethodGenerator : BaseMethodGenerator
     {
         private readonly System.Reflection.Emit.DynamicMethod _builder;
-        public DynamicMethodGenerator(System.Reflection.Emit.DynamicMethod builder, ParameterInfo[] parameters, Type declaring) : base(builder, parameters, declaring)
+        public DynamicMethodGenerator(System.Reflection.Emit.DynamicMethod builder, ParameterInfo[] parameters, Type returnType, Type declaring) : base(builder, parameters, returnType, declaring)
         {
             _builder = builder;
         }
+
 
         public override void EmitParameterInfo()
         {

@@ -51,7 +51,7 @@ namespace FluidScript.Compiler
                 var value = item.Expression.Accept(this);
                 obj.Add(item.Name, value);
             }
-            node.Type = typeof(DynamicObject);
+            node.Type = TypeProvider.DynamicObject;
             return obj;
         }
 

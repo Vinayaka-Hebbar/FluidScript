@@ -56,18 +56,32 @@ namespace FluidScript.Runtime
             return null;
         }
 
-        public static bool AreReferenceAssignable(Type dest, Type src)
+        public static bool AreReferenceAssignable(this Type dest, Type src)
         {
+            if (src is null)
+                return false;
+            if (ReferenceEquals(src, dest))
+                return true;
+            // if both are value type types are not assignable
+            if (src.IsValueType && dest.IsValueType)
+                return false;
             // WARNING: This actually implements "Is this identity assignable and/or reference assignable?"
-            if (dest.IsAssignableFrom(src))
+            // if src is TypeBuilder 
+            if (src.IsSubclassOf(dest))
+                return true;
+            if (dest.IsInterface)
+                return dest.ImplementInterface(src);
+            if (dest.IsGenericParameter)
             {
+                var constraints = dest.GetGenericParameterConstraints();
+                for (int i = 0; i < constraints.Length; i++)
+                {
+                    if (!constraints[i].IsAssignableFrom(src))
+                        return false;
+                }
                 return true;
             }
-            if (!dest.IsValueType && !src.IsValueType && dest.IsAssignableFrom(src))
-            {
-                return true;
-            }
-            return false;
+            return dest.IsAssignableFrom(src);
         }
     }
 }

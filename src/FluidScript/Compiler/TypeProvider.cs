@@ -11,7 +11,7 @@ namespace FluidScript.Compiler
 
         internal static readonly Type FSType;
         internal static readonly Type ObjectType;
-
+        internal static readonly Type DynamicObject;
         internal static readonly Type AnyType;
 
         internal static readonly Type DoubleType;
@@ -25,6 +25,7 @@ namespace FluidScript.Compiler
         internal static readonly Type CharType;
         internal static readonly Type BooleanType;
         internal static readonly Type VoidType;
+        internal static readonly Type ArrayType;
 
         internal static readonly Dictionary<string, Type> Inbuilts;
 
@@ -44,6 +45,8 @@ namespace FluidScript.Compiler
             BooleanType = typeof(Boolean);
             AnyType = typeof(Any);
             VoidType = typeof(void);
+            ArrayType = typeof(Collections.List<>);
+            DynamicObject = typeof(Runtime.DynamicObject);
 
             Inbuilts = new Dictionary<string, Type>()
             {

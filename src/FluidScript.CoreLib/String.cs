@@ -163,13 +163,13 @@ namespace FluidScript
             return m_value == other;
         }
 
+        #region IConvertible
         ///<inheritdoc/>
-        public System.TypeCode GetTypeCode()
+        System.TypeCode System.IConvertible.GetTypeCode()
         {
             return System.TypeCode.String;
         }
 
-        #region IConvertible
         /// <internalonly/>
         bool System.IConvertible.ToBoolean(System.IFormatProvider provider)
         {

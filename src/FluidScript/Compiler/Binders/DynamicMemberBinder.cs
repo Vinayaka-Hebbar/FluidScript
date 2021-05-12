@@ -37,17 +37,8 @@ namespace FluidScript.Compiler.Binders
 
         public void GenerateSet(Expression right, MethodBodyGenerator generator, MethodCompileOption option = MethodCompileOption.None)
         {
-            // first parameter to be Any
-            if (right.Type != TypeProvider.AnyType)
-            {
-                if (right.Type.IsValueType)
-                    generator.Box(right.Type);
-                generator.CallStatic(ReflectionHelpers.ImplicitAny);
-            }
             generator.LoadString(Name);
-            generator.LoadToken(right.Type);
-            generator.Call((Func<RuntimeTypeHandle, Type>)Type.GetTypeFromHandle);
-            generator.Call(typeof(IDynamicInvocable).GetInstanceMethod(nameof(IDynamicInvocable.SafeSetValue), TypeProvider.AnyType, typeof(string), typeof(Type)));
+            generator.Call(typeof(IDynamicInvocable).GetInstanceMethod(nameof(IDynamicInvocable.SafeSetValue), TypeProvider.AnyType, typeof(string)));
             if ((option & MethodCompileOption.Return) == 0)
             {
                 generator.Pop();

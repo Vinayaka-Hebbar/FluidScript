@@ -9,9 +9,9 @@ namespace FluidScript
 {
     [Register(nameof(Any))]
     [Serializable]
-    public struct Any : IConvertible, ISerializable, IFSObject, IDynamicInvocable
+    public struct Any : IConvertible, ISerializable, IFSObject, IDynamicInvocable, IValueBox
     {
-        public static readonly Any Empty = new Any(new object(), typeof(object));
+        public static readonly Any Empty = new Any(null, typeof(object));
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         internal readonly object m_value;
@@ -25,7 +25,7 @@ namespace FluidScript
             m_type = null;
         }
 
-        private Any(object value, Type type)
+        internal Any(object value, Type type)
         {
             m_value = value;
             m_type = type;
@@ -75,6 +75,10 @@ namespace FluidScript
             }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public object Value => m_value;
+
         [Register("toString")]
         public String StringValue()
         {
@@ -112,7 +116,7 @@ namespace FluidScript
                     conversions.Invoke(ref args);
                     return op_Implicit(indexer.Invoke(m_value, args));
                 }
-                return default(Any);
+                return Empty;
             }
             set
             {
@@ -137,7 +141,7 @@ namespace FluidScript
                     conversions.Invoke(ref args);
                     return op_Implicit(indexer.Invoke(m_value, args));
                 }
-                return default(Any);
+                return Empty;
             }
             set
             {
@@ -185,7 +189,7 @@ namespace FluidScript
 
         public void SetValue(string name, Any value)
         {
-            ((IDynamicInvocable)this).SafeSetValue(value, name, value.Type);
+            ((IDynamicInvocable)this).SafeSetValue(value, name);
         }
 
         /// <summary>
@@ -208,7 +212,7 @@ namespace FluidScript
             }
             if (m_value is IDynamicInvocable)
                 return ((IDynamicInvocable)m_value).Invoke(name, args);
-            return default(Any);
+            return Empty;
         }
 
         public override int GetHashCode()
@@ -434,7 +438,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Any operator -(Any left, Any right)
@@ -459,7 +463,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Any operator *(Any left, Any right)
@@ -484,7 +488,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Any operator /(Any left, Any right)
@@ -509,7 +513,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Any operator %(Any left, Any right)
@@ -534,7 +538,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Boolean operator >(Any left, Any right)
@@ -677,7 +681,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Any operator --(Any value)
@@ -702,7 +706,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Any operator +(Any value)
@@ -727,7 +731,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Any operator -(Any value)
@@ -752,7 +756,7 @@ namespace FluidScript
                 }
                 return new Any(res);
             }
-            return default(Any);
+            return Empty;
         }
 
         public static Integer operator &(Any left, Any right)
@@ -932,10 +936,11 @@ namespace FluidScript
             return value.m_value;
         }
 
-        Any IDynamicInvocable.SafeSetValue(Any value, string name, Type type)
+        Any IDynamicInvocable.SafeSetValue(Any value, string name)
         {
             if (Type.TryFindMember(name, TypeUtils.AnyPublic, out IMemberBinder binder))
             {
+                var type = value.Type;
                 if (TypeUtils.AreReferenceAssignable(binder.Type, type) == false)
                 {
                     if (type.TryImplicitConvert(binder.Type, out System.Reflection.MethodInfo op_Implicit) == false)
@@ -947,9 +952,9 @@ namespace FluidScript
             }
             if (m_value is IDynamicInvocable)
             {
-                return ((IDynamicInvocable)m_value).SafeSetValue(value, name, type);
+                return ((IDynamicInvocable)m_value).SafeSetValue(value, name);
             }
-            return default(Any);
+            return Empty;
         }
 
         Any IDynamicInvocable.SafeGetValue(string name)
@@ -962,7 +967,7 @@ namespace FluidScript
             {
                 return ((IDynamicInvocable)m_value).SafeGetValue(name);
             }
-            return default(Any);
+            return Empty;
         }
 
         bool IRuntimeMetadata.GetOrCreateBinder(string name, object value, Type type, out IMemberBinder binder)

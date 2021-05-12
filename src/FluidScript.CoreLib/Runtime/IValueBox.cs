@@ -3,8 +3,8 @@
     /// <summary>
     /// Primitive Value will be wrapped
     /// </summary>
-    /// <typeparam name="T">Type</typeparam>
-    public interface IValueBox<T>
+    public interface IValueBox
     {
+        object Value { get; }
     }
 }

@@ -30,7 +30,7 @@ namespace FluidScript.Runtime
 
         public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject obj)
         {
-            m_value.SafeSetValue(Any.op_Implicit(obj.Value), binder.Name, obj.LimitType);
+            m_value.SafeSetValue(new Any(obj.Value, obj.LimitType), binder.Name);
             var expression = Expression.Convert(Expression.Constant(obj.Value, obj.LimitType), binder.ReturnType);
             return new DynamicMetaObject(expression, GetTypeRestriction(this));
         }

@@ -2,7 +2,6 @@
 using FluidScript.Compiler.SyntaxTree;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace FluidScript.Compiler
@@ -104,7 +103,7 @@ namespace FluidScript.Compiler
                 if (typeName.Namespace == null)
                 {
                     Type[] types = assemblyImport.GetExportedTypes();
-                    type = types.FirstOrDefault(t => t.Name == typeName.Name);
+                    type = Array.Find(types, t => t.Name == typeName.Name);
                 }
                 else
                 {

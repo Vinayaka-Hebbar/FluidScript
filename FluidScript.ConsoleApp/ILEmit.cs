@@ -9,21 +9,21 @@ using ParameterInfo = FluidScript.Compiler.Emit.ParameterInfo;
 
 namespace FluidScript.ConsoleApp
 {
-    public class AnyClass
+    public class ILEmit
     {
         readonly TypeGenerator typeGen;
         readonly AssemblyGen assembly;
 
         FieldGenerator valueField;
 
-        internal AnyClass()
+        internal ILEmit()
         {
             assembly = new AssemblyGen("FluidScript.Runtime", "1.0");
             typeGen = assembly.DefineType("Any", typeof(ValueType), TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, null);
         }
         internal static void Run()
         {
-            AnyClass any = new AnyClass();
+            ILEmit any = new ILEmit();
             any.Start();
         }
 

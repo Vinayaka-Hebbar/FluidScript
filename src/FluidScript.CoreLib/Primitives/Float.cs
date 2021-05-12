@@ -1,11 +1,12 @@
-﻿using System;
+﻿using FluidScript.Runtime;
+using System;
 
 namespace FluidScript
 {
     /// <summary>
     /// Represents a single-precision floating-point number.
     /// </summary>
-    [Runtime.Register(nameof(Float))]
+    [Register(nameof(Float))]
     [Serializable]
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     [System.Runtime.InteropServices.ComVisible(true)]
@@ -13,12 +14,12 @@ namespace FluidScript
 #if LATEST_VS
         readonly
 #endif
-        struct Float : IFSObject, IConvertible, IFormattable, Runtime.IValueBox<float>
+        struct Float : IFSObject, IConvertible, IFormattable
     {
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         internal readonly float m_value;
 
-        [Runtime.Register(nameof(NaN))]
+        [Register(nameof(NaN))]
         public static readonly Float NaN = new Float(float.NaN);
 
         /// <summary>
@@ -30,14 +31,14 @@ namespace FluidScript
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("toString")]
+        [Register("toString")]
         public String StringValue()
         {
             return m_value.ToString();
         }
 
         /// <inheritdoc/>
-        [Runtime.Register("hashCode")]
+        [Register("hashCode")]
         public Integer HashCode()
         {
             return m_value.GetHashCode();
@@ -56,7 +57,7 @@ namespace FluidScript
         /// <param name="obj"> The object to compare with the current instance.</param>
         /// <returns>true if obj and this instance are the same type and represent the same value;
         ///  otherwise, false.</returns>
-        [Runtime.Register("equals")]
+        [Register("equals")]
         public Boolean Equals(Float obj)
         {
             return m_value == obj.m_value ? Boolean.True : Boolean.False;
@@ -79,7 +80,7 @@ namespace FluidScript
             return m_value.ToString(format, provider);
         }
 
-        [Runtime.Register("parse")]
+        [Register("parse")]
         public static Float Parse(object value)
         {
             if (!(value is IConvertible c))

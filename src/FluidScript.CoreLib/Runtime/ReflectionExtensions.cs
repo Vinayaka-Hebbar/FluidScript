@@ -99,7 +99,7 @@ namespace FluidScript.Runtime
         /// <returns></returns>
         public static bool MatchesArgumentTypes(this MethodInfo m, params Type[] types)
         {
-            if (m == null || types == null)
+            if (m is null || types is null)
             {
                 return false;
             }
@@ -127,7 +127,7 @@ namespace FluidScript.Runtime
 
         public static bool IsNullableType(this Type type)
         {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable<>);
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
         }
 
         public static bool ImplementsGenericDefinition(this Type type, Type genericInterfaceDefinition, out Type implementingType)
@@ -167,6 +167,27 @@ namespace FluidScript.Runtime
 
             implementingType = null;
             return false;
+        }
+
+        public static bool ImplementInterface(this Type self, Type ifaceType)
+        {
+            for(; ; )
+            {
+                if (self is null)
+                    return false;
+                Type[] interfaces = self.GetInterfaces();
+                if(interfaces != null)
+                {
+                    for (int i = 0; i < interfaces.Length; i++)
+                    {
+                        if (interfaces[i] == ifaceType)
+                            return true;
+                        if (interfaces[i].ImplementInterface(ifaceType))
+                            return true;
+                    }
+                }
+                self = self.BaseType;
+            }
         }
 
         public static bool TryImplicitConvert(this Type src, Type dest, out MethodInfo method)
@@ -234,7 +255,7 @@ namespace FluidScript.Runtime
                 : TryFindSystemMethod(name, type, TypeUtils.AnyPublic, args, out method, conversions);
         }
 
-        static bool FindMethods(this Type type, string name, BindingFlags flags, object[] args, out MethodInfo method, ArgumentConversions conversions)
+        public static bool FindMethods(this Type type, string name, BindingFlags flags, object[] args, out MethodInfo method, ArgumentConversions conversions)
         {
             if (type != null)
             {
@@ -422,5 +443,18 @@ namespace FluidScript.Runtime
             return null;
         }
         #endregion
+
+        public static object InvokeDelegate(this Delegate self, object[] args)
+        {
+            var conversions = new ArgumentConversions(args.Length);
+            var method = self.GetType().GetMethod(nameof(Action.Invoke));
+            if (method.MatchesArguments(args, conversions))
+            {
+                if (conversions.Count > 0)
+                    conversions.Invoke(ref args);
+                return Any.op_Implicit(self.DynamicInvoke(args));
+            }
+            return Any.Empty;
+        }
     }
 }

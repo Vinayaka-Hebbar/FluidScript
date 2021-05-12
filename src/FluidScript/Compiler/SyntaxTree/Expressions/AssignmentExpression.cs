@@ -48,11 +48,15 @@ namespace FluidScript.Compiler.SyntaxTree
                 var exp = (MemberExpression)Left;
                 exp.Target.GenerateCode(generator);
                 // member assign for dynamic to be Any
-                if ((exp.Binder.Attributes & Binders.BindingAttributes.Dynamic) == Binders.BindingAttributes.Dynamic)
+                if (exp.Target.Type.IsValueType && 
+                    (exp.Binder.Attributes & Binders.BindingAttributes.Dynamic) == Binders.BindingAttributes.Dynamic)
                     generator.Box(TypeProvider.AnyType);
                 Right.GenerateCode(generator, Option);
                 if (Conversion != null)
+                {
                     generator.EmitConvert(Conversion);
+                }
+
                 exp.Binder.GenerateSet(Right, generator, option);
             }
             else if (Left.NodeType == ExpressionType.Indexer)

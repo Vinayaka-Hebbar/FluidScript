@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace FluidScript.Compiler.SyntaxTree
 {
@@ -8,7 +7,7 @@ namespace FluidScript.Compiler.SyntaxTree
     /// </summary>
     public abstract class Node
     {
-        private static readonly IEnumerable<Node> EmptyNodes = Enumerable.Empty<Node>();
+        static readonly Node[] EmptyNodes = new Node[0];
 
         /// <summary>
         /// Creates new <see cref="Node"/>

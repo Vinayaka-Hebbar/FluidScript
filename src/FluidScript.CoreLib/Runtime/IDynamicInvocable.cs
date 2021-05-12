@@ -9,9 +9,8 @@ namespace FluidScript.Runtime
         /// </summary>
         /// <param name="value">First argument from right side</param>
         /// <param name="name">name of member</param>
-        /// <param name="type">type of member</param>
         /// <returns>Updated value</returns>
-        Any SafeSetValue(Any value, string name, System.Type type);
+        Any SafeSetValue(Any value, string name);
         Any SafeGetValue(string name);
         Any Invoke(string name, params Any[] argments);
     }

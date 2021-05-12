@@ -126,16 +126,17 @@ namespace FluidScript.Compiler.Generators
             }
             if (Members.Exists(mem => mem.MemberType == MemberTypes.Constructor) == false)
             {
-                //default ctor
+                // default ctor
                 IMember ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultCtor, CallingConventions.Standard, new Type[0]), new Emit.ParameterInfo[0], this)
                 {
                     SyntaxBody = Statement.Empty
                 };
+                Members.Add(ctor);
                 ctor.Compile();
             }
             if (Members.Exists(mem => mem.MemberType == MemberTypes.Field && mem.IsStatic))
             {
-                //check for static ctor
+                // check for static ctor
                 if (Members.Exists(mem => mem.MemberType == MemberTypes.Constructor && mem.IsStatic) == false)
                 {
                     IMember ctor = new ConstructorGenerator(_builder.DefineConstructor(DefaultStaticCtor, CallingConventions.Standard, new Type[0]), new Emit.ParameterInfo[0], this)
@@ -230,7 +231,15 @@ namespace FluidScript.Compiler.Generators
         /// <inheritdoc/>
         protected override ConstructorInfo GetConstructorImpl(BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, Type[] types, ParameterModifier[] modifiers)
         {
-            return _builder.GetConstructor(bindingAttr, binder, callConvention, types, modifiers);
+            var ctors = GetMembers<MethodBase>(MemberTypes.Constructor, bindingAttr);
+            if (types == null || types.Length == 0)
+            {
+                return (ConstructorInfo)ctors.FirstOrDefault();
+            }
+
+            if (binder == null)
+                binder = DefaultBinder;
+            return (ConstructorInfo)binder.SelectMethod(bindingAttr, ctors.ToArray(), types, modifiers);
         }
 
         /// <inheritdoc/>
@@ -520,15 +529,29 @@ namespace FluidScript.Compiler.Generators
 
         public MethodGenerator DefineMethod(string name, MethodAttributes attrs, Emit.ParameterInfo[] parameters, Type returnType)
         {
-            var method = _builder.DefineMethod(name, attrs, CallingConventions.Standard, returnType, parameters.Map(p => p.Type));
-            MethodGenerator methodGen = new MethodGenerator(method, parameters, this);
+            var method = _builder.DefineMethod(name, attrs, CallingConventions.Standard, returnType?.UnderlyingSystemType, parameters.Map(p => p.Type.UnderlyingSystemType));
+            MethodGenerator methodGen = new MethodGenerator(method, parameters, returnType, this);
             Members.Add(methodGen);
             return methodGen;
         }
 
+        public MethodGenerator DefineMethod(string name, MethodAttributes attrs, Emit.ParameterInfo[] parameters, Type[] types, Type returnType)
+        {
+            var method = _builder.DefineMethod(name, attrs, CallingConventions.Standard, returnType?.UnderlyingSystemType, types.Map(t => t.UnderlyingSystemType));
+            MethodGenerator methodGen = new MethodGenerator(method, parameters, returnType, this);
+            Members.Add(methodGen);
+            return methodGen;
+        }
+
+        public MethodGenerator DefineAccessor(string name, MethodAttributes attrs, Emit.ParameterInfo[] parameters, Type[] types, Type returnType)
+        {
+            var method = _builder.DefineMethod(name, attrs, CallingConventions.Standard, returnType?.UnderlyingSystemType, types.Map(t => t.UnderlyingSystemType));
+            return new MethodGenerator(method, parameters, returnType, this);
+        }
+
         public ConstructorGenerator DefineCtor(Emit.ParameterInfo[] parameters, MethodAttributes attrs)
         {
-            var ctor = _builder.DefineConstructor(attrs, CallingConventions.Standard, parameters.Map(p => p.Type));
+            var ctor = _builder.DefineConstructor(attrs, CallingConventions.Standard, parameters.Map(p => p.Type.UnderlyingSystemType));
             ConstructorGenerator ctorGen = new ConstructorGenerator(ctor, parameters, this);
             Members.Add(ctorGen);
             return ctorGen;
@@ -556,10 +579,10 @@ namespace FluidScript.Compiler.Generators
             nestedTypes++;
             var values = builder.DefineField("Values", LamdaGen.ObjectArray, FieldAttributes.Private);
             var ctor = builder.DefineConstructor(DelegateGen.CtorAttributes, CallingConventions.Standard, LamdaGen.CtorSignature);
-            var method = builder.DefineMethod("Invoke", MethodAttributes.HideBySig, CallingConventions.Standard, returnType, types);
+            var method = builder.DefineMethod(Utils.ReflectionUtils.InvokeMethod, MethodAttributes.HideBySig, CallingConventions.Standard, returnType?.UnderlyingSystemType, types.Map(t=> t.UnderlyingSystemType));
             var iLGen = ctor.GetILGenerator();
             iLGen.Emit(OpCodes.Ldarg_0);
-            iLGen.Emit(OpCodes.Call, typeof(object).GetConstructor(EmptyTypes));
+            iLGen.Emit(OpCodes.Call, TypeProvider.ObjectType.GetInstanceCtor(EmptyTypes));
             iLGen.Emit(OpCodes.Ldarg_0);
             iLGen.Emit(OpCodes.Ldarg_1);
             iLGen.Emit(OpCodes.Stfld, values);

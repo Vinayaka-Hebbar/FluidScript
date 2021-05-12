@@ -9,4 +9,9 @@ namespace FluidScript.Compiler.Emit
 
         Type CreateType();
     }
+
+    public interface IGenericType
+    {
+        Type UnderlyingSystemType { get; }
+    }
 }

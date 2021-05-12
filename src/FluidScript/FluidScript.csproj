@@ -4,7 +4,7 @@
     <TargetFrameworks>net45;netstandard2.0;netcoreapp3.1</TargetFrameworks>
     <DefineConstants>TRACE;</DefineConstants>
     <Authors>Vinayaka Hebbar</Authors>
-    <Version>1.1.2.1-alpha</Version>
+    <Version>1.1.2.3-alpha</Version>
     <Title>FluidScript</Title>
     <LangVersion>8</LangVersion>
     <PackageId>FluidScript</PackageId>
@@ -14,6 +14,7 @@
     <PackageReleaseNotes>Initial Release of FluidScript</PackageReleaseNotes>
     <DefineConstants Condition="'$(VisualStudioVersion)'&gt;= 16">LATEST_VS</DefineConstants>
     <Description>Scripting library for .NET</Description>
+    <RepositoryUrl>https://github.com/Vinayaka-Hebbar/FluidScript</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Release'">
@@ -54,13 +55,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Runtime\DynamicData.cs" />
-    <Compile Remove="Runtime\Function.cs" />
-    <Compile Remove="Utils\ArrayFilterIterator.cs" />
+    <PackageReference Include="FluidScript.CoreLib" Version="1.0.16.3" />
   </ItemGroup>
+   
 
-  <ItemGroup>
-    <PackageReference Include="FluidScript.CoreLib" Version="1.0.16" />
-  </ItemGroup>
 
 </Project>
