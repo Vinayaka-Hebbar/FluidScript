@@ -1,0 +1,5 @@
+﻿class Sample implements ISample {
+	impl func start() {
+		Console.print('Hello World');
+	}
+}

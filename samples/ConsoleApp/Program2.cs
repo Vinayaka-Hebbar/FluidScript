@@ -9,7 +9,7 @@ namespace ConsoleApp
     {
         static void Main(string[] args)
         {
-            var code = ScriptParser.ParseProgram("script.fls");
+            var code = ScriptParser.ParseProgram("script1.fls");
             var assembly = new AssemblyGen("FluidTest", "1.0");
             code.Compile(assembly);
 #if NETFRAMEWORK

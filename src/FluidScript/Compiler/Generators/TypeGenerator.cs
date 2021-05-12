@@ -30,7 +30,7 @@ namespace FluidScript.Compiler.Generators
 
         public override string Name { get; }
 
-        public override Type ReflectedType => _builder;
+        public override Type ReflectedType => _builder.ReflectedType;
 
         public ITypeContext Context { get; }
 

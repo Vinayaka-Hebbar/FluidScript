@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 
 namespace FluidScript.Compiler.Generators
 {
-    public class TypeBuilderInstantiation : Type, Emit.IGenericType
+    public class TypeBuilderInstantiation : Type, Emit.IRuntimeType
     {
         private readonly Type type;
         private readonly Type[] insts;

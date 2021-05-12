@@ -660,10 +660,6 @@ namespace FluidScript.Compiler.Emit
             else if (node.Constructor == null)
             {
                 node.Constructor = node.Type.GetConstructor(ReflectionUtils.PublicInstance, null, new Type[0], null);
-                if (type is IType)
-                {
-                    node.Constructor = System.Reflection.Emit.TypeBuilder.GetConstructor(TypeProvider.ArrayType.MakeGenericType(node.ElementType), node.Constructor);
-                }
             }
             var items = node.Expressions;
             if (items.Count > 0)

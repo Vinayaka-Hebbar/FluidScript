@@ -3,15 +3,19 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
-    <StartupObject>ConsoleApp.Program2</StartupObject>
+    <StartupObject>ConsoleApp.Program3</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="script.fls" />
+    <None Remove="script1.fls" />
+    <None Remove="script2.fls" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="script.fls">
+    <Content Include="script1.fls">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="script2.fls">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
